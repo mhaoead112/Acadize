@@ -1,0 +1,79 @@
+{
+  "general": {
+    "siteName": "Edada",
+    "siteDescription": "A modern learning management system",
+    "logoUrl": "/logo.png",
+    "favicon": "/favicon.ico",
+    "timezone": "UTC",
+    "dateFormat": "YYYY-MM-DD",
+    "timeFormat": "24h"
+  },
+  "security": {
+    "allowRegistration": true,
+    "requireEmailVerification": false,
+    "sessionTimeout": 120,
+    "maxLoginAttempts": 5,
+    "lockoutDuration": 15,
+    "passwordMinLength": 6,
+    "passwordRequireUppercase": false,
+    "passwordRequireNumber": false,
+    "passwordRequireSpecial": false
+  },
+  "features": {
+    "aiStudyBuddy": true,
+    "studyGroups": true,
+    "videoConferencing": false,
+    "reportCards": true,
+    "parentPortal": true,
+    "notifications": true,
+    "darkMode": true
+  },
+  "email": {
+    "smtpEnabled": false,
+    "smtpHost": "",
+    "smtpPort": 587,
+    "smtpUser": "",
+    "smtpSecure": true,
+    "fromEmail": "noreply@eduverse.com",
+    "fromName": "EduVerse"
+  },
+  "uploads": {
+    "maxFileSize": 50,
+    "allowedFileTypes": [
+      "pdf",
+      "doc",
+      "docx",
+      "ppt",
+      "pptx",
+      "xls",
+      "xlsx",
+      "jpg",
+      "jpeg",
+      "png",
+      "gif",
+      "mp4",
+      "mp3",
+      "zip"
+    ],
+    "maxFilesPerUpload": 5,
+    "storageLocation": "local"
+  },
+  "notifications": {
+    "emailNotifications": true,
+    "assignmentReminders": true,
+    "gradeNotifications": true,
+    "announcementNotifications": true,
+    "messageNotifications": true,
+    "reminderHoursBefore": 24,
+    "newUserRegistration": true,
+    "newCourseCreated": true,
+    "reportSubmitted": true,
+    "paymentReceived": true,
+    "systemErrors": true
+  },
+  "maintenance": {
+    "maintenanceMode": false,
+    "maintenanceMessage": "The system is currently under maintenance. Please try again later.",
+    "allowAdminAccess": true
+  }
+}

@@ -1,0 +1,25 @@
+-- Create users table
+CREATE TABLE IF NOT EXISTS users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  username VARCHAR(50) UNIQUE NOT NULL,
+  email VARCHAR(255) UNIQUE NOT NULL,
+  password VARCHAR(255) NOT NULL,
+  full_name VARCHAR(255) NOT NULL,
+  role VARCHAR(20) NOT NULL DEFAULT 'student' CHECK (role IN ('student', 'teacher', 'admin', 'parent')),
+  is_active BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Create indexes
+CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
+
+-- Insert demo users (passwords are 'demo123' hashed with bcrypt)
+INSERT INTO users (username, email, password, full_name, role, is_active) VALUES
+('student_demo', 'student_demo@eduverse.com', '$2a$10$OIcOebX9sd.frP181qbAF.K9fTsRIy38afFen.1JehBiR9V1ppM.W', 'Student Demo User', 'student', true),
+('teacher_demo', 'teacher_demo@eduverse.com', '$2a$10$OIcOebX9sd.frP181qbAF.K9fTsRIy38afFen.1JehBiR9V1ppM.W', 'Teacher Demo User', 'teacher', true),
+('admin_demo', 'admin_demo@eduverse.com', '$2a$10$OIcOebX9sd.frP181qbAF.K9fTsRIy38afFen.1JehBiR9V1ppM.W', 'Admin Demo User', 'admin', true),
+('parent_demo', 'parent_demo@eduverse.com', '$2a$10$OIcOebX9sd.frP181qbAF.K9fTsRIy38afFen.1JehBiR9V1ppM.W', 'Parent Demo User', 'parent', true)
+ON CONFLICT (username) DO NOTHING;

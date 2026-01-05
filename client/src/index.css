@@ -1,0 +1,1243 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Caveat:wght@400;500;600;700&display=swap');
+
+@import './styles/chat-animations.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: hsl(0, 0%, 98%);
+  --foreground: hsl(0, 0%, 11%);
+  --muted: hsl(0, 0%, 96%);
+  --muted-foreground: hsl(0, 0%, 45%);
+  --popover: hsl(0, 0%, 100%);
+  --popover-foreground: hsl(0, 0%, 11%);
+  --card: hsl(0, 0%, 100%);
+  --card-foreground: hsl(0, 0%, 11%);
+  --border: hsl(0, 0%, 93%);
+  --input: hsl(0, 0%, 89%);
+  --primary: hsl(0, 0%, 11%);
+  --primary-foreground: hsl(0, 0%, 98%);
+  --secondary: hsl(0, 0%, 96%);
+  --secondary-foreground: hsl(0, 0%, 11%);
+  --accent: hsl(0, 0%, 96%);
+  --accent-foreground: hsl(0, 0%, 11%);
+  --destructive: hsl(0, 84%, 60%);
+  --destructive-foreground: hsl(0, 0%, 98%);
+  --ring: hsl(0, 0%, 11%);
+  --radius: 0.75rem;
+  
+  /* Modern Design System Colors */
+  --eduverse-blue: hsl(222, 72%, 43%);
+  --eduverse-navy: hsl(225, 83%, 15%);
+  --eduverse-royal: hsl(230, 75%, 25%);
+  --eduverse-platinum: hsl(210, 20%, 85%);
+  --eduverse-gold: hsl(42, 90%, 52%);
+  --eduverse-gold-light: hsl(42, 85%, 65%);
+  --eduverse-gold-dark: hsl(42, 95%, 40%);
+  --eduverse-champagne: hsl(50, 70%, 88%);
+  --eduverse-pearl: hsl(210, 30%, 95%);
+  --eduverse-light: hsl(210, 40%, 98%);
+  --eduverse-gray: hsl(0, 0%, 45%);
+  --eduverse-dark: hsl(0, 0%, 11%);
+  --eduverse-accent: hsl(265, 85%, 55%);
+  --eduverse-accent-light: hsl(265, 75%, 75%);
+  
+  /* Modern Shadow System */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+  --shadow-xl: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+.dark {
+  --background: hsl(222, 47%, 8%);
+  --foreground: hsl(60, 30%, 96%);
+  --muted: hsl(223, 47%, 14%);
+  --muted-foreground: hsl(215, 20%, 65%);
+  --popover: hsl(222, 47%, 10%);
+  --popover-foreground: hsl(60, 30%, 96%);
+  --card: hsl(222, 47%, 10%);
+  --card-foreground: hsl(60, 30%, 96%);
+  --border: hsl(220, 15%, 22%);
+  --input: hsl(220, 15%, 22%);
+  --primary: hsl(42, 85%, 50%);
+  --primary-foreground: hsl(222, 47%, 8%);
+  --secondary: hsl(222, 35%, 18%);
+  --secondary-foreground: hsl(60, 30%, 96%);
+  --accent: hsl(42, 80%, 52%);
+  --accent-foreground: hsl(222, 47%, 8%);
+  --destructive: hsl(0, 62.8%, 45%);
+  --destructive-foreground: hsl(60, 30%, 96%);
+  --ring: hsl(42, 85%, 50%);
+  --radius: 0.75rem;
+  
+  /* Dark mode specific eduverse colors */
+  --eduverse-gold: hsl(42, 85%, 55%);
+  --eduverse-gold-light: hsl(42, 80%, 70%);
+  --eduverse-gold-dark: hsl(42, 90%, 45%);
+  --eduverse-blue: hsl(222, 72%, 55%);
+  --eduverse-navy: hsl(222, 47%, 12%);
+  --eduverse-light: hsl(222, 47%, 12%);
+  --eduverse-dark: hsl(60, 30%, 96%);
+  
+  /* Dark mode shadows with gold glow */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.4);
+  --shadow-xl: 0 8px 32px rgba(0, 0, 0, 0.5);
+  --shadow-gold: 0 0 20px rgba(234, 179, 8, 0.15);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased text-foreground bg-background;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    letter-spacing: -0.01em;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+  
+  .dark body {
+    @apply bg-background text-foreground;
+  }
+  
+  /* Smooth transitions for dark mode */
+  *, *::before, *::after {
+    transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  
+  /* Luxury Typography Classes */
+  .font-luxury {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+  
+  .font-elegant {
+    font-family: 'Crimson Text', Georgia, serif;
+    letter-spacing: 0.01em;
+  }
+  
+  .font-premium {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+  
+  .font-handwriting {
+    font-family: 'Caveat', cursive;
+    font-weight: 500;
+  }
+}
+
+@layer components {
+  .eduverse-blue {
+    color: var(--eduverse-blue);
+  }
+  
+  .bg-eduverse-blue {
+    background-color: var(--eduverse-blue);
+  }
+  
+  .text-eduverse-blue {
+    color: var(--eduverse-blue);
+  }
+  
+  .eduverse-green {
+    color: var(--eduverse-green);
+  }
+  
+  .bg-eduverse-green {
+    background-color: var(--eduverse-green);
+  }
+  
+  .text-eduverse-green {
+    color: var(--eduverse-green);
+  }
+  
+  .eduverse-dark {
+    color: var(--eduverse-dark);
+  }
+  
+  .bg-eduverse-dark {
+    background-color: var(--eduverse-dark);
+  }
+  
+  .text-eduverse-dark {
+    color: var(--eduverse-dark);
+  }
+  
+  .eduverse-light {
+    color: var(--eduverse-light);
+  }
+  
+  .bg-eduverse-light {
+    background-color: var(--eduverse-light);
+  }
+  
+  .eduverse-gray {
+    color: var(--eduverse-gray);
+  }
+  
+  .text-eduverse-gray {
+    color: var(--eduverse-gray);
+  }
+  
+  .text-eduverse-gold {
+    color: var(--eduverse-gold);
+  }
+  
+  /* Luxury Component Styles */
+  .luxury-card {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.95) 100%);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: var(--luxury-shadow);
+    border-radius: 1rem;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .luxury-card:hover {
+    box-shadow: var(--luxury-shadow-lg);
+    transform: translateY(-4px);
+    border-color: rgba(255, 215, 0, 0.2);
+  }
+  
+  .luxury-button {
+    background: linear-gradient(135deg, var(--eduverse-gold) 0%, var(--eduverse-gold-dark) 100%);
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    box-shadow: 0 8px 25px rgba(255, 215, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .luxury-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    transition: left 0.5s;
+  }
+  
+  .luxury-button:hover::before {
+    left: 100%;
+  }
+  
+  .luxury-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 35px rgba(255, 215, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  }
+  
+  .luxury-gradient {
+    background: linear-gradient(135deg, 
+      var(--eduverse-navy) 0%, 
+      var(--eduverse-royal) 25%, 
+      var(--eduverse-blue) 50%, 
+      var(--eduverse-accent) 75%, 
+      var(--eduverse-gold) 100%);
+  }
+  
+  .luxury-text-gradient {
+    background: linear-gradient(135deg, var(--eduverse-navy), var(--eduverse-gold));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .luxury-border {
+    border: 2px solid;
+    border-image: linear-gradient(135deg, var(--eduverse-gold), var(--eduverse-platinum), var(--eduverse-gold)) 1;
+  }
+  
+  .premium-glass {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .gold-shimmer {
+    background: linear-gradient(
+      45deg,
+      var(--eduverse-gold-dark) 0%,
+      var(--eduverse-gold) 25%,
+      var(--eduverse-champagne) 50%,
+      var(--eduverse-gold) 75%,
+      var(--eduverse-gold-dark) 100%
+    );
+    background-size: 200% 200%;
+    animation: shimmer 3s ease-in-out infinite;
+  }
+  
+  @keyframes shimmer {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  
+  .luxury-input {
+    background: rgba(255, 255, 255, 0.9);
+    border: 2px solid rgba(255, 215, 0, 0.2);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+  }
+  
+  .luxury-input:focus {
+    border-color: var(--eduverse-gold);
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+  }
+  
+  .bg-eduverse-gold {
+    background-color: var(--eduverse-gold);
+  }
+  
+  /* Gradient utilities for EduVerse colors */
+  .from-eduverse-light {
+    --tw-gradient-from: var(--eduverse-light);
+    --tw-gradient-to: rgb(255 255 255 / 0);
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+  }
+  
+  .from-eduverse-blue {
+    --tw-gradient-from: var(--eduverse-blue);
+    --tw-gradient-to: rgb(255 255 255 / 0);
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+  }
+  
+  .from-eduverse-gray {
+    --tw-gradient-from: var(--eduverse-gray);
+    --tw-gradient-to: rgb(255 255 255 / 0);
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+  }
+  
+  /* Border utilities for EduVerse colors */
+  .border-eduverse-blue {
+    border-color: var(--eduverse-blue);
+  }
+  
+  .border-eduverse-gold {
+    border-color: var(--eduverse-gold);
+  }
+  
+  .border-eduverse-gray {
+    border-color: var(--eduverse-gray);
+  }
+  
+  /* Hover utilities for EduVerse colors */
+  .hover\:bg-eduverse-blue:hover {
+    background-color: var(--eduverse-blue);
+  }
+  
+  .hover\:bg-eduverse-gold:hover {
+    background-color: var(--eduverse-gold);
+  }
+  
+  .hover\:text-eduverse-blue:hover {
+    color: var(--eduverse-blue);
+  }
+}
+
+@layer utilities {
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+  }
+  
+  .animate-slide-up {
+    animation: slideUp 0.6s ease-out;
+  }
+  
+  .animate-bounce-in {
+    animation: bounceIn 0.8s ease-out;
+  }
+  
+  .animate-pulse-slow {
+    animation: pulseSlow 3s ease-in-out infinite;
+  }
+  
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+  
+  .animate-gradient {
+    background-size: 200% 200%;
+    animation: gradientShift 4s ease infinite;
+  }
+  
+  .animate-spin-slow {
+    animation: spinSlow 8s linear infinite;
+  }
+  
+  .animate-tech-glow {
+    animation: techGlow 2s ease-in-out infinite alternate;
+  }
+  
+  .animate-circuit {
+    animation: circuit 5s ease-in-out infinite;
+  }
+  
+  /* Login page specific animations */
+  .animate-float-delayed {
+    animation: float 6s ease-in-out infinite 3s;
+  }
+  
+  .animate-twinkle {
+    animation: twinkle 2s ease-in-out infinite;
+  }
+  
+  .animate-pulse-glow {
+    animation: pulseGlow 3s ease-in-out infinite;
+  }
+  
+  .animate-bounce-gentle {
+    animation: bounceGentle 2s ease-in-out infinite;
+  }
+  
+  .animate-delay-1000 {
+    animation-delay: 1s;
+  }
+  
+  .animate-delay-2000 {
+    animation-delay: 2s;
+  }
+  
+  .glass-effect {
+    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  .creative-shadow {
+    box-shadow: 0 20px 40px rgba(65, 131, 215, 0.15), 0 10px 20px rgba(0, 0, 0, 0.1);
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  @keyframes slideUp {
+    from { 
+      opacity: 0; 
+      transform: translateY(30px); 
+    }
+    to { 
+      opacity: 1; 
+      transform: translateY(0); 
+    }
+  }
+  
+  @keyframes bounceIn {
+    0% { 
+      opacity: 0; 
+      transform: scale(0.3) translateY(50px); 
+    }
+    50% { 
+      opacity: 1; 
+      transform: scale(1.05); 
+    }
+    70% { 
+      transform: scale(0.95); 
+    }
+    100% { 
+      opacity: 1; 
+      transform: scale(1); 
+    }
+  }
+  
+  @keyframes pulseSlow {
+    0%, 100% { 
+      opacity: 1; 
+      transform: scale(1); 
+    }
+    50% { 
+      opacity: 0.8; 
+      transform: scale(1.05); 
+    }
+  }
+  
+  @keyframes float {
+    0%, 100% { 
+      transform: translateY(0px); 
+    }
+    50% { 
+      transform: translateY(-20px); 
+    }
+  }
+  
+  @keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  
+  @keyframes spinSlow {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  
+  @keyframes techGlow {
+    0% { 
+      box-shadow: 0 0 5px rgba(59, 130, 246, 0.5);
+      opacity: 0.6;
+    }
+    100% { 
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.8);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes circuit {
+    0%, 100% { 
+      transform: translateX(0) scale(1);
+      opacity: 0.5;
+    }
+    50% { 
+      transform: translateX(10px) scale(1.1);
+      opacity: 0.8;
+    }
+  }
+  
+  @keyframes twinkle {
+    0%, 100% { 
+      opacity: 0.3;
+      transform: scale(1);
+    }
+    50% { 
+      opacity: 1;
+      transform: scale(1.2);
+    }
+  }
+  
+  @keyframes pulseGlow {
+    0%, 100% { 
+      text-shadow: 0 0 10px rgba(147, 197, 253, 0.5);
+      opacity: 0.8;
+    }
+    50% { 
+      text-shadow: 0 0 30px rgba(147, 197, 253, 1), 0 0 40px rgba(147, 197, 253, 0.8);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes bounceGentle {
+    0%, 100% { 
+      transform: translateY(0);
+    }
+    50% { 
+      transform: translateY(-5px);
+    }
+  }
+  
+  /* Enhanced EduVerse Dashboard Animations */
+  @keyframes slideInRight {
+    from { opacity: 0; transform: translateX(30px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  
+  @keyframes slideInLeft {
+    from { opacity: 0; transform: translateX(-30px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  
+  @keyframes flipIn {
+    from { opacity: 0; transform: perspective(400px) rotateY(90deg); }
+    to { opacity: 1; transform: perspective(400px) rotateY(0deg); }
+  }
+  
+  @keyframes scaleIn {
+    from { opacity: 0; transform: scale(0.8); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  
+  @keyframes wiggle {
+    0%, 7%, 100% { transform: rotate(0deg); }
+    15% { transform: rotate(-3deg); }
+    20% { transform: rotate(3deg); }
+    25% { transform: rotate(-3deg); }
+    30% { transform: rotate(3deg); }
+    35% { transform: rotate(-1deg); }
+    40% { transform: rotate(1deg); }
+    50%, 100% { transform: rotate(0deg); }
+  }
+  
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+  
+  @keyframes heartbeat {
+    0%, 40%, 80%, 100% { transform: scale(1); }
+    20%, 60% { transform: scale(1.15); }
+  }
+  
+  .animate-slide-in-right {
+    animation: slideInRight 0.6s ease-out;
+  }
+  
+  .animate-slide-in-left {
+    animation: slideInLeft 0.6s ease-out;
+  }
+  
+  .animate-flip-in {
+    animation: flipIn 0.7s ease-out;
+  }
+  
+  .animate-scale-in {
+    animation: scaleIn 0.5s ease-out;
+  }
+  
+  .animate-wiggle {
+    animation: wiggle 1s ease-in-out;
+  }
+  
+  .animate-shimmer {
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+  }
+  
+  .animate-heartbeat {
+    animation: heartbeat 2s ease-in-out infinite;
+  }
+  
+  /* Staggered animation delays */
+  .animate-delay-100 { animation-delay: 0.1s; }
+  .animate-delay-200 { animation-delay: 0.2s; }
+  .animate-delay-300 { animation-delay: 0.3s; }
+  .animate-delay-400 { animation-delay: 0.4s; }
+  .animate-delay-500 { animation-delay: 0.5s; }
+  .animate-delay-600 { animation-delay: 0.6s; }
+  .animate-delay-700 { animation-delay: 0.7s; }
+  .animate-delay-800 { animation-delay: 0.8s; }
+  
+  /* Enhanced hover effects for dashboard components */
+  .hover-lift {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  }
+  
+  .hover-glow {
+    transition: all 0.3s ease;
+  }
+  
+  .hover-glow:hover {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+    transform: scale(1.02);
+  }
+  
+  .hover-tilt {
+    transition: transform 0.3s ease;
+  }
+  
+  .hover-tilt:hover {
+    transform: perspective(1000px) rotateX(5deg) rotateY(5deg);
+  }
+  
+  .hover-gradient {
+    background: linear-gradient(45deg, var(--eduverse-blue), var(--eduverse-gold));
+    background-size: 200% 200%;
+    transition: background-position 0.5s ease;
+  }
+  
+  .hover-gradient:hover {
+    background-position: 100% 100%;
+  }
+  
+  /* Mobile-first responsive design enhancements */
+  @media (max-width: 640px) {
+    .mobile-stack > * {
+      width: 100% !important;
+      margin-bottom: 0.75rem;
+    }
+    
+    .mobile-stack:last-child {
+      margin-bottom: 0;
+    }
+    
+    .mobile-text-sm {
+      font-size: 0.875rem;
+      line-height: 1.25rem;
+    }
+    
+    .mobile-text-xs {
+      font-size: 0.75rem;
+      line-height: 1rem;
+    }
+    
+    .mobile-p-3 {
+      padding: 0.75rem;
+    }
+    
+    .mobile-p-4 {
+      padding: 1rem;
+    }
+    
+    .mobile-hidden {
+      display: none;
+    }
+    
+    .mobile-flex-col {
+      flex-direction: column;
+    }
+    
+    .mobile-space-y-2 > * + * {
+      margin-top: 0.5rem;
+    }
+    
+    .mobile-space-y-4 > * + * {
+      margin-top: 1rem;
+    }
+    
+    /* Dashboard specific mobile optimizations */
+    .mobile-dashboard-grid {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+    
+    .mobile-sidebar-compact {
+      width: 100%;
+      height: auto;
+      position: relative;
+    }
+    
+    .mobile-chart-height {
+      height: 250px;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .tablet-grid-2 {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .tablet-hidden {
+      display: none;
+    }
+  }
+  
+  @media (min-width: 769px) and (max-width: 1024px) {
+    .desktop-sm-grid-3 {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  
+  /* Accessibility improvements */
+  @media (prefers-reduced-motion: reduce) {
+    .animate-fade-in,
+    .animate-slide-up,
+    .animate-bounce-in,
+    .animate-float,
+    .animate-slide-in-right,
+    .animate-slide-in-left,
+    .animate-flip-in,
+    .animate-scale-in,
+    .animate-wiggle,
+    .animate-shimmer,
+    .animate-heartbeat {
+      animation: none;
+    }
+    
+    .hover-lift:hover,
+    .hover-glow:hover,
+    .hover-tilt:hover {
+      transform: none;
+    }
+  }
+  
+  /* Custom scrollbar for dashboard */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 3px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--eduverse-blue);
+    border-radius: 3px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: var(--eduverse-dark);
+  }
+  
+  /* Loading states */
+  .skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+  }
+  
+  .dark .skeleton {
+    background: linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 50%, #2a2a2a 75%);
+    background-size: 200% 100%;
+  }
+  
+  /* Interactive feedback */
+  .click-feedback {
+    transition: transform 0.1s ease;
+  }
+  
+  .click-feedback:active {
+    transform: scale(0.95);
+  }
+  
+  /* Achievement badge glow effect */
+  .achievement-glow {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .achievement-glow::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent, rgba(255, 215, 0, 0.3), transparent);
+    transform: rotate(45deg);
+    animation: achievementSweep 3s infinite;
+  }
+  
+  @keyframes achievementSweep {
+    0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+    50% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+    100% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+  }
+  
+  /* EduVerse Unique Branding Elements */
+  .eduverse-signature-gradient {
+    background: linear-gradient(135deg, var(--eduverse-blue) 0%, var(--eduverse-gold) 50%, var(--eduverse-blue) 100%);
+    background-size: 200% 200%;
+    animation: gradientShift 6s ease-in-out infinite;
+  }
+  
+  .eduverse-learning-particles {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .eduverse-learning-particles::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: 
+      radial-gradient(circle at 25% 25%, rgba(65, 131, 215, 0.1) 2px, transparent 2px),
+      radial-gradient(circle at 75% 75%, rgba(255, 204, 0, 0.1) 3px, transparent 3px),
+      radial-gradient(circle at 50% 50%, rgba(65, 131, 215, 0.05) 1px, transparent 1px);
+    background-size: 50px 50px, 80px 80px, 30px 30px;
+    animation: particleFloat 20s linear infinite;
+    pointer-events: none;
+  }
+  
+  @keyframes particleFloat {
+    0% { transform: translate(0, 0) rotate(0deg); }
+    33% { transform: translate(30px, -30px) rotate(120deg); }
+    66% { transform: translate(-20px, 20px) rotate(240deg); }
+    100% { transform: translate(0, 0) rotate(360deg); }
+  }
+  
+  .eduverse-knowledge-ripple {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .eduverse-knowledge-ripple::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(65, 131, 215, 0.1) 0%, transparent 70%);
+    transform: translate(-50%, -50%);
+    animation: knowledgeRipple 4s ease-out infinite;
+    pointer-events: none;
+  }
+  
+  @keyframes knowledgeRipple {
+    0% { 
+      width: 0; 
+      height: 0; 
+      opacity: 1; 
+    }
+    70% { 
+      width: 300px; 
+      height: 300px; 
+      opacity: 0.6; 
+    }
+    100% { 
+      width: 600px; 
+      height: 600px; 
+      opacity: 0; 
+    }
+  }
+  
+  .eduverse-text-gradient {
+    background: linear-gradient(135deg, var(--eduverse-blue), var(--eduverse-gold));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+  
+  .eduverse-text-shimmer {
+    background: linear-gradient(90deg, var(--eduverse-blue) 25%, var(--eduverse-gold) 50%, var(--eduverse-blue) 75%);
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    animation: shimmer 3s ease-in-out infinite;
+  }
+  
+  .eduverse-glass-card {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  }
+  
+  .eduverse-neon-border {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  
+  .eduverse-neon-border::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    padding: 2px;
+    background: linear-gradient(45deg, var(--eduverse-blue), var(--eduverse-gold), var(--eduverse-blue));
+    border-radius: 12px;
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    animation: neonPulse 2s ease-in-out infinite;
+  }
+  
+  @keyframes neonPulse {
+    0%, 100% { 
+      opacity: 1;
+      filter: drop-shadow(0 0 8px rgba(65, 131, 215, 0.3));
+    }
+    50% { 
+      opacity: 0.7;
+      filter: drop-shadow(0 0 16px rgba(255, 204, 0, 0.5));
+    }
+  }
+  
+  .eduverse-study-beam {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .eduverse-study-beam::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    animation: studyBeam 3s ease-in-out infinite;
+  }
+  
+  @keyframes studyBeam {
+    0% { left: -100%; }
+    50% { left: 0; }
+    100% { left: 100%; }
+  }
+  
+  /* EduVerse Learning Badge Styles */
+  .eduverse-badge {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2rem;
+    height: 2rem;
+    background: linear-gradient(135deg, var(--eduverse-blue), var(--eduverse-gold));
+    border-radius: 50%;
+    color: white;
+    font-weight: 600;
+    font-size: 0.75rem;
+    box-shadow: 0 4px 12px rgba(65, 131, 215, 0.3);
+    animation: badgePulse 2s ease-in-out infinite;
+  }
+  
+  @keyframes badgePulse {
+    0%, 100% { 
+      transform: scale(1);
+      box-shadow: 0 4px 12px rgba(65, 131, 215, 0.3);
+    }
+    50% { 
+      transform: scale(1.05);
+      box-shadow: 0 6px 20px rgba(65, 131, 215, 0.4);
+    }
+  }
+  
+  /* Enhanced Interactive Elements */
+  .eduverse-interactive-hover {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .eduverse-interactive-hover::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 50%, transparent 70%);
+    transform: translateX(-100%) rotate(45deg);
+    transition: transform 0.6s ease;
+  }
+  
+  .eduverse-interactive-hover:hover::before {
+    transform: translateX(100%) rotate(45deg);
+  }
+  
+  .eduverse-interactive-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(65, 131, 215, 0.15);
+  }
+  
+  /* Code highlighting theme for programming responses */
+  .eduverse-code-block {
+    background: #1e293b;
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+    border-left: 4px solid var(--eduverse-blue);
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    color: #e2e8f0;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  }
+  
+  .eduverse-code-block .keyword { color: #7c3aed; }
+  .eduverse-code-block .string { color: #10b981; }
+  .eduverse-code-block .comment { color: #6b7280; }
+  .eduverse-code-block .number { color: #f59e0b; }
+  .eduverse-code-block .function { color: #3b82f6; }
+  
+  /* Mathematical equation styling */
+  .eduverse-math-equation {
+    background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+    border: 2px solid var(--eduverse-blue);
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+    font-family: 'KaTeX_Main', 'Times New Roman', serif;
+    text-align: center;
+    font-size: 1.125rem;
+    color: #1e293b;
+    box-shadow: 0 2px 4px rgba(65, 131, 215, 0.1);
+  }
+  
+  /* EduVerse progress indicators */
+  .eduverse-progress-ring {
+    transform: rotate(-90deg);
+  }
+  
+  .eduverse-progress-ring circle {
+    stroke: var(--eduverse-blue);
+    stroke-width: 4;
+    fill: transparent;
+    stroke-linecap: round;
+    stroke-dasharray: 283;
+    stroke-dashoffset: 283;
+    transition: stroke-dashoffset 0.5s ease;
+  }
+  
+  /* Unique page transition effects */
+  .page-transition-enter {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  
+  .page-transition-enter-active {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+  
+  .page-transition-exit {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  
+  .page-transition-exit-active {
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+
+  /* Dark Mode Enhancements */
+  .dark .eduverse-glass-card {
+    background: rgba(30, 41, 59, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  }
+  
+  .dark .eduverse-code-block {
+    background: #0f172a;
+    border-left-color: var(--eduverse-gold);
+  }
+  
+  .dark .eduverse-math-equation {
+    background: linear-gradient(135deg, #1e293b, #0f172a);
+    border-color: var(--eduverse-gold);
+    color: #f8fafc;
+  }
+  
+  .dark .gold-shimmer {
+    background: linear-gradient(135deg, #B8860B 0%, #DAA520 25%, #FFD700 50%, #DAA520 75%, #B8860B 100%);
+  }
+  
+  .dark .luxury-card {
+    background: linear-gradient(145deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.98) 100%);
+    border: 1px solid rgba(255, 215, 0, 0.1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 40px rgba(255, 215, 0, 0.03);
+  }
+  
+  .dark .creative-shadow {
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(255, 215, 0, 0.05);
+  }
+  
+  /* Dark mode transitions */
+  .theme-transition {
+    transition: background-color 0.3s ease, 
+                color 0.3s ease, 
+                border-color 0.3s ease,
+                box-shadow 0.3s ease;
+  }
+  
+  /* Gold accent glow for dark mode */
+  .dark .gold-glow {
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.2), 0 0 40px rgba(255, 215, 0, 0.1);
+  }
+  
+  .dark .text-gold-shimmer {
+    background: linear-gradient(90deg, #B8860B 0%, #FFD700 50%, #B8860B 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shimmer 3s linear infinite;
+  }
+}
+
+/* Landing Page Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.8s ease-out forwards;
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.8s ease-out forwards;
+  opacity: 0;
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft 0.8s ease-out forwards;
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.8s ease-out forwards;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.6s ease-out forwards;
+  opacity: 0;
+}
+
+/* Hover effects */
+.hover-lift {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px rgba(242, 208, 13, 0.2);
+}
+
+/* Smooth scroll behavior */
+html {
+  scroll-behavior: smooth;
+}
+

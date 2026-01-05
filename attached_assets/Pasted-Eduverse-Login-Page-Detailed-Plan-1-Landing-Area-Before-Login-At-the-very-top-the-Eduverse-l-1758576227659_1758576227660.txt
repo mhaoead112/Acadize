@@ -1,0 +1,98 @@
+Eduverse Login Page (Detailed Plan)
+
+1. Landing Area (Before Login)
+
+At the very top: the Eduverse logo with a soft glowing animation.
+
+A tagline under the logo: “One Universe for All Education”.
+
+Background should feel alive and modern, like floating books, stars, or digital particles that move slightly when the mouse moves.
+
+Three main buttons for role selection:
+
+Student (with a book or graduation cap icon)
+
+Teacher (with a chalkboard or pen icon)
+
+Administrator (with a shield or gear icon)
+
+
+When someone clicks a role, the login box adapts to show custom hints for that role.
+
+
+
+---
+
+2. Login Box
+
+The login box should look modern and futuristic, like transparent glass with glowing edges.
+
+Fields included:
+
+Email or Username
+
+Password
+
+Remember Me option (small toggle)
+
+Login Button (changes text depending on role → “Enter Class” for students, “Start Teaching” for teachers, “Manage System” for admins).
+
+
+Role-specific hints under the fields:
+
+Student role: “Use your Student ID or school email.”
+
+Teacher role: “Use your faculty email for instant access.”
+
+Administrator role: “Use your secured admin key to proceed.”
+
+
+
+
+---
+
+3. Preview Features (Visible Before Login)
+
+Right under the login box, there should be three preview cards explaining benefits for each role:
+
+1. Students: Track progress, join group chats, explore AI quizzes.
+
+
+2. Teachers: Create groups, manage lessons & attendance, use AI grading assistant.
+
+
+3. Administrators: Manage user access, monitor analytics, keep the system secure.
+
+
+
+A community feedback carousel with quotes like:
+
+“Eduverse helped me improve my grades by 30%.”
+
+“Managing my class became so easy with Eduverse.”
+
+
+A floating AI mascot assistant saying: “Need help? I’ll guide you through login.”
+
+
+
+---
+
+4. Footer Area
+
+Small links at the bottom: About • Support • Terms • Privacy
+
+A language selector: EN | AR | FR
+
+A small changing motivational quote, for example:
+
+“Today a reader, tomorrow a leader.”
+
+“Education is the passport to the future.”
+
+
+
+
+---
+
+This way, Eduverse’s login page feels unique, professional, and engaging, not just a boring sign-in form.

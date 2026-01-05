@@ -1,0 +1,195 @@
+import React, { useEffect, useState } from 'react';
+import { Link, useLocation } from "wouter";
+import { School, Menu } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { useTheme } from "@/contexts/ThemeContext";
+import { motion, useScroll, useTransform } from "framer-motion";
+
+const Navbar: React.FC = () => {
+  const [location, setLocation] = useLocation();
+  const { user } = useAuth();
+  const { theme, toggleTheme } = useTheme();
+  const isHome = location === "/" || location === "/home";
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  const { scrollY } = useScroll();
+  const backgroundColor = useTransform(
+    scrollY,
+    [0, 100],
+    ["rgba(255, 255, 255, 0)", "rgba(255, 255, 255, 1)"]
+  );
+  const backgroundColorDark = useTransform(
+    scrollY,
+    [0, 100],
+    ["rgba(10, 25, 47, 0)", "rgba(10, 25, 47, 1)"]
+  );
+  // Theme-aware border colors that increase opacity on scroll
+  const borderColorLight = useTransform(
+    scrollY,
+    [0, 100],
+    ["rgba(226, 232, 240, 0)", "rgba(226, 232, 240, 1)"]
+  );
+  const borderColorDark = useTransform(
+    scrollY,
+    [0, 100],
+    ["rgba(255, 255, 255, 0)", "rgba(255, 255, 255, 0.1)"]
+  );
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const handleFeaturesClick = (e: React.MouseEvent) => {
+    if (isHome) {
+      e.preventDefault();
+      document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      // If not on home, the Link will handle navigation to "/"
+      // We can add a hash to the URL if we want to scroll after navigation, 
+      // but for now just linking to home is fine.
+    }
+  };
+
+  return (
+    <motion.nav 
+      className="absolute top-0 z-50 w-full border-b backdrop-blur-md"
+      style={{
+        backgroundColor: theme === 'dark' ? backgroundColorDark : backgroundColor,
+        borderColor: theme === 'dark' ? borderColorDark : borderColorLight,
+      }}
+      initial={{ y: -100 }}
+      animate={{ y: 0 }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
+    >
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex h-16 items-center justify-between">
+          {/* Logo */}
+          <Link href="/">
+            <motion.div 
+              className="flex items-center gap-2 cursor-pointer"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <motion.div 
+                className="flex size-8 items-center justify-center rounded-lg bg-primary text-background-dark"
+                whileHover={{ rotate: 360 }}
+                transition={{ duration: 0.6 }}
+              >
+                <School className="h-5 w-5" />
+              </motion.div>
+              <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">EduVerse</span>
+            </motion.div>
+          </Link>
+
+          {/* Desktop Menu */}
+          <div className="hidden md:flex items-center gap-8">
+            <Link href={isHome ? "#features" : "/"}>
+              <motion.span 
+                className="text-sm font-semibold text-slate-700 dark:text-slate-300 hover:text-primary dark:hover:text-primary transition-colors cursor-pointer"
+                onClick={handleFeaturesClick}
+                whileHover={{ y: -2 }}
+                whileTap={{ y: 0 }}
+              >
+                Features
+              </motion.span>
+            </Link>
+            <Link href="/pricing">
+              <motion.span 
+                className={`text-sm font-semibold transition-colors cursor-pointer ${location === '/pricing' ? 'text-primary' : 'text-slate-700 dark:text-slate-300 hover:text-primary dark:hover:text-primary'}`}
+                whileHover={{ y: -2 }}
+                whileTap={{ y: 0 }}
+              >
+                Pricing
+              </motion.span>
+            </Link>
+            <Link href="/docs">
+              <motion.span 
+                className={`text-sm font-semibold transition-colors cursor-pointer ${location === '/docs' ? 'text-primary' : 'text-slate-700 dark:text-slate-300 hover:text-primary dark:hover:text-primary'}`}
+                whileHover={{ y: -2 }}
+                whileTap={{ y: 0 }}
+              >
+                Docs
+              </motion.span>
+            </Link>
+            <Link href="/contact">
+              <motion.span 
+                className={`text-sm font-semibold transition-colors cursor-pointer ${location === '/contact' ? 'text-primary' : 'text-slate-700 dark:text-slate-300 hover:text-primary dark:hover:text-primary'}`}
+                whileHover={{ y: -2 }}
+                whileTap={{ y: 0 }}
+              >
+                Contact
+              </motion.span>
+            </Link>
+          </div>
+
+          {/* Auth Buttons */}
+          <div className="flex items-center gap-3">
+            {/* Theme Toggle */}
+            <motion.button
+              onClick={toggleTheme}
+              className="hidden md:flex items-center justify-center rounded-full p-2.5 bg-slate-100 dark:bg-[#112240] border border-slate-300 dark:border-white/10 hover:border-slate-400 dark:hover:border-white/20 transition-all shadow-sm"
+              aria-label="Toggle theme"
+              whileHover={{ scale: 1.1, rotate: 180 }}
+              whileTap={{ scale: 0.9 }}
+              transition={{ type: "spring", stiffness: 400, damping: 17 }}
+            >
+              <span className="material-symbols-outlined text-slate-800 dark:text-white text-[20px]">
+                {theme === 'dark' ? 'light_mode' : 'dark_mode'}
+              </span>
+            </motion.button>
+            
+            {user ? (
+              <Link href={user.role === 'admin' ? '/admin/dashboard' : user.role === 'teacher' ? '/teacher/dashboard' : user.role === 'parent' ? '/parent/dashboard' : '/student/dashboard'}>
+                <motion.button 
+                  className="hidden md:flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-bold text-slate-900 dark:text-white transition-colors hover:bg-slate-100 dark:hover:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 shadow-sm"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  Dashboard
+                </motion.button>
+              </Link>
+            ) : (
+              <Link href="/login">
+                <motion.button 
+                  className="hidden md:flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-bold text-slate-900 dark:text-white transition-colors hover:bg-slate-100 dark:hover:bg-white/5 border border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 shadow-sm"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  Log In
+                </motion.button>
+              </Link>
+            )}
+            {!user && (
+              <Link href="/register">
+                <motion.button 
+                  className="flex items-center justify-center rounded-lg bg-primary px-4 py-2 text-sm font-bold text-background-dark shadow-[0_0_15px_rgba(242,208,13,0.3)]"
+                  whileHover={{ 
+                    scale: 1.05,
+                    boxShadow: "0 0 25px rgba(242,208,13,0.5)"
+                  }}
+                  whileTap={{ scale: 0.95 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                >
+                  Get Started
+                </motion.button>
+              </Link>
+            )}
+            {/* Mobile Menu Button */}
+            <motion.button 
+              className="md:hidden p-2 text-slate-600 dark:text-text-muted hover:text-slate-900 dark:hover:text-white"
+              whileTap={{ scale: 0.9 }}
+            >
+              <Menu className="h-6 w-6" />
+            </motion.button>
+          </div>
+        </div>
+      </div>
+    </motion.nav>
+  );
+};
+
+export default Navbar;

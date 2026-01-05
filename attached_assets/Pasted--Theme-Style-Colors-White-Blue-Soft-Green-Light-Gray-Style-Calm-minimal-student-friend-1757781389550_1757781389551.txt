@@ -1,0 +1,164 @@
+🎨 Theme & Style
+
+Colors: White, Blue, Soft Green, Light Gray 
+
+Style: Calm, minimal, student-friendly.
+
+Responsive: Works smoothly on Mobile, Tablet, Desktop.
+
+Roles: Students, Teachers, Parents, Admins.
+
+
+
+---
+
+🎓 Student Features (MVP)
+
+1. Dashboard
+
+Courses list (Math, Science, English, Coding).
+
+Progress bar for each subject.
+
+
+
+2. AI Tutor (Placeholder)
+
+Friendly text box for explanations.
+
+Example: “Explain fractions → Coming Soon 🍕”.
+
+
+
+3. Chat (Basic MVP)
+
+WhatsApp-like group chat.
+
+Emojis support.
+
+
+
+4. Quizzes (Simple)
+
+Multiple-choice quiz with auto-grade.
+
+
+
+5. Achievements
+
+Points + “Starter Badge” for completing first quiz.
+
+
+
+
+
+---
+
+👨‍🏫 Teacher Features (MVP)
+
+1. Dashboard
+
+Upload lessons (PDF/Video placeholder).
+
+Create quizzes & assignments.
+
+
+
+2. Messaging
+
+Chat with students & parents.
+
+
+
+
+
+---
+
+👪 Parent Features (MVP)
+
+1. Parent Dashboard
+
+Track grades + attendance summary.
+
+
+
+2. Reports
+
+Weekly progress (basic table format).
+
+
+
+
+
+---
+
+🏫 Admin Features (MVP)
+
+1. Admin Dashboard
+
+Add/remove accounts (students/teachers/parents).
+
+Approve courses.
+
+
+
+2. Reports
+
+Attendance + grades overview.
+
+
+
+
+
+---
+
+🌍 Extra Unique Features (New for MVP)
+
+Study Planner (AI Placeholder): Students get daily/weekly plan.
+
+Avatars (Simple MVP): Cartoon smiling profile icons.
+
+Gamification (Starter): Leaderboard with points.
+
+Global Classroom (Demo): Students from different schools appear in same course list.
+
+
+
+---
+
+🔮 Future Features (For Investors)
+
+1. AI Debate Mode 🗣
+Students practice debating with AI and peers.
+
+
+2. AI Art & Music Studio 🎨🎶
+Create paintings, songs, and projects with AI support.
+
+
+3. Coding Playground 💻
+Students practice coding (Python, Java, HTML) directly in-browser.
+
+
+4. VR & 3D Lessons 🕶
+Explore pyramids of Egypt, space missions, or science labs in VR classrooms.
+
+
+5. AI Career Guide 🚀
+Suggests career paths based on student strengths.
+
+
+6. AI Wellness Coach 🧘
+Helps with focus, mental health, and balance reminders.
+
+
+7. Marketplace 🛒
+Buy books, VR packs, and extra courses.
+
+
+8. Offline Mode 📥
+Download lessons to study without internet.
+
+
+9. Global Classrooms 🌎
+Connect students from different countries in one platform.
