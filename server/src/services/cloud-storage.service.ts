@@ -70,6 +70,7 @@ export async function uploadFile(
       resource_type: options.resourceType || 'auto',
       use_filename: true,
       unique_filename: true,
+      access_mode: 'public',
     });
 
     // Delete local file after successful upload to cloud
@@ -134,6 +135,7 @@ export async function uploadBuffer(
         resource_type: options.resourceType || 'auto',
         use_filename: true,
         unique_filename: true,
+        access_mode: 'public',
       },
       (error, result) => {
         if (error) {

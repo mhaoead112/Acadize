@@ -136,7 +136,7 @@ export default function Login() {
         <div className="absolute -left-20 top-20 w-72 h-72 bg-blue-900/10 rounded-full blur-3xl pointer-events-none"></div>
 
         {/* Login Card Container */}
-        <div className="w-full max-w-6xl bg-white dark:bg-card-dark rounded-2xl shadow-2xl flex overflow-hidden z-10 border border-slate-200 dark:border-border-dark min-h-[600px] transition-colors duration-300">
+        <div className="w-full max-w-6xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl flex overflow-hidden z-10 border border-slate-200 dark:border-slate-700 min-h-[600px] transition-colors duration-300">
           {/* Left Side: Login Form */}
           <div className="w-full lg:w-1/2 p-8 md:p-12 lg:p-16 flex flex-col justify-center">
             <div className="max-w-[400px] mx-auto w-full">
@@ -152,9 +152,9 @@ export default function Login() {
                 <label className="flex flex-col gap-2">
                   <span className="text-slate-900 dark:text-white text-sm font-medium leading-normal transition-colors duration-300">Student ID / Email</span>
                   <div className="relative">
-                    <School className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 dark:text-[#cbc290] h-5 w-5 transition-colors duration-300" />
+                    <School className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400 h-5 w-5 transition-colors duration-300" />
                     <input 
-                      className="form-input w-full rounded-lg text-slate-900 dark:text-[#1a180c] placeholder:text-slate-500 dark:placeholder:text-[#8a7d4d] border border-slate-300 dark:border-[#686031] bg-white dark:bg-[#f5f3e8] focus:border-primary focus:ring-1 focus:ring-primary h-12 pl-12 pr-4 text-base transition-colors duration-300" 
+                      className="form-input w-full rounded-lg text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-slate-400 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-primary focus:ring-1 focus:ring-primary h-12 pl-12 pr-4 text-base transition-colors duration-300" 
                       placeholder="e.g. student@university.edu" 
                       type="text"
                       name="email"
@@ -172,11 +172,11 @@ export default function Login() {
                     <a className="text-sm font-medium text-primary hover:text-yellow-400 transition-colors cursor-pointer" onClick={() => setLocation('/forgot-password')}>Forgot Password?</a>
                   </div>
                   <div className="relative">
-                    <svg className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 dark:text-[#cbc290] h-5 w-5 transition-colors duration-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400 h-5 w-5 transition-colors duration-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                     </svg>
                     <input 
-                      className="form-input w-full rounded-lg text-slate-900 dark:text-[#1a180c] placeholder:text-slate-500 dark:placeholder:text-[#8a7d4d] border border-slate-300 dark:border-[#686031] bg-white dark:bg-[#f5f3e8] focus:border-primary focus:ring-1 focus:ring-primary h-12 pl-12 pr-12 text-base transition-colors duration-300" 
+                      className="form-input w-full rounded-lg text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-slate-400 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-primary focus:ring-1 focus:ring-primary h-12 pl-12 pr-12 text-base transition-colors duration-300" 
                       placeholder="Enter your password" 
                       type={showPassword ? "text" : "password"}
                       name="password"
@@ -185,7 +185,7 @@ export default function Login() {
                       disabled={isLoading}
                     />
                     <button 
-                      className="absolute right-0 top-0 h-full px-4 flex items-center text-slate-500 dark:text-[#cbc290] hover:text-slate-700 dark:hover:text-white transition-colors duration-300" 
+                      className="absolute right-0 top-0 h-full px-4 flex items-center text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors duration-300" 
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
                     >
