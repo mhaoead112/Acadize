@@ -158,29 +158,29 @@ const StudentMistakes: React.FC = () => {
             </p>
           </div>
           <div className="flex gap-4">
-            <div className="dark:bg-background-card bg-white p-4 rounded-xl dark:border-slate-700 border border-slate-200 shadow-sm min-w-[140px]">
+            <div className="dark:bg-navy-card bg-white p-4 rounded-xl dark:border-navy-border border border-slate-200 shadow-sm min-w-[140px]">
               <div className="flex items-center gap-2 mb-1">
                 <div className="size-2 rounded-full bg-red-500"></div>
-                <span className="text-xs dark:text-slate-500 text-slate-600 uppercase font-bold tracking-wider">Active</span>
+                <span className="text-xs dark:text-slate-400 text-slate-600 uppercase font-bold tracking-wider">Active</span>
               </div>
               <div className="text-3xl font-bold dark:text-white text-slate-900">{activeMistakes.length}</div>
-              <div className="text-xs dark:text-slate-500 text-slate-600">To review</div>
+              <div className="text-xs dark:text-slate-400 text-slate-600">To review</div>
             </div>
-            <div className="dark:bg-background-card bg-white p-4 rounded-xl dark:border-slate-700 border border-slate-200 shadow-sm min-w-[140px]">
+            <div className="dark:bg-navy-card bg-white p-4 rounded-xl dark:border-navy-border border border-slate-200 shadow-sm min-w-[140px]">
               <div className="flex items-center gap-2 mb-1">
                 <div className="size-2 rounded-full dark:bg-primary bg-yellow-400"></div>
-                <span className="text-xs dark:text-slate-500 text-slate-600 uppercase font-bold tracking-wider">Resolved</span>
+                <span className="text-xs dark:text-slate-400 text-slate-600 uppercase font-bold tracking-wider">Resolved</span>
               </div>
               <div className="text-3xl font-bold dark:text-white text-slate-900">{resolvedMistakes.length}</div>
-              <div className="text-xs dark:text-slate-500 text-slate-600">Mastered</div>
+              <div className="text-xs dark:text-slate-400 text-slate-600">Mastered</div>
             </div>
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           <aside className="lg:col-span-3 space-y-6">
-            <div className="dark:bg-background-card bg-white rounded-xl dark:border-slate-700 border border-slate-200 overflow-hidden shadow-sm">
-              <div className="p-4 border-b dark:border-slate-700 border-slate-200 dark:bg-slate-800/50 bg-slate-50">
+            <div className="dark:bg-navy-card bg-white rounded-xl dark:border-navy-border border border-slate-200 overflow-hidden shadow-sm">
+              <div className="p-4 border-b dark:border-navy-border border-slate-200 dark:bg-navy-dark/50 bg-slate-50">
                 <h3 className="font-bold dark:text-white text-slate-900 flex items-center gap-2">
                   <span className="material-symbols-outlined dark:text-primary text-yellow-600 text-[20px]">pie_chart</span>
                   Error Distribution
@@ -188,7 +188,7 @@ const StudentMistakes: React.FC = () => {
               </div>
               <div className="p-4 space-y-4">
                 {topics.length === 0 ? (
-                  <p className="text-sm dark:text-slate-500 text-slate-600 text-center py-4">No topics yet</p>
+                  <p className="text-sm dark:text-slate-400 text-slate-600 text-center py-4">No topics yet</p>
                 ) : (
                   topics.map(topic => {
                     const topicActive = activeMistakes.filter(q => q.topic === topic.topic).length;
@@ -198,7 +198,7 @@ const StudentMistakes: React.FC = () => {
                           <span className="dark:text-slate-300 text-slate-700">{topic.topic}</span>
                           <span className="font-mono dark:text-primary text-yellow-600">{topicActive} left</span>
                         </div>
-                        <div className="h-1.5 w-full dark:bg-slate-700 bg-slate-200 rounded-full overflow-hidden">
+                        <div className="h-1.5 w-full dark:bg-navy-border bg-slate-200 rounded-full overflow-hidden">
                           <div className="h-full dark:bg-primary bg-yellow-400 rounded-full" style={{ width: `${Math.min(100, (topicActive / 5) * 100)}%` }}></div>
                         </div>
                       </div>
@@ -208,7 +208,7 @@ const StudentMistakes: React.FC = () => {
               </div>
             </div>
 
-            <div className="dark:bg-background-card bg-white rounded-xl dark:border-slate-700 border border-slate-200 p-5 shadow-sm sticky top-24 space-y-3">
+            <div className="dark:bg-navy-card bg-white rounded-xl dark:border-navy-border border border-slate-200 p-5 shadow-sm sticky top-24 space-y-3">
               <button 
                 onClick={() => setLocation('/student/retake-config')}
                 className="w-full py-3 px-4 dark:bg-primary dark:hover:bg-yellow-400 dark:text-navy-dark bg-yellow-400 hover:bg-yellow-500 text-slate-900 font-bold rounded-lg dark:shadow-lg dark:shadow-primary/20 shadow-lg shadow-yellow-400/20 transition-all flex items-center justify-center gap-2 group"
@@ -218,7 +218,7 @@ const StudentMistakes: React.FC = () => {
               </button>
               <button 
                 onClick={() => setLocation('/student/exams')}
-                className="w-full py-2.5 px-4 dark:bg-navy-lighter dark:hover:bg-navy-border dark:text-white dark:border dark:border-navy-border bg-slate-200 hover:bg-slate-300 text-slate-900 rounded-lg transition-all flex items-center justify-center gap-2 text-sm font-medium"
+                className="w-full py-2.5 px-4 dark:bg-navy-dark dark:hover:bg-navy-border dark:text-white dark:border dark:border-navy-border bg-slate-200 hover:bg-slate-300 text-slate-900 rounded-lg transition-all flex items-center justify-center gap-2 text-sm font-medium"
               >
                 <span className="material-symbols-outlined text-[20px]">assignment</span>
                 Go to Exams Center
@@ -237,19 +237,19 @@ const StudentMistakes: React.FC = () => {
                 </div>
               </div>
               {activeMistakes.length === 0 ? (
-                <div className="dark:bg-navy-lighter/30 bg-slate-50 border-2 border-dashed dark:border-slate-700 border-slate-200 rounded-2xl p-12 text-center">
+                <div className="dark:bg-navy-dark/50 bg-slate-50 border-2 border-dashed dark:border-navy-border border-slate-200 rounded-2xl p-12 text-center">
                   <span className="material-symbols-outlined text-6xl dark:text-slate-600 text-slate-300 mb-4">task_alt</span>
                   <p className="dark:text-slate-400 text-slate-500 font-medium">No active mistakes to review. Keep up the great work!</p>
                 </div>
               ) : (
                 <div className="space-y-4">
                   {activeMistakes.map(q => (
-                    <div key={q.mistakeId} className="group relative dark:bg-background-card bg-white border border-l-4 dark:border-slate-700 border-slate-200 border-l-red-500 rounded-r-xl p-5 shadow-sm hover:shadow-md transition-all duration-300">
+                    <div key={q.mistakeId} className="group relative dark:bg-navy-card bg-white border border-l-4 dark:border-navy-border border-slate-200 border-l-red-500 rounded-r-xl p-5 shadow-sm hover:shadow-md transition-all duration-300">
                       <div className="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
                         <div className="space-y-3 flex-1">
                           <div className="flex flex-wrap items-center gap-2">
-                            <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-red-500/10 text-red-400 border border-red-500/20">{q.difficultyLevel || 'medium'}</span>
-                            <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider dark:bg-slate-700 bg-slate-200 dark:text-slate-300 text-slate-700 dark:border-slate-600 border border-slate-300 flex items-center gap-1">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider dark:bg-red-500/20 bg-red-500/10 dark:text-red-400 text-red-600 border dark:border-red-500/30 border-red-500/20">{q.difficultyLevel || 'medium'}</span>
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider dark:bg-navy-border bg-slate-200 dark:text-slate-300 text-slate-700 dark:border-navy-border border border-slate-300 flex items-center gap-1">
                               <span className="material-symbols-outlined text-[12px]">repeat</span> {q.repetitionCount}x Error
                             </span>
                             <span className="text-xs dark:text-slate-400 text-slate-600 flex items-center gap-1">
@@ -296,7 +296,7 @@ const StudentMistakes: React.FC = () => {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {resolvedMistakes.map(q => (
-                    <div key={q.mistakeId} className="dark:bg-background-card bg-white dark:border-slate-700 border border-slate-200 rounded-xl p-4 flex items-center gap-4">
+                    <div key={q.mistakeId} className="dark:bg-navy-card bg-white dark:border-navy-border border border-slate-200 rounded-xl p-4 flex items-center gap-4">
                       <div className="size-10 rounded-full bg-green-500/10 flex items-center justify-center text-green-500 shrink-0">
                         <span className="material-symbols-outlined">check</span>
                       </div>

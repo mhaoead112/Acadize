@@ -1,0 +1,57 @@
+/* React Quill Dark Mode Styles */
+.dark .ql-toolbar {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+.dark .ql-container {
+  background: #0f172a;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+
+.dark .ql-editor.ql-blank::before {
+  color: #64748b;
+}
+
+.dark .ql-stroke {
+  stroke: #e2e8f0;
+}
+
+.dark .ql-fill {
+  fill: #e2e8f0;
+}
+
+.dark .ql-picker-label {
+  color: #e2e8f0;
+}
+
+.dark .ql-picker-options {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.dark .ql-toolbar button:hover,
+.dark .ql-toolbar button:focus {
+  background: #1e293b;
+}
+
+.dark .ql-toolbar button.ql-active {
+  background: #334155;
+}
+
+/* Light mode styles */
+.ql-toolbar {
+  background: #ffffff;
+  border-color: #cbd5e1;
+}
+
+.ql-container {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+.ql-editor {
+  min-height: 300px;
+}

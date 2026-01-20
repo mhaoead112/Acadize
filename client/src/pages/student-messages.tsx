@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,7 +29,7 @@ interface Teacher {
 }
 
 interface Message {
-  id: number;
+  id: number | string;
   senderId: number | string;
   senderName: string;
   content: string;
@@ -56,6 +56,7 @@ export default function StudentMessages() {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchTeachers();
@@ -68,12 +69,18 @@ export default function StudentMessages() {
   }, [selectedTeacher]);
 
   useEffect(() => {
-    scrollToBottom();
+    // Use setTimeout to ensure DOM is updated before scrolling
+    const timer = setTimeout(() => {
+      scrollToBottom();
+    }, 50);
+    return () => clearTimeout(timer);
   }, [messages]);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  const scrollToBottom = useCallback(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, []);
 
   const fetchTeachers = async () => {
     try {
@@ -205,24 +212,36 @@ export default function StudentMessages() {
     }
   };
 
+  // Helper function to check if message is from current user
+  const isFromCurrentUser = (senderId: number | string): boolean => {
+    if (!user?.id) return false;
+    return String(senderId) === String(user.id);
+  };
+
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !selectedTeacher || sending) return;
 
     const messageContent = newMessage;
+    const messageId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     setNewMessage(""); // Clear input immediately
     setSending(true);
     
     // Add message to local state optimistically
     const newMsg: Message = {
-      id: Date.now(),
-      senderId: user?.id || 0,
+      id: messageId,
+      senderId: user?.id || 'current_user',
       senderName: "You",
       content: messageContent,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       isRead: false,
       isSent: true
     };
-    setMessages(prevMessages => [...prevMessages, newMsg]);
+    
+    // Use functional update to ensure we have the latest state
+    setMessages(prevMessages => {
+      const updated = [...prevMessages, newMsg];
+      return updated;
+    });
 
     // Update last message in teacher list
     setTeachers(teachers.map(t => 
@@ -364,36 +383,39 @@ export default function StudentMessages() {
                   </div>
 
                   {/* Messages */}
-                  <ScrollArea className="flex-1 p-4">
-                    <div className="space-y-4">
-                      {messages.map((message) => (
-                        <div
-                          key={message.id}
-                          className={`flex ${message.senderId === user?.id ? 'justify-end' : 'justify-start'}`}
-                        >
+                  <ScrollArea className="flex-1 p-4" key={`scroll-${messages.length}`}>
+                    <div className="space-y-4" ref={messagesContainerRef}>
+                      {messages.map((message, index) => {
+                        const isMine = isFromCurrentUser(message.senderId);
+                        return (
                           <div
-                            className={`max-w-[70%] rounded-2xl px-4 py-2 ${
-                              message.senderId === user?.id
-                                ? 'bg-primary dark:bg-gold text-white dark:text-navy'
-                                : 'bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-white'
-                            }`}
+                            key={`${message.id}-${index}`}
+                            className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}
                           >
-                            <p>{message.content}</p>
-                            <div className={`flex items-center justify-end gap-1 mt-1 text-xs ${
-                              message.senderId === user?.id ? 'text-white/70 dark:text-navy/70' : 'text-slate-600 dark:text-slate-400'
-                            }`}>
-                              <span>{message.timestamp}</span>
-                              {message.senderId === user?.id && (
-                                message.isRead ? (
-                                  <CheckCheck className="h-3 w-3" />
-                                ) : (
-                                  <Check className="h-3 w-3" />
-                                )
-                              )}
+                            <div
+                              className={`max-w-[70%] rounded-2xl px-4 py-2 ${
+                                isMine
+                                  ? 'bg-primary dark:bg-gold text-white dark:text-navy'
+                                  : 'bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-white'
+                              }`}
+                            >
+                              <p>{message.content}</p>
+                              <div className={`flex items-center justify-end gap-1 mt-1 text-xs ${
+                                isMine ? 'text-white/70 dark:text-navy/70' : 'text-slate-600 dark:text-slate-400'
+                              }`}>
+                                <span>{message.timestamp}</span>
+                                {isMine && (
+                                  message.isRead ? (
+                                    <CheckCheck className="h-3 w-3" />
+                                  ) : (
+                                    <Check className="h-3 w-3" />
+                                  )
+                                )}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                       <div ref={messagesEndRef} />
                     </div>
                   </ScrollArea>

@@ -6,8 +6,8 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { storage } from "./storage";
-import { 
-  insertApplicationSchema, insertContactSchema, insertChatMessageSchema, 
+import {
+  insertApplicationSchema, insertContactSchema, insertChatMessageSchema,
   insertGroupSchema, insertGroupMemberSchema, insertUserSchema,
   insertGroupMessageSchema, insertMessageReactionSchema, insertGroupPollSchema,
   insertPollVoteSchema, insertRaiseHandRequestSchema, insertFileAttachmentSchema,
@@ -87,16 +87,16 @@ const forgotPasswordRateLimit = rateLimit({
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // ==================== AUTHENTICATION ROUTES ====================
-  
+
   // Register new user
   app.post("/api/auth/register", authRateLimit, authSlowDown, async (req, res) => {
     try {
       // Validate request body using Zod schema
       const validationResult = registerSchema.safeParse(req.body);
       if (!validationResult.success) {
-        return res.status(400).json({ 
-          message: "Validation failed", 
-          errors: validationResult.error.flatten().fieldErrors 
+        return res.status(400).json({
+          message: "Validation failed",
+          errors: validationResult.error.flatten().fieldErrors
         });
       }
 
@@ -144,7 +144,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         httpOnly: true, // Prevent XSS attacks
         secure: process.env.NODE_ENV === 'production', // HTTPS only in production
         sameSite: 'strict', // CSRF protection
-        maxAge: 2 * 60 * 60 * 1000, // 2 hours (matches token expiry)
+        maxAge: 4 * 60 * 60 * 1000, // 4 hours (matches token expiry)
         path: '/' // Available for all routes
       });
 
@@ -167,9 +167,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Validate request body using Zod schema
       const validationResult = loginSchema.safeParse(req.body);
       if (!validationResult.success) {
-        return res.status(400).json({ 
-          message: "Validation failed", 
-          errors: validationResult.error.flatten().fieldErrors 
+        return res.status(400).json({
+          message: "Validation failed",
+          errors: validationResult.error.flatten().fieldErrors
         });
       }
 
@@ -221,9 +221,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Validate request body using Zod schema
       const validationResult = forgotPasswordSchema.safeParse(req.body);
       if (!validationResult.success) {
-        return res.status(400).json({ 
-          message: "Validation failed", 
-          errors: validationResult.error.flatten().fieldErrors 
+        return res.status(400).json({
+          message: "Validation failed",
+          errors: validationResult.error.flatten().fieldErrors
         });
       }
 
@@ -242,7 +242,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Hash token before storing (security best practice)
       const saltRounds = 12;
       const hashedToken = await bcrypt.hash(resetToken, saltRounds);
-      
+
       await storage.setPasswordResetToken(user.id, hashedToken, resetExpires);
 
       // In a real app, you would send an email here
@@ -253,7 +253,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log('Password reset token generated for user');
       }
 
-      res.json({ 
+      res.json({
         message: "If the email exists, a password reset link has been sent"
         // SECURITY: Never echo tokens in responses
       });
@@ -269,9 +269,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Validate request body using Zod schema
       const validationResult = resetPasswordSchema.safeParse(req.body);
       if (!validationResult.success) {
-        return res.status(400).json({ 
-          message: "Validation failed", 
-          errors: validationResult.error.flatten().fieldErrors 
+        return res.status(400).json({
+          message: "Validation failed",
+          errors: validationResult.error.flatten().fieldErrors
         });
       }
 
@@ -280,14 +280,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get all users with reset tokens and find matching hash
       const usersWithResetTokens = await storage.getUsersWithActiveResetTokens();
       let matchedUser = null;
-      
+
       for (const user of usersWithResetTokens) {
         if (user.passwordResetToken && user.passwordResetExpires) {
           // Check if token is expired first
           if (new Date() > user.passwordResetExpires) {
             continue;
           }
-          
+
           // Compare provided token with hashed token in database
           const isTokenValid = await bcrypt.compare(token, user.passwordResetToken);
           if (isTokenValid) {
@@ -296,7 +296,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         }
       }
-      
+
       if (!matchedUser) {
         return res.status(400).json({ message: "Invalid or expired reset token" });
       }
@@ -307,7 +307,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Update password and clear reset token
       await storage.updatePassword(matchedUser.id, passwordHash);
-      
+
       // Clear the reset token after successful use (security best practice)
       await storage.clearPasswordResetToken(matchedUser.id);
 
@@ -324,9 +324,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Validate request body using Zod schema
       const validationResult = verifyEmailSchema.safeParse(req.body);
       if (!validationResult.success) {
-        return res.status(400).json({ 
-          message: "Validation failed", 
-          errors: validationResult.error.flatten().fieldErrors 
+        return res.status(400).json({
+          message: "Validation failed",
+          errors: validationResult.error.flatten().fieldErrors
         });
       }
 
@@ -335,7 +335,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get all users with verification tokens and find matching hash (constant-time comparison)
       const usersWithVerificationTokens = await storage.getUsersWithActiveVerificationTokens();
       let matchedUser = null;
-      
+
       for (const user of usersWithVerificationTokens) {
         if (user.emailVerificationToken) {
           // Compare provided token with hashed token in database using constant-time comparison
@@ -346,7 +346,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         }
       }
-      
+
       if (!matchedUser) {
         return res.status(400).json({ message: "Invalid verification token" });
       }
@@ -371,7 +371,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Don't return password hash
       const { password: _, ...userWithoutPassword } = user;
-      
+
       res.json(userWithoutPassword);
     } catch (error) {
       console.error("Get profile error:", error);
@@ -385,9 +385,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Validate request body using Zod schema
       const validationResult = elevateRoleSchema.safeParse(req.body);
       if (!validationResult.success) {
-        return res.status(400).json({ 
-          message: "Validation failed", 
-          errors: validationResult.error.flatten().fieldErrors 
+        return res.status(400).json({
+          message: "Validation failed",
+          errors: validationResult.error.flatten().fieldErrors
         });
       }
 
@@ -429,7 +429,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Clear the auth cookie
       res.clearCookie('auth_token');
-      
+
       res.json({ message: "Logout successful" });
     } catch (error) {
       console.error("Logout error:", error);
@@ -447,64 +447,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
         role: "student" | "teacher" | "admin" | "parent";
         password: string;
       }> = [
-        {
-          username: "student_demo",
-          email: "student@eduverse.demo",
-          fullName: "Alex Student",
-          role: "student",
-          password: "demo123"
-        },
-        {
-          username: "teacher_demo",
-          email: "teacher@eduverse.demo", 
-          fullName: "Sarah Teacher",
-          role: "teacher",
-          password: "demo123"
-        },
-        {
-          username: "admin_demo",
-          email: "admin@eduverse.demo",
-          fullName: "Mike Administrator",
-          role: "admin",
-          password: "demo123"
-        },
-        {
-          username: "parent_demo",
-          email: "parent@eduverse.demo",
-          fullName: "Lisa Parent",
-          role: "parent",
-          password: "demo123"
-        },
-        // Users who can function as both student and teacher
-        {
-          username: "teaching_assistant",
-          email: "ta@eduverse.demo",
-          fullName: "Jordan Teaching Assistant",
-          role: "student",
-          password: "demo123"
-        },
-        {
-          username: "grad_instructor",
-          email: "grad@eduverse.demo",
-          fullName: "Taylor Graduate Instructor",
-          role: "teacher",
-          password: "demo123"
-        },
-        {
-          username: "continuing_teacher",
-          email: "continuing@eduverse.demo",
-          fullName: "Morgan Continuing Education",
-          role: "teacher",
-          password: "demo123"
-        },
-        {
-          username: "student_teacher",
-          email: "studentteacher@eduverse.demo",
-          fullName: "Casey Student Teacher",
-          role: "student",
-          password: "demo123"
-        }
-      ];
+          {
+            username: "student_demo",
+            email: "student@eduverse.demo",
+            fullName: "Alex Student",
+            role: "student",
+            password: "demo123"
+          },
+          {
+            username: "teacher_demo",
+            email: "teacher@eduverse.demo",
+            fullName: "Sarah Teacher",
+            role: "teacher",
+            password: "demo123"
+          },
+          {
+            username: "admin_demo",
+            email: "admin@eduverse.demo",
+            fullName: "Mike Administrator",
+            role: "admin",
+            password: "demo123"
+          },
+          {
+            username: "parent_demo",
+            email: "parent@eduverse.demo",
+            fullName: "Lisa Parent",
+            role: "parent",
+            password: "demo123"
+          },
+          // Users who can function as both student and teacher
+          {
+            username: "teaching_assistant",
+            email: "ta@eduverse.demo",
+            fullName: "Jordan Teaching Assistant",
+            role: "student",
+            password: "demo123"
+          },
+          {
+            username: "grad_instructor",
+            email: "grad@eduverse.demo",
+            fullName: "Taylor Graduate Instructor",
+            role: "teacher",
+            password: "demo123"
+          },
+          {
+            username: "continuing_teacher",
+            email: "continuing@eduverse.demo",
+            fullName: "Morgan Continuing Education",
+            role: "teacher",
+            password: "demo123"
+          },
+          {
+            username: "student_teacher",
+            email: "studentteacher@eduverse.demo",
+            fullName: "Casey Student Teacher",
+            role: "student",
+            password: "demo123"
+          }
+        ];
 
       const createdUsers = [];
       for (const demoUser of demoUsers) {
@@ -604,14 +604,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/chat", async (req, res) => {
     const startTime = Date.now();
     console.log(`[API Chat] Request received at ${new Date().toISOString()}`);
-    
+
     try {
       const { message, buddyType = 'general', chatMode = 'buddy' } = req.body;
-      
+
       // Enhanced input validation
       if (!message || typeof message !== 'string') {
         console.error('[API Chat] Invalid input: missing or invalid message');
-        return res.status(400).json({ 
+        return res.status(400).json({
           message: "Message is required and must be a string",
           response: "Please provide a valid message to continue our conversation.",
           demoMode: isDemoMode,
@@ -622,7 +622,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (message.trim().length === 0) {
         console.error('[API Chat] Invalid input: empty message');
-        return res.status(400).json({ 
+        return res.status(400).json({
           message: "Message cannot be empty",
           response: "Please type a question or message for me to help you with!",
           demoMode: isDemoMode,
@@ -673,13 +673,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       const processingTime = Date.now() - startTime;
       console.error(`[API Chat] Critical error after ${processingTime}ms:`, error);
-      
+
       // Production-safe fallback response - never break the chat interface
       const { message, buddyType = 'general', chatMode = 'buddy' } = req.body;
-      
+
       // Determine appropriate fallback message based on buddy type
       let fallbackResponse = "I'm experiencing some technical difficulties right now, but I'm still here to help! Please try asking your question again, or feel free to contact our support team.";
-      
+
       if (buddyType === 'funny') {
         fallbackResponse = "Oops! 😅 Looks like I got a bit tangled up in the digital wires! Don't worry though - even the best of us have our 'oops' moments. Try asking me again, and I'll be right back to my helpful, fun-loving self! 🚀";
       } else if (buddyType === 'serious') {
@@ -785,7 +785,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Enhanced group management endpoints
-  
+
   // Get public groups (for navigation/discovery)
   app.get("/api/groups/public", async (req, res) => {
     try {
@@ -836,7 +836,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { groupId, userId } = req.params;
       const { role } = req.body;
-      
+
       // Check if requester is admin or moderator
       const requesterRole = await storage.getGroupMemberRole(groupId, req.userId!);
       if (requesterRole !== 'admin' && requesterRole !== 'moderator') {
@@ -858,7 +858,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/groups/:groupId/members/:userId", async (req: AuthenticatedRequest, res) => {
     try {
       const { groupId, userId } = req.params;
-      
+
       // Check if requester has permission to remove members
       const requesterRole = await storage.getGroupMemberRole(groupId, req.userId!);
       if (requesterRole !== 'admin' && requesterRole !== 'moderator' && req.userId !== userId) {
@@ -881,7 +881,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const groupId = req.params.groupId;
       const { settings } = req.body;
-      
+
       // Check if requester is admin
       const requesterRole = await storage.getGroupMemberRole(groupId, req.userId!);
       if (requesterRole !== 'admin') {
@@ -924,14 +924,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { role } = req.params;
       const validRoles = ['student', 'teacher', 'parent', 'admin'];
-      
+
       if (!validRoles.includes(role)) {
         return res.status(400).json({ message: "Invalid role. Must be one of: student, teacher, parent, admin" });
       }
-      
+
       const allUsers = await storage.getUsers();
       const filteredUsers = allUsers.filter(user => user.role === role);
-      
+
       // Remove sensitive data
       const safeUsers = filteredUsers.map(({ password, ...user }) => user);
       res.json(safeUsers);
@@ -945,7 +945,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const allUsers = await storage.getUsers();
       const students = allUsers.filter(user => user.role === 'student');
-      
+
       // Remove sensitive data
       const safeStudents = students.map(({ password, ...user }) => user);
       res.json(safeStudents);
@@ -1173,7 +1173,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         'video/mp4', 'video/mpeg', 'video/quicktime', 'video/x-msvideo',
         'audio/mpeg', 'audio/wav', 'audio/ogg'
       ];
-      
+
       if (allowedMimes.includes(file.mimetype)) {
         cb(null, true);
       } else {
@@ -1198,7 +1198,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const attachments = [];
-      
+
       for (const file of req.files) {
         const validatedData = insertFileAttachmentSchema.parse({
           messageId,
@@ -1267,7 +1267,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Set appropriate headers
       res.setHeader('Content-Disposition', `attachment; filename="${attachment.originalName}"`);
       res.setHeader('Content-Type', attachment.mimeType);
-      
+
       // Stream the file
       const fileStream = fs.createReadStream(filePath);
       fileStream.pipe(res);
@@ -1326,7 +1326,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // === CLASS MANAGEMENT ENDPOINTS ===
-  
+
   // Get classes for a teacher
   app.get("/api/classes", async (req: AuthenticatedRequest, res) => {
     try {
@@ -1347,7 +1347,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           createdAt: "2024-01-15T00:00:00Z"
         },
         {
-          id: "2", 
+          id: "2",
           name: "Biology 101",
           description: "Basic principles of biology and life sciences",
           subject: "Science",
@@ -1361,7 +1361,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           createdAt: "2024-01-20T00:00:00Z"
         }
       ];
-      
+
       res.json(mockClasses);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch classes", error: error instanceof Error ? error.message : "Unknown error" });
@@ -1376,7 +1376,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         teacherId: req.userId,
         classCode: Math.random().toString(36).substring(2, 8).toUpperCase()
       });
-      
+
       // For now, return mock data since storage method isn't implemented yet
       const mockClass = {
         id: Math.random().toString(36).substring(2, 15),
@@ -1384,7 +1384,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         enrolledStudents: 0,
         createdAt: new Date().toISOString()
       };
-      
+
       res.json(mockClass);
     } catch (error) {
       res.status(400).json({ message: "Invalid class data", error: error instanceof Error ? error.message : "Unknown error" });
@@ -1409,7 +1409,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         enrolledStudents: 15,
         createdAt: new Date().toISOString()
       };
-      
+
       res.json(mockClass);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch class", error: error instanceof Error ? error.message : "Unknown error" });
@@ -1420,7 +1420,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/classes/:id", async (req: AuthenticatedRequest, res) => {
     try {
       const validatedData = insertClassSchema.parse(req.body);
-      
+
       // For now, return mock updated data
       const mockUpdatedClass = {
         id: req.params.id,
@@ -1430,7 +1430,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         createdAt: "2024-01-15T00:00:00Z",
         updatedAt: new Date().toISOString()
       };
-      
+
       res.json(mockUpdatedClass);
     } catch (error) {
       res.status(400).json({ message: "Invalid class data", error: error instanceof Error ? error.message : "Unknown error" });
@@ -1454,13 +1454,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userRole = req.userRole;
       let courses: any[] = [];
-      
+
       if (userRole === 'teacher' || userRole === 'admin') {
         courses = await storage.getCoursesByTeacher(req.userId!);
       } else if (userRole === 'student') {
         courses = await storage.getEnrolledCourses(req.userId!);
       }
-      
+
       res.json(courses);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch user courses", error: error instanceof Error ? error.message : "Unknown error" });
@@ -1490,9 +1490,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: "Lessons retrieved successfully"
       });
     } catch (error) {
-      res.status(500).json({ 
-        message: "Failed to retrieve lessons", 
-        error: error instanceof Error ? error.message : "Unknown error" 
+      res.status(500).json({
+        message: "Failed to retrieve lessons",
+        error: error instanceof Error ? error.message : "Unknown error"
       });
     }
   });
@@ -1521,9 +1521,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: "Students retrieved successfully"
       });
     } catch (error) {
-      res.status(500).json({ 
-        message: "Failed to retrieve students", 
-        error: error instanceof Error ? error.message : "Unknown error" 
+      res.status(500).json({
+        message: "Failed to retrieve students",
+        error: error instanceof Error ? error.message : "Unknown error"
       });
     }
   });
@@ -1546,7 +1546,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Debug: Log the incoming request body
       console.log('Received course creation request:', req.body);
-      
+
       // Validate request body
       const validatedData = insertCourseSchema.parse({
         ...req.body,
@@ -1566,16 +1566,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ 
-          message: "Validation failed", 
-          errors: error.flatten().fieldErrors 
+        return res.status(400).json({
+          message: "Validation failed",
+          errors: error.flatten().fieldErrors
         });
       }
-      
+
       console.error("Course creation error:", error);
-      res.status(400).json({ 
-        message: "Failed to create course", 
-        error: error instanceof Error ? error.message : "Unknown error" 
+      res.status(400).json({
+        message: "Failed to create course",
+        error: error instanceof Error ? error.message : "Unknown error"
       });
     }
   });
@@ -1605,15 +1605,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ 
-          message: "Validation failed", 
-          errors: error.flatten().fieldErrors 
+        return res.status(400).json({
+          message: "Validation failed",
+          errors: error.flatten().fieldErrors
         });
       }
 
-      res.status(400).json({ 
-        message: "Failed to update course", 
-        error: error instanceof Error ? error.message : "Unknown error" 
+      res.status(400).json({
+        message: "Failed to update course",
+        error: error instanceof Error ? error.message : "Unknown error"
       });
     }
   });
@@ -1633,7 +1633,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const { isPublished } = req.body;
-      
+
       // Update publication status
       const updatedCourse = await storage.updateCourse(req.params.id, { isPublished });
 
@@ -1665,19 +1665,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Delete from database (will cascade delete enrollments and lessons)
       const success = await storage.deleteCourse(req.params.id);
-      
+
       if (!success) {
         return res.status(500).json({ message: "Failed to delete course" });
       }
 
-      res.json({ 
+      res.json({
         message: "Course deleted successfully",
-        courseId: req.params.id 
+        courseId: req.params.id
       });
     } catch (error) {
-      res.status(500).json({ 
-        message: "Failed to delete course", 
-        error: error instanceof Error ? error.message : "Unknown error" 
+      res.status(500).json({
+        message: "Failed to delete course",
+        error: error instanceof Error ? error.message : "Unknown error"
       });
     }
   });
@@ -1711,9 +1711,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         enrollment
       });
     } catch (error) {
-      res.status(400).json({ 
-        message: "Failed to enroll in course", 
-        error: error instanceof Error ? error.message : "Unknown error" 
+      res.status(400).json({
+        message: "Failed to enroll in course",
+        error: error instanceof Error ? error.message : "Unknown error"
       });
     }
   });
@@ -1732,20 +1732,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Delete enrollment record
       const success = await storage.unenrollStudent(studentId, courseId);
-      
+
       if (!success) {
         return res.status(500).json({ message: "Failed to unenroll from course" });
       }
 
-      res.json({ 
+      res.json({
         message: "Successfully unenrolled from course",
         courseId,
         studentId
       });
     } catch (error) {
-      res.status(500).json({ 
-        message: "Failed to unenroll from course", 
-        error: error instanceof Error ? error.message : "Unknown error" 
+      res.status(500).json({
+        message: "Failed to unenroll from course",
+        error: error instanceof Error ? error.message : "Unknown error"
       });
     }
   });
@@ -1802,9 +1802,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
     } catch (error) {
-      res.status(400).json({ 
-        message: "Failed to enroll student", 
-        error: error instanceof Error ? error.message : "Unknown error" 
+      res.status(400).json({
+        message: "Failed to enroll student",
+        error: error instanceof Error ? error.message : "Unknown error"
       });
     }
   });
@@ -1833,20 +1833,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Delete enrollment record
       const success = await storage.unenrollStudent(studentId, courseId);
-      
+
       if (!success) {
         return res.status(500).json({ message: "Failed to unenroll student" });
       }
 
-      res.json({ 
+      res.json({
         message: "Student successfully unenrolled",
         courseId,
         studentId
       });
     } catch (error) {
-      res.status(500).json({ 
-        message: "Failed to unenroll student", 
-        error: error instanceof Error ? error.message : "Unknown error" 
+      res.status(500).json({
+        message: "Failed to unenroll student",
+        error: error instanceof Error ? error.message : "Unknown error"
       });
     }
   });
@@ -1861,12 +1861,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (req.file) {
           fs.unlinkSync(req.file.path); // Delete uploaded file on validation error
         }
-        return res.status(400).json({ 
-          message: "Validation failed", 
-          errors: { 
+        return res.status(400).json({
+          message: "Validation failed",
+          errors: {
             courseId: courseId ? undefined : "Course ID is required",
             lessonTitle: lessonTitle ? undefined : "Lesson title is required"
-          } 
+          }
         });
       }
 
@@ -1875,8 +1875,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (req.file) {
           fs.unlinkSync(req.file.path);
         }
-        return res.status(400).json({ 
-          message: "Lesson title must be between 1 and 255 characters" 
+        return res.status(400).json({
+          message: "Lesson title must be between 1 and 255 characters"
         });
       }
 
@@ -1921,11 +1921,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.error("Error deleting file:", e);
         }
       }
-      
+
       console.error("Lesson upload error:", error);
-      res.status(500).json({ 
-        message: "Failed to create lesson", 
-        error: error instanceof Error ? error.message : "Unknown error" 
+      res.status(500).json({
+        message: "Failed to create lesson",
+        error: error instanceof Error ? error.message : "Unknown error"
       });
     }
   });
@@ -1945,20 +1945,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // 3. Delete the file from disk
       // 4. Delete the lesson record from database
 
-      res.json({ 
+      res.json({
         message: "Lesson deleted successfully",
-        lessonId 
+        lessonId
       });
     } catch (error) {
-      res.status(500).json({ 
-        message: "Failed to delete lesson", 
-        error: error instanceof Error ? error.message : "Unknown error" 
+      res.status(500).json({
+        message: "Failed to delete lesson",
+        error: error instanceof Error ? error.message : "Unknown error"
       });
     }
   });
 
   const httpServer = createServer(app);
-  
+
   // Initialize WebSocket service
   const wsService = new GroupChatWebSocketService(httpServer);
 
@@ -1968,7 +1968,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   async function findUserByUsernameOrEmail(identifier: string) {
     // First try to find by username
     let user = await storage.getUserByUsername(identifier);
-    
+
     // If not found and identifier looks like an email, try to find by email
     if (!user && identifier.includes('@')) {
       // Get all users and find one with matching email (simple approach)
@@ -1985,7 +1985,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
     }
-    
+
     return user;
   }
 
@@ -1994,17 +1994,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { username, password } = req.body;
       const user = await findUserByUsernameOrEmail(username);
-      
+
       if (!user) {
         return res.status(401).json({ message: "Invalid credentials" });
       }
-      
+
       // Simple password check (in production, use proper hashing)
       // For now, just generate token with user info
       const token = generateToken(user.id, user.role);
-      
-      res.json({ 
-        token, 
+
+      res.json({
+        token,
         user: { id: user.id, username: user.username, role: user.role, fullName: user.fullName }
       });
     } catch (error) {
@@ -2028,7 +2028,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId: req.userId  // Use authenticated user ID
       });
       const reaction = await storage.addMessageReaction(validatedData);
-      
+
       // Get message to find group for broadcasting
       const message = await storage.getGroupMessage(req.params.messageId);
       if (message && message.groupId) {
@@ -2040,7 +2040,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           timestamp: new Date().toISOString()
         });
       }
-      
+
       res.json(reaction);
     } catch (error) {
       res.status(400).json({ message: "Invalid reaction data", error: error instanceof Error ? error.message : "Unknown error" });
@@ -2056,10 +2056,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         createdBy: req.userId
       });
       const poll = await storage.createGroupPoll(validatedData);
-      
+
       // Broadcast new poll to group members
       wsService.broadcastToGroupExternal(req.params.groupId, 'new_poll', poll);
-      
+
       res.json(poll);
     } catch (error) {
       res.status(400).json({ message: "Invalid poll data", error: error instanceof Error ? error.message : "Unknown error" });
@@ -2075,10 +2075,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId: req.userId
       });
       const request = await storage.createRaiseHandRequest(validatedData);
-      
+
       // Broadcast raise hand request to group members
       wsService.broadcastToGroupExternal(req.params.groupId, 'raise_hand_request', request);
-      
+
       res.json(request);
     } catch (error) {
       res.status(400).json({ message: "Invalid raise hand request", error: error instanceof Error ? error.message : "Unknown error" });
@@ -2091,7 +2091,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/news", async (req, res) => {
     try {
       const { published = 'true' } = req.query;
-      const articles = published === 'true' 
+      const articles = published === 'true'
         ? await storage.getPublishedNewsArticles()
         : await storage.getNewsArticles();
       res.json(articles);
@@ -2182,7 +2182,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/events", async (req, res) => {
     try {
       const { upcoming = 'false', published = 'true', startDate, endDate } = req.query;
-      
+
       if (startDate && endDate) {
         const events = await storage.getEventsByDateRange(new Date(startDate as string), new Date(endDate as string));
         res.json(events);
@@ -2357,9 +2357,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/staff", async (req, res) => {
     try {
       const { search, department } = req.query;
-      
+
       let profiles;
-      
+
       if (search) {
         profiles = await storage.searchStaffProfiles(search as string);
       } else if (department) {
@@ -2367,12 +2367,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else {
         profiles = await storage.getActiveStaffProfiles();
       }
-      
+
       res.json(profiles);
     } catch (error) {
-      res.status(500).json({ 
-        message: "Failed to fetch staff profiles", 
-        error: error instanceof Error ? error.message : "Unknown error" 
+      res.status(500).json({
+        message: "Failed to fetch staff profiles",
+        error: error instanceof Error ? error.message : "Unknown error"
       });
     }
   });
@@ -2385,9 +2385,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       res.json(profile);
     } catch (error) {
-      res.status(500).json({ 
-        message: "Failed to fetch staff profile", 
-        error: error instanceof Error ? error.message : "Unknown error" 
+      res.status(500).json({
+        message: "Failed to fetch staff profile",
+        error: error instanceof Error ? error.message : "Unknown error"
       });
     }
   });
@@ -2397,9 +2397,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const achievements = await storage.getPublicStaffAchievements(req.params.id);
       res.json(achievements);
     } catch (error) {
-      res.status(500).json({ 
-        message: "Failed to fetch staff achievements", 
-        error: error instanceof Error ? error.message : "Unknown error" 
+      res.status(500).json({
+        message: "Failed to fetch staff achievements",
+        error: error instanceof Error ? error.message : "Unknown error"
       });
     }
   });
@@ -2411,9 +2411,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const profile = await storage.createStaffProfile(validatedData);
       res.json(profile);
     } catch (error) {
-      res.status(400).json({ 
-        message: "Invalid staff profile data", 
-        error: error instanceof Error ? error.message : "Unknown error" 
+      res.status(400).json({
+        message: "Invalid staff profile data",
+        error: error instanceof Error ? error.message : "Unknown error"
       });
     }
   });
@@ -2423,9 +2423,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const profiles = await storage.getStaffProfiles(); // Include inactive ones for admin
       res.json(profiles);
     } catch (error) {
-      res.status(500).json({ 
-        message: "Failed to fetch staff profiles", 
-        error: error instanceof Error ? error.message : "Unknown error" 
+      res.status(500).json({
+        message: "Failed to fetch staff profiles",
+        error: error instanceof Error ? error.message : "Unknown error"
       });
     }
   });
@@ -2439,9 +2439,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       res.json(profile);
     } catch (error) {
-      res.status(400).json({ 
-        message: "Failed to update staff profile", 
-        error: error instanceof Error ? error.message : "Unknown error" 
+      res.status(400).json({
+        message: "Failed to update staff profile",
+        error: error instanceof Error ? error.message : "Unknown error"
       });
     }
   });
@@ -2454,9 +2454,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       res.json({ success: true });
     } catch (error) {
-      res.status(500).json({ 
-        message: "Failed to delete staff profile", 
-        error: error instanceof Error ? error.message : "Unknown error" 
+      res.status(500).json({
+        message: "Failed to delete staff profile",
+        error: error instanceof Error ? error.message : "Unknown error"
       });
     }
   });
@@ -2471,9 +2471,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const achievement = await storage.createStaffAchievement(validatedData);
       res.json(achievement);
     } catch (error) {
-      res.status(400).json({ 
-        message: "Invalid achievement data", 
-        error: error instanceof Error ? error.message : "Unknown error" 
+      res.status(400).json({
+        message: "Invalid achievement data",
+        error: error instanceof Error ? error.message : "Unknown error"
       });
     }
   });
@@ -2483,9 +2483,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const achievements = await storage.getStaffAchievements(req.params.id); // Include private ones for admin
       res.json(achievements);
     } catch (error) {
-      res.status(500).json({ 
-        message: "Failed to fetch staff achievements", 
-        error: error instanceof Error ? error.message : "Unknown error" 
+      res.status(500).json({
+        message: "Failed to fetch staff achievements",
+        error: error instanceof Error ? error.message : "Unknown error"
       });
     }
   });
@@ -2498,12 +2498,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       res.json({ success: true });
     } catch (error) {
-      res.status(500).json({ 
-        message: "Failed to delete achievement", 
-        error: error instanceof Error ? error.message : "Unknown error" 
+      res.status(500).json({
+        message: "Failed to delete achievement",
+        error: error instanceof Error ? error.message : "Unknown error"
       });
     }
   });
-  
+
   return httpServer;
 }

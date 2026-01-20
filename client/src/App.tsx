@@ -34,6 +34,7 @@ import TeacherStudentProfile from "@/pages/teacher-student-profile";
 import TeacherAssessments from "@/pages/teacher-assessments";
 import TeacherContent from "@/pages/teacher-content";
 import TeacherAnalytics from "@/pages/teacher-analytics";
+import TeacherMistakeAnalytics from "@/pages/teacher-mistake-analytics";
 import TeacherCommunication from "@/pages/teacher-communication";
 import TeacherProfile from "@/pages/teacher-profile";
 import PortalLanding from "@/pages/portal-landing";
@@ -80,6 +81,7 @@ import TeacherCreateAssignment from "@/pages/teacher-create-assignment";
 import TeacherAssignmentSubmissions from "@/pages/teacher-assignment-submissions";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
+import ChangePassword from "@/pages/change-password";
 import StudyGroupsChatPage from "@/pages/study-groups-chat-enhanced";
 import ProfilePage from "@/pages/student-profile";
 import Settings from "@/pages/settings";
@@ -92,6 +94,9 @@ import TeacherExams from "@/pages/teacher-exams";
 import TeacherExamCreate from "@/pages/teacher-exam-create";
 import TeacherExamManage from "@/pages/teacher-exam-manage";
 import TeacherAttemptReview from "@/pages/teacher-attempt-review";
+import TeacherExamEdit from "@/pages/teacher-exam-edit";
+import TeacherExamQuestions from "@/pages/teacher-exam-questions";
+import StudentExamPreview from "@/pages/student-exam-preview"; // Imported
 import AdminUsers from "@/pages/admin-users";
 import AdminStudentParentLink from "@/pages/admin-student-parent-link";
 import AdminCalendar from "@/pages/admin-calendar";
@@ -177,6 +182,13 @@ function Router() {
             <PublicOnlyRoute>
               <DemoLogin />
             </PublicOnlyRoute>
+          </Route>
+
+          {/* Change password route - for first-time login */}
+          <Route path="/change-password">
+            <ProtectedRoute>
+              <ChangePassword />
+            </ProtectedRoute>
           </Route>
           
           {/* Public home page */}
@@ -557,6 +569,11 @@ function Router() {
               <TeacherAnalytics />
             </TeacherRoute>
           </Route>
+          <Route path="/teacher/mistakes">
+            <TeacherRoute>
+              <TeacherMistakeAnalytics />
+            </TeacherRoute>
+          </Route>
           <Route path="/teacher/exams">
             <TeacherRoute>
               <TeacherExams />
@@ -570,6 +587,21 @@ function Router() {
           <Route path="/teacher/exams/:id">
             <TeacherRoute>
               <TeacherExamManage />
+            </TeacherRoute>
+          </Route>
+          <Route path="/teacher/exams/:id/edit">
+            <TeacherRoute>
+              <TeacherExamEdit />
+            </TeacherRoute>
+          </Route>
+          <Route path="/teacher/exams/:id/questions">
+            <TeacherRoute>
+              <TeacherExamQuestions />
+            </TeacherRoute>
+          </Route>
+          <Route path="/teacher/exams/:examId/preview">
+            <TeacherRoute>
+              <StudentExamPreview />
             </TeacherRoute>
           </Route>
           <Route path="/teacher/attempts/:attemptId/review">

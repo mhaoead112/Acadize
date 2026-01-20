@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useStudentNotifications } from "@/contexts/StudentNotificationContext";
 import VersaFloatingChat from "@/components/VersaFloatingChat";
 import { apiEndpoint, assetUrl } from '@/lib/config';
 import {
@@ -71,6 +72,7 @@ export default function StudentDashboard() {
   const { user, token, isLoading: authLoading } = useAuth();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { checkProgressNudges } = useStudentNotifications();
   
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
@@ -262,6 +264,9 @@ export default function StudentDashboard() {
         const streakData = await streakRes.json();
         setStreakInfo(streakData);
         checkWeeklyGoalPrompt(streakData);
+        
+        // Trigger progress nudges
+        checkProgressNudges(overallProgress, streakData, enrollmentsList);
       }
 
     } catch (error) {

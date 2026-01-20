@@ -689,22 +689,22 @@ export default function StudentCourseDetailPage() {
                     <motion.div variants={fadeInUpVariants} key={lesson.id}>
                       <Link
                         href={`/student/courses/${courseId}/lessons`}
-                        className="flex items-center gap-4 p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-colors group"
+                        className="flex items-center gap-4 p-4 rounded-xl bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 transition-colors group"
                       >
                         <div className="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center group-hover:bg-primary group-hover:text-black transition-colors">
                           <span className="material-symbols-outlined text-primary group-hover:text-black text-[24px]">book_2</span>
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="text-xs font-medium text-slate-500">
+                            <span className="text-xs font-medium text-slate-500 dark:text-slate-500">
                               Lesson {String(index + 1).padStart(2, '0')}
                             </span>
                           </div>
-                          <h4 className="font-medium text-white truncate">
+                          <h4 className="font-medium text-slate-900 dark:text-white truncate">
                             {lesson.title || lesson.fileName}
                           </h4>
                           {lesson.createdAt && (
-                            <p className="text-xs text-slate-500 mt-1">
+                            <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">
                               Added {new Date(lesson.createdAt).toLocaleDateString()}
                             </p>
                           )}

@@ -7,7 +7,7 @@ import crypto from 'crypto';
 // TYPES & INTERFACES
 // ============================================================================
 
-export type AntiCheatEventType = 
+export type AntiCheatEventType =
   | 'tab_switch'
   | 'window_blur'
   | 'copy_paste'
@@ -97,7 +97,7 @@ const HMAC_SECRET = process.env.ANTI_CHEAT_HMAC_SECRET || 'default-secret-change
 // ============================================================================
 
 export class AntiCheatMonitorService {
-  
+
   /**
    * Record anti-cheat event with validation and tamper resistance
    */
@@ -106,7 +106,7 @@ export class AntiCheatMonitorService {
     payload: AntiCheatEventPayload,
     clientIp?: string
   ): Promise<{ eventId: string; severity: EventSeverity }> {
-    
+
     // Step 1: Validate attempt exists and belongs to student
     const [attempt] = await db
       .select()
@@ -298,7 +298,7 @@ export class AntiCheatMonitorService {
    */
   private static async enforceRateLimit(attemptId: string, severity: EventSeverity): Promise<void> {
     const oneMinuteAgo = new Date(Date.now() - 60000);
-    
+
     const [result] = await db
       .select({ count: count() })
       .from(antiCheatEvents)
@@ -379,16 +379,49 @@ export class AntiCheatMonitorService {
     attemptId: string,
     eventType: AntiCheatEventType
   ): Promise<void> {
-    // TODO: Integrate with WebSocket/SSE for real-time proctor notifications
     console.warn(`[CRITICAL ALERT] Event ${eventId} on attempt ${attemptId}: ${eventType}`);
-    
-    // Future: Send to notification queue
-    // await notificationQueue.add({
-    //   type: 'critical_anti_cheat_event',
-    //   eventId,
-    //   attemptId,
-    //   eventType,
-    // });
+
+    try {
+      // Get attempt details to find the teacher
+      const { db } = await import('../db/index.js');
+      const { examAttempts, exams, users, courses } = await import('../db/schema.js');
+      const { eq } = await import('drizzle-orm');
+      const { WebSocketService } = await import('./websocket.service.js');
+
+      const [attemptData] = await db
+        .select({
+          attemptId: examAttempts.id,
+          studentId: examAttempts.studentId,
+          studentName: users.fullName,
+          examTitle: exams.title,
+          teacherId: courses.teacherId,
+        })
+        .from(examAttempts)
+        .innerJoin(exams, eq(examAttempts.examId, exams.id))
+        .innerJoin(courses, eq(exams.courseId, courses.id))
+        .innerJoin(users, eq(examAttempts.studentId, users.id))
+        .where(eq(examAttempts.id, attemptId))
+        .limit(1);
+
+      if (attemptData) {
+        // Send real-time notification to teacher
+        WebSocketService.sendToUser(attemptData.teacherId, {
+          type: 'ANTI_CHEAT_ALERT',
+          severity: 'critical',
+          eventId,
+          attemptId,
+          studentId: attemptData.studentId,
+          studentName: attemptData.studentName,
+          examTitle: attemptData.examTitle,
+          eventType,
+          timestamp: new Date().toISOString(),
+        });
+
+        console.log(`[WebSocket] Critical alert sent to teacher: ${attemptData.teacherId}`);
+      }
+    } catch (error) {
+      console.error('[WebSocket] Failed to send critical alert:', error);
+    }
   }
 
   /**
@@ -457,10 +490,10 @@ export class AntiCheatMonitorService {
     events.forEach((event) => {
       // Count by severity
       stats.bySeverity[event.severity as EventSeverity]++;
-      
+
       // Count by type
       stats.byType[event.eventType] = (stats.byType[event.eventType] || 0) + 1;
-      
+
       // Count critical
       if (event.severity === 'critical') {
         stats.criticalEvents++;
@@ -482,7 +515,7 @@ export class AntiCheatMonitorService {
     recommendation: 'accept' | 'manual_review' | 'reject';
   }> {
     const stats = await this.getEventStatistics(attemptId);
-    
+
     // Calculate risk score (0-100)
     const riskScore = Math.min(
       100,

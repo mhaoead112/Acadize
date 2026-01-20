@@ -1,0 +1,194 @@
+/* Question Content Renderer - for displaying rich text in student/teacher views */
+.question-content-renderer {
+  color: inherit; /* Inherit from parent (supports both light and dark modes) */
+  line-height: 1.6;
+}
+
+/* Headings */
+.question-content-renderer h1,
+.question-content-renderer h2,
+.question-content-renderer h3 {
+  color: inherit; /* Inherit from parent */
+  font-weight: 700;
+  margin: 1em 0 0.5em;
+}
+
+.question-content-renderer h1 {
+  font-size: 1.5em;
+}
+
+.question-content-renderer h2 {
+  font-size: 1.3em;
+}
+
+.question-content-renderer h3 {
+  font-size: 1.1em;
+}
+
+/* Paragraphs */
+.question-content-renderer p {
+  margin: 0.5em 0;
+}
+
+/* Lists */
+.question-content-renderer ul,
+.question-content-renderer ol {
+  margin: 0.5em 0;
+  padding-left: 2em;
+}
+
+.question-content-renderer li {
+  margin: 0.25em 0;
+}
+
+/* Links */
+.question-content-renderer a {
+  color: #f2d00d;
+  text-decoration: underline;
+}
+
+.question-content-renderer a:hover {
+  color: #ffd700;
+}
+
+/* Images */
+.question-content-renderer img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 1em 0;
+  display: block;
+}
+
+/* Code blocks */
+.question-content-renderer pre {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 1em;
+  margin: 1em 0;
+  overflow-x: auto;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.question-content-renderer code {
+  background: #1e293b;
+  color: #f2d00d;
+  padding: 0.2em 0.4em;
+  border-radius: 4px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.9em;
+}
+
+.question-content-renderer pre code {
+  background: transparent;
+  padding: 0;
+}
+
+/* KaTeX formulas */
+.question-content-renderer .ql-formula {
+  background: #1e293b;
+  padding: 0.5em;
+  border-radius: 4px;
+  display: inline-block;
+  margin: 0 0.25em;
+}
+
+.question-content-renderer .katex {
+  font-size: 1.1em;
+}
+
+.question-content-renderer .katex-display {
+  margin: 1em 0;
+}
+
+/* Text formatting */
+.question-content-renderer strong {
+  font-weight: 700;
+}
+
+.question-content-renderer em {
+  font-style: italic;
+}
+
+.question-content-renderer u {
+  text-decoration: underline;
+}
+
+.question-content-renderer s {
+  text-decoration: line-through;
+}
+
+/* Blockquotes */
+.question-content-renderer blockquote {
+  border-left: 4px solid #f2d00d;
+  padding-left: 1em;
+  margin: 1em 0;
+  color: #94a3b8;
+}
+
+/* Horizontal rules */
+.question-content-renderer hr {
+  border: none;
+  border-top: 1px solid #334155;
+  margin: 1.5em 0;
+}
+
+/* Tables (if Quill supports them) */
+.question-content-renderer table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1em 0;
+}
+
+.question-content-renderer th,
+.question-content-renderer td {
+  border: 1px solid #334155;
+  padding: 0.5em;
+  text-align: left;
+}
+
+.question-content-renderer th {
+  background: #1e293b;
+  font-weight: 700;
+}
+
+/* Indentation */
+.question-content-renderer .ql-indent-1 {
+  padding-left: 3em;
+}
+
+.question-content-renderer .ql-indent-2 {
+  padding-left: 6em;
+}
+
+.question-content-renderer .ql-indent-3 {
+  padding-left: 9em;
+}
+
+/* Text alignment */
+.question-content-renderer .ql-align-center {
+  text-align: center;
+}
+
+.question-content-renderer .ql-align-right {
+  text-align: right;
+}
+
+.question-content-renderer .ql-align-justify {
+  text-align: justify;
+}
+
+/* Syntax highlighting for code blocks */
+.question-content-renderer .ql-syntax {
+  background: #1e293b;
+  color: #ffffff;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 1em;
+  margin: 1em 0;
+  overflow-x: auto;
+  font-family: 'Courier New', Courier, monospace;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}

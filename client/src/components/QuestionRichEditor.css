@@ -1,0 +1,313 @@
+/* Light mode styles for React Quill */
+.question-rich-editor .ql-toolbar {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px 12px 0 0;
+  padding: 8px;
+}
+
+.question-rich-editor .ql-container {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-top: none;
+  border-radius: 0 0 12px 12px;
+  font-size: 15px;
+  min-height: 150px;
+}
+
+.question-rich-editor .ql-editor {
+  color: #1e293b;
+  min-height: 150px;
+  padding: 16px;
+}
+
+.question-rich-editor .ql-editor.ql-blank::before {
+  color: #94a3b8;
+  font-style: normal;
+}
+
+/* Toolbar buttons - Light mode */
+.question-rich-editor .ql-toolbar button {
+  color: #64748b;
+  width: 32px;
+  height: 32px;
+  padding: 4px;
+  border-radius: 6px;
+}
+
+.question-rich-editor .ql-toolbar button:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+.question-rich-editor .ql-toolbar button.ql-active {
+  background: #f2d00d;
+  color: #0f172a;
+}
+
+.question-rich-editor .ql-toolbar .ql-stroke {
+  stroke: #64748b;
+}
+
+.question-rich-editor .ql-toolbar button:hover .ql-stroke {
+  stroke: #1e293b;
+}
+
+.question-rich-editor .ql-toolbar button.ql-active .ql-stroke {
+  stroke: #0f172a;
+}
+
+.question-rich-editor .ql-toolbar .ql-fill {
+  fill: #64748b;
+}
+
+.question-rich-editor .ql-toolbar button:hover .ql-fill {
+  fill: #1e293b;
+}
+
+.question-rich-editor .ql-toolbar button.ql-active .ql-fill {
+  fill: #0f172a;
+}
+
+/* Picker dropdowns - Light mode */
+.question-rich-editor .ql-toolbar .ql-picker {
+  color: #64748b;
+}
+
+.question-rich-editor .ql-toolbar .ql-picker-label {
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 4px 8px;
+}
+
+.question-rich-editor .ql-toolbar .ql-picker-label:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+.question-rich-editor .ql-toolbar .ql-picker-options {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 4px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.question-rich-editor .ql-toolbar .ql-picker-item {
+  color: #1e293b;
+  padding: 6px 12px;
+  border-radius: 4px;
+}
+
+.question-rich-editor .ql-toolbar .ql-picker-item:hover {
+  background: #f1f5f9;
+}
+
+/* Editor content styling - Light mode */
+.question-rich-editor .ql-editor h1,
+.question-rich-editor .ql-editor h2,
+.question-rich-editor .ql-editor h3 {
+  color: #1e293b;
+  font-weight: 700;
+}
+
+.question-rich-editor .ql-editor a {
+  color: #ca8a04;
+}
+
+.question-rich-editor .ql-editor code,
+.question-rich-editor .ql-editor pre {
+  background: #f1f5f9;
+  color: #ca8a04;
+  border-radius: 4px;
+}
+
+.question-rich-editor .ql-editor .ql-code-block-container {
+  background: #f1f5f9;
+  border-radius: 8px;
+  padding: 12px;
+  margin: 8px 0;
+}
+
+/* Formula/KaTeX styling - Light mode */
+.question-rich-editor .ql-editor .ql-formula {
+  background: #f1f5f9;
+  padding: 4px 8px;
+  border-radius: 4px;
+  display: inline-block;
+  margin: 0 2px;
+}
+
+/* Image styling */
+.question-rich-editor .ql-editor img {
+  max-width: 100%;
+  border-radius: 8px;
+  margin: 8px 0;
+}
+
+/* Focus state - Light mode */
+.question-rich-editor .ql-container.ql-snow {
+  border-color: #e2e8f0;
+}
+
+.question-rich-editor:focus-within .ql-container {
+  border-color: #f2d00d;
+  box-shadow: 0 0 0 1px #f2d00d;
+}
+
+.question-rich-editor:focus-within .ql-toolbar {
+  border-color: #f2d00d;
+}
+
+/* Scrollbar styling - Light mode */
+.question-rich-editor .ql-editor::-webkit-scrollbar {
+  width: 8px;
+}
+
+.question-rich-editor .ql-editor::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+.question-rich-editor .ql-editor::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.question-rich-editor .ql-editor::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* ============================================ */
+/* DARK MODE STYLES */
+/* ============================================ */
+
+.dark .question-rich-editor .ql-toolbar {
+  background: #0f172a;
+  border: 1px solid #334155;
+}
+
+.dark .question-rich-editor .ql-container {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-top: none;
+}
+
+.dark .question-rich-editor .ql-editor {
+  color: #ffffff;
+}
+
+.dark .question-rich-editor .ql-editor.ql-blank::before {
+  color: #94a3b8;
+}
+
+/* Toolbar buttons - Dark mode */
+.dark .question-rich-editor .ql-toolbar button {
+  color: #94a3b8;
+}
+
+.dark .question-rich-editor .ql-toolbar button:hover {
+  background: #1e293b;
+  color: #ffffff;
+}
+
+.dark .question-rich-editor .ql-toolbar button.ql-active {
+  background: #f2d00d;
+  color: #0f172a;
+}
+
+.dark .question-rich-editor .ql-toolbar .ql-stroke {
+  stroke: #94a3b8;
+}
+
+.dark .question-rich-editor .ql-toolbar button:hover .ql-stroke {
+  stroke: #ffffff;
+}
+
+.dark .question-rich-editor .ql-toolbar button.ql-active .ql-stroke {
+  stroke: #0f172a;
+}
+
+.dark .question-rich-editor .ql-toolbar .ql-fill {
+  fill: #94a3b8;
+}
+
+.dark .question-rich-editor .ql-toolbar button:hover .ql-fill {
+  fill: #ffffff;
+}
+
+.dark .question-rich-editor .ql-toolbar button.ql-active .ql-fill {
+  fill: #0f172a;
+}
+
+/* Picker dropdowns - Dark mode */
+.dark .question-rich-editor .ql-toolbar .ql-picker {
+  color: #94a3b8;
+}
+
+.dark .question-rich-editor .ql-toolbar .ql-picker-label {
+  border-color: #334155;
+}
+
+.dark .question-rich-editor .ql-toolbar .ql-picker-label:hover {
+  background: #1e293b;
+  color: #ffffff;
+}
+
+.dark .question-rich-editor .ql-toolbar .ql-picker-options {
+  background: #1e293b;
+  border: 1px solid #334155;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+}
+
+.dark .question-rich-editor .ql-toolbar .ql-picker-item {
+  color: #ffffff;
+}
+
+.dark .question-rich-editor .ql-toolbar .ql-picker-item:hover {
+  background: #334155;
+}
+
+/* Editor content styling - Dark mode */
+.dark .question-rich-editor .ql-editor h1,
+.dark .question-rich-editor .ql-editor h2,
+.dark .question-rich-editor .ql-editor h3 {
+  color: #ffffff;
+}
+
+.dark .question-rich-editor .ql-editor a {
+  color: #f2d00d;
+}
+
+.dark .question-rich-editor .ql-editor code,
+.dark .question-rich-editor .ql-editor pre {
+  background: #1e293b;
+  color: #f2d00d;
+}
+
+.dark .question-rich-editor .ql-editor .ql-code-block-container {
+  background: #1e293b;
+}
+
+/* Formula/KaTeX styling - Dark mode */
+.dark .question-rich-editor .ql-editor .ql-formula {
+  background: #1e293b;
+}
+
+/* Focus state - Dark mode */
+.dark .question-rich-editor .ql-container.ql-snow {
+  border-color: #334155;
+}
+
+/* Scrollbar styling - Dark mode */
+.dark .question-rich-editor .ql-editor::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+
+.dark .question-rich-editor .ql-editor::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+
+.dark .question-rich-editor .ql-editor::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}

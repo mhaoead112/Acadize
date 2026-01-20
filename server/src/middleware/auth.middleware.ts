@@ -41,7 +41,11 @@ export const isAuthenticated = (
     const decoded = jwt.verify(token, JWT_SECRET) as AuthenticatedUser;
     req.user = decoded;
     next();
-  } catch (error) {
+  } catch (error: any) {
+    if (error.name === 'TokenExpiredError') {
+      // Don't log stack trace for expired tokens, just return 401
+      return res.status(401).json({ message: "Unauthorized: Token expired." });
+    }
     console.error("JWT verification failed:", error);
     return res.status(401).json({ message: "Unauthorized: Invalid token." });
   }
@@ -69,7 +73,7 @@ export const optionalAuth = (
     // Invalid token, but we'll allow the request to continue without user
     console.warn("Optional auth: invalid token provided");
   }
-  
+
   next();
 };
 

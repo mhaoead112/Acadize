@@ -74,7 +74,7 @@ export default function AdminUsers() {
     email: "",
     role: "student" as 'student' | 'teacher' | 'admin' | 'parent',
     status: "active" as 'active' | 'inactive' | 'pending',
-    password: "",
+    temporaryPassword: "",
   });
 
   const pageSize = 8;
@@ -133,8 +133,8 @@ export default function AdminUsers() {
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newUser.name || !newUser.email || !newUser.password) {
-      toast({ title: 'Missing info', description: 'Name, email, and password are required', variant: 'destructive' });
+    if (!newUser.name || !newUser.email || !newUser.temporaryPassword) {
+      toast({ title: 'Missing info', description: 'Name, email, and temporaryPassword are required', variant: 'destructive' });
       return;
     }
 
@@ -153,9 +153,8 @@ export default function AdminUsers() {
           username,
           fullName: newUser.name,
           email: newUser.email,
-          password: newUser.password,
+          temporaryPassword: newUser.temporaryPassword,
           role: newUser.role,
-          status: newUser.status,
         })
       });
 
@@ -180,7 +179,7 @@ export default function AdminUsers() {
 
       setUsers(prev => [mappedUser, ...prev]);
       setIsAddModalOpen(false);
-      setNewUser({ name: '', email: '', role: 'student', status: 'active', password: '' });
+      setNewUser({ name: '', email: '', role: 'student', status: 'active', temporaryPassword: '' });
       setCurrentPage(1);
       toast({ title: 'Success', description: 'User created successfully' });
     } catch (error) {
@@ -623,8 +622,8 @@ export default function AdminUsers() {
                     <input 
                       required
                       type="password" 
-                      value={newUser.password}
-                      onChange={(e) => setNewUser({...newUser, password: e.target.value})}
+                      value={newUser.temporaryPassword}
+                      onChange={(e) => setNewUser({...newUser, temporaryPassword: e.target.value})}
                       placeholder="Minimum 8 characters"
                       className="w-full h-12 bg-white dark:bg-[#0a192f] border border-slate-200 dark:border-white/10 rounded-2xl px-4 text-slate-900 dark:text-white font-bold focus:ring-[#FFD700]/20 focus:border-[#FFD700] transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500"
                     />

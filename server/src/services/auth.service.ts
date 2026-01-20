@@ -6,7 +6,7 @@ import jwt from 'jsonwebtoken';
 
 // These should be in your .env file
 if (!process.env.JWT_SECRET) {
-  throw new Error('JWT_SECRET environment variable is required!');
+    throw new Error('JWT_SECRET environment variable is required!');
 }
 const JWT_SECRET = process.env.JWT_SECRET;
 const SALT_ROUNDS = 10; // Standard for bcrypt password hashing
@@ -31,6 +31,8 @@ export interface LoginUserDto {
 // Defines the shape of the data we send back on successful login
 export interface AuthResponse {
     token: string;
+    refreshToken: string;
+    expiresIn: number;
     user: {
         id: string;
         fullName: string;
@@ -39,6 +41,9 @@ export interface AuthResponse {
         role: string;
         profilePicture?: string | null;
         grade?: string | null;
+        passwordResetExpires?: Date | null;
+        emailVerified?: boolean | null;
+        isTemporaryPassword?: boolean;
     };
 }
 
@@ -83,19 +88,34 @@ export const registerUser = async (userData: RegisterUserDto) => {
         username: users.username,
         email: users.email,
         role: users.role,
+        isTemporaryPassword: users.isTemporaryPassword,
     });
-    
+
     if (!newUser[0]) {
         throw new Error("Failed to create the user account.");
     }
-    
+
+    // 4. Send welcome email (non-blocking)
+    try {
+        const { EmailService } = await import('./email.service.js');
+        await EmailService.sendWelcomeEmail({
+            email: newUser[0].email,
+            fullName: newUser[0].fullName,
+            role: newUser[0].role,
+        });
+        console.log(`✅ Welcome email sent to ${newUser[0].email}`);
+    } catch (emailError) {
+        // Log error but don't fail registration
+        console.error('❌ Failed to send welcome email:', emailError);
+    }
+
     return newUser[0];
 };
 
 /**
- * Authenticates a user and provides a JWT session token.
+ * Authenticates a user and provides JWT access and refresh tokens.
  * @param credentials The user's login email and password.
- * @returns An object containing the JWT and public user information.
+ * @returns An object containing the JWT tokens and public user information.
  */
 export const loginUser = async (credentials: LoginUserDto): Promise<AuthResponse> => {
     const { email, password } = credentials;
@@ -114,28 +134,22 @@ export const loginUser = async (credentials: LoginUserDto): Promise<AuthResponse
         throw new Error("Invalid Password");
     }
 
-    // 3. If password is correct, create a payload for the JWT
-    const tokenPayload = {
+    // 3. Generate access and refresh tokens using TokenService
+    const { TokenService } = await import('./token.service.js');
+    const tokenPair = await TokenService.generateTokenPair({
         id: user.id,
-        role: user.role,
-    };
-
-    // 4. Sign the JWT, making it valid for 7 days
-    const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '7d' });
-
-    // 5. Return the token and public user data
-    console.log('Login user data:', {
-        id: user.id,
-        fullName: user.fullName,
-        username: user.username,
         email: user.email,
         role: user.role,
-        profilePicture: user.profilePicture,
-        grade: user.grade,
+        fullName: user.fullName,
     });
-    
+
+    // 4. Return the tokens and public user data
+    console.log('Login successful for user:', user.email);
+
     return {
-        token,
+        token: tokenPair.accessToken,
+        refreshToken: tokenPair.refreshToken,
+        expiresIn: tokenPair.expiresIn,
         user: {
             id: user.id,
             fullName: user.fullName,
@@ -144,6 +158,9 @@ export const loginUser = async (credentials: LoginUserDto): Promise<AuthResponse
             role: user.role,
             profilePicture: user.profilePicture,
             grade: user.grade,
+            passwordResetExpires: user.passwordResetExpires,
+            emailVerified: user.emailVerified,
+            isTemporaryPassword: user.isTemporaryPassword,
         }
     };
 };

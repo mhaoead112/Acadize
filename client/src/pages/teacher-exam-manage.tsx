@@ -23,6 +23,8 @@ interface Question {
   type: 'MC' | 'TF' | 'Short' | 'Essay';
   points: number;
   options?: QuestionOption[];
+  correctAnswer?: any;
+  rubric?: string | null;
 }
 
 interface SecuritySettings {
@@ -88,6 +90,7 @@ export default function TeacherExamManage() {
   const [error, setError] = useState<string | null>(null);
   const [updating, setUpdating] = useState(false);
   const [showAddQuestion, setShowAddQuestion] = useState(false);
+  const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null);
 
   const [newQuestion, setNewQuestion] = useState<Partial<Question>>({
     text: '',
@@ -97,6 +100,8 @@ export default function TeacherExamManage() {
       { id: 'opt-1', text: '', isCorrect: true },
       { id: 'opt-2', text: '', isCorrect: false },
     ],
+    correctAnswer: 'true',
+    rubric: '',
   });
 
   const cardBase = useMemo(
@@ -167,6 +172,7 @@ export default function TeacherExamManage() {
       }
 
       const data = await response.json();
+      console.log(data);
       setAttempts(data);
     } catch (err: any) {
       console.error('Error fetching attempts:', err);
@@ -311,10 +317,22 @@ export default function TeacherExamManage() {
         type: newQuestion.type,
         points: newQuestion.points || 1,
         options: newQuestion.type === 'MC' ? newQuestion.options : undefined,
+        correctAnswer:
+          newQuestion.type === 'TF'
+            ? newQuestion.correctAnswer === 'true' || newQuestion.correctAnswer === true
+            : newQuestion.type === 'Short' || newQuestion.type === 'Essay'
+              ? newQuestion.correctAnswer || ''
+              : undefined,
+        rubric: newQuestion.type === 'Essay' || newQuestion.type === 'Short' ? newQuestion.rubric || undefined : undefined,
       };
 
-      const response = await fetch(apiEndpoint(`/api/exams/${examId}/questions`), {
-        method: 'POST',
+      const method = editingQuestionId ? 'PATCH' : 'POST';
+      const url = editingQuestionId
+        ? apiEndpoint(`/api/exams/${examId}/questions/${editingQuestionId}`)
+        : apiEndpoint(`/api/exams/${examId}/questions`);
+
+      const response = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json',
           ...getAuthHeaders(),
@@ -330,6 +348,7 @@ export default function TeacherExamManage() {
 
       await fetchExam();
       setShowAddQuestion(false);
+      setEditingQuestionId(null);
       setNewQuestion({
         text: '',
         type: 'MC',
@@ -338,6 +357,8 @@ export default function TeacherExamManage() {
           { id: 'opt-1', text: '', isCorrect: true },
           { id: 'opt-2', text: '', isCorrect: false },
         ],
+        correctAnswer: 'true',
+        rubric: '',
       });
     } catch (err: any) {
       console.error('Add question error:', err);
@@ -422,8 +443,8 @@ export default function TeacherExamManage() {
 
   return (
     <TeacherLayout>
-      <div className="space-y-8">
-        {/* Breadcrumb */}
+      <div className="space-y-8 p-5">
+        {/* Breadcrumb
         <div className="flex flex-wrap items-center gap-2 text-sm">
           <a href="#/dashboard" className={isDark ? 'text-gray-400 hover:text-primary' : 'text-gray-600 hover:text-primary'}>
             Dashboard
@@ -434,7 +455,7 @@ export default function TeacherExamManage() {
           </button>
           <span className="material-symbols-outlined text-[18px]">chevron_right</span>
           <span className={isDark ? 'text-white font-semibold' : 'text-gray-900 font-semibold'}>{exam.title}</span>
-        </div>
+        </div> */}
 
         {/* Header */}
         <div className={`flex flex-col md:flex-row md:items-center justify-between gap-6 border-b pb-6 ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
@@ -454,12 +475,20 @@ export default function TeacherExamManage() {
 
           <div className="flex gap-3 flex-wrap">
             <button
+              onClick={() => navigate(`/teacher/exams/${exam.id}/edit`)}
+              className={`${isDark ? 'bg-gray-800 text-gray-100 border border-gray-700' : 'bg-white text-gray-800 border border-gray-200'} rounded-xl px-5 py-2.5 font-bold flex items-center gap-2 hover:shadow-sm`}
+            >
+              <span className="material-symbols-outlined text-[20px]">edit</span>
+              Edit Exam
+            </button>
+            <button
               onClick={() => navigate(`/teacher/exams/${exam.id}/preview`)}
               className={`${isDark ? 'bg-gray-800 text-gray-100 border border-gray-700' : 'bg-white text-gray-800 border border-gray-200'} rounded-xl px-5 py-2.5 font-bold flex items-center gap-2 hover:shadow-sm`}
             >
               <span className="material-symbols-outlined text-[20px]">visibility</span>
               Preview
-            </button>             <button
+            </button>
+            <button
                onClick={() => {
                  document.getElementById('questions-section')?.scrollIntoView({ behavior: 'smooth' });
                  setShowAddQuestion(true);
@@ -468,7 +497,8 @@ export default function TeacherExamManage() {
              >
                <span className="material-symbols-outlined text-[20px]">add</span>
                Add Question
-             </button>          </div>
+             </button>
+          </div>
         </div>
 
         {/* Info Cards */}
@@ -530,161 +560,34 @@ export default function TeacherExamManage() {
               </div>
             </div>
 
-            {/* Questions Section */}
-            <section id="questions-section" className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h3 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                  Question Bank ({exam.questions.length})
-                </h3>
+            {/* Questions Section - Refactored to dedicated page */}
+            <section id="questions-section" className={`${cardBase} p-6 border-l-4 border-l-primary`}>
+              <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3">
+                    <div className={`p-3 rounded-xl ${isDark ? 'bg-primary/20 text-primary' : 'bg-primary/10 text-primary'}`}>
+                      <span className="material-symbols-outlined text-2xl">quiz</span>
+                    </div>
+                    <div>
+                      <h3 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                        Exam Questions ({exam.questions.length})
+                      </h3>
+                      <p className={`text-sm ${pillMuted}`}>
+                        Manage your exam content, question types, scoring, and rubrics.
+                      </p>
+                    </div>
+                  </div>
+                </div>
                 <button
-                  onClick={() => setShowAddQuestion(true)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold ${isDark ? 'bg-primary text-navy-950 hover:bg-primary-hover' : 'bg-primary text-navy-950 hover:bg-primary-hover'}`}
+                  onClick={() => navigate(`/teacher/exams/${exam.id}/questions`)}
+                  className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold shadow-lg shadow-primary/20 transition-all ${
+                    isDark ? 'bg-primary text-navy-950 hover:bg-primary-hover' : 'bg-primary text-navy-950 hover:bg-primary-hover'
+                  }`}
                 >
-                  <span className="material-symbols-outlined">add_circle</span>
-                  Add Question
+                  <span className="material-symbols-outlined">edit_document</span>
+                  Open Question Editor
                 </button>
               </div>
-
-              {showAddQuestion && (
-                <div className={`${cardBase} border-primary/30 p-6 shadow-lg shadow-primary/10`}>
-                  <div className="flex justify-between items-center mb-4">
-                    <div className={`font-bold flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                      <span className="material-symbols-outlined text-primary">add_circle</span>
-                      Add New Question
-                    </div>
-                    <button
-                      onClick={() => setShowAddQuestion(false)}
-                      className={isDark ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-800'}
-                    >
-                      <span className="material-symbols-outlined">close</span>
-                    </button>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div>
-                      <label className={`${pillMuted} block text-xs font-bold uppercase mb-2`}>Question Content</label>
-                      <textarea
-                        className={`${isDark ? 'bg-gray-900 border-gray-800 text-white' : 'bg-white border-gray-200 text-gray-900'} w-full rounded-xl px-4 py-3 focus:ring-1 focus:ring-primary focus:border-primary transition-all resize-none`}
-                        rows={3}
-                        placeholder="Enter the question text..."
-                        value={newQuestion.text}
-                        onChange={(e) => setNewQuestion({ ...newQuestion, text: e.target.value })}
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className={`${pillMuted} block text-xs font-bold uppercase mb-2`}>Question Type</label>
-                        <select
-                          className={`${isDark ? 'bg-gray-900 border-gray-800 text-white' : 'bg-white border-gray-200 text-gray-900'} w-full rounded-xl px-4 py-2 focus:ring-1 focus:ring-primary focus:border-primary transition-all`}
-                          value={newQuestion.type}
-                          onChange={(e) => setNewQuestion({ ...newQuestion, type: e.target.value as Question['type'] })}
-                        >
-                          <option value="MC">Multiple Choice (MC)</option>
-                          <option value="TF">True / False (TF)</option>
-                          <option value="Short">Short Answer</option>
-                          <option value="Essay">Essay</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className={`${pillMuted} block text-xs font-bold uppercase mb-2`}>Points</label>
-                        <input
-                          type="number"
-                          className={`${isDark ? 'bg-gray-900 border-gray-800 text-white' : 'bg-white border-gray-200 text-gray-900'} w-full rounded-xl px-4 py-2 focus:ring-1 focus:ring-primary focus:border-primary transition-all`}
-                          min="1"
-                          value={newQuestion.points || 1}
-                          onChange={(e) => setNewQuestion({ ...newQuestion, points: parseInt(e.target.value) || 1 })}
-                        />
-                      </div>
-                    </div>
-
-                    {newQuestion.type === 'MC' && (
-                      <div className="space-y-3">
-                        <label className={`${pillMuted} block text-xs font-bold uppercase mb-2`}>Options</label>
-                        {newQuestion.options?.map((opt, idx) => (
-                          <div key={opt.id} className="flex gap-2 items-center">
-                            <input
-                              type="text"
-                              className={`${isDark ? 'bg-gray-900 border-gray-800 text-white' : 'bg-white border-gray-200 text-gray-900'} flex-1 rounded-lg px-3 py-2 focus:ring-1 focus:ring-primary focus:border-primary transition-all`}
-                              placeholder={`Option ${idx + 1}`}
-                              value={opt.text}
-                              onChange={(e) => updateOption(idx, e.target.value, opt.isCorrect)}
-                            />
-                            <label className="flex items-center gap-2">
-                              <input
-                                type="radio"
-                                name="correct"
-                                checked={opt.isCorrect}
-                                onChange={() => updateOption(idx, opt.text, true)}
-                              />
-                              <span className={`text-xs ${pillMuted}`}>Correct</span>
-                            </label>
-                          </div>
-                        ))}
-                        <button
-                          onClick={addOption}
-                          className={`w-full text-sm font-bold py-2 rounded-lg border ${isDark ? 'border-gray-700 text-primary hover:bg-gray-900/50' : 'border-primary/30 text-primary hover:bg-primary/5'}`}
-                        >
-                          + Add Option
-                        </button>
-                      </div>
-                    )}
-
-                    <div className="flex gap-2 pt-4 border-t" style={{ borderColor: isDark ? '#374151' : '#e5e7eb' }}>
-                      <button
-                        onClick={handleAddQuestion}
-                        disabled={updating}
-                        className={`flex-1 font-bold py-2.5 rounded-xl shadow-lg shadow-primary/20 ${updating ? 'opacity-50 cursor-not-allowed' : ''} ${isDark ? 'bg-primary text-navy-950 hover:bg-primary-hover' : 'bg-primary text-navy-950 hover:bg-primary-hover'}`}
-                      >
-                        Save Question
-                      </button>
-                      <button
-                        onClick={() => setShowAddQuestion(false)}
-                        className={`flex-1 font-bold py-2.5 rounded-xl border ${isDark ? 'border-gray-700 text-gray-300 hover:bg-gray-800' : 'border-gray-300 text-gray-600 hover:bg-gray-50'}`}
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {exam.questions.map((q, i) => (
-                <div key={q.id} className={`${cardBase} p-5 flex justify-between items-start`}>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className={`inline-block text-sm font-bold px-2.5 py-1 rounded-lg ${isDark ? 'bg-gray-800 text-gray-400' : 'bg-gray-100 text-gray-600'}`}>
-                        {i + 1}
-                      </span>
-                      <span className={`inline-block text-xs font-bold px-2 py-0.5 rounded ${isDark ? 'bg-primary/20 text-primary' : 'bg-primary/10 text-primary'}`}>
-                        {q.type}
-                      </span>
-                      <span className={`inline-block text-xs font-bold px-2 py-0.5 rounded ${isDark ? 'bg-gray-800 text-gray-400' : 'bg-gray-100 text-gray-600'}`}>
-                        {q.points} pts
-                      </span>
-                    </div>
-                    <p className={`${isDark ? 'text-white' : 'text-gray-900'}`}>{q.text}</p>
-                    {q.options && q.options.length > 0 && (
-                      <div className={`mt-3 space-y-1 text-sm ${pillMuted}`}>
-                        {q.options.map((opt) => (
-                          <div key={opt.id} className="flex items-center gap-2">
-                            <span className={`size-4 rounded-sm border flex items-center justify-center ${opt.isCorrect ? isDark ? 'bg-green-900/40 border-green-600' : 'bg-green-50 border-green-300' : isDark ? 'border-gray-700' : 'border-gray-300'}`}>
-                              {opt.isCorrect && <span className="material-symbols-outlined text-[14px] text-green-500">check</span>}
-                            </span>
-                            {opt.text}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  <button
-                    className={`text-sm font-bold px-3 py-1.5 rounded-lg border ${isDark ? 'border-gray-700 text-gray-400 hover:text-white' : 'border-gray-300 text-gray-600 hover:text-gray-900'}`}
-                    onClick={() => console.log('Edit question:', q.id)}
-                  >
-                    Edit
-                  </button>
-                </div>
-              ))}
             </section>
 
             {/* Attempts Section */}

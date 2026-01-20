@@ -31,6 +31,9 @@ router.post('/', async (req, res) => {
     });
 
     // TODO: Integrate with email service provider (SendGrid, AWS SES, etc.)
+    // Send email using SendGrid
+    const { EmailService } = await import('../services/email.service.js');
+    await EmailService.sendContactFormEmail({ name, email, subject, message });
     // For now, just log and return success
     // Example with SendGrid:
     // await sendGrid.send({

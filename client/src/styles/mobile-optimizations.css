@@ -1,0 +1,118 @@
+/* Mobile optimizations for touch-friendly controls */
+
+/* Increase touch targets on mobile */
+@media (max-width: 768px) {
+  .question-rich-editor .ql-toolbar button {
+    width: 40px;
+    height: 40px;
+    padding: 8px;
+  }
+
+  .question-rich-editor .ql-toolbar .ql-picker-label {
+    padding: 8px 12px;
+    min-height: 40px;
+  }
+
+  /* Larger font for better readability on mobile */
+  .question-rich-editor .ql-editor {
+    font-size: 16px;
+    padding: 20px;
+    min-height: 200px;
+  }
+
+  /* Prevent zoom on input focus (iOS) */
+  .question-rich-editor .ql-editor {
+    font-size: 16px !important;
+  }
+}
+
+/* Touch-friendly drag handles */
+@media (hover: none) and (pointer: coarse) {
+  /* Always show drag handles on touch devices */
+  .sortable-drag-handle {
+    opacity: 1 !important;
+  }
+
+  /* Larger touch targets for buttons */
+  button, .cursor-pointer {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Better spacing for touch */
+  .touch-friendly-spacing {
+    padding: 12px;
+    margin: 8px 0;
+  }
+}
+
+/* Smooth scrolling for mobile */
+@media (max-width: 1024px) {
+  .overflow-y-auto {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+}
+
+/* Prevent text selection during drag on mobile */
+.dragging {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Better focus states for accessibility */
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid #f2d00d;
+  outline-offset: 2px;
+}
+
+/* Responsive grid adjustments */
+@media (max-width: 768px) {
+  .md\:grid-cols-2 {
+    grid-template-columns: 1fr;
+  }
+
+  .lg\:flex-row {
+    flex-direction: column;
+  }
+
+  /* Full width on mobile */
+  .lg\:w-\[320px\],
+  .lg\:w-\[380px\],
+  .xl\:w-\[380px\] {
+    width: 100%;
+  }
+}
+
+/* Improve button tap feedback */
+button:active {
+  transform: scale(0.98);
+  transition: transform 0.1s ease;
+}
+
+/* Better modal/overlay handling on mobile */
+@media (max-width: 640px) {
+  .fixed.inset-0 {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+  }
+}
+
+/* Optimize for notched devices (iPhone X+) */
+@supports (padding: max(0px)) {
+  .safe-area-inset-top {
+    padding-top: max(env(safe-area-inset-top), 0px);
+  }
+
+  .safe-area-inset-bottom {
+    padding-bottom: max(env(safe-area-inset-bottom), 0px);
+  }
+}

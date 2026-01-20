@@ -26,7 +26,7 @@ const getJWTSecret = (): string => {
 export const authMiddleware = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   // Try to get token from HttpOnly cookie first (preferred), then fallback to Authorization header
   let token: string | undefined;
-  
+
   // Check for token in HttpOnly cookie (secure approach)
   if (req.cookies && req.cookies.auth_token) {
     token = req.cookies.auth_token;
@@ -37,15 +37,15 @@ export const authMiddleware = (req: AuthenticatedRequest, res: Response, next: N
       token = authHeader.substring(7);
     }
   }
-  
+
   if (!token) {
     return res.status(401).json({ message: 'Authentication required' });
   }
-  
+
   try {
     // Verify JWT signature and decode payload
     const decoded = jwt.verify(token, getJWTSecret(), { algorithms: ['HS256'] }) as JWTPayload;
-    
+
     // Check if token has required fields
     if (!decoded.sub || !decoded.role) {
       return res.status(401).json({ message: 'Invalid token format' });
@@ -59,7 +59,7 @@ export const authMiddleware = (req: AuthenticatedRequest, res: Response, next: N
     // Set user information on request
     req.userId = decoded.sub;
     req.userRole = decoded.role;
-    
+
     next();
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {
@@ -88,9 +88,9 @@ export const generateToken = (userId: string, role: string): string => {
     sub: userId,
     role: role,
     iat: Math.floor(Date.now() / 1000),
-    exp: Math.floor(Date.now() / 1000) + (2 * 60 * 60), // 2 hours for enhanced security
+    exp: Math.floor(Date.now() / 1000) + (4 * 60 * 60), // 4 hours for enhanced security
   };
-  
+
   return jwt.sign(payload, getJWTSecret(), { algorithm: 'HS256' });
 };
 

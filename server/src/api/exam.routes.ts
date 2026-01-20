@@ -73,7 +73,7 @@ const verifyCourseOwnership = async (req: Request, res: Response, next: express.
  */
 const verifyExamOwnership = async (req: Request, res: Response, next: express.NextFunction) => {
   try {
-    const examId = req.params.id;
+    const examId = req.params.id || req.params.examId;
     const userId = req.user!.id;
     
     // Allow admins to bypass ownership check
@@ -156,7 +156,9 @@ const validateCreateExam = (body: any): { valid: boolean; errors: string[] } => 
   }
   
   // Scheduling validation
-  if (body.scheduledStartAt && body.scheduledEndAt) {
+  if (!body.scheduledStartAt || !body.scheduledEndAt) {
+    errors.push('scheduledStartAt and scheduledEndAt are required.');
+  } else {
     const start = new Date(body.scheduledStartAt);
     const end = new Date(body.scheduledEndAt);
     if (isNaN(start.getTime()) || isNaN(end.getTime())) {
@@ -165,14 +167,62 @@ const validateCreateExam = (body: any): { valid: boolean; errors: string[] } => 
       errors.push('scheduledEndAt must be after scheduledStartAt.');
     }
   }
-  
-  // Anti-cheat validation
-  if (body.antiCheatSettings) {
-    if (typeof body.antiCheatSettings !== 'object') {
-      errors.push('antiCheatSettings must be an object.');
+  // Question/feedback display
+  const booleanFields = [
+    'shuffleQuestions', 'shuffleOptions', 'showResults', 'showResultsImmediately',
+    'showCorrectAnswers', 'allowReview', 'allowBacktracking', 'lateSubmissionAllowed'
+  ];
+  for (const field of booleanFields) {
+    if (body[field] !== undefined && typeof body[field] !== 'boolean') {
+      errors.push(`${field} must be a boolean.`);
     }
   }
-  
+  if (body.lateSubmissionPenalty !== undefined) {
+    if (typeof body.lateSubmissionPenalty !== 'number' || body.lateSubmissionPenalty < 0 || body.lateSubmissionPenalty > 100) {
+      errors.push('lateSubmissionPenalty must be between 0 and 100.');
+    }
+  }
+  if (body.timeLimit !== undefined && typeof body.timeLimit !== 'number') {
+    errors.push('timeLimit must be a number.');
+  }
+
+  // Anti-cheat validation
+  const antiCheatBooleanFields = [
+    'antiCheatEnabled', 'requireWebcam', 'requireScreenShare', 'requireFullscreen',
+    'requireLockdownBrowser', 'copyPasteAllowed', 'rightClickAllowed'
+  ];
+  for (const field of antiCheatBooleanFields) {
+    if (body[field] !== undefined && typeof body[field] !== 'boolean') {
+      errors.push(`${field} must be a boolean.`);
+    }
+  }
+  if (body.tabSwitchLimit !== undefined && body.tabSwitchLimit !== null) {
+    if (typeof body.tabSwitchLimit !== 'number' || body.tabSwitchLimit < 0) {
+      errors.push('tabSwitchLimit must be a non-negative number or null.');
+    }
+  }
+  if (body.recordingDisclosure !== undefined && typeof body.recordingDisclosure !== 'string') {
+    errors.push('recordingDisclosure must be a string.');
+  }
+  if (body.dataRetentionDays !== undefined) {
+    if (typeof body.dataRetentionDays !== 'number' || body.dataRetentionDays < 1) {
+      errors.push('dataRetentionDays must be a positive number.');
+    }
+  }
+
+  // Retake validation
+  if (body.retakeEnabled !== undefined && typeof body.retakeEnabled !== 'boolean') {
+    errors.push('retakeEnabled must be a boolean.');
+  }
+  if (body.retakeDelay !== undefined) {
+    if (typeof body.retakeDelay !== 'number' || body.retakeDelay < 0) {
+      errors.push('retakeDelay must be a non-negative number.');
+    }
+  }
+  if (body.adaptiveRetake !== undefined && typeof body.adaptiveRetake !== 'boolean') {
+    errors.push('adaptiveRetake must be a boolean.');
+  }
+
   return { valid: errors.length === 0, errors };
 };
 
@@ -233,6 +283,10 @@ const validateAntiCheatConfig = (config: any): { valid: boolean; errors: string[
   if (config.requireWebcam !== undefined && typeof config.requireWebcam !== 'boolean') {
     errors.push('requireWebcam must be a boolean.');
   }
+
+  if (config.requireScreenShare !== undefined && typeof config.requireScreenShare !== 'boolean') {
+    errors.push('requireScreenShare must be a boolean.');
+  }
   
   if (config.requireFullscreen !== undefined && typeof config.requireFullscreen !== 'boolean') {
     errors.push('requireFullscreen must be a boolean.');
@@ -258,6 +312,12 @@ const validateAntiCheatConfig = (config: any): { valid: boolean; errors: string[
   
   if (config.recordingDisclosure !== undefined && typeof config.recordingDisclosure !== 'string') {
     errors.push('recordingDisclosure must be a string.');
+  }
+
+  if (config.dataRetentionDays !== undefined) {
+    if (typeof config.dataRetentionDays !== 'number' || config.dataRetentionDays < 1) {
+      errors.push('dataRetentionDays must be a positive number.');
+    }
   }
   
   return { valid: errors.length === 0, errors };
@@ -351,10 +411,29 @@ router.post('/', isAuthenticated, isTeacher, verifyCourseOwnership, async (req: 
       shuffleQuestions = false,
       shuffleOptions = false,
       showResults = true,
+      showResultsImmediately = false,
       showCorrectAnswers = false,
+      allowReview = true,
+      allowBacktracking = false,
       lateSubmissionAllowed = false,
       lateSubmissionPenalty = 0,
+      antiCheatEnabled = true,
+      requireWebcam = false,
+      requireScreenShare = false,
+      requireFullscreen = true,
+      requireLockdownBrowser = false,
+      tabSwitchLimit = 3,
+      copyPasteAllowed = false,
+      rightClickAllowed = false,
+      recordingDisclosure,
+      dataRetentionDays = 365,
+      retakeEnabled = true,
+      retakeDelay = 24,
+      adaptiveRetake = true,
     } = req.body;
+    
+    const normalizedTimeLimit = timeLimit !== undefined ? Number(timeLimit) : undefined;
+    const normalizedAttempts = Number(attemptsAllowed);
     
     // Create exam with default anti-cheat settings
     const [newExam] = await db.insert(exams).values({
@@ -369,28 +448,31 @@ router.post('/', isAuthenticated, isTeacher, verifyCourseOwnership, async (req: 
       duration,
       totalPoints,
       passingScore,
-      attemptsAllowed,
-      timeLimit,
+      attemptsAllowed: normalizedAttempts.toString(),
+      maxAttempts: normalizedAttempts,
+      timeLimit: normalizedTimeLimit !== undefined ? normalizedTimeLimit.toString() : null,
       lateSubmissionAllowed,
       lateSubmissionPenalty,
       shuffleQuestions,
       shuffleOptions,
       showResults,
+      showResultsImmediately,
       showCorrectAnswers,
-      // Default anti-cheat settings
-      antiCheatEnabled: true,
-      requireWebcam: false,
-      requireFullscreen: true,
-      requireLockdownBrowser: false,
-      tabSwitchLimit: 3,
-      copyPasteAllowed: false,
-      rightClickAllowed: false,
-      // Default retake settings
-      retakeEnabled: true,
-      retakeDelay: 24,
-      adaptiveRetake: true,
-      // Privacy compliance
-      dataRetentionDays: 365,
+      allowReview,
+      allowBacktracking,
+      antiCheatEnabled,
+      requireWebcam,
+      requireScreenShare,
+      requireFullscreen,
+      requireLockdownBrowser,
+      tabSwitchLimit,
+      copyPasteAllowed,
+      rightClickAllowed,
+      retakeEnabled,
+      retakeDelay,
+      adaptiveRetake,
+      recordingDisclosure: recordingDisclosure || null,
+      dataRetentionDays,
     } as any).returning();
     
     // Audit log
@@ -469,7 +551,9 @@ router.get('/:id', isAuthenticated, async (req: Request, res: Response) => {
           : q.questionType === 'essay' ? 'Essay'
           : q.questionType,
       points: q.points,
-      options: q.options as any
+      options: q.options as any,
+      correctAnswer: q.correctAnswer as any,
+      rubric: q.rubric,
     }));
     
     res.status(200).json({
@@ -497,10 +581,10 @@ router.get('/:id', isAuthenticated, async (req: Request, res: Response) => {
  */
 router.get('/:id/attempts', isAuthenticated, isTeacher, async (req: Request, res: Response) => {
   try {
-    const examId = parseInt(req.params.id);
+    const examId = req.params.id;
     const teacherId = req.user!.id;
 
-    if (isNaN(examId)) {
+    if (!examId) {
       return res.status(400).json({ message: 'Invalid exam ID' });
     }
 
@@ -529,24 +613,27 @@ router.get('/:id/attempts', isAuthenticated, isTeacher, async (req: Request, res
     }
 
     // Fetch all attempts for this exam with student info
-    const attempts = await db
-      .select({
-        id: examAttempts.id,
-        studentId: examAttempts.studentId,
-        studentName: sql<string>`CONCAT(${users.firstName}, ' ', ${users.lastName})`,
-        studentEmail: users.email,
-        startedAt: examAttempts.startedAt,
-        submittedAt: examAttempts.submittedAt,
-        score: examAttempts.score,
-        percentage: examAttempts.percentage,
-        passed: examAttempts.passed,
-        flaggedForReview: examAttempts.flaggedForReview,
-        reviewStatus: examAttempts.reviewStatus,
-      })
+    const rawAttempts = await db
+      .select()
       .from(examAttempts)
       .innerJoin(users, eq(users.id, examAttempts.studentId))
       .where(eq(examAttempts.examId, examId))
-      .orderBy(desc(examAttempts.submittedAt));
+      .orderBy(desc(examAttempts.startedAt));
+
+    // Format attempts
+    const attempts = rawAttempts.map((row: any) => ({
+      id: row.exam_attempts.id,
+      studentId: row.exam_attempts.studentId,
+      studentName: `${row.users.firstName} ${row.users.lastName}`,
+      studentEmail: row.users.email,
+      startedAt: row.exam_attempts.startedAt,
+      submittedAt: row.exam_attempts.submittedAt,
+      score: row.exam_attempts.score,
+      percentage: row.exam_attempts.percentage,
+      passed: row.exam_attempts.passed,
+      flaggedForReview: row.exam_attempts.flaggedForReview,
+      reviewStatus: row.exam_attempts.reviewStatus,
+    }));
 
     res.json(attempts);
   } catch (error) {
@@ -1013,6 +1100,7 @@ router.patch('/:id/archive', isAuthenticated, isTeacher, verifyExamOwnership, as
  * {
  *   antiCheatEnabled?: boolean
  *   requireWebcam?: boolean
+ *   requireScreenShare?: boolean
  *   requireFullscreen?: boolean
  *   requireLockdownBrowser?: boolean
  *   tabSwitchLimit?: number | null
@@ -1054,7 +1142,7 @@ router.patch('/:id/anti-cheat', isAuthenticated, isTeacher, verifyExamOwnership,
     // Build update object for anti-cheat fields
     const updateData: any = {};
     const antiCheatFields = [
-      'antiCheatEnabled', 'requireWebcam', 'requireFullscreen', 
+      'antiCheatEnabled', 'requireWebcam', 'requireScreenShare', 'requireFullscreen', 
       'requireLockdownBrowser', 'tabSwitchLimit', 'copyPasteAllowed',
       'rightClickAllowed', 'recordingDisclosure', 'dataRetentionDays'
     ];
@@ -1080,6 +1168,7 @@ router.patch('/:id/anti-cheat', isAuthenticated, isTeacher, verifyExamOwnership,
     const antiCheatSettings = {
       antiCheatEnabled: updatedExam.antiCheatEnabled,
       requireWebcam: updatedExam.requireWebcam,
+      requireScreenShare: updatedExam.requireScreenShare,
       requireFullscreen: updatedExam.requireFullscreen,
       requireLockdownBrowser: updatedExam.requireLockdownBrowser,
       tabSwitchLimit: updatedExam.tabSwitchLimit,
@@ -1122,6 +1211,7 @@ router.get('/:id/anti-cheat', isAuthenticated, isTeacher, verifyExamOwnership, a
       .select({
         antiCheatEnabled: exams.antiCheatEnabled,
         requireWebcam: exams.requireWebcam,
+        requireScreenShare: exams.requireScreenShare,
         requireFullscreen: exams.requireFullscreen,
         requireLockdownBrowser: exams.requireLockdownBrowser,
         tabSwitchLimit: exams.tabSwitchLimit,
@@ -1291,7 +1381,7 @@ router.get('/:id/retake-settings', isAuthenticated, isTeacher, verifyExamOwnersh
 router.post('/:id/questions', isAuthenticated, isTeacher, verifyExamOwnership, async (req: Request, res: Response) => {
   try {
     const examId = req.params.id;
-    const { text, type, points, options, topic, subtopic, skillTag, difficultyLevel } = req.body;
+    const { text, type, points, options, correctAnswer: incomingCorrect, rubric, topic, subtopic, skillTag, difficultyLevel } = req.body;
     
     // Validation
     if (!text || !type || !points) {
@@ -1322,19 +1412,23 @@ router.post('/:id/questions', isAuthenticated, isTeacher, verifyExamOwnership, a
       });
     }
     
-    // Validate options for multiple choice
+    // Validate options/correct answer
     if (type === 'MC') {
       if (!options || !Array.isArray(options) || options.length === 0) {
         return res.status(400).json({ 
           message: 'Multiple choice questions must have at least one option.' 
         });
       }
-      
       const hasCorrectAnswer = options.some(opt => opt.isCorrect);
       if (!hasCorrectAnswer) {
         return res.status(400).json({ 
           message: 'Multiple choice questions must have at least one correct answer.' 
         });
+      }
+    }
+    if (type === 'TF') {
+      if (incomingCorrect === undefined || incomingCorrect === null) {
+        return res.status(400).json({ message: 'True/False questions require a correct answer.' });
       }
     }
     
@@ -1368,10 +1462,15 @@ router.post('/:id/questions', isAuthenticated, isTeacher, verifyExamOwnership, a
         { id: 'opt_true', text: 'True', isCorrect: false },
         { id: 'opt_false', text: 'False', isCorrect: false }
       ];
-      correctAnswer = []; // Will be set when grading or by teacher later
+      const isTrueCorrect = incomingCorrect === true || incomingCorrect === 'true';
+      questionOptions = questionOptions.map(opt => ({
+        ...opt,
+        isCorrect: opt.id === (isTrueCorrect ? 'opt_true' : 'opt_false')
+      }));
+      correctAnswer = isTrueCorrect ? ['opt_true'] : ['opt_false'];
     } else {
-      // For Short/Essay, correct answer will be set during grading
-      correctAnswer = null;
+      // For Short/Essay, store teacher-provided mark scheme or empty string
+      correctAnswer = typeof incomingCorrect === 'string' ? incomingCorrect : '';
     }
     
     // Create question
@@ -1391,6 +1490,8 @@ router.post('/:id/questions', isAuthenticated, isTeacher, verifyExamOwnership, a
         skillTag: skillTag || null,
         difficultyLevel: difficultyLevel || null,
         partialCreditEnabled: false,
+        requiresManualGrading: type !== 'MC' && type !== 'TF',
+        rubric: rubric || null,
       } as any)
       .returning();
     
@@ -1404,6 +1505,97 @@ router.post('/:id/questions', isAuthenticated, isTeacher, verifyExamOwnership, a
   } catch (error) {
     console.error('Error adding question:', error);
     res.status(500).json({ message: 'Failed to add question.' });
+  }
+});
+
+// Update a question
+router.patch('/:examId/questions/:questionId', isAuthenticated, isTeacher, verifyExamOwnership, async (req: Request, res: Response) => {
+  try {
+    const examId = req.params.examId;
+    const questionId = req.params.questionId;
+    const { text, type, points, options, correctAnswer: incomingCorrect, rubric, topic, subtopic, skillTag, difficultyLevel } = req.body;
+
+    if (!text || !type || !points) {
+      return res.status(400).json({ message: 'Missing required fields: text, type, and points are required.' });
+    }
+    if (!['MC', 'TF', 'Short', 'Essay'].includes(type)) {
+      return res.status(400).json({ message: 'Invalid question type.' });
+    }
+
+    const typeMapping: Record<string, string> = {
+      MC: 'multiple_choice',
+      TF: 'true_false',
+      Short: 'short_answer',
+      Essay: 'essay',
+    };
+    const dbQuestionType = typeMapping[type];
+
+    if (points <= 0) {
+      return res.status(400).json({ message: 'Points must be greater than 0.' });
+    }
+
+    if (type === 'MC') {
+      if (!options || !Array.isArray(options) || options.length === 0) {
+        return res.status(400).json({ message: 'Multiple choice questions must have at least one option.' });
+      }
+      const hasCorrectAnswer = options.some((opt: any) => opt.isCorrect);
+      if (!hasCorrectAnswer) {
+        return res.status(400).json({ message: 'Multiple choice questions must have at least one correct answer.' });
+      }
+    }
+    if (type === 'TF') {
+      if (incomingCorrect === undefined || incomingCorrect === null) {
+        return res.status(400).json({ message: 'True/False questions require a correct answer.' });
+      }
+    }
+
+    let correctAnswer: any;
+    let questionOptions: any = null;
+
+    if (type === 'MC') {
+      questionOptions = options.map((opt: any, idx: number) => ({
+        id: opt.id || `opt_${idx + 1}`,
+        text: opt.text,
+        isCorrect: !!opt.isCorrect,
+      }));
+      correctAnswer = questionOptions.filter((opt: any) => opt.isCorrect).map((opt: any) => opt.id);
+    } else if (type === 'TF') {
+      const isTrueCorrect = incomingCorrect === true || incomingCorrect === 'true';
+      questionOptions = [
+        { id: 'opt_true', text: 'True', isCorrect: isTrueCorrect },
+        { id: 'opt_false', text: 'False', isCorrect: !isTrueCorrect },
+      ];
+      correctAnswer = isTrueCorrect ? ['opt_true'] : ['opt_false'];
+    } else {
+      correctAnswer = typeof incomingCorrect === 'string' ? incomingCorrect : '';
+    }
+
+    const [updated] = await db
+      .update(examQuestions)
+      .set({
+        questionType: dbQuestionType as any,
+        questionText: text,
+        options: questionOptions,
+        correctAnswer,
+        points,
+        topic: topic || null,
+        subtopic: subtopic || null,
+        skillTag: skillTag || null,
+        difficultyLevel: difficultyLevel || null,
+        requiresManualGrading: type !== 'MC' && type !== 'TF',
+        rubric: rubric || null,
+      })
+      .where(and(eq(examQuestions.id, questionId), eq(examQuestions.examId, examId)))
+      .returning();
+
+    if (!updated) {
+      return res.status(404).json({ message: 'Question not found.' });
+    }
+
+    res.json({ message: 'Question updated successfully.', question: updated });
+  } catch (error) {
+    console.error('Error updating question:', error);
+    res.status(500).json({ message: 'Failed to update question.' });
   }
 });
 

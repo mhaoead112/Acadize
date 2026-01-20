@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/use-toast';
 import { apiEndpoint } from '@/lib/config';
 import StudentLayout from '@/components/StudentLayout';
 
@@ -63,6 +64,7 @@ type CategoryType = 'main' | 'mock' | 'practice' | 'all';
 const StudentExams: React.FC = () => {
   const [, setLocation] = useLocation();
   const { user, getAuthHeaders, isAuthenticated } = useAuth();
+  const { toast } = useToast();
   
   // State management
   const [examData, setExamData] = useState<ExamCategory>({
@@ -146,6 +148,18 @@ const StudentExams: React.FC = () => {
         ['submitted', 'graded', 'flagged', 'under_review'].includes(a.status)
       );
 
+      // Helper to count attempts per exam
+      const getAttemptCount = (examId: string) => {
+        return attempts.filter(a => a.examId === examId).length;
+      };
+
+      // Filter available exams: Remove those where max attempts reached
+      const filteredAvailableExams = availableExams.filter(exam => {
+        const attemptsUsed = getAttemptCount(exam.id);
+        const attemptsAllowed = exam.attemptsAllowed || 1; // Default to 1 if not specified
+        return attemptsUsed < attemptsAllowed;
+      });
+
       // Check if student has an active exam session
       const activeAttempt = inProgressAttempts[0];
       if (activeAttempt) {
@@ -186,7 +200,7 @@ const StudentExams: React.FC = () => {
       });
 
       setExamData({
-        available: enrichedExams,
+        available: filteredAvailableExams,
         inProgress: inProgressAttempts,
         completed: completedAttempts,
         retakeEligible
@@ -207,7 +221,11 @@ const StudentExams: React.FC = () => {
   const handleStartExam = async (exam: Exam) => {
     // Exam lock: prevent starting new exam if one is active
     if (activeExamLock && activeExamLock !== exam.id) {
-      alert('You have an active exam in progress. Please complete or submit it before starting a new exam.');
+      toast({
+        title: "Exam Session Active",
+        description: "You have an active exam in progress. Please complete or submit it before starting a new exam.",
+        variant: "destructive",
+      });
       
       const activeAttempt = examData.inProgress.find(a => a.examId === activeExamLock);
       if (activeAttempt) {
@@ -219,12 +237,20 @@ const StudentExams: React.FC = () => {
 
     // Check if exam is within scheduled time window
     if (exam.scheduledStartAt && new Date(exam.scheduledStartAt) > new Date()) {
-      alert(`This exam is not yet available. It starts on ${new Date(exam.scheduledStartAt).toLocaleString()}`);
+      toast({
+        title: "Exam Not Available Yet",
+        description: `This exam starts on ${new Date(exam.scheduledStartAt).toLocaleString()}`,
+        variant: "default",
+      });
       return;
     }
 
     if (exam.scheduledEndAt && new Date(exam.scheduledEndAt) < new Date()) {
-      alert('This exam period has ended.');
+      toast({
+        title: "Exam Period Ended",
+        description: "This exam period has ended and is no longer available.",
+        variant: "destructive",
+      });
       return;
     }
 
