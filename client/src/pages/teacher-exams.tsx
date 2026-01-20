@@ -236,10 +236,10 @@ export default function TeacherExams() {
           {/* Header */}
           <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 lg:gap-6">
             <div>
-              <h1 className="text-4xl lg:text-5xl font-black tracking-tight text-white mb-3">
+              <h1 className="text-4xl lg:text-5xl font-black tracking-tight text-slate-900 dark:text-white mb-3">
                 Exam Management
               </h1>
-              <p className="text-text-muted text-lg max-w-2xl">
+              <p className="text-slate-500 dark:text-slate-400 text-lg max-w-2xl">
                 Overview of all assessments. Manage active sessions, grade submissions, and create new exams.
               </p>
             </div>
@@ -247,7 +247,7 @@ export default function TeacherExams() {
               <button
                 onClick={handleRefresh}
                 disabled={refreshing}
-                className="flex items-center gap-2 px-5 py-3 rounded-xl bg-navy-900 border border-navy-700 text-text-muted hover:text-white hover:border-navy-600 hover:bg-navy-800 transition-all text-sm font-bold shadow-sm disabled:opacity-50"
+                className="flex items-center gap-2 px-5 py-3 rounded-xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:border-slate-300 dark:hover:border-navy-600 hover:bg-slate-50 dark:hover:bg-navy-800 transition-all text-sm font-bold shadow-sm disabled:opacity-50"
               >
                 <span className={`material-symbols-outlined text-[20px] ${refreshing ? 'animate-spin' : ''}`}>
                   refresh
@@ -255,8 +255,8 @@ export default function TeacherExams() {
                 {refreshing ? 'Refreshing...' : 'Refresh'}
               </button>
               <button
-                onClick={() => setLocation('/teacher/analytics')}
-                className="flex items-center gap-2 px-5 py-3 rounded-xl bg-navy-900 border border-navy-700 text-text-muted hover:text-white hover:border-navy-600 hover:bg-navy-800 transition-all text-sm font-bold shadow-sm"
+                onClick={() => setLocation('/teacher/mistakes')}
+                className="flex items-center gap-2 px-5 py-3 rounded-xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-700 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:border-slate-300 dark:hover:border-navy-600 hover:bg-slate-50 dark:hover:bg-navy-800 transition-all text-sm font-bold shadow-sm"
               >
                 <span className="material-symbols-outlined text-[20px]">analytics</span>
                 Mistake Analytics
@@ -273,68 +273,68 @@ export default function TeacherExams() {
 
           {/* KPI Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-            <div className="bg-navy-900/50 backdrop-blur-sm rounded-2xl p-5 lg:p-6 border border-navy-800 hover:border-navy-600 transition-all duration-300 relative overflow-hidden group cursor-pointer hover:shadow-xl hover:shadow-green-500/5 hover:-translate-y-1">
+            <div className="bg-white dark:bg-navy-900/50 backdrop-blur-sm rounded-2xl p-5 lg:p-6 border border-slate-200 dark:border-navy-800 hover:border-slate-300 dark:hover:border-navy-600 transition-all duration-300 relative overflow-hidden group cursor-pointer hover:shadow-xl hover:shadow-green-500/5 hover:-translate-y-1">
               <div className="absolute -right-6 -top-6 p-4 opacity-5 group-hover:opacity-10 transition-opacity rotate-12">
                 <span className="material-symbols-outlined text-[120px] text-green-400">timer</span>
               </div>
               <div className="relative z-10">
-                <p className="text-text-muted text-xs lg:text-sm font-bold uppercase tracking-wider mb-2">
+                <p className="text-slate-500 dark:text-slate-400 text-xs lg:text-sm font-bold uppercase tracking-wider mb-2">
                   Active Sessions
                 </p>
                 <div className="flex items-end gap-2 lg:gap-3">
-                  <h3 className="text-3xl lg:text-4xl font-black text-white">{activeExams}</h3>
-                  <span className="mb-1.5 inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-green-500/10 text-green-400 border border-current opacity-70">
+                  <h3 className="text-3xl lg:text-4xl font-black text-slate-900 dark:text-white">{activeExams}</h3>
+                  <span className="mb-1.5 inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-green-500/10 text-green-600 dark:text-green-400 border border-current opacity-70">
                     Live
                   </span>
                 </div>
               </div>
             </div>
 
-            <div className="bg-navy-900/50 backdrop-blur-sm rounded-2xl p-5 lg:p-6 border border-navy-800 hover:border-navy-600 transition-all duration-300 relative overflow-hidden group cursor-pointer hover:shadow-xl hover:shadow-orange-500/5 hover:-translate-y-1">
+            <div className="bg-white dark:bg-navy-900/50 backdrop-blur-sm rounded-2xl p-5 lg:p-6 border border-slate-200 dark:border-navy-800 hover:border-slate-300 dark:hover:border-navy-600 transition-all duration-300 relative overflow-hidden group cursor-pointer hover:shadow-xl hover:shadow-orange-500/5 hover:-translate-y-1">
               <div className="absolute -right-6 -top-6 p-4 opacity-5 group-hover:opacity-10 transition-opacity rotate-12">
                 <span className="material-symbols-outlined text-[120px] text-orange-400">flag</span>
               </div>
               <div className="relative z-10">
-                <p className="text-text-muted text-xs lg:text-sm font-bold uppercase tracking-wider mb-2">
+                <p className="text-slate-500 dark:text-slate-400 text-xs lg:text-sm font-bold uppercase tracking-wider mb-2">
                   Flagged Attempts
                 </p>
                 <div className="flex items-end gap-2 lg:gap-3">
-                  <h3 className="text-3xl lg:text-4xl font-black text-white">{totalFlagged}</h3>
-                  <span className="mb-1.5 inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-orange-500/10 text-orange-400 border border-current opacity-70">
+                  <h3 className="text-3xl lg:text-4xl font-black text-slate-900 dark:text-white">{totalFlagged}</h3>
+                  <span className="mb-1.5 inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-current opacity-70">
                     Review
                   </span>
                 </div>
               </div>
             </div>
 
-            <div className="bg-navy-900/50 backdrop-blur-sm rounded-2xl p-5 lg:p-6 border border-navy-800 hover:border-navy-600 transition-all duration-300 relative overflow-hidden group cursor-pointer hover:shadow-xl hover:shadow-blue-500/5 hover:-translate-y-1">
+            <div className="bg-white dark:bg-navy-900/50 backdrop-blur-sm rounded-2xl p-5 lg:p-6 border border-slate-200 dark:border-navy-800 hover:border-slate-300 dark:hover:border-navy-600 transition-all duration-300 relative overflow-hidden group cursor-pointer hover:shadow-xl hover:shadow-blue-500/5 hover:-translate-y-1">
               <div className="absolute -right-6 -top-6 p-4 opacity-5 group-hover:opacity-10 transition-opacity rotate-12">
                 <span className="material-symbols-outlined text-[120px] text-blue-400">bar_chart</span>
               </div>
               <div className="relative z-10">
-                <p className="text-text-muted text-xs lg:text-sm font-bold uppercase tracking-wider mb-2">
+                <p className="text-slate-500 dark:text-slate-400 text-xs lg:text-sm font-bold uppercase tracking-wider mb-2">
                   Avg. Class Score
                 </p>
                 <div className="flex items-end gap-2 lg:gap-3">
-                  <h3 className="text-3xl lg:text-4xl font-black text-white">{avgClassScore}%</h3>
-                  <span className="mb-1.5 inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-blue-500/10 text-blue-400 border border-current opacity-70">
+                  <h3 className="text-3xl lg:text-4xl font-black text-slate-900 dark:text-white">{avgClassScore}%</h3>
+                  <span className="mb-1.5 inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-current opacity-70">
                     Overall
                   </span>
                 </div>
               </div>
             </div>
 
-            <div className="bg-navy-900/50 backdrop-blur-sm rounded-2xl p-5 lg:p-6 border border-navy-800 hover:border-navy-600 transition-all duration-300 relative overflow-hidden group cursor-pointer hover:shadow-xl hover:shadow-purple-500/5 hover:-translate-y-1">
+            <div className="bg-white dark:bg-navy-900/50 backdrop-blur-sm rounded-2xl p-5 lg:p-6 border border-slate-200 dark:border-navy-800 hover:border-slate-300 dark:hover:border-navy-600 transition-all duration-300 relative overflow-hidden group cursor-pointer hover:shadow-xl hover:shadow-purple-500/5 hover:-translate-y-1">
               <div className="absolute -right-6 -top-6 p-4 opacity-5 group-hover:opacity-10 transition-opacity rotate-12">
                 <span className="material-symbols-outlined text-[120px] text-purple-400">event</span>
               </div>
               <div className="relative z-10">
-                <p className="text-text-muted text-xs lg:text-sm font-bold uppercase tracking-wider mb-2">
+                <p className="text-slate-500 dark:text-slate-400 text-xs lg:text-sm font-bold uppercase tracking-wider mb-2">
                   Upcoming Exams
                 </p>
                 <div className="flex items-end gap-2 lg:gap-3">
-                  <h3 className="text-3xl lg:text-4xl font-black text-white">{scheduledExams}</h3>
-                  <span className="mb-1.5 inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-purple-500/10 text-purple-400 border border-current opacity-70 whitespace-nowrap">
+                  <h3 className="text-3xl lg:text-4xl font-black text-slate-900 dark:text-white">{scheduledExams}</h3>
+                  <span className="mb-1.5 inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-current opacity-70 whitespace-nowrap">
                     {getNextScheduledExam()}
                   </span>
                 </div>
@@ -346,19 +346,19 @@ export default function TeacherExams() {
           <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 lg:gap-8">
             {/* Exams Table */}
             <div className="xl:col-span-8">
-              <section className="bg-navy-900/80 backdrop-blur-sm border border-navy-700 rounded-2xl overflow-hidden shadow-lg">
-                <div className="p-4 lg:p-5 border-b border-navy-700 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <h3 className="text-lg lg:text-xl font-bold text-white flex items-center gap-2">
+              <section className="bg-white dark:bg-navy-900/80 backdrop-blur-sm border border-slate-200 dark:border-navy-700 rounded-2xl overflow-hidden shadow-lg">
+                <div className="p-4 lg:p-5 border-b border-slate-200 dark:border-navy-700 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <h3 className="text-lg lg:text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
                     <span className="material-symbols-outlined text-primary">quiz</span>
                     Your Exams
                   </h3>
                   <div className="flex gap-2">
                     <div className="relative">
-                      <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-text-muted">
+                      <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 dark:text-slate-500">
                         <span className="material-symbols-outlined text-[18px]">search</span>
                       </span>
                       <input
-                        className="bg-navy-950 border border-navy-700 rounded-lg text-sm py-2 pl-9 pr-4 w-48 focus:ring-2 focus:ring-primary focus:border-primary text-white placeholder-text-muted transition-all"
+                        className="bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-700 rounded-lg text-sm py-2 pl-9 pr-4 w-48 focus:ring-2 focus:ring-primary focus:border-primary text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 transition-all"
                         placeholder="Filter exams..."
                         type="text"
                       />
@@ -368,7 +368,7 @@ export default function TeacherExams() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-left">
                     <thead>
-                      <tr className="bg-navy-950/50 text-text-muted text-xs uppercase tracking-wider border-b border-navy-700">
+                      <tr className="bg-slate-50 dark:bg-navy-950/50 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider border-b border-slate-200 dark:border-navy-700">
                         <th className="px-4 lg:px-6 py-3 lg:py-4 font-semibold">Exam Details</th>
                         <th className="px-4 lg:px-6 py-3 lg:py-4 font-semibold">Course</th>
                         <th className="px-4 lg:px-6 py-3 lg:py-4 font-semibold">Status</th>
@@ -376,16 +376,16 @@ export default function TeacherExams() {
                         <th className="px-4 lg:px-6 py-3 lg:py-4 font-semibold text-right">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="text-sm divide-y divide-navy-800">
+                    <tbody className="text-sm divide-y divide-slate-100 dark:divide-navy-800">
                       {exams.length === 0 ? (
                         <tr>
                           <td colSpan={5} className="px-4 lg:px-6 py-12 lg:py-16 text-center">
                             <div className="flex flex-col items-center">
-                              <div className="bg-navy-950/50 rounded-full p-6 mb-4">
-                                <span className="material-symbols-outlined text-5xl text-text-muted">quiz</span>
+                              <div className="bg-slate-100 dark:bg-navy-950/50 rounded-full p-6 mb-4">
+                                <span className="material-symbols-outlined text-5xl text-slate-400 dark:text-slate-500">quiz</span>
                               </div>
-                              <p className="text-text-muted text-lg font-medium mb-2">No exams created yet</p>
-                              <p className="text-text-muted/70 text-sm mb-6">Start by creating your first exam</p>
+                              <p className="text-slate-500 dark:text-slate-400 text-lg font-medium mb-2">No exams created yet</p>
+                              <p className="text-slate-400 dark:text-slate-500 text-sm mb-6">Start by creating your first exam</p>
                               <button
                                 onClick={() => setLocation('/teacher/exams/create')}
                                 className="px-6 py-3 bg-primary hover:bg-primary-hover text-navy-950 rounded-xl font-bold transition-all shadow-lg shadow-primary/20 hover:-translate-y-0.5"
@@ -397,15 +397,15 @@ export default function TeacherExams() {
                         </tr>
                       ) : (
                         exams.map((exam) => (
-                          <tr key={exam.id} className="group hover:bg-navy-800/40 transition-all duration-200">
+                          <tr key={exam.id} className="group hover:bg-slate-50 dark:hover:bg-navy-800/40 transition-all duration-200">
                             <td className="px-4 lg:px-6 py-4">
-                              <div className="font-bold text-white text-sm lg:text-base">{exam.title}</div>
-                              <div className="text-xs text-text-muted flex items-center gap-2 mt-1">
+                              <div className="font-bold text-slate-900 dark:text-white text-sm lg:text-base">{exam.title}</div>
+                              <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2 mt-1">
                                 <span className="flex items-center gap-1">
                                   <span className="material-symbols-outlined text-[14px]">schedule</span>
                                   {exam.duration} Mins
                                 </span>
-                                <span className="text-navy-700">•</span>
+                                <span className="text-slate-300 dark:text-navy-700">•</span>
                                 <span className="flex items-center gap-1">
                                   <span className="material-symbols-outlined text-[14px]">star</span>
                                   {exam.totalPoints} Points
@@ -413,7 +413,7 @@ export default function TeacherExams() {
                               </div>
                             </td>
                             <td className="px-4 lg:px-6 py-4">
-                              <span className="px-2.5 py-1.5 rounded-lg bg-navy-950/70 text-xs font-medium text-white border border-navy-700 inline-block">
+                              <span className="px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-navy-950/70 text-xs font-medium text-slate-700 dark:text-white border border-slate-200 dark:border-navy-700 inline-block">
                                 {exam.courseName}
                               </span>
                             </td>
@@ -434,15 +434,15 @@ export default function TeacherExams() {
                             <td className="px-4 lg:px-6 py-4">
                               <div className="text-xs space-y-1.5">
                                 <div className="flex items-center gap-2">
-                                  <span className="material-symbols-outlined text-[14px] text-text-muted">groups</span>
-                                  <span className="text-text-muted">Attempts:</span>
-                                  <span className="text-white font-semibold">{exam.stats.totalAttempts}</span>
+                                  <span className="material-symbols-outlined text-[14px] text-slate-400 dark:text-slate-500">groups</span>
+                                  <span className="text-slate-500 dark:text-slate-400">Attempts:</span>
+                                  <span className="text-slate-900 dark:text-white font-semibold">{exam.stats.totalAttempts}</span>
                                 </div>
                                 {exam.stats.averageScore !== null && (
                                   <div className="flex items-center gap-2">
-                                    <span className="material-symbols-outlined text-[14px] text-text-muted">trending_up</span>
-                                    <span className="text-text-muted">Avg:</span>
-                                    <span className="text-white font-semibold">{exam.stats.averageScore}%</span>
+                                    <span className="material-symbols-outlined text-[14px] text-slate-400 dark:text-slate-500">trending_up</span>
+                                    <span className="text-slate-500 dark:text-slate-400">Avg:</span>
+                                    <span className="text-slate-900 dark:text-white font-semibold">{exam.stats.averageScore}%</span>
                                   </div>
                                 )}
                               </div>
@@ -450,7 +450,7 @@ export default function TeacherExams() {
                             <td className="px-4 lg:px-6 py-4 text-right">
                               <button
                                 onClick={() => setLocation(`/teacher/exams/${exam.id}`)}
-                                className="text-text-muted hover:text-primary transition-all p-2 hover:bg-navy-800 rounded-lg group-hover:bg-navy-800"
+                                className="text-slate-400 dark:text-slate-500 hover:text-primary transition-all p-2 hover:bg-slate-100 dark:hover:bg-navy-800 rounded-lg"
                                 title="Manage Exam"
                               >
                                 <span className="material-symbols-outlined text-[22px]">settings</span>
@@ -467,45 +467,45 @@ export default function TeacherExams() {
 
             {/* Flagged Attempts Sidebar */}
             <div className="xl:col-span-4">
-              <section className="bg-navy-900/80 backdrop-blur-sm border border-navy-700 rounded-2xl p-5 lg:p-6 shadow-lg">
+              <section className="bg-white dark:bg-navy-900/80 backdrop-blur-sm border border-slate-200 dark:border-navy-700 rounded-2xl p-5 lg:p-6 shadow-lg">
                 <div className="flex items-center justify-between mb-5">
-                  <h3 className="text-lg lg:text-xl font-bold text-white flex items-center gap-2">
+                  <h3 className="text-lg lg:text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
                     <span className="material-symbols-outlined text-orange-500">warning</span>
                     Needs Review
                   </h3>
-                  <span className="bg-orange-500 text-navy-950 text-xs font-bold px-3 py-1.5 rounded-full shadow-lg shadow-orange-500/20">
+                  <span className="bg-orange-500 text-white dark:text-navy-950 text-xs font-bold px-3 py-1.5 rounded-full shadow-lg shadow-orange-500/20">
                     {flaggedAttempts.length}
                   </span>
                 </div>
                 <div className="flex flex-col gap-3 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
                   {flaggedAttempts.length === 0 ? (
                     <div className="text-center py-8 lg:py-12">
-                      <div className="bg-navy-950/50 rounded-full p-6 inline-block mb-4">
-                        <span className="material-symbols-outlined text-5xl text-green-400">
+                      <div className="bg-slate-100 dark:bg-navy-950/50 rounded-full p-6 inline-block mb-4">
+                        <span className="material-symbols-outlined text-5xl text-green-500 dark:text-green-400">
                           check_circle
                         </span>
                       </div>
-                      <p className="text-text-muted text-base font-medium mb-1">All Clear!</p>
-                      <p className="text-text-muted/70 text-sm">No flagged attempts at the moment</p>
+                      <p className="text-slate-600 dark:text-slate-400 text-base font-medium mb-1">All Clear!</p>
+                      <p className="text-slate-500 dark:text-slate-500 text-sm">No flagged attempts at the moment</p>
                     </div>
                   ) : (
                     flaggedAttempts.map((attempt) => (
                       <div
                         key={attempt.id}
-                        className="bg-navy-950/50 rounded-xl p-4 border-l-4 border-orange-500 hover:bg-navy-800/50 transition-all duration-200 group hover:shadow-lg hover:shadow-orange-500/5"
+                        className="bg-slate-50 dark:bg-navy-950/50 rounded-xl p-4 border-l-4 border-orange-500 hover:bg-slate-100 dark:hover:bg-navy-800/50 transition-all duration-200 group hover:shadow-lg hover:shadow-orange-500/5"
                       >
                         <div className="flex justify-between items-start mb-3">
                           <div className="flex-1 min-w-0">
-                            <p className="text-white font-bold text-sm truncate">{attempt.studentName}</p>
-                            <p className="text-xs text-text-muted truncate mt-0.5">{attempt.examTitle}</p>
+                            <p className="text-slate-900 dark:text-white font-bold text-sm truncate">{attempt.studentName}</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">{attempt.examTitle}</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-2 mb-3">
                           <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold ${
-                            attempt.riskLevel.toLowerCase() === 'critical' ? 'bg-red-500/10 text-red-400 border border-red-500/20' :
-                            attempt.riskLevel.toLowerCase() === 'high' ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20' :
-                            attempt.riskLevel.toLowerCase() === 'medium' ? 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20' :
-                            'bg-green-500/10 text-green-400 border border-green-500/20'
+                            attempt.riskLevel.toLowerCase() === 'critical' ? 'bg-red-500/10 text-red-500 dark:text-red-400 border border-red-500/20' :
+                            attempt.riskLevel.toLowerCase() === 'high' ? 'bg-orange-500/10 text-orange-500 dark:text-orange-400 border border-orange-500/20' :
+                            attempt.riskLevel.toLowerCase() === 'medium' ? 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border border-yellow-500/20' :
+                            'bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20'
                           }`}>
                             <span className="material-symbols-outlined text-[14px]">psychology</span>
                             <span>{attempt.riskScore}%</span>
@@ -516,7 +516,7 @@ export default function TeacherExams() {
                         </div>
                         <button
                           onClick={() => setLocation(`/teacher/review/${attempt.id}`)}
-                          className="w-full text-center py-2.5 rounded-lg bg-navy-800 text-sm font-bold text-white group-hover:bg-primary group-hover:text-navy-950 transition-all shadow-sm group-hover:shadow-md"
+                          className="w-full text-center py-2.5 rounded-lg bg-slate-200 dark:bg-navy-800 text-sm font-bold text-slate-700 dark:text-white group-hover:bg-primary group-hover:text-navy-950 transition-all shadow-sm group-hover:shadow-md"
                         >
                           Review Attempt
                         </button>

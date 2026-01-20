@@ -146,6 +146,12 @@ export default function TeacherExamCreate() {
       newErrors.push({ field: 'attemptsAllowed', message: 'At least 1 attempt must be allowed' });
     }
     
+    if (!formData.scheduledStartAt) {
+      newErrors.push({ field: 'scheduledStartAt', message: 'Start date/time is required' });
+    }
+    if (!formData.scheduledEndAt) {
+      newErrors.push({ field: 'scheduledEndAt', message: 'End date/time is required' });
+    }
     if (formData.scheduledStartAt && formData.scheduledEndAt) {
       const start = new Date(formData.scheduledStartAt);
       const end = new Date(formData.scheduledEndAt);
@@ -201,9 +207,25 @@ export default function TeacherExamCreate() {
         shuffleQuestions: formData.shuffleQuestions,
         shuffleOptions: formData.shuffleOptions,
         showResults: formData.showResults,
+        showResultsImmediately: formData.showResultsImmediately,
         showCorrectAnswers: formData.showCorrectAnswers,
+        allowReview: formData.allowReview,
+        allowBacktracking: formData.allowBacktracking,
         lateSubmissionAllowed: formData.lateSubmissionAllowed,
         lateSubmissionPenalty: formData.lateSubmissionPenalty,
+        antiCheatEnabled: formData.antiCheatEnabled,
+        requireWebcam: formData.requireWebcam,
+        requireScreenShare: formData.requireScreenShare,
+        requireFullscreen: formData.requireFullscreen,
+        requireLockdownBrowser: formData.requireLockdownBrowser,
+        tabSwitchLimit: formData.tabSwitchLimit,
+        copyPasteAllowed: formData.copyPasteAllowed,
+        rightClickAllowed: formData.rightClickAllowed,
+        retakeEnabled: formData.retakeEnabled,
+        retakeDelay: formData.retakeDelay,
+        adaptiveRetake: formData.adaptiveRetake,
+        recordingDisclosure: formData.recordingDisclosure || undefined,
+        dataRetentionDays: formData.dataRetentionDays,
       };
       
       const response = await fetch(apiEndpoint('/api/exams'), {
@@ -261,49 +283,25 @@ export default function TeacherExamCreate() {
     );
   }
 
-  const inputClasses = `w-full ${
-    theme === 'dark'
-      ? 'bg-navy-950 border-navy-800 text-white'
-      : 'bg-white border-gray-300 text-gray-900'
-  } rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary focus:border-primary transition-all`;
 
-  const cardClasses = `${
-    theme === 'dark'
-      ? 'bg-navy-900 border-navy-700'
-      : 'bg-white border-gray-200'
-  } border rounded-2xl p-8 space-y-8 shadow-xl`;
-
-  const checkboxCardClasses = (checked: boolean) => `flex items-center justify-between p-4 ${
-    theme === 'dark'
-      ? `bg-navy-950 rounded-xl border ${checked ? 'border-primary/50' : 'border-navy-800'}`
-      : `bg-gray-50 rounded-xl border ${checked ? 'border-primary/50' : 'border-gray-300'}`
-  } hover:border-primary/30 transition-all cursor-pointer`;
 
   return (
     <TeacherLayout>
-      <div className="max-w-5xl mx-auto p-6">
+      <div className="max-w-5xl mx-auto p-4 sm:p-6 pb-16">
         {/* Header */}
-        <div className="mb-10">
-          <div className="flex items-center gap-3 mb-2">
+        <div className="mb-8 lg:mb-12">
+          <div className="flex items-center gap-4 mb-3">
             <button
               onClick={() => setLocation('/teacher/exams')}
-              className={`p-2 rounded-lg ${
-                theme === 'dark'
-                  ? 'hover:bg-navy-800 text-text-muted hover:text-white'
-                  : 'hover:bg-gray-100 text-gray-600 hover:text-gray-900'
-              } transition-all`}
+              className="p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-navy-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all shadow-sm group"
             >
-              <span className="material-symbols-outlined">arrow_back</span>
+              <span className="material-symbols-outlined transition-transform group-hover:-translate-x-1">arrow_back</span>
             </button>
-            <h1 className={`text-4xl font-black tracking-tight ${
-              theme === 'dark' ? 'text-white' : 'text-gray-900'
-            }`}>
+            <h1 className="text-3xl lg:text-5xl font-black tracking-tight text-slate-900 dark:text-white">
               Create New Exam
             </h1>
           </div>
-          <p className={`text-lg ml-14 ${
-            theme === 'dark' ? 'text-text-muted' : 'text-gray-600'
-          }`}>
+          <p className="text-lg lg:text-xl text-slate-600 dark:text-slate-400 ml-14 max-w-3xl">
             Configure metadata, timing, security protocols, and anti-cheat settings for your assessment.
           </p>
         </div>
@@ -325,28 +323,24 @@ export default function TeacherExamCreate() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-8">
+        <form onSubmit={handleSubmit} className="space-y-8 lg:space-y-12">
           {/* Metadata & Timing */}
-          <div className={cardClasses}>
-            <div className="flex items-center gap-3 mb-6">
-              <span className={`material-symbols-outlined ${
-                theme === 'dark' ? 'text-primary' : 'text-primary'
-              }`}>edit_document</span>
-              <h3 className={`text-xl font-bold ${
-                theme === 'dark' ? 'text-white' : 'text-gray-900'
-              }`}>Metadata & Timing</h3>
+          <div className="bg-white dark:bg-navy-900/50 backdrop-blur-sm border border-slate-200 dark:border-navy-800 rounded-3xl p-6 lg:p-10 shadow-xl shadow-slate-200/50 dark:shadow-none space-y-8 lg:space-y-10">
+            <div className="flex items-center gap-4 mb-2">
+              <div className="size-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+                <span className="material-symbols-outlined text-[28px]">edit_document</span>
+              </div>
+              <h3 className="text-2xl font-bold text-slate-900 dark:text-white">Metadata & Timing</h3>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
               {/* Course Selection */}
-              <div className="space-y-2 md:col-span-2">
-                <label className={`text-sm font-bold uppercase ${
-                  theme === 'dark' ? 'text-text-muted' : 'text-gray-600'
-                }`}>
+              <div className="space-y-2.5 md:col-span-2">
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 ml-1">
                   Course *
                 </label>
                 <select
-                  className={inputClasses}
+                  className="w-full bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-700 text-slate-900 dark:text-white rounded-2xl px-5 py-4 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none appearance-none"
                   value={formData.courseId}
                   onChange={(e) => handleInputChange('courseId', e.target.value)}
                   required
@@ -357,40 +351,35 @@ export default function TeacherExamCreate() {
                   ))}
                 </select>
                 {getFieldError('courseId') && (
-                  <p className="text-red-400 text-sm mt-1">{getFieldError('courseId')}</p>
+                  <p className="text-red-500 text-sm mt-1 ml-1">{getFieldError('courseId')}</p>
                 )}
               </div>
 
               {/* Exam Title */}
-              <div className="space-y-2 md:col-span-2">
-                <label className={`text-sm font-bold uppercase ${
-                  theme === 'dark' ? 'text-text-muted' : 'text-gray-600'
-                }`}>
+              <div className="space-y-2.5 md:col-span-2">
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 ml-1">
                   Exam Title *
                 </label>
                 <input
                   type="text"
-                  className={inputClasses}
+                  className="w-full bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-700 text-slate-900 dark:text-white rounded-2xl px-5 py-4 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
                   placeholder="e.g., Midterm Exam: Thermodynamics"
                   value={formData.title}
                   onChange={(e) => handleInputChange('title', e.target.value)}
                   required
                 />
                 {getFieldError('title') && (
-                  <p className="text-red-400 text-sm mt-1">{getFieldError('title')}</p>
+                  <p className="text-red-500 text-sm mt-1 ml-1">{getFieldError('title')}</p>
                 )}
               </div>
 
               {/* Description */}
-              <div className="space-y-2 md:col-span-2">
-                <label className={`text-sm font-bold uppercase ${
-                  theme === 'dark' ? 'text-text-muted' : 'text-gray-600'
-                }`}>
+              <div className="space-y-2.5 md:col-span-2">
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 ml-1">
                   Description (Optional)
                 </label>
                 <textarea
-                  className={inputClasses}
-                  rows={3}
+                  className="w-full bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-700 text-slate-900 dark:text-white rounded-2xl px-5 py-4 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none min-h-[100px]"
                   placeholder="Brief description of the exam content and objectives..."
                   value={formData.description}
                   onChange={(e) => handleInputChange('description', e.target.value)}
@@ -398,15 +387,12 @@ export default function TeacherExamCreate() {
               </div>
 
               {/* Instructions */}
-              <div className="space-y-2 md:col-span-2">
-                <label className={`text-sm font-bold uppercase ${
-                  theme === 'dark' ? 'text-text-muted' : 'text-gray-600'
-                }`}>
+              <div className="space-y-2.5 md:col-span-2">
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 ml-1">
                   Instructions (Optional)
                 </label>
                 <textarea
-                  className={inputClasses}
-                  rows={4}
+                  className="w-full bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-700 text-slate-900 dark:text-white rounded-2xl px-5 py-4 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none min-h-[120px]"
                   placeholder="Special instructions for students taking this exam..."
                   value={formData.instructions}
                   onChange={(e) => handleInputChange('instructions', e.target.value)}
@@ -414,75 +400,67 @@ export default function TeacherExamCreate() {
               </div>
 
               {/* Duration */}
-              <div className="space-y-2">
-                <label className={`text-sm font-bold uppercase ${
-                  theme === 'dark' ? 'text-text-muted' : 'text-gray-600'
-                }`}>
+              <div className="space-y-2.5">
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 ml-1">
                   Duration (Minutes) *
                 </label>
                 <input
                   type="number"
-                  className={inputClasses}
+                  className="w-full bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-700 text-slate-900 dark:text-white rounded-2xl px-5 py-4 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
                   min="1"
                   value={formData.duration}
                   onChange={(e) => handleInputChange('duration', parseInt(e.target.value) || 0)}
                   required
                 />
                 {getFieldError('duration') && (
-                  <p className="text-red-400 text-sm mt-1">{getFieldError('duration')}</p>
+                  <p className="text-red-500 text-sm mt-1 ml-1">{getFieldError('duration')}</p>
                 )}
               </div>
 
               {/* Time Limit Per Attempt */}
-              <div className="space-y-2">
-                <label className={`text-sm font-bold uppercase ${
-                  theme === 'dark' ? 'text-text-muted' : 'text-gray-600'
-                }`}>
+              <div className="space-y-2.5">
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 ml-1">
                   Time Limit Per Attempt (Minutes) *
                 </label>
                 <input
                   type="number"
-                  className={inputClasses}
+                  className="w-full bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-700 text-slate-900 dark:text-white rounded-2xl px-5 py-4 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
                   min="1"
                   value={formData.timeLimit}
                   onChange={(e) => handleInputChange('timeLimit', parseInt(e.target.value) || 0)}
                   required
                 />
                 {getFieldError('timeLimit') && (
-                  <p className="text-red-400 text-sm mt-1">{getFieldError('timeLimit')}</p>
+                  <p className="text-red-500 text-sm mt-1 ml-1">{getFieldError('timeLimit')}</p>
                 )}
               </div>
 
               {/* Total Points */}
-              <div className="space-y-2">
-                <label className={`text-sm font-bold uppercase ${
-                  theme === 'dark' ? 'text-text-muted' : 'text-gray-600'
-                }`}>
+              <div className="space-y-2.5">
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 ml-1">
                   Total Points *
                 </label>
                 <input
                   type="number"
-                  className={inputClasses}
+                  className="w-full bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-700 text-slate-900 dark:text-white rounded-2xl px-5 py-4 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
                   min="0"
                   value={formData.totalPoints}
                   onChange={(e) => handleInputChange('totalPoints', parseInt(e.target.value) || 0)}
                   required
                 />
                 {getFieldError('totalPoints') && (
-                  <p className="text-red-400 text-sm mt-1">{getFieldError('totalPoints')}</p>
+                  <p className="text-red-500 text-sm mt-1 ml-1">{getFieldError('totalPoints')}</p>
                 )}
               </div>
 
               {/* Passing Score */}
-              <div className="space-y-2">
-                <label className={`text-sm font-bold uppercase ${
-                  theme === 'dark' ? 'text-text-muted' : 'text-gray-600'
-                }`}>
+              <div className="space-y-2.5">
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 ml-1">
                   Passing Score *
                 </label>
                 <input
                   type="number"
-                  className={inputClasses}
+                  className="w-full bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-700 text-slate-900 dark:text-white rounded-2xl px-5 py-4 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
                   min="0"
                   max={formData.totalPoints}
                   value={formData.passingScore}
@@ -490,112 +468,116 @@ export default function TeacherExamCreate() {
                   required
                 />
                 {getFieldError('passingScore') && (
-                  <p className="text-red-400 text-sm mt-1">{getFieldError('passingScore')}</p>
+                  <p className="text-red-500 text-sm mt-1 ml-1">{getFieldError('passingScore')}</p>
                 )}
               </div>
 
               {/* Attempts Allowed */}
-              <div className="space-y-2">
-                <label className={`text-sm font-bold uppercase ${
-                  theme === 'dark' ? 'text-text-muted' : 'text-gray-600'
-                }`}>
+              <div className="space-y-2.5">
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 ml-1">
                   Attempts Allowed *
                 </label>
                 <input
                   type="number"
-                  className={inputClasses}
+                  className="w-full bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-700 text-slate-900 dark:text-white rounded-2xl px-5 py-4 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
                   min="1"
                   value={formData.attemptsAllowed}
                   onChange={(e) => handleInputChange('attemptsAllowed', parseInt(e.target.value) || 1)}
                   required
                 />
                 {getFieldError('attemptsAllowed') && (
-                  <p className="text-red-400 text-sm mt-1">{getFieldError('attemptsAllowed')}</p>
+                  <p className="text-red-500 text-sm mt-1 ml-1">{getFieldError('attemptsAllowed')}</p>
                 )}
               </div>
             </div>
           </div>
 
           {/* Scheduling */}
-          <div className={cardClasses}>
-            <div className="flex items-center gap-3 mb-6">
-              <span className={`material-symbols-outlined ${
-                theme === 'dark' ? 'text-primary' : 'text-primary'
-              }`}>schedule</span>
-              <h3 className={`text-xl font-bold ${
-                theme === 'dark' ? 'text-white' : 'text-gray-900'
-              }`}>Scheduling (Optional)</h3>
+          <div className="bg-white dark:bg-navy-900/50 backdrop-blur-sm border border-slate-200 dark:border-navy-800 rounded-3xl p-6 lg:p-10 shadow-xl shadow-slate-200/50 dark:shadow-none space-y-8 lg:space-y-10">
+            <div className="flex items-center gap-4 mb-2">
+              <div className="size-12 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-500">
+                <span className="material-symbols-outlined text-[28px]">schedule</span>
+              </div>
+              <h3 className="text-2xl font-bold text-slate-900 dark:text-white">Scheduling (Optional)</h3>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
               {/* Start Date */}
-              <div className="space-y-2">
-                <label className={`text-sm font-bold uppercase ${
-                  theme === 'dark' ? 'text-text-muted' : 'text-gray-600'
-                }`}>
+              <div className="space-y-2.5">
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 ml-1">
                   Start Date & Time
                 </label>
                 <input
                   type="datetime-local"
-                  className={inputClasses}
+                  className="w-full bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-700 text-slate-900 dark:text-white rounded-2xl px-5 py-4 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
                   value={formData.scheduledStartAt}
                   onChange={(e) => handleInputChange('scheduledStartAt', e.target.value)}
                 />
               </div>
 
               {/* End Date */}
-              <div className="space-y-2">
-                <label className={`text-sm font-bold uppercase ${
-                  theme === 'dark' ? 'text-text-muted' : 'text-gray-600'
-                }`}>
+              <div className="space-y-2.5">
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 ml-1">
                   End Date & Time
                 </label>
                 <input
                   type="datetime-local"
-                  className={inputClasses}
+                  className="w-full bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-700 text-slate-900 dark:text-white rounded-2xl px-5 py-4 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
                   value={formData.scheduledEndAt}
                   onChange={(e) => handleInputChange('scheduledEndAt', e.target.value)}
                 />
                 {getFieldError('scheduledEndAt') && (
-                  <p className="text-red-400 text-sm mt-1">{getFieldError('scheduledEndAt')}</p>
+                  <p className="text-red-500 text-sm mt-1 ml-1">{getFieldError('scheduledEndAt')}</p>
                 )}
               </div>
             </div>
           </div>
 
-          {/* Question Randomization & Display Settings */}
-          <div className={cardClasses}>
-            <div className="flex items-center gap-3 mb-6">
-              <span className={`material-symbols-outlined ${
-                theme === 'dark' ? 'text-primary' : 'text-primary'
-              }`}>shuffle</span>
-              <h3 className={`text-xl font-bold ${
-                theme === 'dark' ? 'text-white' : 'text-gray-900'
-              }`}>Question Randomization & Display</h3>
+          {/* Randomization Settings */}
+          <div className="bg-white dark:bg-navy-900/50 backdrop-blur-sm border border-slate-200 dark:border-navy-800 rounded-3xl p-6 lg:p-10 shadow-xl shadow-slate-200/50 dark:shadow-none space-y-8 lg:space-y-10">
+            <div className="flex items-center gap-4 mb-2">
+              <div className="size-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+                <span className="material-symbols-outlined text-[28px]">shuffle</span>
+              </div>
+              <h3 className="text-2xl font-bold text-slate-900 dark:text-white">Question Randomization & Display</h3>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
               {[
-                { key: 'shuffleQuestions', label: 'Shuffle Questions', desc: 'Randomize question order for each student' },
-                { key: 'shuffleOptions', label: 'Shuffle Options', desc: 'Randomize answer choices for MCQs' },
-                { key: 'showResults', label: 'Show Results', desc: 'Display exam results to students' },
-                { key: 'showResultsImmediately', label: 'Show Results Immediately', desc: 'Display results right after submission' },
-                { key: 'showCorrectAnswers', label: 'Show Correct Answers', desc: 'Reveal correct answers in results' },
-                { key: 'allowReview', label: 'Allow Review', desc: 'Let students review their answers' },
-                { key: 'allowBacktracking', label: 'Allow Backtracking', desc: 'Allow returning to previous questions' },
+                { key: 'shuffleQuestions', label: 'Shuffle Questions', desc: 'Randomize question order for each student', icon: 'shuffle' },
+                { key: 'shuffleOptions', label: 'Shuffle Options', desc: 'Randomize answer choices for MCQs', icon: 'format_list_bulleted' },
+                { key: 'showResults', label: 'Show Results', desc: 'Display exam results to students', icon: 'analytics' },
+                { key: 'showResultsImmediately', label: 'Show Results Immediately', desc: 'Display results right after submission', icon: 'speed' },
+                { key: 'showCorrectAnswers', label: 'Show Correct Answers', desc: 'Reveal correct answers in results', icon: 'check_circle' },
+                { key: 'allowReview', label: 'Allow Review', desc: 'Let students review their answers', icon: 'rate_review' },
+                { key: 'allowBacktracking', label: 'Allow Backtracking', desc: 'Allow returning to previous questions', icon: 'undo' },
               ].map(item => (
-                <label key={item.key} className={checkboxCardClasses((formData as any)[item.key])}>
-                  <div className="flex flex-col flex-1">
-                    <span className={`font-bold text-sm ${
-                      theme === 'dark' ? 'text-white' : 'text-gray-900'
-                    }`}>{item.label}</span>
-                    <span className={`text-xs ${
-                      theme === 'dark' ? 'text-text-muted' : 'text-gray-500'
-                    }`}>{item.desc}</span>
+                <label key={item.key} className={`flex items-center justify-between p-5 rounded-2xl border transition-all cursor-pointer group ${
+                  (formData as any)[item.key]
+                    ? 'bg-primary/5 border-primary/50 dark:bg-primary/10'
+                    : 'bg-slate-50 dark:bg-navy-950/50 border-slate-200 dark:border-navy-700 hover:border-primary/30'
+                }`}>
+                  <div className="flex items-center gap-4">
+                    <div className={`size-10 rounded-xl flex items-center justify-center transition-colors ${
+                      (formData as any)[item.key] ? 'bg-primary text-navy-950' : 'bg-slate-200 dark:bg-navy-800 text-slate-500 dark:text-slate-400'
+                    }`}>
+                      <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-bold text-slate-900 dark:text-white">{item.label}</span>
+                      <span className="text-xs text-slate-500 dark:text-slate-400">{item.desc}</span>
+                    </div>
+                  </div>
+                  <div className={`size-6 rounded-full border-2 flex items-center justify-center transition-all ${
+                    (formData as any)[item.key] ? 'bg-primary border-primary' : 'border-slate-300 dark:border-navy-600'
+                  }`}>
+                    {(formData as any)[item.key] && (
+                      <span className="material-symbols-outlined text-[16px] text-navy-950 font-bold">check</span>
+                    )}
                   </div>
                   <input
                     type="checkbox"
-                    className="form-checkbox h-5 w-5 rounded text-primary focus:ring-primary"
+                    className="hidden"
                     checked={(formData as any)[item.key]}
                     onChange={(e) => handleInputChange(item.key, e.target.checked)}
                   />
@@ -605,51 +587,61 @@ export default function TeacherExamCreate() {
           </div>
 
           {/* Late Submission Settings */}
-          <div className={cardClasses}>
-            <div className="flex items-center gap-3 mb-6">
-              <span className={`material-symbols-outlined ${
-                theme === 'dark' ? 'text-primary' : 'text-primary'
-              }`}>schedule_send</span>
-              <h3 className={`text-xl font-bold ${
-                theme === 'dark' ? 'text-white' : 'text-gray-900'
-              }`}>Late Submission Settings</h3>
+          <div className="bg-white dark:bg-navy-900/50 backdrop-blur-sm border border-slate-200 dark:border-navy-800 rounded-3xl p-6 lg:p-10 shadow-xl shadow-slate-200/50 dark:shadow-none space-y-8 lg:space-y-10">
+            <div className="flex items-center gap-4 mb-2">
+              <div className="size-12 rounded-2xl bg-orange-500/10 flex items-center justify-center text-orange-500">
+                <span className="material-symbols-outlined text-[28px]">schedule_send</span>
+              </div>
+              <h3 className="text-2xl font-bold text-slate-900 dark:text-white">Late Submission Settings</h3>
             </div>
             
             <div className="space-y-6">
-              <label className={checkboxCardClasses(formData.lateSubmissionAllowed)}>
-                <div className="flex flex-col flex-1">
-                  <span className={`font-bold text-sm ${
-                    theme === 'dark' ? 'text-white' : 'text-gray-900'
-                  }`}>Allow Late Submissions</span>
-                  <span className={`text-xs ${
-                    theme === 'dark' ? 'text-text-muted' : 'text-gray-500'
-                  }`}>Permit exam submissions after deadline</span>
+              <label className={`flex items-center justify-between p-5 rounded-2xl border transition-all cursor-pointer group ${
+                formData.lateSubmissionAllowed
+                  ? 'bg-primary/5 border-primary/50 dark:bg-primary/10'
+                  : 'bg-slate-50 dark:bg-navy-950/50 border-slate-200 dark:border-navy-700 hover:border-primary/30'
+              }`}>
+                <div className="flex items-center gap-4">
+                  <div className={`size-10 rounded-xl flex items-center justify-center transition-colors ${
+                    formData.lateSubmissionAllowed ? 'bg-primary text-navy-950' : 'bg-slate-200 dark:bg-navy-800 text-slate-500 dark:text-slate-400'
+                  }`}>
+                    <span className="material-symbols-outlined text-[20px]">history</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="font-bold text-slate-900 dark:text-white">Allow Late Submissions</span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400">Permit exam submissions after deadline</span>
+                  </div>
+                </div>
+                <div className={`size-6 rounded-full border-2 flex items-center justify-center transition-all ${
+                  formData.lateSubmissionAllowed ? 'bg-primary border-primary' : 'border-slate-300 dark:border-navy-600'
+                }`}>
+                  {formData.lateSubmissionAllowed && (
+                    <span className="material-symbols-outlined text-[16px] text-navy-950 font-bold">check</span>
+                  )}
                 </div>
                 <input
                   type="checkbox"
-                  className="form-checkbox h-5 w-5 rounded text-primary focus:ring-primary"
+                  className="hidden"
                   checked={formData.lateSubmissionAllowed}
                   onChange={(e) => handleInputChange('lateSubmissionAllowed', e.target.checked)}
                 />
               </label>
 
               {formData.lateSubmissionAllowed && (
-                <div className="space-y-2">
-                  <label className={`text-sm font-bold uppercase ${
-                    theme === 'dark' ? 'text-text-muted' : 'text-gray-600'
-                  }`}>
+                <div className="space-y-2.5 animate-fade-in">
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 ml-1">
                     Late Submission Penalty (%)
                   </label>
                   <input
                     type="number"
-                    className={inputClasses}
+                    className="w-full bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-700 text-slate-900 dark:text-white rounded-2xl px-5 py-4 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
                     min="0"
                     max="100"
                     value={formData.lateSubmissionPenalty}
                     onChange={(e) => handleInputChange('lateSubmissionPenalty', parseInt(e.target.value) || 0)}
                   />
                   {getFieldError('lateSubmissionPenalty') && (
-                    <p className="text-red-400 text-sm mt-1">{getFieldError('lateSubmissionPenalty')}</p>
+                    <p className="text-red-500 text-sm mt-1 ml-1">{getFieldError('lateSubmissionPenalty')}</p>
                   )}
                 </div>
               )}
@@ -657,58 +649,82 @@ export default function TeacherExamCreate() {
           </div>
 
           {/* Anti-Cheat & Proctoring */}
-          <div className={cardClasses}>
-            <div className="flex items-center gap-3 mb-6">
-              <span className={`material-symbols-outlined ${
-                theme === 'dark' ? 'text-primary' : 'text-primary'
-              }`}>security</span>
-              <h3 className={`text-xl font-bold ${
-                theme === 'dark' ? 'text-white' : 'text-gray-900'
-              }`}>Anti-Cheat & Proctoring</h3>
+          <div className="bg-white dark:bg-navy-900/50 backdrop-blur-sm border border-slate-200 dark:border-navy-800 rounded-3xl p-6 lg:p-10 shadow-xl shadow-slate-200/50 dark:shadow-none space-y-8 lg:space-y-10">
+            <div className="flex items-center gap-4 mb-2">
+              <div className="size-12 rounded-2xl bg-red-500/10 flex items-center justify-center text-red-500">
+                <span className="material-symbols-outlined text-[28px]">security</span>
+              </div>
+              <h3 className="text-2xl font-bold text-slate-900 dark:text-white">Anti-Cheat & Proctoring</h3>
             </div>
             
-            <div className="space-y-6">
+            <div className="space-y-8">
               {/* Anti-Cheat Enabled Toggle */}
-              <label className={checkboxCardClasses(formData.antiCheatEnabled)}>
-                <div className="flex flex-col flex-1">
-                  <span className={`font-bold text-sm ${
-                    theme === 'dark' ? 'text-white' : 'text-gray-900'
-                  }`}>Enable Anti-Cheat System</span>
-                  <span className={`text-xs ${
-                    theme === 'dark' ? 'text-text-muted' : 'text-gray-500'
-                  }`}>Activate comprehensive cheating prevention measures</span>
+              <label className={`flex items-center justify-between p-6 rounded-2xl border transition-all cursor-pointer group ${
+                formData.antiCheatEnabled
+                  ? 'bg-primary/5 border-primary/50 dark:bg-primary/10'
+                  : 'bg-slate-50 dark:bg-navy-950/50 border-slate-200 dark:border-navy-700 hover:border-primary/30'
+              }`}>
+                <div className="flex items-center gap-5">
+                  <div className={`size-12 rounded-xl flex items-center justify-center transition-colors ${
+                    formData.antiCheatEnabled ? 'bg-primary text-navy-950' : 'bg-slate-200 dark:bg-navy-800 text-slate-500 dark:text-slate-400'
+                  }`}>
+                    <span className="material-symbols-outlined text-[24px]">verified_user</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="font-bold text-lg text-slate-900 dark:text-white">Enable Anti-Cheat System</span>
+                    <span className="text-sm text-slate-500 dark:text-slate-400">Activate comprehensive cheating prevention measures</span>
+                  </div>
+                </div>
+                <div className={`h-7 w-12 rounded-full p-1 transition-colors ${
+                  formData.antiCheatEnabled ? 'bg-primary' : 'bg-slate-300 dark:bg-navy-700'
+                }`}>
+                  <div className={`size-5 rounded-full bg-white shadow-sm transition-transform ${
+                    formData.antiCheatEnabled ? 'translate-x-5' : 'translate-x-0'
+                  }`} />
                 </div>
                 <input
                   type="checkbox"
-                  className="form-checkbox h-5 w-5 rounded text-primary focus:ring-primary"
+                  className="hidden"
                   checked={formData.antiCheatEnabled}
                   onChange={(e) => handleInputChange('antiCheatEnabled', e.target.checked)}
                 />
               </label>
 
               {formData.antiCheatEnabled && (
-                <>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-8 animate-fade-in">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
                     {[
-                      { key: 'requireWebcam', label: 'Require Webcam', desc: 'Verify student identity via webcam' },
-                      { key: 'requireScreenShare', label: 'Require Screen Share', desc: 'Monitor student screen during exam' },
-                      { key: 'requireFullscreen', label: 'Require Fullscreen', desc: 'Force fullscreen mode during exam' },
-                      { key: 'requireLockdownBrowser', label: 'Lockdown Browser', desc: 'Prevent browser navigation and switching' },
-                      { key: 'copyPasteAllowed', label: 'Allow Copy/Paste', desc: 'Permit clipboard operations' },
-                      { key: 'rightClickAllowed', label: 'Allow Right-Click', desc: 'Enable context menu access' },
+                      { key: 'requireWebcam', label: 'Require Webcam', desc: 'Verify identity via webcam', icon: 'videocam' },
+                      { key: 'requireScreenShare', label: 'Require Screen Share', desc: 'Monitor student screen', icon: 'screen_share' },
+                      { key: 'requireFullscreen', label: 'Force Fullscreen', desc: 'Restrict browser escape', icon: 'fullscreen' },
+                      { key: 'requireLockdownBrowser', label: 'Lockdown Mode', desc: 'Prevent tab switching', icon: 'browser_updated' },
+                      { key: 'copyPasteAllowed', label: 'Allow Clipboard', desc: 'Permit copy/paste actions', icon: 'content_paste' },
+                      { key: 'rightClickAllowed', label: 'Allow Right-Click', desc: 'Enable context menus', icon: 'mouse' },
                     ].map(item => (
-                      <label key={item.key} className={checkboxCardClasses((formData as any)[item.key])}>
-                        <div className="flex flex-col flex-1">
-                          <span className={`font-bold text-sm ${
-                            theme === 'dark' ? 'text-white' : 'text-gray-900'
-                          }`}>{item.label}</span>
-                          <span className={`text-xs ${
-                            theme === 'dark' ? 'text-text-muted' : 'text-gray-500'
-                          }`}>{item.desc}</span>
+                      <label key={item.key} className={`flex flex-col p-5 rounded-2xl border transition-all cursor-pointer group ${
+                        (formData as any)[item.key]
+                          ? 'bg-primary/5 border-primary/50 dark:bg-primary/10'
+                          : 'bg-slate-50 dark:bg-navy-950/50 border-slate-200 dark:border-navy-700 hover:border-primary/30'
+                      }`}>
+                        <div className="flex items-center justify-between mb-3">
+                          <div className={`size-10 rounded-xl flex items-center justify-center transition-colors ${
+                            (formData as any)[item.key] ? 'bg-primary text-navy-950' : 'bg-slate-200 dark:bg-navy-800 text-slate-500 dark:text-slate-400'
+                          }`}>
+                            <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
+                          </div>
+                          <div className={`size-5 rounded-md border-2 flex items-center justify-center transition-all ${
+                            (formData as any)[item.key] ? 'bg-primary border-primary' : 'border-slate-300 dark:border-navy-600'
+                          }`}>
+                            {(formData as any)[item.key] && (
+                              <span className="material-symbols-outlined text-[14px] text-navy-950 font-bold">check</span>
+                            )}
+                          </div>
                         </div>
+                        <span className="font-bold text-slate-900 dark:text-white text-sm">{item.label}</span>
+                        <span className="text-xs text-slate-500 dark:text-slate-400 mt-1">{item.desc}</span>
                         <input
                           type="checkbox"
-                          className="form-checkbox h-5 w-5 rounded text-primary focus:ring-primary"
+                          className="hidden"
                           checked={(formData as any)[item.key]}
                           onChange={(e) => handleInputChange(item.key, e.target.checked)}
                         />
@@ -716,185 +732,187 @@ export default function TeacherExamCreate() {
                     ))}
                   </div>
 
-                  <div className="space-y-2">
-                    <label className={`text-sm font-bold uppercase ${
-                      theme === 'dark' ? 'text-text-muted' : 'text-gray-600'
-                    }`}>
+                  <div className="space-y-2.5 p-6 bg-slate-50 dark:bg-navy-950/30 rounded-2xl border border-slate-200 dark:border-navy-800">
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 ml-1">
                       Tab Switch Limit
                     </label>
-                    <input
-                      type="number"
-                      className={inputClasses}
-                      min="0"
-                      placeholder="0 = unlimited"
-                      value={formData.tabSwitchLimit}
-                      onChange={(e) => handleInputChange('tabSwitchLimit', parseInt(e.target.value) || 0)}
-                    />
-                    <p className={`text-xs ${
-                      theme === 'dark' ? 'text-text-muted' : 'text-gray-500'
-                    }`}>
-                      Maximum number of allowed tab switches (0 = unlimited)
-                    </p>
+                    <div className="flex items-center gap-4">
+                      <input
+                        type="number"
+                        className="w-32 bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 text-slate-900 dark:text-white rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
+                        min="0"
+                        placeholder="0"
+                        value={formData.tabSwitchLimit}
+                        onChange={(e) => handleInputChange('tabSwitchLimit', parseInt(e.target.value) || 0)}
+                      />
+                      <p className="text-xs text-slate-500 dark:text-slate-400 italic">
+                        Set to 0 for unlimited switches. Recommended: 3.
+                      </p>
+                    </div>
                     {getFieldError('tabSwitchLimit') && (
-                      <p className="text-red-400 text-sm mt-1">{getFieldError('tabSwitchLimit')}</p>
+                      <p className="text-red-500 text-sm mt-1 ml-1">{getFieldError('tabSwitchLimit')}</p>
                     )}
                   </div>
-                </>
+                </div>
               )}
             </div>
           </div>
 
           {/* Retake Settings */}
-          <div className={cardClasses}>
-            <div className="flex items-center gap-3 mb-6">
-              <span className={`material-symbols-outlined ${
-                theme === 'dark' ? 'text-primary' : 'text-primary'
-              }`}>repeat</span>
-              <h3 className={`text-xl font-bold ${
-                theme === 'dark' ? 'text-white' : 'text-gray-900'
-              }`}>Retake Configuration</h3>
+          <div className="bg-white dark:bg-navy-900/50 backdrop-blur-sm border border-slate-200 dark:border-navy-800 rounded-3xl p-6 lg:p-10 shadow-xl shadow-slate-200/50 dark:shadow-none space-y-8 lg:space-y-10">
+            <div className="flex items-center gap-4 mb-2">
+              <div className="size-12 rounded-2xl bg-purple-500/10 flex items-center justify-center text-purple-500">
+                <span className="material-symbols-outlined text-[28px]">repeat</span>
+              </div>
+              <h3 className="text-2xl font-bold text-slate-900 dark:text-white">Retake Configuration</h3>
             </div>
             
-            <div className="space-y-6">
-              <label className={checkboxCardClasses(formData.retakeEnabled)}>
-                <div className="flex flex-col flex-1">
-                  <span className={`font-bold text-sm ${
-                    theme === 'dark' ? 'text-white' : 'text-gray-900'
-                  }`}>Enable Retake Exams</span>
-                  <span className={`text-xs ${
-                    theme === 'dark' ? 'text-text-muted' : 'text-gray-500'
-                  }`}>Allow students to take mistake-based retake exams</span>
+            <div className="space-y-8">
+              <label className={`flex items-center justify-between p-6 rounded-2xl border transition-all cursor-pointer group ${
+                formData.retakeEnabled
+                  ? 'bg-primary/5 border-primary/50 dark:bg-primary/10'
+                  : 'bg-slate-50 dark:bg-navy-950/50 border-slate-200 dark:border-navy-700 hover:border-primary/30'
+              }`}>
+                <div className="flex items-center gap-5">
+                  <div className={`size-12 rounded-xl flex items-center justify-center transition-colors ${
+                    formData.retakeEnabled ? 'bg-primary text-navy-950' : 'bg-slate-200 dark:bg-navy-800 text-slate-500 dark:text-slate-400'
+                  }`}>
+                    <span className="material-symbols-outlined text-[24px]">autorenew</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="font-bold text-lg text-slate-900 dark:text-white">Enable Retake Exams</span>
+                    <span className="text-sm text-slate-500 dark:text-slate-400">Allow mistake-based practice sessions</span>
+                  </div>
+                </div>
+                <div className={`h-7 w-12 rounded-full p-1 transition-colors ${
+                  formData.retakeEnabled ? 'bg-primary' : 'bg-slate-300 dark:bg-navy-700'
+                }`}>
+                  <div className={`size-5 rounded-full bg-white shadow-sm transition-transform ${
+                    formData.retakeEnabled ? 'translate-x-5' : 'translate-x-0'
+                  }`} />
                 </div>
                 <input
                   type="checkbox"
-                  className="form-checkbox h-5 w-5 rounded text-primary focus:ring-primary"
+                  className="hidden"
                   checked={formData.retakeEnabled}
                   onChange={(e) => handleInputChange('retakeEnabled', e.target.checked)}
                 />
               </label>
 
               {formData.retakeEnabled && (
-                <>
-                  <div className="space-y-2">
-                    <label className={`text-sm font-bold uppercase ${
-                      theme === 'dark' ? 'text-text-muted' : 'text-gray-600'
-                    }`}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10 animate-fade-in p-8 rounded-2xl bg-slate-50 dark:bg-navy-950/30 border border-slate-200 dark:border-navy-800">
+                  <div className="space-y-2.5">
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 ml-1">
                       Retake Delay (Hours)
                     </label>
                     <input
                       type="number"
-                      className={inputClasses}
+                      className="w-full bg-white dark:bg-navy-950 border border-slate-200 dark:border-navy-700 text-slate-900 dark:text-white rounded-2xl px-5 py-4 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
                       min="0"
                       value={formData.retakeDelay}
                       onChange={(e) => handleInputChange('retakeDelay', parseInt(e.target.value) || 0)}
                     />
-                    <p className={`text-xs ${
-                      theme === 'dark' ? 'text-text-muted' : 'text-gray-500'
-                    }`}>
-                      Time students must wait before retake becomes available
+                    <p className="text-xs text-slate-500 dark:text-slate-400 italic ml-1">
+                      Cooldown period between attempts.
                     </p>
                     {getFieldError('retakeDelay') && (
-                      <p className="text-red-400 text-sm mt-1">{getFieldError('retakeDelay')}</p>
+                      <p className="text-red-500 text-sm mt-1 ml-1">{getFieldError('retakeDelay')}</p>
                     )}
                   </div>
 
-                  <label className={checkboxCardClasses(formData.adaptiveRetake)}>
-                    <div className="flex flex-col flex-1">
-                      <span className={`font-bold text-sm ${
-                        theme === 'dark' ? 'text-white' : 'text-gray-900'
-                      }`}>Adaptive Retake</span>
-                      <span className={`text-xs ${
-                        theme === 'dark' ? 'text-text-muted' : 'text-gray-500'
-                      }`}>Generate retakes based on student mistakes</span>
+                  <label className={`flex items-center justify-between p-5 rounded-2xl border transition-all cursor-pointer group mt-auto ${
+                    formData.adaptiveRetake
+                      ? 'bg-primary/5 border-primary/50 dark:bg-primary/10'
+                      : 'bg-white dark:bg-navy-950/50 border-slate-200 dark:border-navy-700 hover:border-primary/30'
+                  }`}>
+                    <div className="flex items-center gap-4">
+                      <div className={`size-10 rounded-xl flex items-center justify-center transition-colors ${
+                        formData.adaptiveRetake ? 'bg-primary text-navy-950' : 'bg-slate-100 dark:bg-navy-800 text-slate-500 dark:text-slate-400'
+                      }`}>
+                        <span className="material-symbols-outlined text-[20px]">psychology</span>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="font-bold text-slate-900 dark:text-white">Adaptive</span>
+                        <span className="text-xs text-slate-500 dark:text-slate-400">Targeted review</span>
+                      </div>
                     </div>
                     <input
                       type="checkbox"
-                      className="form-checkbox h-5 w-5 rounded text-primary focus:ring-primary"
+                      className="form-checkbox h-5 w-5 rounded-lg text-primary focus:ring-primary border-slate-300 dark:border-navy-600"
                       checked={formData.adaptiveRetake}
                       onChange={(e) => handleInputChange('adaptiveRetake', e.target.checked)}
                     />
                   </label>
-                </>
+                </div>
               )}
             </div>
           </div>
 
           {/* Privacy & Compliance */}
-          <div className={cardClasses}>
-            <div className="flex items-center gap-3 mb-6">
-              <span className={`material-symbols-outlined ${
-                theme === 'dark' ? 'text-primary' : 'text-primary'
-              }`}>privacy_tip</span>
-              <h3 className={`text-xl font-bold ${
-                theme === 'dark' ? 'text-white' : 'text-gray-900'
-              }`}>Privacy & Compliance</h3>
+          <div className="bg-white dark:bg-navy-900/50 backdrop-blur-sm border border-slate-200 dark:border-navy-800 rounded-3xl p-6 lg:p-10 shadow-xl shadow-slate-200/50 dark:shadow-none space-y-8 lg:space-y-10">
+            <div className="flex items-center gap-4 mb-2">
+              <div className="size-12 rounded-2xl bg-teal-500/10 flex items-center justify-center text-teal-500">
+                <span className="material-symbols-outlined text-[28px]">policy</span>
+              </div>
+              <h3 className="text-2xl font-bold text-slate-900 dark:text-white">Privacy & Compliance</h3>
             </div>
             
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <label className={`text-sm font-bold uppercase ${
-                  theme === 'dark' ? 'text-text-muted' : 'text-gray-600'
-                }`}>
+            <div className="space-y-8">
+              <div className="space-y-2.5">
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 ml-1">
                   Recording Disclosure (Optional)
                 </label>
                 <textarea
-                  className={inputClasses}
-                  rows={3}
+                  className="w-full bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-700 text-slate-900 dark:text-white rounded-2xl px-5 py-4 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none min-h-[100px]"
                   placeholder="Inform students about recording/monitoring practices..."
                   value={formData.recordingDisclosure}
                   onChange={(e) => handleInputChange('recordingDisclosure', e.target.value)}
                 />
               </div>
 
-              <div className="space-y-2">
-                <label className={`text-sm font-bold uppercase ${
-                  theme === 'dark' ? 'text-text-muted' : 'text-gray-600'
-                }`}>
+              <div className="space-y-2.5">
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 ml-1">
                   Data Retention (Days)
                 </label>
-                <input
-                  type="number"
-                  className={inputClasses}
-                  min="1"
-                  value={formData.dataRetentionDays}
-                  onChange={(e) => handleInputChange('dataRetentionDays', parseInt(e.target.value) || 365)}
-                />
-                <p className={`text-xs ${
-                  theme === 'dark' ? 'text-text-muted' : 'text-gray-500'
-                }`}>
-                  Number of days to retain exam and proctoring data (GDPR compliance)
-                </p>
+                <div className="flex items-center gap-4">
+                  <input
+                    type="number"
+                    className="w-32 bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-700 text-slate-900 dark:text-white rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
+                    min="1"
+                    value={formData.dataRetentionDays}
+                    onChange={(e) => handleInputChange('dataRetentionDays', parseInt(e.target.value) || 365)}
+                  />
+                  <p className="text-xs text-slate-500 dark:text-slate-400 italic">
+                    Duration for keeping exam data (GDPR/FERPA compliance).
+                  </p>
+                </div>
                 {getFieldError('dataRetentionDays') && (
-                  <p className="text-red-400 text-sm mt-1">{getFieldError('dataRetentionDays')}</p>
+                  <p className="text-red-500 text-sm mt-1 ml-1">{getFieldError('dataRetentionDays')}</p>
                 )}
               </div>
             </div>
           </div>
 
           {/* Form Actions */}
-          <div className={`pt-6 border-t ${
-            theme === 'dark' ? 'border-navy-800' : 'border-gray-200'
-          } flex justify-end gap-4`}>
+          <div className="pt-10 border-t border-slate-200 dark:border-navy-800 flex flex-col sm:flex-row justify-end gap-4">
             <button
               type="button"
               onClick={() => setLocation('/teacher/exams')}
-              className={`px-6 py-3 rounded-xl font-bold transition-all ${
-                theme === 'dark'
-                  ? 'bg-navy-800 text-text-muted hover:text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
+              className="order-2 sm:order-1 px-8 py-4 rounded-2xl font-bold bg-slate-100 dark:bg-navy-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-navy-700 transition-all flex items-center justify-center gap-2"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="px-8 py-3 rounded-xl bg-primary text-white font-bold hover:bg-primary-hover shadow-lg shadow-primary/20 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="order-1 sm:order-2 px-10 py-4 rounded-2xl bg-primary text-navy-950 font-black hover:bg-primary-hover shadow-xl shadow-primary/20 hover:shadow-primary/30 hover:-translate-y-1 transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed group"
             >
-              {submitting && (
-                <span className="animate-spin border-2 border-white border-t-transparent rounded-full size-4"></span>
+              {submitting ? (
+                <span className="animate-spin border-3 border-navy-950/30 border-t-navy-950 rounded-full size-5"></span>
+              ) : (
+                <span className="material-symbols-outlined text-[24px] group-hover:scale-110 transition-transform">add_circle</span>
               )}
-              {submitting ? 'Creating...' : 'Create Exam'}
+              {submitting ? 'Creating Assessment...' : 'Create Assessment'}
             </button>
           </div>
         </form>
