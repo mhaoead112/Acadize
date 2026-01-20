@@ -65,6 +65,13 @@ import AIStudyBuddy from "@/pages/ai-study-buddy";
 import StudentAssignments from "@/pages/student-assignments";
 import StudentGrades from "@/pages/student-grades";
 import StudentSchedule from "@/pages/student-schedule";
+import StudentExams from "@/pages/student-exams";
+import StudentMistakes from "@/pages/student-mistakes";
+import StudentRetakeConfig from "@/pages/student-retake-config";
+import StudentRetakeAttempt from "@/pages/student-retake-attempt";
+import ExamInstructions from "@/pages/exam-instructions";
+import StudentExamAttempt from "@/pages/student-exam-attempt";
+import StudentExamResults from "@/pages/student-exam-results";
 import AnnouncementsPage from "@/pages/announcements";
 import StudentAnnouncementsPage from "@/pages/student-announcements";
 import StudentAllAnnouncementsPage from "@/pages/student-all-announcements";
@@ -81,6 +88,10 @@ import TeacherLessonView from "@/pages/teacher-lesson-view";
 // New pages for complete LMS
 import TeacherMessages from "@/pages/teacher-messages";
 import TeacherCalendar from "@/pages/teacher-calendar";
+import TeacherExams from "@/pages/teacher-exams";
+import TeacherExamCreate from "@/pages/teacher-exam-create";
+import TeacherExamManage from "@/pages/teacher-exam-manage";
+import TeacherAttemptReview from "@/pages/teacher-attempt-review";
 import AdminUsers from "@/pages/admin-users";
 import AdminStudentParentLink from "@/pages/admin-student-parent-link";
 import AdminCalendar from "@/pages/admin-calendar";
@@ -223,6 +234,48 @@ function Router() {
           <Route path="/student/assignments">
             <StudentRoute>
               <StudentAssignments />
+            </StudentRoute>
+          </Route>
+
+          <Route path="/student/exams">
+            <StudentRoute>
+              <StudentExams />
+            </StudentRoute>
+          </Route>
+
+          <Route path="/student/exams/:examId/start">
+            <StudentRoute>
+              <ExamInstructions />
+            </StudentRoute>
+          </Route>
+
+          <Route path="/student/exams/:examId/attempt/:attemptId">
+            <StudentRoute>
+              <StudentExamAttempt />
+            </StudentRoute>
+          </Route>
+
+          <Route path="/student/exams/:examId/results/:attemptId">
+            <StudentRoute>
+              <StudentExamResults />
+            </StudentRoute>
+          </Route>
+
+          <Route path="/student/mistakes">
+            <StudentRoute>
+              <StudentMistakes />
+            </StudentRoute>
+          </Route>
+
+          <Route path="/student/retake-config">
+            <StudentRoute>
+              <StudentRetakeConfig />
+            </StudentRoute>
+          </Route>
+
+          <Route path="/student/retakes/:retakeId">
+            <StudentRoute>
+              <StudentRetakeAttempt />
             </StudentRoute>
           </Route>
 
@@ -502,6 +555,26 @@ function Router() {
           <Route path="/teacher/analytics">
             <TeacherRoute>
               <TeacherAnalytics />
+            </TeacherRoute>
+          </Route>
+          <Route path="/teacher/exams">
+            <TeacherRoute>
+              <TeacherExams />
+            </TeacherRoute>
+          </Route>
+          <Route path="/teacher/exams/create">
+            <TeacherRoute>
+              <TeacherExamCreate />
+            </TeacherRoute>
+          </Route>
+          <Route path="/teacher/exams/:id">
+            <TeacherRoute>
+              <TeacherExamManage />
+            </TeacherRoute>
+          </Route>
+          <Route path="/teacher/attempts/:attemptId/review">
+            <TeacherRoute>
+              <TeacherAttemptReview />
             </TeacherRoute>
           </Route>
           <Route path="/teacher/calendar">

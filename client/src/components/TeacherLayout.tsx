@@ -15,6 +15,7 @@ const navItems: NavItem[] = [
   { label: 'Dashboard', icon: 'dashboard', path: '/teacher/dashboard' },
   { label: 'Classes', icon: 'school', path: '/teacher/courses' },
   { label: 'Assignments', icon: 'task', path: '/teacher/assignments' },
+  { label: 'Exams', icon: 'quiz', path: '/teacher/exams' },
   { label: 'Students', icon: 'groups', path: '/teacher/students' },
   { label: 'Calendar', icon: 'calendar_month', path: '/teacher/calendar' },
   { label: 'Report Cards', icon: 'assessment', path: '/teacher/report-cards' },
@@ -38,7 +39,7 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
   };
 
   return (
-    <div className="flex h-screen w-full bg-slate-50 dark:bg-[#0a192f] overflow-hidden font-sans transition-colors duration-300">
+    <div className="flex h-screen w-full bg-slate-50 dark:bg-[#0a192f] font-sans transition-colors duration-300">
       {/* Desktop Sidebar */}
       <aside className="hidden lg:flex w-72 h-full flex-col border-r border-slate-200 dark:border-white/10 bg-white dark:bg-[#0a192f] shadow-xl dark:shadow-none z-30 transition-colors duration-300">
         <div className="p-6 pb-2">
@@ -212,7 +213,7 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden relative">
+      <div className="flex-1 flex flex-col h-full overflow-y-auto relative">
         {/* Mobile Header */}
         <header className="lg:hidden flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-white/10 bg-white/95 dark:bg-[#0a192f]/95 backdrop-blur-sm z-20">
           <button 

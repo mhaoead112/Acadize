@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiEndpoint } from '@/lib/config';
 import { 
   MessageCircle, Send, Search, Plus, User, 
-  Phone, Video, MoreVertical, Paperclip, Smile,
+  MoreVertical, Paperclip, Smile,
   Check, CheckCheck, Clock
 } from "lucide-react";
 
@@ -206,9 +206,31 @@ export default function StudentMessages() {
   };
 
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !selectedTeacher) return;
+    if (!newMessage.trim() || !selectedTeacher || sending) return;
 
+    const messageContent = newMessage;
+    setNewMessage(""); // Clear input immediately
     setSending(true);
+    
+    // Add message to local state optimistically
+    const newMsg: Message = {
+      id: Date.now(),
+      senderId: user?.id || 0,
+      senderName: "You",
+      content: messageContent,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      isRead: false,
+      isSent: true
+    };
+    setMessages(prevMessages => [...prevMessages, newMsg]);
+
+    // Update last message in teacher list
+    setTeachers(teachers.map(t => 
+      t.id === selectedTeacher.id 
+        ? { ...t, lastMessage: messageContent, lastMessageTime: "Just now" }
+        : t
+    ));
+
     try {
       const response = await fetch(apiEndpoint(`/api/student/messages/${selectedTeacher.id}`), {
         method: 'POST',
@@ -217,28 +239,12 @@ export default function StudentMessages() {
           'Content-Type': 'application/json'
         },
         credentials: 'include',
-        body: JSON.stringify({ content: newMessage })
+        body: JSON.stringify({ content: messageContent })
       });
 
-      // Add message to local state regardless of API response
-      const newMsg: Message = {
-        id: Date.now(),
-        senderId: user?.id || 0,
-        senderName: "You",
-        content: newMessage,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        isRead: false,
-        isSent: true
-      };
-      setMessages([...messages, newMsg]);
-      setNewMessage("");
-
-      // Update last message in teacher list
-      setTeachers(teachers.map(t => 
-        t.id === selectedTeacher.id 
-          ? { ...t, lastMessage: newMessage, lastMessageTime: "Just now" }
-          : t
-      ));
+      if (!response.ok) {
+        throw new Error('Failed to send message');
+      }
     } catch (error) {
       console.error('Error sending message:', error);
       toast({
@@ -246,6 +252,8 @@ export default function StudentMessages() {
         description: "Failed to send message. Please try again.",
         variant: "destructive"
       });
+      // Optionally remove the message from local state on error
+      setMessages(prevMessages => prevMessages.filter(m => m.id !== newMsg.id));
     } finally {
       setSending(false);
     }
@@ -349,12 +357,6 @@ export default function StudentMessages() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Button variant="ghost" size="icon">
-                        <Phone className="h-5 w-5 text-slate-500 dark:text-slate-400" />
-                      </Button>
-                      <Button variant="ghost" size="icon">
-                        <Video className="h-5 w-5 text-slate-500 dark:text-slate-400" />
-                      </Button>
                       <Button variant="ghost" size="icon">
                         <MoreVertical className="h-5 w-5 text-slate-500 dark:text-slate-400" />
                       </Button>

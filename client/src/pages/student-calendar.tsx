@@ -54,6 +54,7 @@ export default function StudentCalendar() {
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [showEventDialog, setShowEventDialog] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [activeFilters, setActiveFilters] = useState<string[]>(['Assignments', 'Classes', 'Exams', 'Events']);
 
   useEffect(() => {
     if (token) {
@@ -162,11 +163,21 @@ export default function StudentCalendar() {
   const getEventsForDate = useCallback((date: Date) => {
     return events.filter(event => {
       const eventDate = new Date(event.startTime);
-      return eventDate.getDate() === date.getDate() &&
+      const dateMatches = eventDate.getDate() === date.getDate() &&
              eventDate.getMonth() === date.getMonth() &&
              eventDate.getFullYear() === date.getFullYear();
+      
+      // Apply filters
+      if (!dateMatches) return false;
+      
+      if (activeFilters.includes('Assignments') && (event.type === 'assignment' || event.type === 'deadline')) return true;
+      if (activeFilters.includes('Classes') && event.type === 'class') return true;
+      if (activeFilters.includes('Exams') && event.type === 'exam') return true;
+      if (activeFilters.includes('Events') && event.type === 'event') return true;
+      
+      return false;
     });
-  }, [events]);
+  }, [events, activeFilters]);
 
   const navigateMonth = (direction: 'prev' | 'next') => {
     const newDate = new Date(currentDate);

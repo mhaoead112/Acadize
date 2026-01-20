@@ -80,3 +80,19 @@ export const isAdmin = (req: Request, res: Response, next: NextFunction) => {
     return res.status(403).json({ message: "Forbidden: Admin access required." });
   }
 };
+
+export const isStudent = (req: Request, res: Response, next: NextFunction) => {
+  if (req.user && req.user.role === "student") {
+    next();
+  } else {
+    return res.status(403).json({ message: "Forbidden: Student access required." });
+  }
+};
+
+export const isTeacher = (req: Request, res: Response, next: NextFunction) => {
+  if (req.user && req.user.role === "teacher") {
+    next();
+  } else {
+    return res.status(403).json({ message: "Forbidden: Teacher access required." });
+  }
+};

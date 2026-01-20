@@ -78,6 +78,16 @@ import adminSettingsRoutes from './api/admin-settings.routes.js';
 import pushRoutes from './api/push.routes.js';
 import uploadRoutes from './api/upload.routes.js';
 import contactsRoutes from './api/contacts.routes.js';
+import studentRoutes from './api/student.routes.js';
+import examRoutes from './api/exam.routes.js';
+import examAttemptRoutes from './api/exam-attempt.routes.js';
+import antiCheatRoutes from './api/anti-cheat.routes.js';
+import mistakesRoutes from './api/mistakes.routes.js';
+import riskScoringRoutes from './api/risk-scoring.routes.js';
+import retakeExamRoutes from './api/retake-exam.routes.js';
+import retakeSubmissionRoutes from './api/retake-submission.routes.js';
+import retakeRoutes from './api/retake.routes.js';
+import teacherRoutes from './api/teacher.routes.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -336,6 +346,16 @@ app.use('/api/admin/settings', apiLimiter, adminSettingsRoutes);
 app.use('/api/push', apiLimiter, pushRoutes);
 app.use('/api/upload', uploadLimiter, uploadRoutes);
 app.use('/api/contacts', apiLimiter, contactsRoutes);
+app.use('/api/student', apiLimiter, studentRoutes);
+app.use('/api/exams', apiLimiter, examRoutes);
+app.use('/api/exam-attempts', apiLimiter, examAttemptRoutes);
+app.use('/api/anti-cheat', apiLimiter, antiCheatRoutes);
+app.use('/api/mistakes', apiLimiter, mistakesRoutes);
+app.use('/api/risk-scoring', apiLimiter, riskScoringRoutes);
+app.use('/api/retake-exams', apiLimiter, retakeExamRoutes);
+app.use('/api/retake-submissions', apiLimiter, retakeSubmissionRoutes);
+app.use('/api/retakes', apiLimiter, retakeRoutes);
+app.use('/api/teacher', apiLimiter, teacherRoutes); // Temporary alias for teacher routes
 
 app.get('/api/health', (req, res) => {
     res.status(200).json({ 

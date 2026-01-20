@@ -10,6 +10,39 @@ const router = express.Router();
 
 /**
  * PROTECTED (STUDENT)
+ * GET /api/enrollments/my-courses
+ * Get all courses the authenticated student is enrolled in (simplified)
+ */
+router.get('/my-courses', isAuthenticated, async (req, res) => {
+    try {
+        const user = (req as any).user;
+        if (!user) {
+            return res.status(401).json({ message: 'Unauthorized' });
+        }
+
+        const studentEnrollments = await db
+            .select({
+                id: courses.id,
+                title: courses.title,
+                description: courses.description,
+                teacherId: courses.teacherId,
+            })
+            .from(enrollments)
+            .leftJoin(courses, eq(enrollments.courseId, courses.id))
+            .where(eq(enrollments.studentId, user.id));
+
+        res.status(200).json(studentEnrollments);
+    } catch (error) {
+        console.error('Error fetching student courses:', error);
+        res.status(500).json({
+            message: 'Failed to fetch courses',
+            error: error instanceof Error ? error.message : 'Unknown error'
+        });
+    }
+});
+
+/**
+ * PROTECTED (STUDENT)
  * GET /api/enrollments/student
  * Get all enrollments for the authenticated student
  */

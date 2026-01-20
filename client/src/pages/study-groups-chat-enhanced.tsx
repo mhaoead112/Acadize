@@ -11,10 +11,10 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { 
-  Search, Send, Smile, Paperclip, Phone, 
+  Search, Send, Smile, Paperclip, 
   MoreVertical, Hash, Lock, Users, X, Plus, MessageCircle, 
   Image as ImageIcon, FileText, Link as LinkIcon, Download, Loader2,
-  Check, CheckCheck, Video, Settings, ArrowLeft
+  Check, CheckCheck, Settings, ArrowLeft
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
@@ -494,9 +494,12 @@ export default function StudyGroupsChatPage() {
 
   // Message handlers
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !selectedConversation?.conversationId) return;
+    if (!newMessage.trim() || !selectedConversation?.conversationId || isSending) return;
     
+    const messageContent = newMessage;
+    setNewMessage(""); // Clear input immediately
     setIsSending(true);
+    
     try {
       const response = await fetch(apiEndpoint(`/api/conversations/${selectedConversation.conversationId}/messages`), {
         method: 'POST',
@@ -507,14 +510,13 @@ export default function StudyGroupsChatPage() {
         credentials: "include",
         body: JSON.stringify({
           type: 'text',
-          content: newMessage,
+          content: messageContent,
         }),
       });
 
       if (response.ok) {
         const message = await response.json();
         // Don't add message locally - let WebSocket handle it for consistency
-        setNewMessage("");
         
         // Send WebSocket message for real-time delivery
         wsSendMessage({
@@ -1059,12 +1061,14 @@ export default function StudyGroupsChatPage() {
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white transition-colors duration-300">Messages</h2>
               <div className="flex gap-2">
-                <Dialog open={showCreateGroupDialog} onOpenChange={setShowCreateGroupDialog}>
-                  <DialogTrigger asChild>
-                    <button className="bg-slate-200 dark:bg-surface-accent hover:bg-slate-300 dark:hover:bg-surface-accent/80 text-slate-900 dark:text-white rounded-full p-2 transition-colors duration-300" title="New Group">
-                      <Users className="h-5 w-5" />
-                    </button>
-                  </DialogTrigger>
+                {/* Group creation disabled for students */}
+                {user?.role === 'teacher' && (
+                  <Dialog open={showCreateGroupDialog} onOpenChange={setShowCreateGroupDialog}>
+                    <DialogTrigger asChild>
+                      <button className="bg-slate-200 dark:bg-surface-accent hover:bg-slate-300 dark:hover:bg-surface-accent/80 text-slate-900 dark:text-white rounded-full p-2 transition-colors duration-300" title="New Group">
+                        <Users className="h-5 w-5" />
+                      </button>
+                    </DialogTrigger>
                   <DialogContent className="bg-surface-dark border-white/10 text-white sm:max-w-[500px]">
                     <DialogHeader>
                       <DialogTitle>Create New Group</DialogTitle>
@@ -1140,6 +1144,7 @@ export default function StudyGroupsChatPage() {
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
+                )}
 
                 <Dialog open={showNewDMDialog} onOpenChange={setShowNewDMDialog}>
                   <DialogTrigger asChild>
@@ -1395,12 +1400,6 @@ export default function StudyGroupsChatPage() {
                   )}
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
-                  <button className="size-10 flex items-center justify-center rounded-full text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-surface-accent transition-colors duration-300 hidden sm:flex">
-                    <Phone className="h-5 w-5" />
-                  </button>
-                  <button className="size-10 flex items-center justify-center rounded-full text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-surface-accent transition-colors duration-300 hidden sm:flex">
-                    <Video className="h-5 w-5" />
-                  </button>
                   <button 
                     onClick={() => setShowRightPanel(!showRightPanel)}
                     className={`size-10 flex items-center justify-center rounded-full transition-colors duration-300 ${showRightPanel ? 'text-slate-900 dark:text-white bg-slate-100 dark:bg-surface-accent' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-surface-accent'}`}

@@ -1,7 +1,6 @@
 ﻿import { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from "framer-motion";
 import StudentLayout from "@/components/StudentLayout";
-import NotificationBell from "@/components/NotificationBell";
 import { useAuth } from '@/hooks/useAuth';
 import { 
   Download, 
@@ -173,7 +172,6 @@ export default function StudentReportCards() {
               View and download your academic progress reports
             </p>
           </div>
-          <NotificationBell />
         </div>
 
         {/* Filters */}

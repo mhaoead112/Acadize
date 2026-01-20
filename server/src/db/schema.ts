@@ -1,13 +1,30 @@
-import { pgTable, text, boolean, timestamp, varchar, pgEnum, date } from "drizzle-orm/pg-core";
+import { pgTable, text, boolean, timestamp, varchar, pgEnum, date, integer, real, jsonb, index, uniqueIndex } from "drizzle-orm/pg-core";
 import { createId } from "@paralleldrive/cuid2";
 
 // --- ENUMS ---
-export const userRoleEnum = pgEnum('user_role', ['student', 'teacher', 'admin', 'parent']);
+export const userRoleEnum = pgEnum('user_role', ['student', 'teacher', 'admin', 'parent', 'proctor']);
 export const reportCardPeriodEnum = pgEnum('report_period', ['Q1', 'Q2', 'Q3', 'Q4', 'S1', 'S2', 'FINAL']);
 export const messageTypeEnum = pgEnum('message_type', ['text', 'file', 'image', 'video']);
 export const conversationTypeEnum = pgEnum('conversation_type', ['group', 'direct']);
 export const eventTypeEnum = pgEnum('event_type', ['class', 'meeting', 'holiday', 'exam', 'announcement']);
 export const attendanceStatusEnum = pgEnum('attendance_status', ['present', 'absent', 'tardy', 'excused']);
+
+// Exam & Anti-Cheat Enums
+export const examStatusEnum = pgEnum('exam_status', ['draft', 'scheduled', 'active', 'completed', 'archived']);
+export const questionTypeEnum = pgEnum('question_type', ['multiple_choice', 'true_false', 'short_answer', 'essay', 'code', 'matching', 'fill_blank']);
+export const attemptStatusEnum = pgEnum('attempt_status', ['in_progress', 'submitted', 'graded', 'flagged', 'under_review', 'invalidated']);
+export const antiCheatEventTypeEnum = pgEnum('anti_cheat_event_type', [
+  'tab_switch', 'window_blur', 'copy_paste', 'right_click', 'keyboard_shortcut',
+  'devtools_open', 'fullscreen_exit', 'multiple_monitors', 
+  'face_not_detected', 'multiple_faces', 'no_face_visible',
+  'unauthorized_app', 'suspicious_pattern', 'rapid_answers', 
+  'unusual_timing', 'browser_extension_detected', 'screen_share_detected'
+]);
+export const eventSeverityEnum = pgEnum('event_severity', ['low', 'medium', 'high', 'critical']);
+export const reviewStatusEnum = pgEnum('review_status', ['pending', 'under_review', 'cleared', 'violation_confirmed', 'escalated']);
+export const mistakeTypeEnum = pgEnum('mistake_type', ['wrong_answer', 'partial_credit', 'timeout', 'skipped']);
+export const remediationStatusEnum = pgEnum('remediation_status', ['not_started', 'in_progress', 'completed', 'skipped']);
+export const retakeStatusEnum = pgEnum('retake_status', ['pending', 'available', 'in_progress', 'completed', 'expired', 'cancelled']);
 
 export const users = pgTable("users", {
   id: text("id").primaryKey().$defaultFn(() => createId()),
@@ -420,3 +437,431 @@ export const staffAchievements = pgTable("staff_achievements", {
   year: text("year"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+// =====================================================
+// EXAM & ANTI-CHEAT SYSTEM
+// =====================================================
+
+// --- EXAMS ---
+export const exams = pgTable("exams", {
+  id: text("id").primaryKey().$defaultFn(() => createId()),
+  courseId: text("course_id").notNull().references(() => courses.id, { onDelete: 'cascade' }),
+  createdBy: text("created_by").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  
+  // Basic Info
+  title: varchar("title", { length: 500 }).notNull(),
+  description: text("description"),
+  instructions: text("instructions"),
+  
+  // Scheduling - using actual database column names
+  status: examStatusEnum("status").default('draft').notNull(),
+  scheduledStartAt: timestamp("scheduled_start_at"),
+  scheduledEndAt: timestamp("scheduled_end_at"),
+  scheduledStart: timestamp("scheduled_start"),
+  scheduledEnd: timestamp("scheduled_end"),
+  duration: integer("duration").notNull(), // in minutes
+  
+  // Scoring & Passing
+  totalPoints: integer("total_points").default(100).notNull(),
+  passingScore: integer("passing_score").default(70).notNull(),
+  
+  // Attempt Settings
+  attemptsAllowed: text("attempts_allowed").default('1').notNull(),
+  maxAttempts: integer("max_attempts").default(1).notNull(),
+  timeLimit: text("time_limit"), // per attempt in minutes
+  lateSubmissionAllowed: boolean("late_submission_allowed").default(false).notNull(),
+  lateSubmissionPenalty: integer("late_submission_penalty").default(0), // percentage penalty
+  
+  // Question Display Settings
+  shuffleQuestions: boolean("shuffle_questions").default(false).notNull(),
+  shuffleOptions: boolean("shuffle_options").default(false).notNull(),
+  showResults: boolean("show_results").default(true).notNull(),
+  showResultsImmediately: boolean("show_results_immediately").default(false).notNull(),
+  showCorrectAnswers: boolean("show_correct_answers").default(false).notNull(),
+  allowReview: boolean("allow_review").default(true).notNull(),
+  allowBacktracking: boolean("allow_backtracking").default(false).notNull(),
+  
+  // Anti-Cheat Configuration
+  antiCheatEnabled: boolean("anti_cheat_enabled").default(true).notNull(),
+  requireWebcam: boolean("require_webcam").default(false).notNull(),
+  requireScreenShare: boolean("require_screen_share").default(false).notNull(),
+  requireFullscreen: boolean("require_fullscreen").default(true).notNull(),
+  requireLockdownBrowser: boolean("require_lockdown_browser").default(false).notNull(),
+  lockBrowser: boolean("lock_browser").default(false).notNull(),
+  tabSwitchLimit: integer("tab_switch_limit").default(3), // null = unlimited
+  copyPasteAllowed: boolean("copy_paste_allowed").default(false).notNull(),
+  rightClickAllowed: boolean("right_click_allowed").default(false).notNull(),
+  
+  // Access Control
+  accessCode: varchar("access_code", { length: 255 }),
+  ipWhitelist: jsonb("ip_whitelist"),
+  
+  // Retake Policy
+  retakeEnabled: boolean("retake_enabled").default(true).notNull(),
+  retakeDelay: integer("retake_delay").default(24), // hours before retake available
+  adaptiveRetake: boolean("adaptive_retake").default(true).notNull(), // mistake-based questions
+  
+  // Privacy & Compliance
+  recordingDisclosure: text("recording_disclosure"), // disclosure text for students
+  dataRetentionDays: integer("data_retention_days").default(365), // GDPR compliance
+  
+  // Metadata
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
+}, (table) => ({
+  courseIdx: index("exam_course_idx").on(table.courseId),
+  statusIdx: index("exam_status_idx").on(table.status),
+  scheduleIdx: index("exam_schedule_idx").on(table.scheduledStartAt, table.scheduledEndAt),
+}));
+
+// --- EXAM QUESTIONS ---
+export const examQuestions = pgTable("exam_questions", {
+  id: text("id").primaryKey().$defaultFn(() => createId()),
+  examId: text("exam_id").notNull().references(() => exams.id, { onDelete: 'cascade' }),
+  
+  // Question Content
+  questionType: questionTypeEnum("question_type").notNull(),
+  questionText: text("question_text").notNull(),
+  questionImageUrl: text("question_image_url"),
+  questionCodeSnippet: text("question_code_snippet"),
+  
+  // Options/Choices (for MCQ, True/False, Matching)
+  options: jsonb("options"), // Array of option objects: [{id, text, imageUrl}]
+  correctAnswer: jsonb("correct_answer").notNull(), // Flexible: single id, array of ids, or text
+  
+  // Scoring
+  points: integer("points").default(1).notNull(),
+  partialCreditEnabled: boolean("partial_credit_enabled").default(false).notNull(),
+  
+  // Metadata for Analytics & Mistake Tracking
+  topic: varchar("topic", { length: 255 }), // e.g., "Algebra", "Functions", "Grammar"
+  subtopic: varchar("subtopic", { length: 255 }), // e.g., "Quadratic Equations"
+  skillTag: varchar("skill_tag", { length: 255 }), // e.g., "problem_solving", "critical_thinking"
+  difficultyLevel: varchar("difficulty_level", { length: 50 }), // e.g., "easy", "medium", "hard"
+  bloomsTaxonomy: varchar("blooms_taxonomy", { length: 50 }), // e.g., "remember", "understand", "apply"
+  
+  // Question Bank Integration
+  questionBankId: text("question_bank_id"), // if pulled from a reusable question bank
+  
+  // Display Order
+  order: integer("order").notNull(),
+  sectionName: varchar("section_name", { length: 255 }), // optional section grouping
+  
+  // Grading (for manual grading)
+  requiresManualGrading: boolean("requires_manual_grading").default(false).notNull(),
+  rubric: text("rubric"), // grading rubric for essay/code questions
+  
+  // Metadata
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
+}, (table) => ({
+  examIdx: index("exam_question_exam_idx").on(table.examId),
+  topicIdx: index("exam_question_topic_idx").on(table.topic),
+  difficultyIdx: index("exam_question_difficulty_idx").on(table.difficultyLevel),
+}));
+
+// --- EXAM ATTEMPTS ---
+export const examAttempts = pgTable("exam_attempts", {
+  id: text("id").primaryKey().$defaultFn(() => createId()),
+  examId: text("exam_id").notNull().references(() => exams.id, { onDelete: 'cascade' }),
+  studentId: text("student_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  
+  // Attempt Info
+  attemptNumber: integer("attempt_number").notNull(), // 1, 2, 3, etc.
+  status: attemptStatusEnum("status").default('in_progress').notNull(),
+  
+  // Timing
+  startedAt: timestamp("started_at").defaultNow().notNull(),
+  submittedAt: timestamp("submitted_at"),
+  timeRemaining: text("time_remaining"), // stored as text in DB (usually numeric seconds)
+  duration: integer("duration_seconds"), // actual time taken in seconds
+  
+  // Session Info
+  ipAddress: varchar("ip_address", { length: 45 }), // IPv4 or IPv6
+  userAgent: text("user_agent"),
+  deviceFingerprint: text("device_fingerprint"), // hash of device characteristics
+  browserInfo: jsonb("browser_info"), // {name, version, os, screen resolution}
+  
+  // Scoring
+  score: real("score"), // actual score achieved
+  maxScore: integer("max_score"), // total points possible
+  percentage: real("percentage"), // score / maxScore * 100
+  passed: boolean("passed"), // true if percentage >= passing score
+  
+  // Grading
+  autoGraded: boolean("auto_graded"), // true if automatically graded
+  gradedAt: timestamp("graded_at"),
+  gradedBy: text("graded_by").references(() => users.id, { onDelete: 'set null' }),
+  
+  // Anti-Cheat Flags
+  flaggedForReview: boolean("flagged_for_review").default(false).notNull(),
+  integrityScore: real("integrity_score").default(0), // 0-100, calculated from anti-cheat events
+  locationData: jsonb("location_data"), // geolocation data
+  
+  // Retake Info
+  isRetake: boolean("is_retake").default(false).notNull(),
+  originalAttemptId: text("original_attempt_id").references(() => examAttempts.id, { onDelete: 'set null' }),
+  retakeReason: text("retake_reason"), // e.g., "failed", "violation", "mistake_based"
+  
+  // Privacy & Compliance
+  webcamRecordingUrl: text("webcam_recording_url"), // encrypted storage URL
+  screenRecordingUrl: text("screen_recording_url"), // encrypted storage URL
+  metadata: jsonb("metadata"), // flexible metadata storage
+  
+  // Metadata
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
+}, (table) => ({
+  examStudentIdx: index("exam_attempt_exam_student_idx").on(table.examId, table.studentId),
+  studentIdx: index("exam_attempt_student_idx").on(table.studentId),
+  statusIdx: index("exam_attempt_status_idx").on(table.status),
+  flaggedIdx: index("exam_attempt_flagged_idx").on(table.flaggedForReview),
+  retakeIdx: index("exam_attempt_retake_idx").on(table.isRetake, table.originalAttemptId),
+  uniqueAttempt: uniqueIndex("exam_attempt_unique_idx").on(table.examId, table.studentId, table.attemptNumber),
+}));
+
+// --- EXAM ANSWERS ---
+export const examAnswers = pgTable("exam_answers", {
+  id: text("id").primaryKey().$defaultFn(() => createId()),
+  attemptId: text("attempt_id").notNull().references(() => examAttempts.id, { onDelete: 'cascade' }),
+  questionId: text("question_id").notNull().references(() => examQuestions.id, { onDelete: 'cascade' }),
+  
+  // Student Response
+  answer: jsonb("answer"), // flexible: string, number, array, object
+  isCorrect: boolean("is_correct"), // null until graded
+  
+  // Scoring
+  pointsAwarded: real("points_awarded").default(0),
+  pointsPossible: integer("points_possible").default(1).notNull(),
+  
+  // Timing
+  answeredAt: timestamp("answered_at").notNull(),
+  timeSpentSeconds: integer("time_spent_seconds"), // seconds spent on this question
+  
+  // Instructor Review
+  feedback: text("feedback"), // grader feedback
+  flagged: boolean("flagged").default(false).notNull(),
+  
+  // AI Scoring
+  aiScore: real("ai_score"),
+  aiFeedback: text("ai_feedback"),
+  manuallyReviewed: boolean("manually_reviewed").default(false).notNull(),
+  
+  // Metadata
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
+}, (table) => ({
+  attemptIdx: index("exam_answer_attempt_idx").on(table.attemptId),
+  questionIdx: index("exam_answer_question_idx").on(table.questionId),
+  correctnessIdx: index("exam_answer_correctness_idx").on(table.isCorrect),
+  uniqueAnswer: uniqueIndex("exam_answer_unique_idx").on(table.attemptId, table.questionId),
+}));
+
+// --- ANTI-CHEAT EVENTS ---
+export const antiCheatEvents = pgTable("anti_cheat_events", {
+  id: text("id").primaryKey().$defaultFn(() => createId()),
+  attemptId: text("attempt_id").notNull().references(() => examAttempts.id, { onDelete: 'cascade' }),
+  
+  // Event Classification
+  eventType: antiCheatEventTypeEnum("event_type").notNull(),
+  severity: eventSeverityEnum("severity").notNull(),
+  
+  // Event Details
+  description: text("description"),
+  metadata: jsonb("metadata"), // flexible event-specific data
+  
+  // Detection Info
+  detectedBy: varchar("detected_by", { length: 100 }), // 'browser_monitor', 'ai_model', 'proctor'
+  aiConfidence: real("ai_confidence"), // 0-1 for AI-detected events
+  
+  // Context
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+  questionId: text("question_id").references(() => examQuestions.id, { onDelete: 'set null' }),
+  
+  // Device/Browser Info
+  deviceInfo: jsonb("device_info"),
+  screenshotUrl: text("screenshot_url"), // if screenshot captured
+  videoTimestamp: integer("video_timestamp"), // second in recording where event occurred
+  
+  // Review Status
+  reviewStatus: reviewStatusEnum("review_status").default('pending').notNull(),
+  reviewedBy: text("reviewed_by").references(() => users.id, { onDelete: 'set null' }),
+  reviewedAt: timestamp("reviewed_at"),
+  reviewNotes: text("review_notes"),
+  
+  // Metadata
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  attemptIdx: index("anti_cheat_event_attempt_idx").on(table.attemptId),
+  typeIdx: index("anti_cheat_event_type_idx").on(table.eventType),
+  severityIdx: index("anti_cheat_event_severity_idx").on(table.severity),
+  timestampIdx: index("anti_cheat_event_timestamp_idx").on(table.timestamp),
+  reviewStatusIdx: index("anti_cheat_event_review_status_idx").on(table.reviewStatus),
+}));
+
+// --- ANTI-CHEAT RISK SCORES ---
+export const antiCheatRiskScores = pgTable("anti_cheat_risk_scores", {
+  id: text("id").primaryKey().$defaultFn(() => createId()),
+  attemptId: text("attempt_id").notNull().references(() => examAttempts.id, { onDelete: 'cascade' }).unique(),
+  
+  // Overall Risk Assessment
+  overallRiskScore: real("overall_risk_score").default(0).notNull(), // 0-100
+  riskLevel: varchar("risk_level", { length: 50 }), // 'low', 'medium', 'high', 'critical'
+  
+  // Category Scores (0-100 each)
+  behaviorScore: real("behavior_score").default(0),
+  timingScore: real("timing_score").default(0),
+  deviceScore: real("device_score").default(0),
+  biometricScore: real("biometric_score").default(0),
+  patternScore: real("pattern_score").default(0),
+  
+  // Event Counts by Severity
+  lowSeverityCount: integer("low_severity_count").default(0),
+  mediumSeverityCount: integer("medium_severity_count").default(0),
+  highSeverityCount: integer("high_severity_count").default(0),
+  criticalSeverityCount: integer("critical_severity_count").default(0),
+  
+  // Specific Violation Counts
+  tabSwitchCount: integer("tab_switch_count").default(0),
+  copyPasteCount: integer("copy_paste_count").default(0),
+  fullscreenExitCount: integer("fullscreen_exit_count").default(0),
+  faceDetectionIssues: integer("face_detection_issues").default(0),
+  
+  // Review Decision
+  requiresManualReview: boolean("requires_manual_review").default(false).notNull(),
+  reviewPriority: integer("review_priority").default(0), // 0-10, higher = more urgent
+  
+  // Final Verdict
+  finalVerdict: varchar("final_verdict", { length: 50 }), // 'cleared', 'warning', 'violation', 'invalidated'
+  verdictReason: text("verdict_reason"),
+  decidedBy: text("decided_by").references(() => users.id, { onDelete: 'set null' }),
+  decidedAt: timestamp("decided_at"),
+  
+  // ML Model Info
+  modelVersion: varchar("model_version", { length: 50 }),
+  modelPrediction: jsonb("model_prediction"), // raw model output
+  
+  // Metadata
+  calculatedAt: timestamp("calculated_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
+}, (table) => ({
+  attemptIdx: index("anti_cheat_risk_score_attempt_idx").on(table.attemptId),
+  riskLevelIdx: index("anti_cheat_risk_score_risk_level_idx").on(table.riskLevel),
+  reviewIdx: index("anti_cheat_risk_score_review_idx").on(table.requiresManualReview, table.reviewPriority),
+}));
+
+// --- MISTAKE POOL (for mistake tracking & adaptive learning) ---
+export const mistakePool = pgTable("mistake_pool", {
+  id: text("id").primaryKey().$defaultFn(() => createId()),
+  studentId: text("student_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  attemptId: text("attempt_id").notNull().references(() => examAttempts.id, { onDelete: 'cascade' }),
+  answerId: text("answer_id").notNull().references(() => examAnswers.id, { onDelete: 'cascade' }),
+  questionId: text("question_id").notNull().references(() => examQuestions.id, { onDelete: 'cascade' }),
+  examId: text("exam_id").notNull().references(() => exams.id, { onDelete: 'cascade' }),
+  
+  // Mistake Classification
+  mistakeType: mistakeTypeEnum("mistake_type").notNull(),
+  
+  // Question Metadata (denormalized for analytics)
+  topic: varchar("topic", { length: 255 }),
+  subtopic: varchar("subtopic", { length: 255 }),
+  skillTag: varchar("skill_tag", { length: 255 }),
+  difficultyLevel: varchar("difficulty_level", { length: 50 }),
+  
+  // Student's Response
+  studentAnswer: jsonb("student_answer"),
+  correctAnswer: jsonb("correct_answer"),
+  
+  // Scoring
+  pointsLost: real("points_lost").notNull(),
+  pointsPossible: integer("points_possible").notNull(),
+  
+  // Timing
+  occurredAt: timestamp("occurred_at").notNull(),
+  
+  // Remediation Tracking
+  remediationStatus: remediationStatusEnum("remediation_status").default('not_started').notNull(),
+  remediationStartedAt: timestamp("remediation_started_at"),
+  remediationCompletedAt: timestamp("remediation_completed_at"),
+  resourcesViewed: jsonb("resources_viewed"), // array of lesson/resource ids
+  
+  // Retake Tracking
+  includedInRetake: boolean("included_in_retake").default(false).notNull(),
+  retakeExamId: text("retake_exam_id").references(() => mistakeRetakeExams.id, { onDelete: 'set null' }),
+  correctedInRetake: boolean("corrected_in_retake"), // null until retake completed
+  retakeAttemptId: text("retake_attempt_id").references(() => examAttempts.id, { onDelete: 'set null' }),
+  
+  // Pattern Analysis
+  isRepeatedMistake: boolean("is_repeated_mistake").default(false).notNull(), // same topic/skill error before
+  repetitionCount: integer("repetition_count").default(1), // how many times made this type of mistake
+  
+  // Metadata
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
+}, (table) => ({
+  studentIdx: index("mistake_pool_student_idx").on(table.studentId),
+  attemptIdx: index("mistake_pool_attempt_idx").on(table.attemptId),
+  topicIdx: index("mistake_pool_topic_idx").on(table.topic),
+  skillIdx: index("mistake_pool_skill_idx").on(table.skillTag),
+  remediationIdx: index("mistake_pool_remediation_idx").on(table.remediationStatus),
+  retakeIdx: index("mistake_pool_retake_idx").on(table.includedInRetake, table.retakeExamId),
+  patternIdx: index("mistake_pool_pattern_idx").on(table.studentId, table.topic, table.isRepeatedMistake),
+}));
+
+// --- MISTAKE RETAKE EXAMS ---
+export const mistakeRetakeExams = pgTable("mistake_retake_exams", {
+  id: text("id").primaryKey().$defaultFn(() => createId()),
+  originalExamId: text("original_exam_id").notNull().references(() => exams.id, { onDelete: 'cascade' }),
+  studentId: text("student_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  originalAttemptId: text("original_attempt_id").notNull().references(() => examAttempts.id, { onDelete: 'cascade' }),
+  
+  // Retake Info
+  title: varchar("title", { length: 500 }).notNull(),
+  description: text("description"),
+  status: retakeStatusEnum("status").default('pending').notNull(),
+  
+  // Scheduling
+  availableFrom: timestamp("available_from").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  duration: integer("duration").notNull(), // in minutes
+  
+  // Question Selection Strategy
+  adaptiveStrategy: jsonb("adaptive_strategy").notNull(), // config for question selection
+  totalQuestions: integer("total_questions").notNull(),
+  totalPoints: integer("total_points").notNull(),
+  
+  // Mistake Pattern Targeting
+  targetTopics: jsonb("target_topics").notNull(), // array of topics to focus on
+  targetSkills: jsonb("target_skills"), // array of skills to reinforce
+  mistakeIds: jsonb("mistake_ids").notNull(), // array of mistake pool ids being addressed
+  
+  // Difficulty Adjustment
+  adjustedDifficulty: boolean("adjusted_difficulty").default(true).notNull(),
+  difficultyModifier: real("difficulty_modifier").default(1.0), // 0.8 = easier, 1.2 = harder
+  
+  // Completion
+  completedAt: timestamp("completed_at"),
+  attemptId: text("attempt_id").references(() => examAttempts.id, { onDelete: 'set null' }),
+  score: real("score"),
+  passed: boolean("passed"),
+  improvementPercentage: real("improvement_percentage"), // vs original attempt
+  
+  // Notifications
+  studentNotified: boolean("student_notified").default(false).notNull(),
+  notifiedAt: timestamp("notified_at"),
+  reminderSentAt: timestamp("reminder_sent_at"),
+  
+  // Metadata
+  generatedAt: timestamp("generated_at").defaultNow().notNull(),
+  generatedBy: text("generated_by").references(() => users.id, { onDelete: 'set null' }), // system or teacher
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
+}, (table) => ({
+  studentIdx: index("mistake_retake_exam_student_idx").on(table.studentId),
+  originalExamIdx: index("mistake_retake_exam_original_idx").on(table.originalExamId),
+  statusIdx: index("mistake_retake_exam_status_idx").on(table.status),
+  availabilityIdx: index("mistake_retake_exam_availability_idx").on(table.availableFrom, table.expiresAt),
+  notificationIdx: index("mistake_retake_exam_notification_idx").on(table.studentNotified, table.status),
+}));

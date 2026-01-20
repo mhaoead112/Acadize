@@ -10,6 +10,9 @@ import { z } from 'zod';
 export const userRoleEnum = pgEnum('user_role', ['student', 'teacher', 'admin', 'parent']);
 export const reportCardPeriodEnum = pgEnum('report_period', ['Q1', 'Q2', 'Q3', 'Q4', 'S1', 'S2', 'FINAL']);
 export const eventTypeEnum = pgEnum('event_type', ['assignment', 'exam', 'class', 'event', 'deadline', 'meeting']);
+export const examStatusEnum = pgEnum('exam_status', ['draft', 'scheduled', 'active', 'completed', 'archived']);
+export const questionTypeEnum = pgEnum('question_type', ['multiple_choice', 'true_false', 'short_answer', 'essay', 'code']);
+export const attemptStatusEnum = pgEnum('attempt_status', ['in_progress', 'submitted', 'graded', 'flagged', 'under_review', 'invalidated']);
 
 // --- CORE TABLES (Auth and Users) ---
 export const users = pgTable('users', {
@@ -226,6 +229,80 @@ export const pushSubscriptions = pgTable("push_subscriptions", {
   isActive: boolean("is_active").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
+});
+
+// --- EXAM SYSTEM TABLES ---
+export const exams = pgTable("exams", {
+  id: text("id").primaryKey().$defaultFn(() => createId()),
+  courseId: text("course_id").notNull().references(() => courses.id, { onDelete: 'cascade' }),
+  title: text("title").notNull(),
+  description: text("description"),
+  instructions: text("instructions"),
+  status: examStatusEnum("status").default('draft').notNull(),
+  scheduledStartAt: timestamp("scheduled_start_at"),
+  scheduledEndAt: timestamp("scheduled_end_at"),
+  duration: text("duration").notNull(), // minutes
+  totalPoints: text("total_points").notNull(),
+  passingScore: text("passing_score").notNull(),
+  attemptsAllowed: text("attempts_allowed").default('1').notNull(),
+  showResultsImmediately: boolean("show_results_immediately").default(false).notNull(),
+  shuffleQuestions: boolean("shuffle_questions").default(false).notNull(),
+  shuffleOptions: boolean("shuffle_options").default(false).notNull(),
+  antiCheatEnabled: boolean("anti_cheat_enabled").default(false).notNull(),
+  requireWebcam: boolean("require_webcam").default(false).notNull(),
+  requireFullscreen: boolean("require_fullscreen").default(false).notNull(),
+  allowBacktracking: boolean("allow_backtracking").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
+});
+
+export const examQuestions = pgTable("exam_questions", {
+  id: text("id").primaryKey().$defaultFn(() => createId()),
+  examId: text("exam_id").notNull().references(() => exams.id, { onDelete: 'cascade' }),
+  questionType: questionTypeEnum("question_type").notNull(),
+  questionText: text("question_text").notNull(),
+  points: text("points").notNull(),
+  orderIndex: text("order_index").notNull(),
+  options: text("options"), // JSON string for multiple choice
+  correctAnswer: text("correct_answer").notNull(),
+  explanation: text("explanation"),
+  skillTag: text("skill_tag"),
+  difficultyLevel: text("difficulty_level"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
+});
+
+export const examAttempts = pgTable("exam_attempts", {
+  id: text("id").primaryKey().$defaultFn(() => createId()),
+  examId: text("exam_id").notNull().references(() => exams.id, { onDelete: 'cascade' }),
+  studentId: text("student_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  attemptNumber: text("attempt_number").notNull(),
+  status: attemptStatusEnum("status").default('in_progress').notNull(),
+  startedAt: timestamp("started_at").defaultNow().notNull(),
+  submittedAt: timestamp("submitted_at"),
+  timeRemaining: text("time_remaining"), // minutes
+  score: text("score"),
+  percentage: text("percentage"),
+  passed: boolean("passed"),
+  isRetake: boolean("is_retake").default(false).notNull(),
+  flaggedForReview: boolean("flagged_for_review").default(false).notNull(),
+  reviewNotes: text("review_notes"),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
+});
+
+export const examAnswers = pgTable("exam_answers", {
+  id: text("id").primaryKey().$defaultFn(() => createId()),
+  attemptId: text("attempt_id").notNull().references(() => examAttempts.id, { onDelete: 'cascade' }),
+  questionId: text("question_id").notNull().references(() => examQuestions.id, { onDelete: 'cascade' }),
+  studentAnswer: text("student_answer"),
+  isCorrect: boolean("is_correct"),
+  pointsAwarded: text("points_awarded"),
+  timeSpent: text("time_spent"), // seconds
+  flaggedForReview: boolean("flagged_for_review").default(false).notNull(),
+  submittedAt: timestamp("submitted_at").defaultNow().notNull(),
 });
 
 // --- ZOD SCHEMAS & TYPES ---

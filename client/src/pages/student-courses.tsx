@@ -227,7 +227,7 @@ export default function StudentCoursesPage() {
                 const gradePercent = 0;
                 
                 return (
-                  <div key={enrollment.id} className="bg-white dark:bg-card rounded-xl overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-slate-200 dark:border-white/10 flex flex-col h-full group">
+                  <div key={enrollment.id} className="bg-white dark:bg-surface-dark rounded-xl overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-slate-200 dark:border-white/10 flex flex-col h-full group">
                     <div className="h-44 bg-cover bg-center relative" style={{ 
                       backgroundImage: enrollment.course.imageUrl 
                         ? `url("${enrollment.course.imageUrl}")` 
@@ -285,7 +285,7 @@ export default function StudentCoursesPage() {
                 );
               })}
 
-              <button className="bg-white dark:bg-card border-2 border-dashed border-slate-300 dark:border-white/10 rounded-xl flex flex-col items-center justify-center p-8 text-center hover:bg-slate-50 dark:hover:bg-white/5 hover:border-primary transition-all group h-full min-h-[360px]">
+              <button className="bg-white dark:bg-surface-dark border-2 border-dashed border-slate-300 dark:border-white/10 rounded-xl flex flex-col items-center justify-center p-8 text-center hover:bg-slate-50 dark:hover:bg-white/5 hover:border-primary transition-all group h-full min-h-[360px]">
                 <div className="size-16 rounded-full bg-slate-100 dark:bg-white/10 text-slate-500 dark:text-slate-400 flex items-center justify-center mb-4 group-hover:bg-primary group-hover:text-black transition-colors">
                   <span className="material-symbols-outlined text-3xl">add</span>
                 </div>

@@ -29,6 +29,8 @@ const navItems: NavItem[] = [
   { label: 'Calendar', icon: 'calendar_month', path: '/student/calendar' },
   { label: 'Report Cards', icon: 'assessment', path: '/student/report-cards' },
   { label: 'Messages', icon: 'message', path: '/student/messages' },
+  { label: 'Exams', icon: 'quiz', path: '/student/exams' },
+  { label: 'Mistakes', icon: 'psychology', path: '/student/mistakes' },
 ];
 
 interface StudentLayoutProps {
@@ -56,7 +58,7 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
   };
 
   return (
-    <div className="flex h-screen w-full bg-slate-50 dark:bg-[#0a192f] overflow-hidden font-sans transition-colors duration-300 relative">
+    <div className="flex h-screen w-full bg-slate-50 dark:bg-[#0a192f] overflow-x-hidden font-sans transition-colors duration-300 relative">
       {/* Parallax Background */}
       <ParallaxBackground />
       
@@ -350,7 +352,7 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
       </AnimatePresence>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden relative">
+      <div className="flex-1 flex flex-col h-full overflow-y-auto overflow-x-hidden relative">
         {/* Mobile Header */}
         <motion.header 
           className="lg:hidden flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-white/10 bg-white/95 dark:bg-[#0a192f]/95 backdrop-blur-sm z-20"

@@ -11,6 +11,7 @@ const Navbar: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
   const isHome = location === "/" || location === "/home";
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const { scrollY } = useScroll();
   const backgroundColor = useTransform(
@@ -180,13 +181,116 @@ const Navbar: React.FC = () => {
             )}
             {/* Mobile Menu Button */}
             <motion.button 
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="md:hidden p-2 text-slate-600 dark:text-text-muted hover:text-slate-900 dark:hover:text-white"
               whileTap={{ scale: 0.9 }}
+              aria-label="Toggle mobile menu"
             >
               <Menu className="h-6 w-6" />
             </motion.button>
           </div>
         </div>
+
+        {/* Mobile Menu */}
+        {isMobileMenuOpen && (
+          <motion.div
+            className="md:hidden border-t border-slate-200 dark:border-white/10"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="px-4 py-4 space-y-3 bg-white dark:bg-background-dark">
+              <Link href={isHome ? "#features" : "/"}>
+                <motion.div
+                  onClick={(e) => {
+                    handleFeaturesClick(e);
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="block px-3 py-2 text-base font-semibold text-slate-700 dark:text-slate-300 hover:text-primary dark:hover:text-primary hover:bg-slate-50 dark:hover:bg-white/5 rounded-md transition-colors cursor-pointer"
+                  whileTap={{ scale: 0.98 }}
+                >
+                  Features
+                </motion.div>
+              </Link>
+              <Link href="/pricing">
+                <motion.div
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={`block px-3 py-2 text-base font-semibold rounded-md transition-colors cursor-pointer ${location === '/pricing' ? 'text-primary bg-primary/10' : 'text-slate-700 dark:text-slate-300 hover:text-primary dark:hover:text-primary hover:bg-slate-50 dark:hover:bg-white/5'}`}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  Pricing
+                </motion.div>
+              </Link>
+              <Link href="/docs">
+                <motion.div
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={`block px-3 py-2 text-base font-semibold rounded-md transition-colors cursor-pointer ${location === '/docs' ? 'text-primary bg-primary/10' : 'text-slate-700 dark:text-slate-300 hover:text-primary dark:hover:text-primary hover:bg-slate-50 dark:hover:bg-white/5'}`}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  Docs
+                </motion.div>
+              </Link>
+              <Link href="/contact">
+                <motion.div
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={`block px-3 py-2 text-base font-semibold rounded-md transition-colors cursor-pointer ${location === '/contact' ? 'text-primary bg-primary/10' : 'text-slate-700 dark:text-slate-300 hover:text-primary dark:hover:text-primary hover:bg-slate-50 dark:hover:bg-white/5'}`}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  Contact
+                </motion.div>
+              </Link>
+              
+              {/* Theme Toggle Mobile */}
+              <motion.button
+                onClick={toggleTheme}
+                className="w-full flex items-center justify-between px-3 py-2 text-base font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 rounded-md transition-colors"
+                whileTap={{ scale: 0.98 }}
+              >
+                <span>Theme</span>
+                <span className="material-symbols-outlined text-[20px]">
+                  {theme === 'dark' ? 'light_mode' : 'dark_mode'}
+                </span>
+              </motion.button>
+
+              {/* Auth Buttons Mobile */}
+              <div className="pt-3 space-y-2 border-t border-slate-200 dark:border-white/10">
+                {user ? (
+                  <Link href={user.role === 'admin' ? '/admin/dashboard' : user.role === 'teacher' ? '/teacher/dashboard' : user.role === 'parent' ? '/parent/dashboard' : '/student/dashboard'}>
+                    <motion.button
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="w-full px-4 py-2.5 text-sm font-bold text-slate-900 dark:text-white border border-slate-200 dark:border-white/10 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5"
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      Dashboard
+                    </motion.button>
+                  </Link>
+                ) : (
+                  <>
+                    <Link href="/login">
+                      <motion.button
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="w-full px-4 py-2.5 text-sm font-bold text-slate-900 dark:text-white border border-slate-200 dark:border-white/10 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5"
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        Log In
+                      </motion.button>
+                    </Link>
+                    <Link href="/register">
+                      <motion.button
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="w-full px-4 py-2 text-sm font-bold bg-primary text-background-dark rounded-lg shadow-[0_0_15px_rgba(242,208,13,0.3)]"
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        Get Started
+                      </motion.button>
+                    </Link>
+                  </>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        )}
       </div>
     </motion.nav>
   );
