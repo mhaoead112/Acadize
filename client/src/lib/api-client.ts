@@ -22,7 +22,7 @@ export function getAuthToken(): string | null {
 export function getStoredUser() {
   const userStr = localStorage.getItem('user') || localStorage.getItem('eduverse_user');
   if (!userStr) return null;
-  
+
   try {
     return JSON.parse(userStr);
   } catch {
@@ -33,9 +33,12 @@ export function getStoredUser() {
 /**
  * Store authentication data
  */
-export function setAuthData(token: string, user: any) {
+export function setAuthData(token: string, user: any, refreshToken?: string) {
   localStorage.setItem('auth_token', token);
   localStorage.setItem('user', JSON.stringify(user));
+  if (refreshToken) {
+    localStorage.setItem('refresh_token', refreshToken);
+  }
 }
 
 /**
@@ -44,6 +47,7 @@ export function setAuthData(token: string, user: any) {
 export function clearAuthData() {
   localStorage.removeItem('auth_token');
   localStorage.removeItem('eduverse_token');
+  localStorage.removeItem('refresh_token');
   localStorage.removeItem('user');
   localStorage.removeItem('eduverse_user');
 }
@@ -64,8 +68,25 @@ export async function apiRequest<T = any>(
 ): Promise<T> {
   const { requiresAuth = true, headers = {}, ...restOptions } = options;
 
+  // Automatically refresh token if needed (before making the request)
+  if (requiresAuth && isTokenExpired()) {
+    console.log('🔄 Token expired, attempting refresh...');
+    const refreshed = await refreshTokenIfNeeded();
+    if (!refreshed) {
+      console.error('❌ Token refresh failed, redirecting to login');
+      clearAuthData();
+      if (!window.location.pathname.includes('/login') &&
+        !window.location.pathname.includes('/register') &&
+        !window.location.pathname.includes('/demo')) {
+        window.location.href = '/login';
+      }
+      throw new Error('Session expired - Please log in again');
+    }
+    console.log('✅ Token refreshed successfully');
+  }
+
   // Build headers
-  const requestHeaders: HeadersInit = {
+  const requestHeaders: any = {
     'Content-Type': 'application/json',
     ...headers,
   };
@@ -85,18 +106,42 @@ export async function apiRequest<T = any>(
     credentials: 'include', // Include cookies for session management
   });
 
-  // Handle unauthorized responses
+  // Handle unauthorized responses (in case refresh failed or token is invalid)
   if (response.status === 401) {
-    // Clear auth data on unauthorized
+    // Try to refresh one more time
+    console.log('🔄 Got 401, attempting token refresh...');
+    const refreshed = await refreshTokenIfNeeded();
+
+    if (refreshed) {
+      // Retry the original request with new token
+      console.log('✅ Token refreshed, retrying request...');
+      const newToken = getAuthToken();
+      if (newToken) {
+        requestHeaders['Authorization'] = `Bearer ${newToken}`;
+      }
+
+      const retryResponse = await fetch(url, {
+        ...restOptions,
+        headers: requestHeaders,
+        credentials: 'include',
+      });
+
+      if (retryResponse.ok) {
+        return retryResponse.json();
+      }
+    }
+
+    // If refresh failed or retry failed, clear auth and redirect
+    console.error('❌ Authentication failed, redirecting to login');
     clearAuthData();
-    
+
     // Redirect to login if not already there
-    if (!window.location.pathname.includes('/login') && 
-        !window.location.pathname.includes('/register') &&
-        !window.location.pathname.includes('/demo')) {
+    if (!window.location.pathname.includes('/login') &&
+      !window.location.pathname.includes('/register') &&
+      !window.location.pathname.includes('/demo')) {
       window.location.href = '/login';
     }
-    
+
     throw new Error('Unauthorized - Please log in again');
   }
 
@@ -167,7 +212,8 @@ export function isTokenExpired(): boolean {
     // Decode JWT payload (basic check, not cryptographic verification)
     const payload = JSON.parse(atob(token.split('.')[1]));
     const expirationTime = payload.exp * 1000; // Convert to milliseconds
-    return Date.now() >= expirationTime;
+    // Consider token expired if it expires in less than 2 minutes (120s) to ensure background refresher (runs every 1m) catches it
+    return Date.now() >= (expirationTime - 120000);
   } catch {
     // If we can't decode, assume it's invalid
     return true;
@@ -183,19 +229,35 @@ export async function refreshTokenIfNeeded(): Promise<boolean> {
   }
 
   try {
+    const refreshToken = localStorage.getItem('refresh_token');
+    if (!refreshToken) {
+      console.error('No refresh token found');
+      return false;
+    }
+
     const response = await fetch(apiEndpoint('/api/auth/refresh'), {
       method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
       credentials: 'include',
+      body: JSON.stringify({ refreshToken }),
     });
 
     if (!response.ok) {
+      console.error('Token refresh failed:', response.status);
       throw new Error('Token refresh failed');
     }
 
-    const { token, user } = await response.json();
-    setAuthData(token, user);
+    const data = await response.json();
+    const { token, user, refreshToken: newRefreshToken } = data;
+
+    // Store new tokens
+    setAuthData(token, user, newRefreshToken || refreshToken);
+    console.log('✅ Token refreshed successfully');
     return true;
-  } catch {
+  } catch (error) {
+    console.error('Error refreshing token:', error);
     clearAuthData();
     return false;
   }

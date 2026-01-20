@@ -53,4 +53,81 @@ router.post('/login', async (req, res) => {
     }
 });
 
+// --- ROUTE: POST /api/auth/refresh ---
+// Refresh access token using refresh token
+router.post('/refresh', async (req, res) => {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+        return res.status(400).json({ message: 'Refresh token is required.' });
+    }
+
+    try {
+        const { TokenService } = await import('../services/token.service.js');
+        const { users } = await import('../db/schema.js');
+        const { db } = await import('../db/index.js');
+        const { eq } = await import('drizzle-orm');
+
+        // Verify refresh token
+        const userId = await TokenService.verifyRefreshToken(refreshToken);
+
+        if (!userId) {
+            return res.status(401).json({ message: 'Invalid or expired refresh token.' });
+        }
+
+        // Get user data
+        const [user] = await db
+            .select({
+                id: users.id,
+                email: users.email,
+                role: users.role,
+                fullName: users.fullName,
+            })
+            .from(users)
+            .where(eq(users.id, userId))
+            .limit(1);
+
+        if (!user) {
+            return res.status(401).json({ message: 'User not found.' });
+        }
+
+        // Generate new access token
+        const accessToken = TokenService.generateAccessToken({
+            id: user.id,
+            email: user.email,
+            role: user.role,
+            fullName: user.fullName,
+        });
+
+        res.status(200).json({
+            token: accessToken,
+            user,
+            expiresIn: 4 * 60 * 60, // 4 hours
+        });
+    } catch (error) {
+        console.error('Refresh Token Error:', error instanceof Error ? error.message : error);
+        res.status(401).json({ message: 'Failed to refresh token.' });
+    }
+});
+
+// --- ROUTE: POST /api/auth/logout ---
+// Logout user and revoke refresh token
+router.post('/logout', async (req, res) => {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+        return res.status(200).json({ message: 'Logged out successfully.' });
+    }
+
+    try {
+        const { TokenService } = await import('../services/token.service.js');
+        await TokenService.revokeRefreshToken(refreshToken);
+
+        res.status(200).json({ message: 'Logged out successfully.' });
+    } catch (error) {
+        console.error('Logout Error:', error instanceof Error ? error.message : error);
+        res.status(200).json({ message: 'Logged out successfully.' });
+    }
+});
+
 export default router;

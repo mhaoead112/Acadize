@@ -88,6 +88,10 @@ import retakeExamRoutes from './api/retake-exam.routes.js';
 import retakeSubmissionRoutes from './api/retake-submission.routes.js';
 import retakeRoutes from './api/retake.routes.js';
 import teacherRoutes from './api/teacher.routes.js';
+import recordingUploadRoutes from './api/recording-upload.routes.js';
+import adminUsersRoutes from './api/admin-users.routes.js';
+import passwordResetRoutes from './api/password-reset.routes.js';
+import emailTestRoutes from './api/email-test.routes.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -146,14 +150,14 @@ if (isProduction) {
 
 // CORS configuration - MUST be before Helmet and other middleware
 // Updated to include all Vercel deployment URLs (Dec 10, 2025)
-const allowedOrigins = process.env.CORS_ORIGINS 
-  ? process.env.CORS_ORIGINS.split(',') 
+const allowedOrigins = process.env.CORS_ORIGINS
+  ? process.env.CORS_ORIGINS.split(',')
   : [
-      'http://localhost:5173',
-      'http://localhost:5174',
-      'https://eduverse-initial.vercel.app',
-      'https://eduverse-initial-k9ot2z2u6-mhaoead112s-projects.vercel.app'
-    ];
+    'http://localhost:5173',
+    'http://localhost:5174',
+    'https://eduverse-initial.vercel.app',
+    'https://eduverse-initial-k9ot2z2u6-mhaoead112s-projects.vercel.app'
+  ];
 
 logger.info(`🔐 CORS enabled for origins: ${JSON.stringify(allowedOrigins)}`);
 
@@ -164,7 +168,7 @@ const corsConfig = cors({
       logger.info('✅ CORS: Allowing request with no origin (server-to-server)');
       return callback(null, true);
     }
-    
+
     // Check if origin is in allowed list or matches Vercel preview pattern
     const isAllowed = allowedOrigins.some(allowed => {
       if (allowed === origin) return true;
@@ -172,7 +176,7 @@ const corsConfig = cors({
       if (origin.includes('eduverse-initial') && origin.includes('.vercel.app')) return true;
       return false;
     });
-    
+
     if (isAllowed) {
       logger.info(`✅ CORS: Allowed origin: ${origin}`);
       callback(null, true);
@@ -266,9 +270,9 @@ app.use((req, res, next) => {
     // Skip JSON parsing for file uploads - multer will handle these
     return next();
   }
-  express.json()(req, res, next);
+  express.json({ limit: '50mb' })(req, res, next);
 });
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Cookie parser with signing for security
 app.use(cookieParser(cookieSecret));
@@ -339,7 +343,10 @@ app.use('/api/streaks', apiLimiter, streakRoutes);
 app.use('/api', apiLimiter, eventsRoutes);
 app.use('/api/profile', uploadLimiter, profileRoutes);
 app.use('/api/analytics', apiLimiter, analyticsRoutes);
+app.use('/api/admin/users', apiLimiter, adminUsersRoutes);
 app.use('/api/admin', apiLimiter, adminRoutes);
+app.use('/api/password-reset', authLimiter, passwordResetRoutes);
+app.use('/api/email-test', apiLimiter, emailTestRoutes);
 app.use('/api/parent', apiLimiter, parentRoutes);
 app.use('/api/schedule', apiLimiter, scheduleRoutes);
 app.use('/api/admin/settings', apiLimiter, adminSettingsRoutes);
@@ -356,14 +363,15 @@ app.use('/api/retake-exams', apiLimiter, retakeExamRoutes);
 app.use('/api/retake-submissions', apiLimiter, retakeSubmissionRoutes);
 app.use('/api/retakes', apiLimiter, retakeRoutes);
 app.use('/api/teacher', apiLimiter, teacherRoutes); // Temporary alias for teacher routes
+app.use('/api/recordings', uploadLimiter, recordingUploadRoutes); // Screen recording uploads
 
 app.get('/api/health', (req, res) => {
-    res.status(200).json({ 
-      status: 'ok', 
-      timestamp: new Date(),
-      environment: process.env.NODE_ENV || 'development',
-      uptime: process.uptime()
-    });
+  res.status(200).json({
+    status: 'ok',
+    timestamp: new Date(),
+    environment: process.env.NODE_ENV || 'development',
+    uptime: process.uptime()
+  });
 });
 
 // Sentry error handler must be after all controllers and before other error middleware
@@ -379,17 +387,21 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
     url: req.url,
     method: req.method,
   });
-  
+
   res.status(err.status || 500).json({
     error: isProduction ? 'Internal server error' : err.message,
     ...(isProduction ? {} : { stack: err.stack })
   });
 });
 
+// Initialize WebSocket service for real-time notifications
+import { WebSocketService } from './services/websocket.service.js';
+WebSocketService.initialize(server);
+
 server.listen(PORT, () => {
-    logger.info(`✅ Eduverse backend server is running on http://localhost:${PORT}`);
-    logger.info(`🔌 WebSocket server is running on ws://localhost:${PORT}`);
-    logger.info(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-    logger.info(`🔒 Security: Helmet enabled, CORS configured`);
-    logger.info(`⏱️  Rate limiting: ${isProduction ? 'STRICT' : 'RELAXED'} mode`);
+  logger.info(`✅ Eduverse backend server is running on http://localhost:${PORT}`);
+  logger.info(`🔌 WebSocket server is running on ws://localhost:${PORT}/ws`);
+  logger.info(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+  logger.info(`🔒 Security: Helmet enabled, CORS configured`);
+  logger.info(`⏱️  Rate limiting: ${isProduction ? 'STRICT' : 'RELAXED'} mode`);
 });

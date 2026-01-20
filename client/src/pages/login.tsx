@@ -71,6 +71,26 @@ export default function Login() {
         const storedUser = localStorage.getItem('eduverse_user');
         const userData = storedUser ? JSON.parse(storedUser) : null;
 
+        // Check if user has a temporary password that needs to be changed
+        // User needs to change password if:
+        // 1. They have a passwordResetExpires date (temporary password)
+        // 2. The password hasn't expired yet
+        // 3. Email is not verified (first login)
+        const hasTemporaryPassword = userData?.passwordResetExpires && 
+          new Date(userData.passwordResetExpires) > new Date();
+        
+        if (hasTemporaryPassword && !userData?.emailVerified) {
+          toast({
+            title: 'Password Change Required',
+            description: 'You must change your temporary password to continue',
+          });
+          
+          setTimeout(() => {
+            setLocation('/change-password');
+          }, 300);
+          return;
+        }
+
         // Track login streak for students
         if (userData?.role === 'student') {
           const storedToken = localStorage.getItem('eduverse_token');
