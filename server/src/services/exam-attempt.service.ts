@@ -1,10 +1,10 @@
 // server/src/services/exam-attempt.service.ts
 
 import { db } from '../db/index.js';
-import { 
-  exams, 
-  examAttempts, 
-  examQuestions, 
+import {
+  exams,
+  examAttempts,
+  examQuestions,
   examAnswers,
   enrollments,
   antiCheatEvents,
@@ -88,7 +88,7 @@ export interface ExamSnapshot {
 // =====================================================
 
 export class ExamAttemptService {
-  
+
   /**
    * START EXAM ATTEMPT
    * 
@@ -192,8 +192,8 @@ export class ExamAttemptService {
     const attemptCount = previousAttempts[0]?.count || 0;
     const attemptNumber = attemptCount + 1;
 
-    const maxAttempts = typeof exam.attemptsAllowed === 'string' 
-      ? parseInt(exam.attemptsAllowed, 10) || 1 
+    const maxAttempts = typeof exam.attemptsAllowed === 'string'
+      ? parseInt(exam.attemptsAllowed, 10) || 1
       : exam.attemptsAllowed || 1;
 
     if (attemptCount >= maxAttempts) {
@@ -248,6 +248,7 @@ export class ExamAttemptService {
       browserInfo: browserInfo as any,
       maxScore: exam.totalPoints,
       isRetake: false,
+      metadata: { examSnapshot: snapshot } as any, // Store immutable snapshot
     } as any).returning();
 
     const insertedAttempts = (insertResult as any)?.rows ?? insertResult;
@@ -370,10 +371,26 @@ export class ExamAttemptService {
    * GET EXAM SNAPSHOT (for reconnection)
    * 
    * Retrieves the locked configuration for an ongoing attempt.
+   * Fetches from metadata if available, otherwise recreates.
    */
   private static async getExamSnapshot(examId: string, attemptId: string): Promise<ExamSnapshot> {
-    // For simplicity, recreate snapshot (in production, store in attempt metadata)
-    // TODO: Store snapshot in examAttempts.metadata field for true immutability
+    // Try to get snapshot from attempt metadata first
+    const [attempt] = await db
+      .select({ metadata: examAttempts.metadata })
+      .from(examAttempts)
+      .where(eq(examAttempts.id, attemptId))
+      .limit(1);
+
+    if (attempt?.metadata && typeof attempt.metadata === 'object') {
+      const metadata = attempt.metadata as any;
+      if (metadata.examSnapshot) {
+        console.log(`[SNAPSHOT] Retrieved immutable snapshot from metadata for attempt: ${attemptId}`);
+        return metadata.examSnapshot as ExamSnapshot;
+      }
+    }
+
+    // Fallback: recreate snapshot (for legacy attempts)
+    console.warn(`[SNAPSHOT] No snapshot in metadata for attempt ${attemptId}, recreating...`);
     return await this.createExamSnapshot(examId);
   }
 
@@ -648,7 +665,7 @@ export class ExamAttemptService {
 
       // 8. Trigger async processing
       const processingJobId = createId();
-      
+
       // Note: In production, use a job queue (Bull, BullMQ, etc.)
       // For now, we'll process synchronously but return immediately
       setImmediate(async () => {
@@ -759,7 +776,7 @@ export class ExamAttemptService {
 
     // Update attempt with score
     const percentage = maxScore > 0 ? (totalScore / maxScore) * 100 : 0;
-    
+
     const [exam] = await db
       .select({ passingScore: exams.passingScore })
       .from(exams)
@@ -803,17 +820,66 @@ export class ExamAttemptService {
     switch (questionType) {
       case 'multiple_choice':
       case 'true_false':
-        // Normalize answers: support index-based or text-based storage
+        // Normalize to a canonical option key: prefer option id, else text/label/value.
         const opts = Array.isArray(options) ? options : undefined;
-        const normalize = (val: any) => {
-          if (typeof val === 'number' && opts && opts[val] !== undefined) {
-            return String(opts[val]).trim().toLowerCase();
-          }
-          return String(val).trim().toLowerCase();
+        const toLowerStr = (v: any) => String(v ?? '').trim().toLowerCase();
+
+        const canonicalKey = (opt: any) => {
+          if (!opt) return '';
+          const id = opt.id != null ? toLowerStr(opt.id) : '';
+          const txt = toLowerStr(opt.text ?? opt.label ?? opt.value);
+          return id || txt;
         };
-        const left = normalize(studentAnswer);
-        const right = normalize(correctAnswer);
-        const isCorrect = left === right;
+
+        const findOptionByVal = (val: any) => {
+          if (!opts) return null;
+          // numeric index
+          if (typeof val === 'number' && opts[val] !== undefined) return opts[val];
+          const low = toLowerStr(val);
+          // direct match by id or text
+          return (opts as any[]).find(o => {
+            const id = o.id != null ? toLowerStr(o.id) : '';
+            const txt = toLowerStr(o.text ?? o.label ?? o.value);
+            return id === low || txt === low;
+          }) || null;
+        };
+
+        const resolveCanonical = (val: any) => {
+          // Handle arrays of answers: any match accepted
+          if (Array.isArray(val)) {
+            // Return a set-like string of canonical keys for comparison flexibility
+            const keys = val.map(v => {
+              const opt = findOptionByVal(v);
+              if (opt) return canonicalKey(opt);
+              return toLowerStr(v);
+            }).sort();
+            return keys.join('|');
+          }
+          // Boolean values (for true_false)
+          if (typeof val === 'boolean') {
+            // Try map to option text or id
+            const opt = findOptionByVal(val ? 'true' : 'false');
+            return opt ? canonicalKey(opt) : toLowerStr(val);
+          }
+          // Number index or string id/text
+          if (typeof val === 'number' || typeof val === 'string') {
+            const opt = findOptionByVal(val);
+            return opt ? canonicalKey(opt) : toLowerStr(val);
+          }
+          // Object with fields
+          if (val && typeof val === 'object') {
+            const candidate = val.id ?? val.text ?? val.label ?? val.value;
+            if (candidate != null) {
+              const opt = findOptionByVal(candidate);
+              return opt ? canonicalKey(opt) : toLowerStr(candidate);
+            }
+          }
+          return toLowerStr(val);
+        };
+
+        const left = resolveCanonical(studentAnswer);
+        const right = resolveCanonical(correctAnswer);
+        const isCorrect = left === right || (Array.isArray(correctAnswer) && right.includes(left));
         return {
           isCorrect,
           pointsAwarded: isCorrect ? pointsPossible : 0,
@@ -823,9 +889,18 @@ export class ExamAttemptService {
 
       case 'fill_blank':
       case 'short_answer':
-        // Case-insensitive comparison, trim whitespace
-        const studentStr = String(studentAnswer).trim().toLowerCase();
-        const correctStr = String(correctAnswer).trim().toLowerCase();
+        // Case-insensitive comparison, trim whitespace, support object {text|value}
+        const normalizeText = (val: any) => {
+          if (val == null) return '';
+          if (typeof val === 'string' || typeof val === 'number') return String(val).trim().toLowerCase();
+          if (typeof val === 'object') {
+            const candidate = val.text ?? val.value ?? val.answer ?? (Array.isArray(val) ? val.join(' ') : null);
+            if (candidate != null) return String(candidate).trim().toLowerCase();
+          }
+          return String(val).trim().toLowerCase();
+        };
+        const studentStr = normalizeText(studentAnswer);
+        const correctStr = normalizeText(correctAnswer);
         const matches = studentStr === correctStr;
         return {
           isCorrect: matches,
@@ -840,7 +915,7 @@ export class ExamAttemptService {
         }
 
         const studentAnswers = Array.isArray(studentAnswer) ? studentAnswer : [studentAnswer];
-        const correctCount = studentAnswers.filter((ans: any) => 
+        const correctCount = studentAnswers.filter((ans: any) =>
           correctAnswer.includes(ans)
         ).length;
 
@@ -917,9 +992,9 @@ export class ExamAttemptService {
       tabSwitchCount: eventTypeCounts['tab_switch'] || 0,
       copyPasteCount: eventTypeCounts['copy_paste'] || 0,
       fullscreenExitCount: eventTypeCounts['fullscreen_exit'] || 0,
-      faceDetectionIssues: (eventTypeCounts['face_not_detected'] || 0) + 
-                            (eventTypeCounts['multiple_faces'] || 0) +
-                            (eventTypeCounts['no_face_visible'] || 0),
+      faceDetectionIssues: (eventTypeCounts['face_not_detected'] || 0) +
+        (eventTypeCounts['multiple_faces'] || 0) +
+        (eventTypeCounts['no_face_visible'] || 0),
       requiresManualReview,
       reviewPriority: riskScore >= 75 ? 10 : riskScore >= 50 ? 5 : 0,
     } as any);
@@ -990,7 +1065,7 @@ export class ExamAttemptService {
     for (const answer of incorrectAnswers) {
       // Determine mistake type
       let mistakeType: 'wrong_answer' | 'partial_credit' | 'timeout' | 'skipped' = 'wrong_answer';
-      
+
       if (answer.answer === null) {
         mistakeType = 'skipped';
       } else if (answer.pointsAwarded && answer.pointsAwarded > 0) {

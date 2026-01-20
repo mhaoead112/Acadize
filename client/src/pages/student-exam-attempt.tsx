@@ -2,6 +2,17 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useRoute, useLocation } from 'wouter';
 import { useAuth } from '@/hooks/useAuth';
 import { apiEndpoint } from '@/lib/config';
+import { useDevToolsDetection } from '@/hooks/useDevToolsDetection';
+import { useScreenRecording } from '@/hooks/useScreenRecording';
+import { useWebcamProctoring } from '@/hooks/useWebcamProctoring';
+import { ProctoringConsent, ProctoringOverlay, ProctoringAlert } from '@/components/exam';
+import { AutoSaveIndicator } from '@/components/AutoSaveIndicator';
+import { RichTextEditor } from '@/components/RichTextEditor';
+import { CodeEditor } from '@/components/CodeEditor';
+import { FillBlankQuestion } from '@/components/FillBlankQuestion';
+import { MatchingQuestion } from '@/components/MatchingQuestion';
+import QuestionContentRenderer from '@/components/QuestionContentRenderer';
+import '@/components/QuestionContentRenderer.css';
 
 // ============================================================================
 // TYPES
@@ -14,6 +25,8 @@ interface Question {
   options: Array<{id: string; text: string; isCorrect?: boolean}> | string[];
   points: number;
   order: number;
+  leftItems?: string[];
+  rightItems?: string[];
 }
 
 interface ExamAttempt {
@@ -42,10 +55,10 @@ interface ExamData {
     antiCheatEnabled: boolean;
   };
   questions: Question[];
-  answers: Record<string, number>;
+  answers: Record<string, number | string | string[] | Record<string, string>>;
 }
 
-type EventType = 'blur' | 'focus' | 'fullscreen_exit' | 'tab_switch' | 'copy_attempt' | 'right_click' | 'page_unload';
+type EventType = 'blur' | 'focus' | 'fullscreen_exit' | 'tab_switch' | 'copy_attempt' | 'paste_attempt' | 'cut_attempt' | 'right_click' | 'page_unload' | 'keyboard_shortcut' | 'devtools_open';
 
 // ============================================================================
 // COMPONENT
@@ -65,11 +78,15 @@ const StudentExamAttempt: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, number>>({});
+  const [answers, setAnswers] = useState<Record<string, number | string | string[] | Record<string, string>>>({});
   const [isFocused, setIsFocused] = useState(true);
   const [showFocusNotification, setShowFocusNotification] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [timeLeft, setTimeLeft] = useState(0);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [lastSaved, setLastSaved] = useState<Date | undefined>();
+  const [showProctoringConsent, setShowProctoringConsent] = useState(false);
+  const [proctoringAlert, setProctoringAlert] = useState<{ type: 'face_not_detected' | 'multiple_faces' | 'looking_away' | 'info'; isOpen: boolean }>({ type: 'info', isOpen: false });
 
   // Refs for managing state without re-renders
   const answersRef = useRef(answers);
@@ -82,6 +99,85 @@ const StudentExamAttempt: React.FC = () => {
   useEffect(() => {
     answersRef.current = answers;
   }, [answers]);
+
+  // ============================================================================
+  // ANTI-CHEAT HOOKS
+  // ============================================================================
+
+  // DevTools detection
+  useDevToolsDetection(() => {
+    if (examData?.exam.antiCheatEnabled) {
+      logEvent('devtools_open');
+    }
+  }, 1000);
+
+  // Screen recording
+  const {
+    isRecording,
+    isSupported: isRecordingSupported,
+    startRecording,
+    stopRecording,
+    error: recordingError
+  } = useScreenRecording(attemptId, async (chunk, chunkIndex) => {
+    // Upload chunk to backend
+    if (examData?.exam.antiCheatEnabled) {
+      try {
+        const formData = new FormData();
+        formData.append('chunk', chunk);
+        formData.append('chunkIndex', chunkIndex.toString());
+        formData.append('attemptId', attemptId);
+
+        const headers = getAuthHeaders();
+        await fetch(apiEndpoint('/api/recordings/upload-chunk'), {
+          method: 'POST',
+          headers: {
+            ...headers,
+          },
+          body: formData
+        });
+      } catch (err) {
+        console.error('Failed to upload recording chunk:', err);
+      }
+    }
+  });
+
+  // Webcam proctoring
+  const {
+    status: proctoringStatus,
+    webcamRef,
+    startProctoring,
+    stopProctoring,
+    isSupported: isProctoringSupported
+  } = useWebcamProctoring(attemptId, examData?.exam.antiCheatEnabled ?? false);
+
+  // Show proctoring alert when violations occur
+  useEffect(() => {
+    if (proctoringStatus.faceCount === 0 && proctoringStatus.status === 'active') {
+      setProctoringAlert({ type: 'face_not_detected', isOpen: true });
+    } else if (proctoringStatus.faceCount > 1) {
+      setProctoringAlert({ type: 'multiple_faces', isOpen: true });
+    } else if (proctoringStatus.isLookingAway) {
+      setProctoringAlert({ type: 'looking_away', isOpen: true });
+    }
+  }, [proctoringStatus.faceCount, proctoringStatus.isLookingAway, proctoringStatus.status]);
+
+  // Show proctoring consent when anti-cheat is enabled
+  useEffect(() => {
+    if (examData?.exam.antiCheatEnabled && isProctoringSupported && proctoringStatus.status === 'initializing') {
+      setShowProctoringConsent(true);
+    }
+  }, [examData?.exam.antiCheatEnabled, isProctoringSupported, proctoringStatus.status]);
+
+  const handleProctoringAccept = async () => {
+    setShowProctoringConsent(false);
+    await startProctoring();
+  };
+
+  const handleProctoringDecline = () => {
+    setShowProctoringConsent(false);
+    // Continue without proctoring, but log the decline
+    logEvent('blur'); // Log as a suspicious event
+  };
 
   // ============================================================================
   // DATA FETCHING
@@ -140,6 +236,17 @@ const StudentExamAttempt: React.FC = () => {
     }
   };
 
+  // Start screen recording when exam loads (if anti-cheat enabled)
+  useEffect(() => {
+    if (examData?.exam.antiCheatEnabled && isRecordingSupported && !isRecording) {
+      startRecording().catch((err) => {
+        console.error('[RECORDING] Failed to start:', err);
+        // Log event but allow exam to continue
+        logEvent('page_unload'); // Use generic event for recording failure
+      });
+    }
+  }, [examData?.exam.antiCheatEnabled, isRecordingSupported]);
+
   // ============================================================================
   // TIMER & AUTO-SUBMIT
   // ============================================================================
@@ -185,6 +292,7 @@ const StudentExamAttempt: React.FC = () => {
     if (!attemptId || isSubmittingRef.current) return;
 
     try {
+      setSaveStatus('saving');
       const headers = getAuthHeaders();
       const response = await fetch(
         apiEndpoint(`/api/exam-attempts/${attemptId}/answers`),
@@ -200,9 +308,17 @@ const StudentExamAttempt: React.FC = () => {
 
       if (!response.ok) {
         console.error('Failed to save answers');
+        setSaveStatus('error');
+        setTimeout(() => setSaveStatus('idle'), 3000);
+      } else {
+        setSaveStatus('saved');
+        setLastSaved(new Date());
+        setTimeout(() => setSaveStatus('idle'), 2000);
       }
     } catch (err) {
       console.error('Error saving answers:', err);
+      setSaveStatus('error');
+      setTimeout(() => setSaveStatus('idle'), 3000);
     }
   };
 
@@ -232,8 +348,16 @@ const StudentExamAttempt: React.FC = () => {
           return { eventType: 'fullscreen_exit', severity: 'high', description: 'Exited fullscreen during exam' };
         case 'copy_attempt':
           return { eventType: 'copy_paste', severity: 'medium', description: 'Copy action attempted' };
+        case 'paste_attempt':
+          return { eventType: 'copy_paste', severity: 'medium', description: 'Paste action attempted' };
+        case 'cut_attempt':
+          return { eventType: 'copy_paste', severity: 'medium', description: 'Cut action attempted' };
         case 'right_click':
           return { eventType: 'right_click', severity: 'low', description: 'Right click detected' };
+        case 'keyboard_shortcut':
+          return { eventType: 'keyboard_shortcut', severity: 'medium', description: 'Suspicious keyboard shortcut detected' };
+        case 'devtools_open':
+          return { eventType: 'devtools_open', severity: 'critical', description: 'Developer tools opened during exam' };
         case 'page_unload':
           return { eventType: 'suspicious_pattern', severity: 'low', description: 'Page unload or navigation away' };
         default:
@@ -332,6 +456,75 @@ const StudentExamAttempt: React.FC = () => {
     return () => document.removeEventListener('contextmenu', handleContextMenu);
   }, [examData]);
 
+  // Copy/Paste/Cut blocking
+  useEffect(() => {
+    const handleCopy = (e: ClipboardEvent) => {
+      if (examData?.exam.antiCheatEnabled) {
+        e.preventDefault();
+        logEvent('copy_attempt');
+      }
+    };
+
+    const handlePaste = (e: ClipboardEvent) => {
+      if (examData?.exam.antiCheatEnabled) {
+        e.preventDefault();
+        logEvent('paste_attempt');
+      }
+    };
+
+    const handleCut = (e: ClipboardEvent) => {
+      if (examData?.exam.antiCheatEnabled) {
+        e.preventDefault();
+        logEvent('cut_attempt');
+      }
+    };
+
+    document.addEventListener('copy', handleCopy);
+    document.addEventListener('paste', handlePaste);
+    document.addEventListener('cut', handleCut);
+
+    return () => {
+      document.removeEventListener('copy', handleCopy);
+      document.removeEventListener('paste', handlePaste);
+      document.removeEventListener('cut', handleCut);
+    };
+  }, [examData]);
+
+  // Keyboard shortcut blocking
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!examData?.exam.antiCheatEnabled) return;
+
+      const isCtrl = e.ctrlKey || e.metaKey; // Support both Ctrl (Windows/Linux) and Cmd (Mac)
+      
+      // Block common shortcuts
+      const blockedShortcuts = [
+        { key: 'c', ctrl: true, name: 'Copy' },
+        { key: 'v', ctrl: true, name: 'Paste' },
+        { key: 'x', ctrl: true, name: 'Cut' },
+        { key: 'a', ctrl: true, name: 'Select All' },
+        { key: 'p', ctrl: true, name: 'Print' },
+        { key: 's', ctrl: true, name: 'Save' },
+        { key: 'F12', ctrl: false, name: 'DevTools' },
+      ];
+
+      for (const shortcut of blockedShortcuts) {
+        const keyMatches = e.key.toLowerCase() === shortcut.key.toLowerCase();
+        const ctrlMatches = shortcut.ctrl ? isCtrl : true;
+        
+        if (keyMatches && ctrlMatches) {
+          e.preventDefault();
+          logEvent('keyboard_shortcut');
+          console.log(`[ANTI-CHEAT] Blocked keyboard shortcut: ${shortcut.name}`);
+          break;
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [examData]);
+
   // Prevent navigation away
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -381,10 +574,36 @@ const StudentExamAttempt: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      // 1. Save final answers
+      // 1. Stop screen recording if active
+      if (isRecording) {
+        try {
+          const finalBlob = await stopRecording();
+          if (finalBlob) {
+            // Upload final recording
+            const formData = new FormData();
+            formData.append('recording', finalBlob);
+            formData.append('attemptId', attemptId);
+
+            const headers = getAuthHeaders();
+            await fetch(apiEndpoint('/api/recordings/finalize'), {
+              method: 'POST',
+              headers: {
+                ...headers,
+              },
+              body: formData
+            });
+            console.log('[RECORDING] Final recording uploaded');
+          }
+        } catch (err) {
+          console.error('[RECORDING] Failed to finalize recording:', err);
+          // Continue with submission even if recording fails
+        }
+      }
+
+      // 2. Save final answers
       await saveAnswers();
 
-      // 2. Log submission event
+      // 3. Log submission event
       await logEvent('page_unload');
 
       // 3. Submit attempt with retry logic
@@ -460,8 +679,8 @@ const StudentExamAttempt: React.FC = () => {
   // ANSWER HANDLING
   // ============================================================================
 
-  const handleAnswerChange = (questionId: string, optionIndex: number) => {
-    const newAnswers = { ...answers, [questionId]: optionIndex };
+  const handleAnswerChange = (questionId: string, answer: number | string | string[] | Record<string, string>) => {
+    const newAnswers = { ...answers, [questionId]: answer };
     setAnswers(newAnswers);
   };
 
@@ -537,6 +756,48 @@ const StudentExamAttempt: React.FC = () => {
 
   return (
     <div className="flex flex-col h-screen dark:bg-[#0a192f] bg-white overflow-hidden">
+      {/* Proctoring Consent Dialog */}
+      <ProctoringConsent
+        isOpen={showProctoringConsent}
+        onAccept={handleProctoringAccept}
+        onDecline={handleProctoringDecline}
+        examTitle={examData.exam.title}
+      />
+
+      {/* Proctoring Alert */}
+      <ProctoringAlert
+        isOpen={proctoringAlert.isOpen}
+        type={proctoringAlert.type}
+        onDismiss={() => setProctoringAlert({ ...proctoringAlert, isOpen: false })}
+      />
+
+      {/* Proctoring Overlay (shows webcam preview) */}
+      {examData.exam.antiCheatEnabled && proctoringStatus.status === 'active' && (
+        <ProctoringOverlay
+          status={proctoringStatus}
+          webcamRef={webcamRef}
+          showPreview={true}
+        />
+      )}
+
+      {/* Hidden video element for face detection (used by proctoring hook) */}
+      {/* Must have proper dimensions for face-api.js to work - visually hidden but not size=0 */}
+      <video
+        ref={webcamRef}
+        autoPlay
+        playsInline
+        muted
+        style={{ 
+          position: 'fixed',
+          top: '-9999px',
+          left: '-9999px',
+          width: '640px',
+          height: '480px',
+          visibility: 'hidden',
+          pointerEvents: 'none'
+        }}
+      />
+
       {/* Submitting Overlay */}
       {isSubmitting && (
         <div className="fixed inset-0 dark:bg-black/80 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center">
@@ -561,9 +822,12 @@ const StudentExamAttempt: React.FC = () => {
         <div className="flex items-center gap-4">
           <div>
             <h1 className="dark:text-white text-slate-900 text-lg font-bold leading-tight tracking-tight">{examData.exam.title}</h1>
-            <p className="dark:text-slate-400 text-slate-600 text-xs font-normal">
-              {examData.attempt.isRetake ? 'Mistake Resolution Mode' : 'Proctored Exam Session'}
-            </p>
+            <div className="flex items-center gap-3">
+              <p className="dark:text-slate-400 text-slate-600 text-xs font-normal">
+                {examData.attempt.isRetake ? 'Mistake Resolution Mode' : 'Proctored Exam Session'}
+              </p>
+              <AutoSaveIndicator status={saveStatus} lastSaved={lastSaved} />
+            </div>
           </div>
         </div>
 
@@ -685,48 +949,124 @@ const StudentExamAttempt: React.FC = () => {
                 </div>
 
                 <div className="text-lg dark:text-slate-200 text-slate-800 leading-relaxed">
-                  <p>{currentQuestion.questionText}</p>
+                  <QuestionContentRenderer content={currentQuestion.questionText} />
                 </div>
 
+                {/* Render answer input based on question type */}
                 <div className="flex flex-col gap-3">
-                  <p className="text-sm font-medium dark:text-slate-400 text-slate-600 mb-2">Select one answer:</p>
-                  {currentQuestion.options.map((opt, i) => {
-                    const optionText = typeof opt === 'string' ? opt : opt.text;
-                    return (
-                      <label 
-                        key={i} 
-                        className={`group relative flex items-center p-4 rounded-lg border cursor-pointer transition-all ${
-                          answers[currentQuestion.id] === i
-                            ? 'dark:border-primary dark:bg-primary/10 border-yellow-400 bg-yellow-100/50'
-                            : 'dark:border-navy-border dark:bg-navy-dark/50 dark:hover:bg-navy-dark bg-slate-100 border-slate-200 hover:bg-slate-200'
-                        }`}
-                      >
-                        <input 
-                          className="peer sr-only" 
-                          name="answer" 
-                          type="radio" 
-                          checked={answers[currentQuestion.id] === i}
-                          onChange={() => handleAnswerChange(currentQuestion.id, i)}
-                        />
-                        <div className={`flex-shrink-0 size-5 rounded-full border mr-4 flex items-center justify-center transition-colors ${
-                          answers[currentQuestion.id] === i
-                            ? 'dark:bg-primary dark:border-primary bg-yellow-400 border-yellow-400'
-                            : 'dark:border-slate-500 dark:group-hover:border-primary border-slate-400 group-hover:border-yellow-400'
-                        }`}>
-                          {answers[currentQuestion.id] === i && (
-                            <div className="size-2 dark:bg-navy-dark bg-white rounded-full"></div>
-                          )}
-                        </div>
-                        <span className={`flex-1 transition-colors ${
-                          answers[currentQuestion.id] === i
-                            ? 'dark:text-white text-slate-900 font-bold'
-                            : 'dark:text-slate-300 text-slate-700 group-hover:dark:text-white group-hover:text-slate-900 font-medium'
-                        }`}>
-                          {String.fromCharCode(65 + i)}. {optionText}
-                        </span>
-                      </label>
-                    );
-                  })}
+                  {/* Multiple Choice & True/False */}
+                  {(currentQuestion.questionType === 'multiple_choice' || currentQuestion.questionType === 'true_false') && (
+                    <>
+                      <p className="text-sm font-medium dark:text-slate-400 text-slate-600 mb-2">Select one answer:</p>
+                      {currentQuestion.options.map((opt, i) => {
+                        const optionText = typeof opt === 'string' ? opt : opt.text;
+                        return (
+                          <label 
+                            key={i} 
+                            className={`group relative flex items-center p-4 rounded-lg border cursor-pointer transition-all ${
+                              answers[currentQuestion.id] === i
+                                ? 'dark:border-primary dark:bg-primary/10 border-yellow-400 bg-yellow-100/50'
+                                : 'dark:border-navy-border dark:bg-navy-dark/50 dark:hover:bg-navy-dark bg-slate-100 border-slate-200 hover:bg-slate-200'
+                            }`}
+                          >
+                            <input 
+                              className="peer sr-only" 
+                              name="answer" 
+                              type="radio" 
+                              checked={answers[currentQuestion.id] === i}
+                              onChange={() => handleAnswerChange(currentQuestion.id, i)}
+                            />
+                            <div className={`flex-shrink-0 size-5 rounded-full border mr-4 flex items-center justify-center transition-colors ${
+                              answers[currentQuestion.id] === i
+                                ? 'dark:bg-primary dark:border-primary bg-yellow-400 border-yellow-400'
+                                : 'dark:border-slate-500 dark:group-hover:border-primary border-slate-400 group-hover:border-yellow-400'
+                            }`}>
+                              {answers[currentQuestion.id] === i && (
+                                <div className="size-2 dark:bg-navy-dark bg-white rounded-full"></div>
+                              )}
+                            </div>
+                            <span className={`flex-1 transition-colors ${
+                              answers[currentQuestion.id] === i
+                                ? 'dark:text-white text-slate-900 font-bold'
+                                : 'dark:text-slate-300 text-slate-700 group-hover:dark:text-white group-hover:text-slate-900 font-medium'
+                            }`}>
+                              {String.fromCharCode(65 + i)}. {optionText}
+                            </span>
+                          </label>
+                        );
+                      })}
+                    </>
+                  )}
+
+                  {/* Essay Question with Rich Text Editor */}
+                  {currentQuestion.questionType === 'essay' && (
+                    <RichTextEditor
+                      value={(answers[currentQuestion.id] as string) || ''}
+                      onChange={(val) => handleAnswerChange(currentQuestion.id, val)}
+                      placeholder="Write your essay answer here... Be thorough and provide detailed explanations."
+                      maxLength={5000}
+                    />
+                  )}
+
+                  {/* Short Answer Question */}
+                  {currentQuestion.questionType === 'short_answer' && (
+                    <>
+                      <p className="text-sm font-medium dark:text-slate-400 text-slate-600 mb-2">Type your answer:</p>
+                      <input
+                        type="text"
+                        className="w-full p-4 rounded-lg border dark:bg-navy-dark dark:border-navy-border dark:text-white bg-white border-slate-300 text-slate-900 focus:ring-2 focus:ring-primary focus:border-primary"
+                        placeholder="Type your answer here..."
+                        value={(answers[currentQuestion.id] as string) || ''}
+                        onChange={(e) => handleAnswerChange(currentQuestion.id, e.target.value)}
+                      />
+                    </>
+                  )}
+
+                  {/* Fill in the Blank with Inline Inputs */}
+                  {currentQuestion.questionType === 'fill_blank' && (
+                    <FillBlankQuestion
+                      questionText={currentQuestion.questionText}
+                      value={(answers[currentQuestion.id] as string[]) || []}
+                      onChange={(val) => handleAnswerChange(currentQuestion.id, val)}
+                    />
+                  )}
+
+                  {/* Code Question with Monaco Editor */}
+                  {currentQuestion.questionType === 'code' && (
+                    <CodeEditor
+                      value={(answers[currentQuestion.id] as string) || ''}
+                      onChange={(val) => handleAnswerChange(currentQuestion.id, val)}
+                      language="javascript"
+                      height="400px"
+                      maxLines={200}
+                    />
+                  )}
+
+                  {/* Matching Question with Dropdown Selectors */}
+                  {currentQuestion.questionType === 'matching' && (
+                    <MatchingQuestion
+                      leftItems={currentQuestion.leftItems || []}
+                      rightItems={currentQuestion.rightItems || []}
+                      value={(answers[currentQuestion.id] as Record<string, string>) || {}}
+                      onChange={(val) => handleAnswerChange(currentQuestion.id, val)}
+                    />
+                  )}
+
+                  {/* Fallback for unknown question types */}
+                  {!['multiple_choice', 'true_false', 'essay', 'short_answer', 'fill_blank', 'code', 'matching'].includes(currentQuestion.questionType) && (
+                    <>
+                      <p className="text-sm font-medium dark:text-slate-400 text-slate-600 mb-2">Your answer:</p>
+                      <textarea
+                        className="w-full min-h-[200px] p-4 rounded-lg border dark:bg-navy-dark dark:border-navy-border dark:text-white bg-white border-slate-300 text-slate-900 focus:ring-2 focus:ring-primary focus:border-primary resize-y"
+                        placeholder="Type your answer here..."
+                        value={(answers[currentQuestion.id] as string) || ''}
+                        onChange={(e) => handleAnswerChange(currentQuestion.id, e.target.value)}
+                      />
+                      <p className="text-xs dark:text-orange-400 text-orange-600">
+                        Unknown question type: {currentQuestion.questionType}
+                      </p>
+                    </>
+                  )}
                 </div>
               </div>
             </div>

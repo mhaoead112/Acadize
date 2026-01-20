@@ -16,30 +16,31 @@ export const attemptStatusEnum = pgEnum('attempt_status', ['in_progress', 'submi
 
 // --- CORE TABLES (Auth and Users) ---
 export const users = pgTable('users', {
-    id: text('id').$defaultFn(() => createId()).primaryKey(),
-    username: varchar('username', { length: 255 }).notNull().unique(),
-    fullName: varchar('full_name', { length: 255 }).notNull(),
-    email: varchar('email', { length: 255 }).notNull().unique(),
-    password: text('password_hash').notNull(),
-    role: userRoleEnum('role').default('student').notNull(),
-    profilePicture: text('profile_picture'),
-    phone: text('phone'),
-    bio: text('bio'),
-    grade: varchar('grade', { length: 50 }), // For students: "Grade 1", "Grade 2", etc.
-    isActive: boolean('is_active').default(true).notNull(),
-    emailVerified: boolean('email_verified').default(false).notNull(),
-    emailVerificationToken: text('email_verification_token'),
-    passwordResetToken: text('password_reset_token'),
-    passwordResetExpires: timestamp('password_reset_expires'),
-    preferredRole: userRoleEnum('preferred_role'),
-    lastLoginAt: timestamp('last_login_at'),
-    createdAt: timestamp('created_at').defaultNow().notNull(),
-    updatedAt: timestamp('updated_at').defaultNow().$onUpdate(() => new Date()),
+  id: text('id').$defaultFn(() => createId()).primaryKey(),
+  username: varchar('username', { length: 255 }).notNull().unique(),
+  fullName: varchar('full_name', { length: 255 }).notNull(),
+  email: varchar('email', { length: 255 }).notNull().unique(),
+  password: text('password_hash').notNull(),
+  role: userRoleEnum('role').default('student').notNull(),
+  profilePicture: text('profile_picture'),
+  phone: text('phone'),
+  bio: text('bio'),
+  grade: varchar('grade', { length: 50 }), // For students: "Grade 1", "Grade 2", etc.
+  isActive: boolean('is_active').default(true).notNull(),
+  emailVerified: boolean('email_verified').default(false).notNull(),
+  emailVerificationToken: text('email_verification_token'),
+  passwordResetToken: text('password_reset_token'),
+  passwordResetExpires: timestamp('password_reset_expires'),
+  preferredRole: userRoleEnum('preferred_role'),
+  lastLoginAt: timestamp('last_login_at'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().$onUpdate(() => new Date()),
+  isTemporaryPassword: boolean('is_temporary_password').default(false).notNull(),
 });
 
 // --- COURSES TABLES (from develop branch) ---
 export const courses = pgTable("courses", {
-  id: text("id").primaryKey().$defaultFn(() => createId()), 
+  id: text("id").primaryKey().$defaultFn(() => createId()),
   title: text("title").notNull(),
   description: text("description"),
   teacherId: text("teacher_id").notNull().references(() => users.id, { onDelete: 'cascade' }),

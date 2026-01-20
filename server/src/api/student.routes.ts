@@ -32,19 +32,19 @@ router.get("/my-progress", isAuthenticated, isStudent, async (req, res) => {
 router.get("/exams", isAuthenticated, isStudent, async (req, res) => {
   try {
     const studentId = (req as any).user.id;
-    
+
     // Get student's enrollments
     const studentEnrollments = await db
       .select({ courseId: enrollments.courseId })
       .from(enrollments)
       .where(eq(enrollments.studentId, studentId));
-    
+
     if (studentEnrollments.length === 0) {
       return res.status(200).json([]);
     }
-    
+
     const courseIds = studentEnrollments.map(e => e.courseId);
-    
+
     // Get available exams from enrolled courses
     const availableExams = await db
       .select()
@@ -55,7 +55,7 @@ router.get("/exams", isAuthenticated, isStudent, async (req, res) => {
           inArray(exams.status, ['scheduled', 'active'])
         )
       );
-    
+
     res.status(200).json(availableExams);
   } catch (error) {
     console.error('Error fetching available exams:', error);
