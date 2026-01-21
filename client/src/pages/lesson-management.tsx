@@ -215,7 +215,7 @@ export default function LessonManagementPage() {
   return (
     <div className="flex-1 flex flex-col h-full overflow-y-auto bg-slate-50 dark:bg-navy-dark transition-colors duration-200">
       {/* Sticky Header */}
-      <header className="sticky top-0 z-50 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-surface-dark/80 backdrop-blur-md px-6 py-3 flex items-center justify-between">
+      <header className="sticky top-0 z-50 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3 text-sm">
           <Link href="/teacher-dashboard" className="text-slate-500 hover:text-gold transition-colors">
             Dashboard
@@ -287,9 +287,9 @@ export default function LessonManagementPage() {
             </div>
 
             {/* Rich Text Editor */}
-            <div className="bg-white dark:bg-surface-dark rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col min-h-[400px] overflow-hidden">
+            <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col min-h-[400px] overflow-hidden">
               {/* Toolbar */}
-              <div className="border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-surface-dark/50 p-3 flex flex-wrap gap-2">
+              <div className="border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 p-3 flex flex-wrap gap-2">
                 <button className="p-1.5 hover:bg-white dark:hover:bg-slate-700 rounded text-slate-500 transition-colors">
                   <span className="material-symbols-outlined">format_bold</span>
                 </button>
@@ -314,7 +314,7 @@ export default function LessonManagementPage() {
             </div>
 
             {/* Lesson Materials Upload */}
-            <div className="bg-white dark:bg-surface-dark rounded-xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
               <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
                 <span className="material-symbols-outlined text-gold">folder_open</span>
                 Lesson Materials
@@ -387,7 +387,7 @@ export default function LessonManagementPage() {
           {/* Right Column - Sidebar */}
           <div className="space-y-6">
             {/* Publishing Section */}
-            <section className="bg-white dark:bg-surface-dark rounded-xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm">
+            <section className="bg-white dark:bg-slate-800 rounded-xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm">
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-4">Publishing</h3>
               
               {/* Visibility Indicator */}
@@ -445,7 +445,7 @@ export default function LessonManagementPage() {
             </section>
 
             {/* Meta Data Section */}
-            <section className="bg-white dark:bg-surface-dark rounded-xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm">
+            <section className="bg-white dark:bg-slate-800 rounded-xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm">
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-4">Meta Data</h3>
               <div className="space-y-4">
                 {/* Prerequisite Lesson */}

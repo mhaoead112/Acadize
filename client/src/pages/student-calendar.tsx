@@ -212,7 +212,7 @@ export default function StudentCalendar() {
           key={day}
           onClick={() => setSelectedDate(date)}
           className={`min-h-[120px] border p-2 cursor-pointer transition-all ${
-            isToday ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-400 dark:border-blue-600' : 'bg-white dark:bg-surface-dark border-gray-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5'
+            isToday ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-400 dark:border-blue-600' : 'bg-white dark:bg-slate-800 border-gray-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/5'
           } ${isSelected ? 'ring-2 ring-blue-500 dark:ring-blue-400' : ''}`}
         >
           <div className={`text-sm font-semibold mb-2 ${
@@ -304,7 +304,7 @@ export default function StudentCalendar() {
     return (
       <div className="flex flex-col h-full">
         {/* Week header */}
-        <div className="grid grid-cols-8 gap-0 border-b border-slate-200 dark:border-white/10 sticky top-0 bg-white dark:bg-surface-dark z-10">
+        <div className="grid grid-cols-8 gap-0 border-b border-slate-200 dark:border-white/10 sticky top-0 bg-white dark:bg-slate-800 z-10">
           <div className="p-2 text-xs text-slate-500 dark:text-slate-400 font-medium border-r border-slate-200 dark:border-white/10"></div>
           {weekDates.map((date, idx) => {
             const isToday = date.toDateString() === new Date().toDateString();
@@ -472,7 +472,7 @@ export default function StudentCalendar() {
   return (
     <StudentLayout>
       {/* Header */}
-      <header className="w-full px-8 py-6 flex flex-wrap items-end justify-between gap-4 shrink-0 bg-white dark:bg-background-dark border-b border-slate-200 dark:border-white/10">
+      <header className="w-full px-8 py-6 flex flex-wrap items-end justify-between gap-4 shrink-0 bg-white dark:bg-background border-b border-slate-200 dark:border-white/10">
         <div className="flex flex-col gap-1">
           <h1 className="text-slate-900 dark:text-white text-4xl font-black tracking-tight">Schedule</h1>
           <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
@@ -481,14 +481,14 @@ export default function StudentCalendar() {
           </div>
         </div>
         <div className="flex items-center gap-4">
-          <div className="flex h-10 items-center justify-center rounded-full bg-slate-100 dark:bg-surface-accent p-1">
+          <div className="flex h-10 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-700 p-1">
             {['Month', 'Week', 'Day'].map((viewOption) => (
               <button
                 key={viewOption}
                 onClick={() => setView(viewOption.toLowerCase() as 'month' | 'week' | 'day')}
                 className={`h-full px-4 py-2 rounded-full text-sm font-medium transition-all ${
                   view === viewOption.toLowerCase()
-                    ? 'bg-white dark:bg-surface-dark shadow-sm text-slate-900 dark:text-white'
+                    ? 'bg-white dark:bg-slate-800 shadow-sm text-slate-900 dark:text-white'
                     : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
@@ -499,14 +499,14 @@ export default function StudentCalendar() {
         </div>
       </header>
 
-      <div className="flex-1 overflow-hidden flex flex-col bg-slate-50 dark:bg-background-dark">
+      <div className="flex-1 overflow-hidden flex flex-col bg-slate-50 dark:bg-background">
         {/* Filters and Navigation */}
-        <div className="px-8 py-4 flex items-center justify-between shrink-0 bg-white dark:bg-background-dark border-b border-slate-200 dark:border-white/10">
+        <div className="px-8 py-4 flex items-center justify-between shrink-0 bg-white dark:bg-background border-b border-slate-200 dark:border-white/10">
           <div className="flex gap-3 overflow-x-auto pb-2">
             {['Assignments', 'Classes', 'Exams'].map((filter, i) => (
               <button
                 key={filter}
-                className="flex h-8 items-center gap-2 rounded-full bg-slate-100 dark:bg-surface-accent hover:bg-slate-200 dark:hover:bg-surface-accent/80 px-4 transition-colors text-slate-600 dark:text-slate-300"
+                className="flex h-8 items-center gap-2 rounded-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700/80 px-4 transition-colors text-slate-600 dark:text-slate-300"
               >
                 <span className="text-sm font-medium">{filter}</span>
               </button>
@@ -515,14 +515,14 @@ export default function StudentCalendar() {
               <span className="text-sm font-medium">Clear All</span>
             </button>
           </div>
-          <div className="flex items-center gap-4 bg-slate-100 dark:bg-surface-accent rounded-full px-2 py-1">
+          <div className="flex items-center gap-4 bg-slate-100 dark:bg-slate-700 rounded-full px-2 py-1">
             <button
               onClick={() => {
                 if (view === 'month') navigateMonth('prev');
                 else if (view === 'week') navigateWeek('prev');
                 else navigateDay('prev');
               }}
-              className="size-8 flex items-center justify-center rounded-full hover:bg-white dark:hover:bg-surface-dark text-slate-600 dark:text-slate-400 transition-colors"
+              className="size-8 flex items-center justify-center rounded-full hover:bg-white dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 transition-colors"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
@@ -541,7 +541,7 @@ export default function StudentCalendar() {
                 else if (view === 'week') navigateWeek('next');
                 else navigateDay('next');
               }}
-              className="size-8 flex items-center justify-center rounded-full hover:bg-white dark:hover:bg-surface-dark text-slate-600 dark:text-slate-400 transition-colors"
+              className="size-8 flex items-center justify-center rounded-full hover:bg-white dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 transition-colors"
             >
               <ChevronRight className="w-5 h-5" />
             </button>
@@ -551,7 +551,7 @@ export default function StudentCalendar() {
         {/* Main Content */}
         <div className="flex-1 px-8 py-8 overflow-hidden flex gap-6">
           {/* Calendar */}
-          <div className="flex-1 bg-white dark:bg-surface-dark rounded-3xl p-6 flex flex-col shadow-lg overflow-hidden border border-slate-200 dark:border-white/10">
+          <div className="flex-1 bg-white dark:bg-slate-800 rounded-3xl p-6 flex flex-col shadow-lg overflow-hidden border border-slate-200 dark:border-white/10">
             {view === 'month' && (
               <div>
                 {/* Day Headers */}
@@ -584,7 +584,7 @@ export default function StudentCalendar() {
                       return (
                         <div
                           key={idx}
-                          className="bg-white dark:bg-surface-dark/50 p-2 min-h-[100px] opacity-40"
+                          className="bg-white dark:bg-slate-800/50 p-2 min-h-[100px] opacity-40"
                         />
                       );
                     }
@@ -598,7 +598,7 @@ export default function StudentCalendar() {
                       <div
                         key={idx}
                         onClick={() => setSelectedDate(date)}
-                        className={`bg-white dark:bg-surface-dark p-2 flex flex-col gap-1 min-h-[100px] transition-colors cursor-pointer group hover:bg-slate-50 dark:hover:bg-surface-dark/80 ${
+                        className={`bg-white dark:bg-slate-800 p-2 flex flex-col gap-1 min-h-[100px] transition-colors cursor-pointer group hover:bg-slate-50 dark:hover:bg-slate-800/80 ${
                           isToday ? 'bg-blue-50 dark:bg-blue-500/20 ring-1 ring-inset ring-blue-400 dark:ring-blue-500/50' : ''
                         } ${isSelected ? 'ring-2 ring-blue-500 dark:ring-[#FFD700]' : ''}`}
                       >
@@ -642,7 +642,7 @@ export default function StudentCalendar() {
           {/* Right Sidebar */}
           <div className="w-96 flex flex-col gap-6 shrink-0 overflow-y-auto pb-4">
             {/* Selected Date Info */}
-            <div className="flex flex-col gap-4 bg-white dark:bg-surface-dark rounded-3xl p-6 shadow-lg border border-slate-200 dark:border-white/10">
+            <div className="flex flex-col gap-4 bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-lg border border-slate-200 dark:border-white/10">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Selected</p>
@@ -714,7 +714,7 @@ export default function StudentCalendar() {
                         setSelectedEvent(event);
                         setShowEventDialog(true);
                       }}
-                      className="flex items-center gap-4 p-4 rounded-2xl bg-white dark:bg-surface-dark border border-slate-200 dark:border-white/10 hover:border-blue-500 dark:hover:border-[#FFD700] transition-colors shadow-sm cursor-pointer"
+                      className="flex items-center gap-4 p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 hover:border-blue-500 dark:hover:border-[#FFD700] transition-colors shadow-sm cursor-pointer"
                     >
                       <div className="flex flex-col items-center justify-center bg-slate-100 dark:bg-slate-800 rounded-xl w-12 h-12 shrink-0">
                         <span className="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase">

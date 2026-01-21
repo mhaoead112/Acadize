@@ -15,7 +15,7 @@ const Analytics: React.FC = () => {
   const rotateX = useTransform(scrollYProgress, [0, 0.5, 1], [15, 0, -15]);
 
   return (
-    <section ref={ref} className="py-20 lg:py-28 bg-slate-100 dark:bg-background-secondary border-y border-slate-200 dark:border-white/5 relative overflow-hidden">
+    <section ref={ref} className="py-20 lg:py-28 bg-slate-100 dark:bg-slate-900 border-y border-slate-200 dark:border-white/5 relative overflow-hidden">
       {/* Background Blurs with Animation */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden opacity-20 pointer-events-none">
         <motion.div 
@@ -139,7 +139,7 @@ const Analytics: React.FC = () => {
               style={{ transformStyle: "preserve-3d" }}
             >
               {/* Browser Bar */}
-              <div className="absolute top-0 left-0 right-0 h-10 bg-background-dark/90 backdrop-blur rounded-t-xl flex items-center px-4 gap-2 z-10 border-b border-white/5">
+              <div className="absolute top-0 left-0 right-0 h-10 bg-slate-950/90 backdrop-blur rounded-t-xl flex items-center px-4 gap-2 z-10 border-b border-white/5">
                 <div className="flex gap-1.5">
                   <div className="size-3 rounded-full bg-red-500/50"></div>
                   <div className="size-3 rounded-full bg-yellow-500/50"></div>
@@ -156,12 +156,12 @@ const Analytics: React.FC = () => {
                 animate={isInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.95 }}
                 transition={{ delay: 0.6, duration: 0.8 }}
               >
-                <div className="absolute inset-0 bg-gradient-to-tr from-background-secondary/50 to-transparent pointer-events-none"></div>
+                <div className="absolute inset-0 bg-gradient-to-tr from-slate-900/50 to-transparent pointer-events-none"></div>
               </motion.div>
 
               {/* Floating Stat Card with 3D Effect */}
               <motion.div 
-                className="absolute bottom-8 left-8 bg-background-dark/95 border border-white/10 p-4 rounded-lg shadow-xl max-w-xs backdrop-blur-md cursor-default"
+                className="absolute bottom-8 left-8 bg-slate-950/95 border border-white/10 p-4 rounded-lg shadow-xl max-w-xs backdrop-blur-md cursor-default"
                 initial={{ opacity: 0, y: 30, scale: 0.8, rotateX: -20 }}
                 animate={isInView ? { opacity: 1, y: 0, scale: 1, rotateX: 0 } : { opacity: 0, y: 30, scale: 0.8, rotateX: -20 }}
                 transition={{ delay: 0.8, duration: 0.8, type: "spring", stiffness: 200 }}

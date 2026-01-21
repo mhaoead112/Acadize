@@ -13,7 +13,7 @@ export default function BlogPostDetail() {
 
   if (!post) {
     return (
-      <div className="min-h-screen bg-white dark:bg-background-dark text-slate-900 dark:text-white font-sans antialiased flex items-center justify-center">
+      <div className="min-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-sans antialiased flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-4xl font-bold mb-4">Post Not Found</h1>
           <Link href="/blog">
@@ -31,7 +31,7 @@ export default function BlogPostDetail() {
     .slice(0, 3);
 
   return (
-    <div className="min-h-screen bg-white dark:bg-background-dark text-slate-900 dark:text-white font-sans antialiased">
+    <div className="min-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-sans antialiased">
 
       <article className="relative">
         <div className="relative h-[400px] bg-cover bg-center" style={{ backgroundImage: `url(${post.image})` }}>
@@ -117,7 +117,7 @@ export default function BlogPostDetail() {
                 {post.tags.map((tag, index) => (
                   <span
                     key={index}
-                    className="px-3 py-1 rounded-full bg-slate-50 dark:bg-surface-dark border border-slate-200 dark:border-secondary-dark text-sm text-slate-600 dark:text-text-muted hover:border-primary hover:text-primary transition-all cursor-pointer"
+                    className="px-3 py-1 rounded-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-secondary-dark text-sm text-slate-600 dark:text-text-muted hover:border-primary hover:text-primary transition-all cursor-pointer"
                   >
                     {tag}
                   </span>
@@ -127,7 +127,7 @@ export default function BlogPostDetail() {
           )}
 
           {/* Author Bio */}
-          <div className="mt-12 p-6 rounded-2xl border border-slate-200 dark:border-secondary-dark bg-white dark:bg-surface-dark">
+          <div className="mt-12 p-6 rounded-2xl border border-slate-200 dark:border-secondary-dark bg-white dark:bg-slate-800">
             <h3 className="text-xl font-bold mb-4">About the Author</h3>
             <div className="flex items-start gap-4">
               {post.author.avatar && (
@@ -149,13 +149,13 @@ export default function BlogPostDetail() {
       </article>
 
       {relatedPosts.length > 0 && (
-        <section className="py-16 px-4 sm:px-6 lg:px-8 bg-slate-50 dark:bg-surface-dark/30 border-t border-slate-200 dark:border-secondary-dark">
+        <section className="py-16 px-4 sm:px-6 lg:px-8 bg-slate-50 dark:bg-slate-800/30 border-t border-slate-200 dark:border-secondary-dark">
           <div className="mx-auto max-w-7xl">
             <h2 className="text-3xl font-bold mb-8">Related Articles</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {relatedPosts.map((relatedPost, index) => (
                 <Link key={index} href={`/blog/${relatedPost.slug}`}>
-                  <div className="group rounded-2xl border border-slate-200 dark:border-secondary-dark bg-white dark:bg-surface-dark overflow-hidden hover:border-primary hover:shadow-2xl hover:shadow-primary/20 transition-all cursor-pointer hover-lift">
+                  <div className="group rounded-2xl border border-slate-200 dark:border-secondary-dark bg-white dark:bg-slate-800 overflow-hidden hover:border-primary hover:shadow-2xl hover:shadow-primary/20 transition-all cursor-pointer hover-lift">
                     <div 
                       className="h-48 bg-cover bg-center"
                       style={{ backgroundImage: `url(${relatedPost.image})` }}

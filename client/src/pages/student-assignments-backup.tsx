@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { 
@@ -256,7 +256,7 @@ function AssignmentCard({ assignment, onSubmit, onViewDetails, onViewSubmission 
   const TypeIcon = typeInfo.icon;
 
   return (
-    <Card className="bg-white dark:bg-surface-dark border-slate-200 dark:border-white/10 hover:shadow-2xl transition-all border-l-4 border-l-primary rounded-2xl">
+    <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-white/10 hover:shadow-2xl transition-all border-l-4 border-l-primary rounded-2xl">
       <CardHeader className="pb-3 p-6">
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
@@ -620,7 +620,7 @@ export default function StudentAssignments() {
   if (isLoading) {
     return (
       <StudentLayout>
-        <div className="flex items-center justify-center h-screen bg-slate-50 dark:bg-background-dark">
+        <div className="flex items-center justify-center h-screen bg-slate-50 dark:bg-slate-950">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
             <p className="text-slate-600 dark:text-text-secondary mt-4">Loading assignments...</p>
@@ -634,7 +634,7 @@ export default function StudentAssignments() {
   if (error) {
     return (
       <StudentLayout>
-        <div className="flex items-center justify-center h-screen bg-slate-50 dark:bg-background-dark">
+        <div className="flex items-center justify-center h-screen bg-slate-50 dark:bg-slate-950">
           <div className="text-center">
             <AlertCircle className="h-12 w-12 text-red-500 dark:text-red-400 mx-auto mb-4" />
             <p className="text-slate-900 dark:text-white font-semibold">Failed to load assignments</p>
@@ -650,7 +650,7 @@ export default function StudentAssignments() {
   return (
     <StudentLayout>
       {/* Header */}
-      <header className="flex items-center justify-between px-8 py-5 border-b border-slate-200 dark:border-white/10 bg-white/95 dark:bg-background-dark/95 backdrop-blur-sm z-20">
+      <header className="flex items-center justify-between px-8 py-5 border-b border-slate-200 dark:border-white/10 bg-white/95 dark:bg-slate-950/95 backdrop-blur-sm z-20">
         <div className="flex-1 max-w-md">
           <div className="relative group">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-text-secondary pointer-events-none" />
@@ -658,7 +658,7 @@ export default function StudentAssignments() {
               placeholder="Search assignments, courses..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="block w-full pl-12 pr-10 py-3 bg-slate-100 dark:bg-surface-highlight border-none rounded-full text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-text-secondary focus:ring-2 focus:ring-secondary dark:focus:ring-primary focus:bg-white dark:focus:bg-surface-dark transition-all shadow-inner"
+              className="block w-full pl-12 pr-10 py-3 bg-slate-100 dark:bg-surface-highlight border-none rounded-full text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-text-secondary focus:ring-2 focus:ring-secondary dark:focus:ring-primary focus:bg-white dark:focus:bg-slate-800 transition-all shadow-inner"
             />
           </div>
         </div>
@@ -671,7 +671,7 @@ export default function StudentAssignments() {
       </header>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-y-auto p-4 md:p-8 lg:p-10 scroll-smooth bg-slate-50 dark:bg-background-dark">
+      <div className="flex-1 overflow-y-auto p-4 md:p-8 lg:p-10 scroll-smooth bg-slate-50 dark:bg-slate-950">
         <div className="max-w-7xl mx-auto space-y-8">
           {/* Page Title */}
           <div>
@@ -685,7 +685,7 @@ export default function StudentAssignments() {
 
           {/* Stats Cards */}
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-            <Card className="bg-white dark:bg-surface-dark border-slate-200 dark:border-white/10 hover:shadow-xl transition-all rounded-2xl">
+            <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-white/10 hover:shadow-xl transition-all rounded-2xl">
               <CardContent className="p-5">
                 <div className="text-center">
                   <ClipboardList className="h-8 w-8 mx-auto mb-2 text-slate-500 dark:text-text-secondary" />
@@ -694,7 +694,7 @@ export default function StudentAssignments() {
                 </div>
               </CardContent>
             </Card>
-            <Card className="bg-white dark:bg-surface-dark border-slate-200 dark:border-white/10 hover:shadow-xl transition-all rounded-2xl border-t-4 border-t-orange-500">
+            <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-white/10 hover:shadow-xl transition-all rounded-2xl border-t-4 border-t-orange-500">
               <CardContent className="p-5">
                 <div className="text-center">
                   <AlertCircle className="h-8 w-8 mx-auto mb-2 text-orange-500" />
@@ -703,7 +703,7 @@ export default function StudentAssignments() {
                 </div>
               </CardContent>
             </Card>
-            <Card className="bg-white dark:bg-surface-dark border-slate-200 dark:border-white/10 hover:shadow-xl transition-all rounded-2xl border-t-4 border-t-primary">
+            <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-white/10 hover:shadow-xl transition-all rounded-2xl border-t-4 border-t-primary">
               <CardContent className="p-5">
                 <div className="text-center">
                   <Clock className="h-8 w-8 mx-auto mb-2 text-primary" />
@@ -712,7 +712,7 @@ export default function StudentAssignments() {
                 </div>
               </CardContent>
             </Card>
-            <Card className="bg-white dark:bg-surface-dark border-slate-200 dark:border-white/10 hover:shadow-xl transition-all rounded-2xl border-t-4 border-t-green-500">
+            <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-white/10 hover:shadow-xl transition-all rounded-2xl border-t-4 border-t-green-500">
               <CardContent className="p-5">
                 <div className="text-center">
                   <CheckCircle className="h-8 w-8 mx-auto mb-2 text-green-500" />
@@ -721,7 +721,7 @@ export default function StudentAssignments() {
                 </div>
               </CardContent>
             </Card>
-            <Card className="bg-white dark:bg-surface-dark border-slate-200 dark:border-white/10 hover:shadow-xl transition-all rounded-2xl border-t-4 border-t-red-500">
+            <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-white/10 hover:shadow-xl transition-all rounded-2xl border-t-4 border-t-red-500">
               <CardContent className="p-5">
                 <div className="text-center">
                   <XCircle className="h-8 w-8 mx-auto mb-2 text-red-500" />
@@ -733,14 +733,14 @@ export default function StudentAssignments() {
           </div>
 
           {/* Filters and Search */}
-          <Card className="bg-white dark:bg-surface-dark border-slate-200 dark:border-white/10 shadow-lg">
+          <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-white/10 shadow-lg">
             <CardContent className="p-5">
               <div className="flex flex-col sm:flex-row gap-4">
                 <Select value={filterStatus} onValueChange={setFilterStatus}>
                   <SelectTrigger className="w-full sm:w-[180px] h-11 bg-slate-100 dark:bg-surface-highlight border-slate-200 dark:border-white/10 text-slate-900 dark:text-white">
                     <SelectValue placeholder="Filter by status" />
                   </SelectTrigger>
-                  <SelectContent className="bg-white dark:bg-surface-dark border-slate-200 dark:border-white/10">
+                  <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-white/10">
                     <SelectItem value="all">All Status</SelectItem>
                     <SelectItem value="pending">To Do</SelectItem>
                     <SelectItem value="in-progress">In Progress</SelectItem>
@@ -752,7 +752,7 @@ export default function StudentAssignments() {
                   <SelectTrigger className="w-full sm:w-[200px] h-11 bg-slate-100 dark:bg-surface-highlight border-slate-200 dark:border-white/10 text-slate-900 dark:text-white">
                     <SelectValue placeholder="Filter by course" />
                   </SelectTrigger>
-                  <SelectContent className="bg-white dark:bg-surface-dark border-slate-200 dark:border-white/10">
+                  <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-white/10">
                     <SelectItem value="all">All Classes</SelectItem>
                     {uniqueCourses.map(course => (
                       <SelectItem key={course} value={course}>{course}</SelectItem>
@@ -763,7 +763,7 @@ export default function StudentAssignments() {
                   <SelectTrigger className="w-full sm:w-[180px] h-11 bg-slate-100 dark:bg-surface-highlight border-slate-200 dark:border-white/10 text-slate-900 dark:text-white">
                     <SelectValue placeholder="Sort by" />
                   </SelectTrigger>
-                  <SelectContent className="bg-white dark:bg-surface-dark border-slate-200 dark:border-white/10">
+                  <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-white/10">
                     <SelectItem value="dueDate">Due Date</SelectItem>
                     <SelectItem value="priority">Priority</SelectItem>
                   </SelectContent>
@@ -774,7 +774,7 @@ export default function StudentAssignments() {
 
           {/* Assignments List */}
           <Tabs defaultValue="all" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4 h-12 bg-white dark:bg-surface-dark border-slate-200 dark:border-white/10">
+            <TabsList className="grid w-full grid-cols-4 h-12 bg-white dark:bg-slate-800 border-slate-200 dark:border-white/10">
               <TabsTrigger value="all" className="text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-black">
                 All <Badge variant="secondary" className="ml-2 bg-slate-200 dark:bg-surface-highlight">{filteredAssignments.length}</Badge>
               </TabsTrigger>
@@ -1126,7 +1126,7 @@ export default function StudentAssignments() {
                   </p>
                   <div className="flex items-center gap-4 mt-3 text-sm text-blue-600">
                     <span>Max Score: {submissionData.assignment?.maxScore}</span>
-                    <span>•</span>
+                    <span>�</span>
                     <span>Due: {new Date(submissionData.assignment?.dueDate).toLocaleDateString()}</span>
                   </div>
                 </div>

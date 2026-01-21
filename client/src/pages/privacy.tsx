@@ -42,7 +42,7 @@ export default function Privacy() {
   ];
 
   return (
-    <div className="min-h-screen bg-white dark:bg-background-dark text-slate-900 dark:text-white font-sans antialiased overflow-x-hidden">
+    <div className="min-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-sans antialiased overflow-x-hidden">
 
       <section className="relative py-20 px-4 sm:px-6 lg:px-8 border-b border-slate-200 dark:border-secondary-dark">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent"></div>
@@ -64,7 +64,7 @@ export default function Privacy() {
         </div>
       </section>
 
-      <section className="py-12 px-4 sm:px-6 lg:px-8 bg-slate-100 dark:bg-surface-dark/30 border-b border-slate-200 dark:border-secondary-dark">
+      <section className="py-12 px-4 sm:px-6 lg:px-8 bg-slate-100 dark:bg-slate-800/30 border-b border-slate-200 dark:border-secondary-dark">
         <div className="mx-auto max-w-4xl">
           <h2 className="text-xl font-bold mb-4">Quick Navigation</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -72,7 +72,7 @@ export default function Privacy() {
               <a
                 key={section.id}
                 href={`#${section.id}`}
-                className="flex items-center gap-2 rounded-lg border border-slate-200 dark:border-secondary-dark bg-white dark:bg-surface-dark p-3 text-sm hover:border-primary hover:text-primary transition-all"
+                className="flex items-center gap-2 rounded-lg border border-slate-200 dark:border-secondary-dark bg-white dark:bg-slate-800 p-3 text-sm hover:border-primary hover:text-primary transition-all"
               >
                 <span>→</span>
                 <span>{section.title}</span>
@@ -114,21 +114,21 @@ export default function Privacy() {
             <h2 className="text-2xl font-bold mb-6">Additional Information</h2>
             
             <div className="space-y-6">
-              <div className="rounded-xl border border-secondary-dark bg-surface-dark p-6">
+              <div className="rounded-xl border border-secondary-dark bg-slate-800 p-6">
                 <h3 className="text-lg font-bold mb-2">Children's Privacy</h3>
                 <p className="text-sm text-text-muted">
                   Our services are not directed to children under 13. We do not knowingly collect personal information from children under 13. If you believe we have collected information from a child under 13, please contact us immediately.
                 </p>
               </div>
 
-              <div className="rounded-xl border border-secondary-dark bg-surface-dark p-6">
+              <div className="rounded-xl border border-secondary-dark bg-slate-800 p-6">
                 <h3 className="text-lg font-bold mb-2">International Data Transfers</h3>
                 <p className="text-sm text-text-muted">
                   Your information may be transferred to and processed in countries other than your country of residence. We ensure appropriate safeguards are in place to protect your data in accordance with this privacy policy and applicable laws.
                 </p>
               </div>
 
-              <div className="rounded-xl border border-secondary-dark bg-surface-dark p-6">
+              <div className="rounded-xl border border-secondary-dark bg-slate-800 p-6">
                 <h3 className="text-lg font-bold mb-2">Changes to This Policy</h3>
                 <p className="text-sm text-text-muted">
                   We may update this privacy policy from time to time. We will notify you of any changes by posting the new policy on this page and updating the "Last updated" date. We encourage you to review this policy periodically.
@@ -140,9 +140,9 @@ export default function Privacy() {
       </section>
 
       {/* Contact Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-surface-dark/30">
+      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-slate-800/30">
         <div className="mx-auto max-w-4xl">
-          <div className="rounded-2xl border border-secondary-dark bg-surface-dark p-8 lg:p-12 text-center">
+          <div className="rounded-2xl border border-secondary-dark bg-slate-800 p-8 lg:p-12 text-center">
             <h2 className="text-2xl font-bold mb-4">Questions About Privacy?</h2>
             <p className="text-text-muted mb-6 max-w-2xl mx-auto">
               If you have any questions about this privacy policy or our data practices, please don't hesitate to contact us.

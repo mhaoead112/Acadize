@@ -87,7 +87,7 @@ export default function CreateCoursePage() {
           <Button
             variant="ghost"
             onClick={() => setLocation('/teacher/courses')}
-            className="mb-4 text-slate-600 dark:text-gray-400 hover:text-navy dark:hover:text-white hover:bg-white dark:hover:bg-surface-dark gap-2"
+            className="mb-4 text-slate-600 dark:text-gray-400 hover:text-navy dark:hover:text-white hover:bg-white dark:hover:bg-slate-800 gap-2"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to Classes
@@ -143,7 +143,7 @@ export default function CreateCoursePage() {
           {/* Sidebar - Takes 1 column */}
           <div className="space-y-4">
             {/* Quick Tips Card */}
-            <div className="bg-white dark:bg-surface-dark rounded-xl p-5 shadow-sm border border-slate-200 dark:border-gray-800">
+            <div className="bg-white dark:bg-slate-800 rounded-xl p-5 shadow-sm border border-slate-200 dark:border-gray-800">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 rounded-lg bg-amber-500 dark:bg-amber-600 flex items-center justify-center">
                   <Lightbulb className="w-5 h-5 text-white" />
@@ -167,7 +167,7 @@ export default function CreateCoursePage() {
             </div>
 
             {/* What's Next Card */}
-            <div className="bg-white dark:bg-surface-dark rounded-xl p-5 shadow-sm border border-slate-200 dark:border-gray-800">
+            <div className="bg-white dark:bg-slate-800 rounded-xl p-5 shadow-sm border border-slate-200 dark:border-gray-800">
               <h3 className="font-bold text-navy dark:text-white mb-4 flex items-center gap-2">
                 <Rocket className="w-5 h-5 text-purple-500" />
                 What's Next?

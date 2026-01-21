@@ -26,7 +26,7 @@ export default function Blog() {
   const featuredPost = blogPosts[0];
 
   return (
-    <div className="min-h-screen bg-white dark:bg-background-dark text-slate-900 dark:text-white font-sans antialiased overflow-x-hidden">
+    <div className="min-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-sans antialiased overflow-x-hidden">
       {/* Hero Section */}
       <section className="relative py-12 px-4 sm:px-6 lg:px-8 border-b border-slate-200 dark:border-secondary-dark">
         <div className="mx-auto max-w-7xl">
@@ -48,7 +48,7 @@ export default function Blog() {
       <section className="py-12 px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <Link href={`/blog/${featuredPost.slug}`}>
-            <motion.div className="rounded-2xl border border-slate-200 dark:border-secondary-dark bg-white dark:bg-surface-dark overflow-hidden hover:border-primary transition-all group cursor-pointer" whileHover={{ y: -6, rotateX: 2, rotateY: -2 }} transition={{ type: "spring", stiffness: 350, damping: 22 }} style={{ perspective: 1000, transformStyle: 'preserve-3d' }}>
+            <motion.div className="rounded-2xl border border-slate-200 dark:border-secondary-dark bg-white dark:bg-slate-800 overflow-hidden hover:border-primary transition-all group cursor-pointer" whileHover={{ y: -6, rotateX: 2, rotateY: -2 }} transition={{ type: "spring", stiffness: 350, damping: 22 }} style={{ perspective: 1000, transformStyle: 'preserve-3d' }}>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
                 <div
                   className="h-64 lg:h-full bg-cover bg-center group-hover:scale-105 transition-transform duration-500"
@@ -89,7 +89,7 @@ export default function Blog() {
       </section>
 
       {/* Filter Categories */}
-      <section className="py-8 px-4 sm:px-6 lg:px-8 border-y border-slate-200 dark:border-secondary-dark bg-slate-50 dark:bg-surface-dark/30">
+      <section className="py-8 px-4 sm:px-6 lg:px-8 border-y border-slate-200 dark:border-secondary-dark bg-slate-50 dark:bg-slate-800/30">
         <div className="mx-auto max-w-7xl">
           <div className="flex gap-3 overflow-x-auto pb-2">
             {blogCategories.map((category, index) => (
@@ -102,7 +102,7 @@ export default function Blog() {
                 className={`px-6 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
                   selectedCategory === category
                     ? "bg-primary text-background-dark"
-                    : "bg-white dark:bg-surface-dark border border-slate-200 dark:border-secondary-dark text-slate-600 dark:text-text-muted hover:bg-slate-100 dark:hover:bg-white/5 hover:border-primary"
+                    : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-secondary-dark text-slate-600 dark:text-text-muted hover:bg-slate-100 dark:hover:bg-white/5 hover:border-primary"
                 }`}
                 whileHover={{ y: -2 }} whileTap={{ y: 0 }}
               >
@@ -122,7 +122,7 @@ export default function Blog() {
           <motion.div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" variants={containerVariants} initial="hidden" animate="show">
             {currentPosts.map((post, index) => (
               <Link key={index} href={`/blog/${post.slug}`}>
-                <motion.article className="group rounded-2xl border border-slate-200 dark:border-secondary-dark bg-white dark:bg-surface-dark overflow-hidden hover:border-primary hover:shadow-2xl hover:shadow-primary/20 transition-all cursor-pointer" variants={itemVariants} whileHover={{ y: -4, rotateX: 2, rotateY: -2 }} transition={{ type: "spring", stiffness: 350, damping: 22 }} style={{ perspective: 1000, transformStyle: 'preserve-3d' }}>
+                <motion.article className="group rounded-2xl border border-slate-200 dark:border-secondary-dark bg-white dark:bg-slate-800 overflow-hidden hover:border-primary hover:shadow-2xl hover:shadow-primary/20 transition-all cursor-pointer" variants={itemVariants} whileHover={{ y: -4, rotateX: 2, rotateY: -2 }} transition={{ type: "spring", stiffness: 350, damping: 22 }} style={{ perspective: 1000, transformStyle: 'preserve-3d' }}>
                   <div
                     className="h-48 bg-cover bg-center group-hover:scale-105 transition-transform duration-500"
                     style={{ backgroundImage: `url(${post.image})` }}
@@ -188,7 +188,7 @@ export default function Blog() {
       </section>
 
       {/* Newsletter CTA */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-slate-50 dark:bg-surface-dark/30">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-slate-50 dark:bg-slate-800/30">
         <div className="mx-auto max-w-4xl text-center">
           <h2 className="text-3xl sm:text-4xl font-bold mb-4">
             Stay Updated
@@ -200,7 +200,7 @@ export default function Blog() {
             <input
               type="email"
               placeholder="Enter your email"
-              className="flex-1 px-6 py-3 rounded-lg bg-white dark:bg-background-dark border border-slate-200 dark:border-secondary-dark text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-text-muted focus:border-primary focus:outline-none"
+              className="flex-1 px-6 py-3 rounded-lg bg-white dark:bg-slate-950 border border-slate-200 dark:border-secondary-dark text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-text-muted focus:border-primary focus:outline-none"
             />
             <button className="px-8 py-3 rounded-lg bg-primary text-background-dark font-bold transition-all hover:bg-primary-hover shadow-lg shadow-primary/30 whitespace-nowrap">
               Subscribe

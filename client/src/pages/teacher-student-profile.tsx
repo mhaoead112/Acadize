@@ -484,7 +484,7 @@ export default function StudentProfilePage() {
 
         <div className="flex-1 w-full max-w-7xl mx-auto px-6 md:px-10 pb-10 flex flex-col gap-6 mt-4">
           {/* Header Card */}
-          <Card className="border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-surface-dark shadow-sm overflow-hidden">
+          <Card className="border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-800 shadow-sm overflow-hidden">
             <CardContent className="p-6">
               <div className="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
                 <div className="flex flex-col sm:flex-row gap-5 items-center sm:items-start text-center sm:text-left">
@@ -558,7 +558,7 @@ export default function StudentProfilePage() {
 
           {/* Stats */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <Card className="border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-surface-dark shadow-sm relative overflow-hidden">
+            <Card className="border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-800 shadow-sm relative overflow-hidden">
               <div className="absolute right-0 top-0 h-full w-1 bg-gold"></div>
               <CardContent className="p-5 flex flex-col gap-1">
                 <div className="flex justify-between items-start">
@@ -578,7 +578,7 @@ export default function StudentProfilePage() {
               </CardContent>
             </Card>
 
-            <Card className="border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-surface-dark shadow-sm relative overflow-hidden">
+            <Card className="border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-800 shadow-sm relative overflow-hidden">
               <div className="absolute right-0 top-0 h-full w-1 bg-blue-500"></div>
               <CardContent className="p-5 flex flex-col gap-1">
                 <div className="flex justify-between items-start">
@@ -598,7 +598,7 @@ export default function StudentProfilePage() {
               </CardContent>
             </Card>
 
-            <Card className="border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-surface-dark shadow-sm relative overflow-hidden">
+            <Card className="border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-800 shadow-sm relative overflow-hidden">
               <div className="absolute right-0 top-0 h-full w-1 bg-red-500"></div>
               <CardContent className="p-5 flex flex-col gap-1">
                 <div className="flex justify-between items-start">
@@ -622,7 +622,7 @@ export default function StudentProfilePage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Performance Table */}
             <div className="lg:col-span-2 flex flex-col gap-6">
-              <Card className="border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-surface-dark overflow-hidden shadow-sm">
+              <Card className="border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-800 overflow-hidden shadow-sm">
                 <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900/30">
                   <h3 className="text-slate-900 dark:text-white font-bold text-lg">
                     Course Performance
@@ -709,7 +709,7 @@ export default function StudentProfilePage() {
               </Card>
 
               {/* Recent Activity */}
-              <Card className="border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-surface-dark p-5 shadow-sm">
+              <Card className="border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-800 p-5 shadow-sm">
                 <h3 className="text-slate-900 dark:text-white font-bold text-lg mb-4">
                   Recent Activity
                 </h3>
@@ -753,7 +753,7 @@ export default function StudentProfilePage() {
             {/* Right Side */}
             <div className="flex flex-col gap-6">
               {/* Teacher Notes */}
-              <Card className="border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-surface-dark flex flex-col shadow-sm overflow-hidden">
+              <Card className="border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-800 flex flex-col shadow-sm overflow-hidden">
                 <div className="p-5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30">
                   <h3 className="text-slate-900 dark:text-white font-bold text-lg">
                     Teacher Notes
@@ -805,7 +805,7 @@ export default function StudentProfilePage() {
               </Card>
 
               {/* Contact Info */}
-              <Card className="border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-surface-dark p-5 shadow-sm">
+              <Card className="border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-800 p-5 shadow-sm">
                 <h3 className="text-slate-900 dark:text-white font-bold text-lg mb-4">
                   Contact Information
                 </h3>

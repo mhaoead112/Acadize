@@ -176,7 +176,7 @@ export default function StudentReportCards() {
 
         {/* Filters */}
         <div>
-        <Card className="bg-white dark:bg-surface-dark border-slate-200 dark:border-white/10">
+        <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-white/10">
           <CardHeader>
             <CardTitle className="text-lg text-slate-900 dark:text-white">Filter Reports</CardTitle>
           </CardHeader>
@@ -187,12 +187,12 @@ export default function StudentReportCards() {
                   Academic Year
                 </label>
                 <Select value={selectedYear} onValueChange={setSelectedYear}>
-                  <SelectTrigger className="bg-slate-50 dark:bg-surface-accent border-slate-200 dark:border-white/10 text-slate-900 dark:text-white">
+                  <SelectTrigger className="bg-slate-50 dark:bg-slate-700 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white">
                     <SelectValue placeholder="Select academic year" />
                   </SelectTrigger>
-                  <SelectContent className="bg-white dark:bg-surface-dark border-slate-200 dark:border-white/10">
+                  <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-white/10">
                     {ACADEMIC_YEARS.map(year => (
-                      <SelectItem key={year} value={year} className="text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-surface-accent">
+                      <SelectItem key={year} value={year} className="text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-slate-700">
                         {year}
                       </SelectItem>
                     ))}
@@ -205,10 +205,10 @@ export default function StudentReportCards() {
                   Period
                 </label>
                 <Select value={selectedPeriod} onValueChange={(val) => setSelectedPeriod(val as ReportPeriod | 'ALL')}>
-                  <SelectTrigger className="bg-slate-50 dark:bg-surface-accent border-slate-200 dark:border-white/10 text-slate-900 dark:text-white">
+                  <SelectTrigger className="bg-slate-50 dark:bg-slate-700 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white">
                     <SelectValue placeholder="Select period" />
                   </SelectTrigger>
-                  <SelectContent className="bg-white dark:bg-surface-dark border-slate-200 dark:border-white/10">
+                  <SelectContent className="bg-white dark:bg-slate-800 border-slate-200 dark:border-white/10">
                     <SelectItem value="ALL" className="text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-surface-accent">All Periods</SelectItem>
                     {PERIODS.map(period => (
                       <SelectItem key={period.value} value={period.value} className="text-white hover:bg-surface-accent">
@@ -226,7 +226,7 @@ export default function StudentReportCards() {
         {/* Loading State */}
         {loading && (
           <div>
-          <Card className="bg-white dark:bg-surface-dark border-slate-200 dark:border-white/10">
+          <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-white/10">
             <CardContent className="flex items-center justify-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-primary dark:text-[#FFD700]" />
               <span className="ml-3 text-slate-600 dark:text-slate-400">Loading report cards...</span>
@@ -252,7 +252,7 @@ export default function StudentReportCards() {
           <>
             {filteredReports.length === 0 ? (
               <div>
-              <Card className="bg-white dark:bg-surface-dark border-slate-200 dark:border-white/10">
+              <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-white/10">
                 <CardContent className="flex flex-col items-center justify-center py-12">
                   <FileText className="h-16 w-16 text-slate-300 dark:text-slate-600 mb-4" />
                   <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
@@ -274,7 +274,7 @@ export default function StudentReportCards() {
                   return (
                     <Card 
                       key={report.id}
-                      className="bg-white dark:bg-surface-dark border-slate-200 dark:border-white/10 hover:border-primary/50 dark:hover:border-[#FFD700]/50 transition-all hover:shadow-lg hover:shadow-primary/10 dark:hover:shadow-[#FFD700]/10"
+                      className="bg-white dark:bg-slate-800 border-slate-200 dark:border-white/10 hover:border-primary/50 dark:hover:border-[#FFD700]/50 transition-all hover:shadow-lg hover:shadow-primary/10 dark:hover:shadow-[#FFD700]/10"
                     >
                       <CardHeader className="pb-3">
                         <div className="flex items-start justify-between">
@@ -305,7 +305,7 @@ export default function StudentReportCards() {
 
                         <div className="flex gap-2 pt-2 border-t border-slate-200 dark:border-white/10">
                           <Button 
-                            className="flex-1 bg-slate-100 dark:bg-surface-accent hover:bg-slate-200 dark:hover:bg-surface-accent/80 text-slate-900 dark:text-white border-slate-200 dark:border-white/10" 
+                            className="flex-1 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700/80 text-slate-900 dark:text-white border-slate-200 dark:border-white/10" 
                             variant="outline"
                             onClick={() => handleView(report)}
                           >

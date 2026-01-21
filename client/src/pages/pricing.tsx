@@ -69,7 +69,7 @@ export default function Pricing() {
   ];
 
   return (
-    <div className="min-h-screen bg-white dark:bg-background-dark text-slate-900 dark:text-white font-sans antialiased overflow-x-hidden">
+    <div className="min-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-sans antialiased overflow-x-hidden">
 
       {/* Hero Section */}
       <section ref={heroRef} className="relative py-20 px-4 sm:px-6 lg:px-8">
@@ -123,7 +123,7 @@ export default function Pricing() {
             <span className={`text-sm font-medium transition-colors ${!isAnnual ? 'text-slate-900 dark:text-white' : 'text-slate-600 dark:text-text-muted'}`}>Monthly</span>
             <button 
               onClick={() => setIsAnnual(!isAnnual)}
-              className="relative inline-flex h-6 w-11 items-center rounded-full bg-slate-200 dark:bg-surface-dark border border-slate-300 dark:border-secondary-dark transition-all hover:border-primary"
+              className="relative inline-flex h-6 w-11 items-center rounded-full bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-secondary-dark transition-all hover:border-primary"
             >
               <span className={`inline-block h-4 w-4 transform rounded-full bg-primary transition-transform ${isAnnual ? 'translate-x-6' : 'translate-x-1'}`}></span>
             </button>
@@ -145,8 +145,8 @@ export default function Pricing() {
                   key={index}
                   className={`relative rounded-2xl border p-8 transition-all hover:shadow-2xl hover:shadow-primary/20 hover-lift animate-scale-in ${
                     plan.popular
-                      ? "border-primary bg-gradient-to-b from-white to-slate-50 dark:from-surface-dark dark:to-background-dark scale-105"
-                      : "border-slate-200 bg-white dark:border-secondary-dark dark:bg-surface-dark"
+                      ? "border-primary bg-gradient-to-b from-white to-slate-50 dark:from-slate-800 dark:to-background-dark scale-105"
+                      : "border-slate-200 bg-white dark:border-secondary-dark dark:bg-slate-800"
                   }`}
                   style={{ animationDelay: `${index * 0.2}s` }}
                 >
@@ -192,7 +192,7 @@ export default function Pricing() {
                     className={`w-full rounded-lg px-6 py-3 text-sm font-bold transition-all mb-8 ${
                       plan.popular
                         ? "bg-primary text-background-dark hover:bg-primary-hover shadow-lg shadow-primary/30"
-                        : "bg-slate-100 border border-slate-200 text-slate-900 hover:bg-slate-200 dark:bg-surface-darker dark:border-secondary-dark dark:text-white dark:hover:bg-white/5"
+                        : "bg-slate-100 border border-slate-200 text-slate-900 hover:bg-slate-200 dark:bg-slate-800er dark:border-secondary-dark dark:text-white dark:hover:bg-white/5"
                     }`}
                   >
                     {plan.cta}
@@ -214,7 +214,7 @@ export default function Pricing() {
       </section>
 
       {/* FAQ Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-slate-50 dark:bg-surface-dark/30">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-slate-50 dark:bg-slate-800/30">
         <div className="mx-auto max-w-4xl">
           <div className="text-center mb-12 animate-fade-in-up">
             <h2 className="text-3xl sm:text-4xl font-bold mb-4">Frequently Asked Questions</h2>
@@ -242,7 +242,7 @@ export default function Pricing() {
             ].map((faq, index) => (
               <div
                 key={index}
-                className="rounded-xl border border-slate-200 bg-white dark:border-secondary-dark dark:bg-surface-dark p-6 animate-fade-in-up hover-lift"
+                className="rounded-xl border border-slate-200 bg-white dark:border-secondary-dark dark:bg-slate-800 p-6 animate-fade-in-up hover-lift"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
                 <h3 className="text-lg font-bold mb-2">{faq.q}</h3>

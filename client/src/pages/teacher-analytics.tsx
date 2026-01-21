@@ -291,7 +291,7 @@ export default function TeacherAnalytics() {
     <TeacherLayout>
     <div className="flex-1 flex flex-col h-full relative overflow-y-auto bg-[#f8f9fc] dark:bg-navy-dark">
       {/* Sticky Header */}
-      <header className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-surface-dark/80 backdrop-blur-md px-6 py-3">
+      <header className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md px-6 py-3">
         <div className="flex items-center gap-4">
           <button className="md:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg">
             <span className="material-symbols-outlined">menu</span>
@@ -323,7 +323,7 @@ export default function TeacherAnalytics() {
             <div className="relative min-w-[200px]">
               <label className="block text-xs font-semibold text-slate-500 mb-1 ml-1">Select Class</label>
               <select
-                className="w-full appearance-none bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-sm rounded-lg focus:ring-gold focus:border-gold block p-2.5 pr-8"
+                className="w-full appearance-none bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-sm rounded-lg focus:ring-gold focus:border-gold block p-2.5 pr-8"
                 value={selectedCourse}
                 onChange={(e) => setSelectedCourse(e.target.value)}
               >
@@ -337,7 +337,7 @@ export default function TeacherAnalytics() {
             <div className="relative min-w-[160px]">
               <label className="block text-xs font-semibold text-slate-500 mb-1 ml-1">Timeframe</label>
               <select
-                className="w-full appearance-none bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-sm rounded-lg focus:ring-gold focus:border-gold block p-2.5 pr-8"
+                className="w-full appearance-none bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-sm rounded-lg focus:ring-gold focus:border-gold block p-2.5 pr-8"
                 value={timeframe}
                 onChange={(e) => setTimeframe(e.target.value)}
               >
@@ -356,7 +356,7 @@ export default function TeacherAnalytics() {
 
         {/* Stat Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white dark:bg-surface-dark rounded-xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden group">
+          <div className="bg-white dark:bg-slate-800 rounded-xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden group">
             <div className="absolute right-0 top-0 h-full w-1 bg-gold"></div>
             <div className="flex justify-between items-start mb-4">
               <div className="p-2 bg-gold/10 rounded-lg">
@@ -368,7 +368,7 @@ export default function TeacherAnalytics() {
             <p className="text-3xl font-bold text-slate-900 dark:text-white">{avgGrade}%</p>
             <p className="text-xs text-slate-400 mt-2">Class average is rising</p>
           </div>
-          <div className="bg-white dark:bg-surface-dark rounded-xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden">
+          <div className="bg-white dark:bg-slate-800 rounded-xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden">
             <div className="absolute right-0 top-0 h-full w-1 bg-navy-light"></div>
             <div className="flex justify-between items-start mb-4">
               <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
@@ -380,7 +380,7 @@ export default function TeacherAnalytics() {
             <p className="text-3xl font-bold text-slate-900 dark:text-white">{completionRate}%</p>
             <p className="text-xs text-slate-400 mt-2">{missingOrLatePct}% Missing or Late</p>
           </div>
-          <div className="bg-white dark:bg-surface-dark rounded-xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden">
+          <div className="bg-white dark:bg-slate-800 rounded-xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden">
             <div className="absolute right-0 top-0 h-full w-1 bg-red-500"></div>
             <div className="flex justify-between items-start mb-4">
               <div className="p-2 bg-gold/10 dark:bg-gold/20 rounded-lg">
@@ -392,7 +392,7 @@ export default function TeacherAnalytics() {
             <p className="text-3xl font-bold text-slate-900 dark:text-white">{studentsAtRisk}</p>
             <p className="text-xs text-slate-400 mt-2">Students below 65%</p>
           </div>
-          <div className="bg-white dark:bg-surface-dark rounded-xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden">
+          <div className="bg-white dark:bg-slate-800 rounded-xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden">
             <div className="absolute right-0 top-0 h-full w-1 bg-emerald-500"></div>
             <div className="flex justify-between items-start mb-4">
               <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg">
@@ -408,7 +408,7 @@ export default function TeacherAnalytics() {
 
         {/* Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-auto">
-          <div className="lg:col-span-2 bg-white dark:bg-surface-dark rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
+          <div className="lg:col-span-2 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-slate-900 dark:text-white font-bold text-lg">Class Performance Trend</h3>
               <div className="flex items-center gap-2">
@@ -449,7 +449,7 @@ export default function TeacherAnalytics() {
             </div>
           </div>
 
-          <div className="bg-white dark:bg-surface-dark rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm flex flex-col">
+          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm flex flex-col">
             <h3 className="text-slate-900 dark:text-white font-bold text-lg mb-6">Submission Status</h3>
             <div className="flex-1 flex flex-col justify-center items-center gap-6 relative">
               <div className="w-[200px] h-[200px] relative">
@@ -494,7 +494,7 @@ export default function TeacherAnalytics() {
         {/* Bottom Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-6">
           {/* Needs Attention Table */}
-          <div className="bg-white dark:bg-surface-dark rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col">
+          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col">
             <div className="p-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-gold/5 dark:bg-gold/10">
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-gold">warning</span>
@@ -514,7 +514,7 @@ export default function TeacherAnalytics() {
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
                   {needsAttention.slice(0, 2).map((s) => (
-                    <tr key={s.id} className="bg-white dark:bg-surface-dark hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                    <tr key={s.id} className="bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/50">
                       <td className="px-6 py-4 font-medium text-slate-900 dark:text-white flex items-center gap-3">
                         <div className="size-8 rounded-full bg-slate-200 bg-cover flex items-center justify-center text-xs font-bold text-slate-700">
                           {(s.fullName || s.username).substring(0,1).toUpperCase()}
@@ -539,7 +539,7 @@ export default function TeacherAnalytics() {
           </div>
 
           {/* Topic Mastery */}
-          <div className="bg-white dark:bg-surface-dark rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-6 flex flex-col">
+          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-6 flex flex-col">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-slate-900 dark:text-white font-bold text-lg">Topic Mastery</h3>
               <button className="p-1 hover:bg-slate-100 rounded">

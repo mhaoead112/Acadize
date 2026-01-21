@@ -516,7 +516,7 @@ export default function TeacherCourseManage() {
           <div className="flex flex-col gap-8 animate-in fade-in duration-300">
             {/* Quick Stats Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="flex flex-col gap-1 rounded-xl p-5 bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-800 shadow-sm">
+              <div className="flex flex-col gap-1 rounded-xl p-5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-800 shadow-sm">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-slate-500 dark:text-slate-400 text-sm font-medium">Total Students</span>
                   <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-[11px]">Active</Badge>
@@ -527,7 +527,7 @@ export default function TeacherCourseManage() {
                   Growing roster
                 </p>
               </div>
-              <div className="flex flex-col gap-1 rounded-xl p-5 bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-800 shadow-sm ring-1 ring-gold/30">
+              <div className="flex flex-col gap-1 rounded-xl p-5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-800 shadow-sm ring-1 ring-gold/30">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-slate-500 dark:text-slate-400 text-sm font-medium">Assignments</span>
                   <Badge variant="secondary" className="text-[11px]">Open</Badge>
@@ -538,7 +538,7 @@ export default function TeacherCourseManage() {
                   {upcomingAssignment ? `Next due ${new Date(upcomingAssignment.dueDate).toLocaleDateString()}` : 'No upcoming due dates'}
                 </p>
               </div>
-              <div className="flex flex-col gap-1 rounded-xl p-5 bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-800 shadow-sm">
+              <div className="flex flex-col gap-1 rounded-xl p-5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-800 shadow-sm">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-slate-500 dark:text-slate-400 text-sm font-medium">Lessons</span>
                   <Badge variant="outline" className="text-[11px]">Content</Badge>
@@ -546,7 +546,7 @@ export default function TeacherCourseManage() {
                 <p className="text-slate-900 dark:text-white text-3xl font-bold">{lessons.length}</p>
                 <p className="text-xs text-slate-400 font-medium">Latest {lessons[0]?.title ? 'added' : 'pending'}</p>
               </div>
-              <div className="flex flex-col gap-1 rounded-xl p-5 bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-800 shadow-sm">
+              <div className="flex flex-col gap-1 rounded-xl p-5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-800 shadow-sm">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-slate-500 dark:text-slate-400 text-sm font-medium">Avg Progress</span>
                   <Badge variant="secondary" className="text-[11px] flex items-center gap-1"><TrendingUp className="h-3 w-3" />Trend</Badge>
@@ -559,7 +559,7 @@ export default function TeacherCourseManage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <div className="lg:col-span-2 flex flex-col gap-4">
                 <h2 className="text-slate-900 dark:text-white text-xl font-bold">Recent Activity</h2>
-                <div className="bg-white dark:bg-surface-dark rounded-xl border border-slate-200 dark:border-slate-800 divide-y divide-slate-100 dark:divide-slate-800 shadow-sm overflow-hidden">
+                <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-800 divide-y divide-slate-100 dark:divide-slate-800 shadow-sm overflow-hidden">
                   {activityItems.length === 0 ? (
                     <div className="p-8 text-center text-slate-500 dark:text-slate-400">No recent activity yet.</div>
                   ) : (
@@ -608,7 +608,7 @@ export default function TeacherCourseManage() {
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     onClick={openEnrollDialog}
-                    className="flex items-center justify-between rounded-xl px-4 py-3 bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-800 text-left hover:shadow-sm transition"
+                    className="flex items-center justify-between rounded-xl px-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-800 text-left hover:shadow-sm transition"
                   >
                     <div>
                       <p className="text-xs text-slate-500">Enrollments</p>
@@ -618,7 +618,7 @@ export default function TeacherCourseManage() {
                   </button>
                   <button
                     onClick={() => setLocation(`/teacher/courses/${courseId}/lessons/create`)}
-                    className="flex items-center justify-between rounded-xl px-4 py-3 bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-800 text-left hover:shadow-sm transition"
+                    className="flex items-center justify-between rounded-xl px-4 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-800 text-left hover:shadow-sm transition"
                   >
                     <div>
                       <p className="text-xs text-slate-500">Lesson</p>
@@ -645,7 +645,7 @@ export default function TeacherCourseManage() {
                 Add Lesson
               </Button>
             </div>
-            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-surface-dark overflow-hidden divide-y divide-slate-100 dark:divide-slate-800">
+            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 overflow-hidden divide-y divide-slate-100 dark:divide-slate-800">
               {lessons.length === 0 ? (
                 <div className="p-6 text-center text-slate-500">No lessons yet. Create your first lesson.</div>
               ) : (
@@ -688,7 +688,7 @@ export default function TeacherCourseManage() {
                 Create Assignment
               </Button>
             </div>
-            <div className="bg-white dark:bg-surface-dark rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+            <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
               <table className="w-full text-left text-sm">
                 <thead className="bg-slate-50 dark:bg-slate-800/50 text-xs font-bold text-slate-500 uppercase tracking-wider">
                   <tr>
@@ -741,12 +741,12 @@ export default function TeacherCourseManage() {
                     placeholder="Search by name or email..."
                     value={rosterSearch}
                     onChange={(e) => setRosterSearch(e.target.value)}
-                    className="w-full bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-4 py-2 text-sm focus:ring-2 focus:ring-gold/50 outline-none transition-all"
+                    className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-4 py-2 text-sm focus:ring-2 focus:ring-gold/50 outline-none transition-all"
                   />
                 </div>
                 <Button 
                   variant="outline"
-                  className="flex items-center gap-2 bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-slate-50 transition-colors shrink-0"
+                  className="flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-slate-50 transition-colors shrink-0"
                   onClick={handleExportRoster}
                 >
                   <BarChart3 className="h-4 w-4" />
@@ -758,7 +758,7 @@ export default function TeacherCourseManage() {
                 </Button>
               </div>
             </div>
-            <div className="bg-white dark:bg-surface-dark rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+            <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
               <table className="w-full text-left text-sm">
                 <thead className="bg-slate-50 dark:bg-slate-800/50 text-xs font-bold text-slate-500 uppercase tracking-wider">
                   <tr>
@@ -840,7 +840,7 @@ export default function TeacherCourseManage() {
             </div>
 
             {announcements.length === 0 ? (
-              <div className="rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-surface-dark p-12 text-center shadow-sm">
+              <div className="rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-slate-800 p-12 text-center shadow-sm">
                 <Megaphone className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                 <p className="text-slate-600 dark:text-gray-400 mb-4">No announcements yet.</p>
                 <Button 
@@ -856,7 +856,7 @@ export default function TeacherCourseManage() {
                 {announcements.map((announcement) => (
                   <div 
                     key={announcement.id} 
-                    className="rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-surface-dark p-6 hover:shadow-md transition-all"
+                    className="rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-slate-800 p-6 hover:shadow-md transition-all"
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
@@ -898,7 +898,7 @@ export default function TeacherCourseManage() {
   return (
     <TeacherLayout>
       <div className="flex flex-col h-full overflow-hidden bg-slate-50 dark:bg-navy-dark">
-        <div className="px-6 py-8 md:px-10 md:py-10 bg-white dark:bg-surface-dark border-b border-slate-200 dark:border-slate-800 shrink-0">
+        <div className="px-6 py-8 md:px-10 md:py-10 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-800 shrink-0">
           <div className="max-w-6xl mx-auto flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div className="flex flex-col gap-3">
               <div className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-widest">
@@ -912,7 +912,7 @@ export default function TeacherCourseManage() {
               <h1 className="text-3xl md:text-4xl font-black tracking-tight text-slate-900 dark:text-white">{course.title}</h1>
               <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{course.description}</p>
               <div className="flex items-center gap-3 mt-2">
-                <Badge variant="outline" className="bg-white dark:bg-surface-dark text-xs">
+                <Badge variant="outline" className="bg-white dark:bg-slate-800 text-xs">
                   <Calendar className="h-3 w-3 mr-1" />
                   Created {new Date(course.createdAt).toLocaleDateString()}
                 </Badge>
@@ -966,7 +966,7 @@ export default function TeacherCourseManage() {
 
         {/* Dialogs */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="bg-white dark:bg-surface-dark">
+          <DialogContent className="bg-white dark:bg-slate-800">
             <DialogHeader>
               <DialogTitle className="text-navy dark:text-white">Edit Course</DialogTitle>
               <DialogDescription className="text-slate-500 dark:text-gray-400">Update course information</DialogDescription>
@@ -1011,7 +1011,7 @@ export default function TeacherCourseManage() {
         </Dialog>
 
         <Dialog open={isEnrollDialogOpen} onOpenChange={setIsEnrollDialogOpen}>
-          <DialogContent className="max-w-md bg-white dark:bg-surface-dark">
+          <DialogContent className="max-w-md bg-white dark:bg-slate-800">
             <DialogHeader>
               <DialogTitle className="text-navy dark:text-white">Enroll Student</DialogTitle>
               <DialogDescription className="text-slate-500 dark:text-gray-400">

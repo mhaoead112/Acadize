@@ -42,7 +42,7 @@ export default function Terms() {
   ];
 
   return (
-    <div className="min-h-screen bg-white dark:bg-background-dark text-slate-900 dark:text-white font-sans antialiased overflow-x-hidden">
+    <div className="min-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-sans antialiased overflow-x-hidden">
 
       <section className="relative py-20 px-4 sm:px-6 lg:px-8 border-b border-slate-200 dark:border-secondary-dark">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent"></div>
@@ -64,7 +64,7 @@ export default function Terms() {
         </div>
       </section>
 
-      <section className="py-8 px-4 sm:px-6 lg:px-8 bg-slate-100 dark:bg-surface-dark/30 border-b border-slate-200 dark:border-secondary-dark">
+      <section className="py-8 px-4 sm:px-6 lg:px-8 bg-slate-100 dark:bg-slate-800/30 border-b border-slate-200 dark:border-secondary-dark">
         <div className="mx-auto max-w-4xl">
           <div className="rounded-xl border border-yellow-500/20 bg-yellow-50 dark:bg-yellow-500/5 p-6">
             <div className="flex items-start gap-4">
@@ -81,7 +81,7 @@ export default function Terms() {
       </section>
 
       {/* Table of Contents */}
-      <section className="py-12 px-4 sm:px-6 lg:px-8 bg-surface-dark/30 border-b border-secondary-dark">
+      <section className="py-12 px-4 sm:px-6 lg:px-8 bg-slate-800/30 border-b border-secondary-dark">
         <div className="mx-auto max-w-4xl">
           <h2 className="text-xl font-bold mb-4">Quick Navigation</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -89,7 +89,7 @@ export default function Terms() {
               <a
                 key={section.id}
                 href={`#${section.id}`}
-                className="flex items-center gap-2 rounded-lg border border-secondary-dark bg-surface-dark p-3 text-sm hover:border-primary hover:text-primary transition-all"
+                className="flex items-center gap-2 rounded-lg border border-secondary-dark bg-slate-800 p-3 text-sm hover:border-primary hover:text-primary transition-all"
               >
                 <span>→</span>
                 <span>{section.title}</span>
@@ -131,35 +131,35 @@ export default function Terms() {
             <h2 className="text-2xl font-bold mb-6">Additional Terms</h2>
             
             <div className="space-y-6">
-              <div className="rounded-xl border border-secondary-dark bg-surface-dark p-6">
+              <div className="rounded-xl border border-secondary-dark bg-slate-800 p-6">
                 <h3 className="text-lg font-bold mb-2">Limitation of Liability</h3>
                 <p className="text-sm text-text-muted">
                   EduVerse shall not be liable for any indirect, incidental, special, consequential, or punitive damages resulting from your use of or inability to use the service. Our total liability shall not exceed the amount paid by you in the twelve months prior to the event giving rise to liability.
                 </p>
               </div>
 
-              <div className="rounded-xl border border-secondary-dark bg-surface-dark p-6">
+              <div className="rounded-xl border border-secondary-dark bg-slate-800 p-6">
                 <h3 className="text-lg font-bold mb-2">Dispute Resolution</h3>
                 <p className="text-sm text-text-muted">
                   Any disputes arising from these terms or your use of the service will be resolved through binding arbitration, rather than in court, except that you may assert claims in small claims court if your claims qualify. You waive your right to participate in a class action lawsuit or class-wide arbitration.
                 </p>
               </div>
 
-              <div className="rounded-xl border border-secondary-dark bg-surface-dark p-6">
+              <div className="rounded-xl border border-secondary-dark bg-slate-800 p-6">
                 <h3 className="text-lg font-bold mb-2">Governing Law</h3>
                 <p className="text-sm text-text-muted">
                   These terms shall be governed by and construed in accordance with the laws of the State of California, United States, without regard to its conflict of law provisions.
                 </p>
               </div>
 
-              <div className="rounded-xl border border-secondary-dark bg-surface-dark p-6">
+              <div className="rounded-xl border border-secondary-dark bg-slate-800 p-6">
                 <h3 className="text-lg font-bold mb-2">Changes to Terms</h3>
                 <p className="text-sm text-text-muted">
                   We reserve the right to modify these terms at any time. We will notify users of any material changes via email or through the platform. Your continued use of the service after such modifications constitutes your acceptance of the updated terms.
                 </p>
               </div>
 
-              <div className="rounded-xl border border-secondary-dark bg-surface-dark p-6">
+              <div className="rounded-xl border border-secondary-dark bg-slate-800 p-6">
                 <h3 className="text-lg font-bold mb-2">Severability</h3>
                 <p className="text-sm text-text-muted">
                   If any provision of these terms is found to be unenforceable or invalid, that provision will be limited or eliminated to the minimum extent necessary so that these Terms of Service will otherwise remain in full force and effect.
@@ -171,9 +171,9 @@ export default function Terms() {
       </section>
 
       {/* Contact Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-surface-dark/30">
+      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-slate-800/30">
         <div className="mx-auto max-w-4xl">
-          <div className="rounded-2xl border border-secondary-dark bg-surface-dark p-8 lg:p-12 text-center">
+          <div className="rounded-2xl border border-secondary-dark bg-slate-800 p-8 lg:p-12 text-center">
             <h2 className="text-2xl font-bold mb-4">Questions About These Terms?</h2>
             <p className="text-text-muted mb-6 max-w-2xl mx-auto">
               If you have any questions about these Terms of Service, please contact our legal team.

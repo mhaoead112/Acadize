@@ -147,7 +147,7 @@ export default function Login() {
   };
 
   return (
-    <div className="bg-slate-50 dark:bg-background-dark font-display min-h-screen flex flex-col transition-colors duration-300">
+    <div className="bg-slate-50 dark:bg-slate-950 font-display min-h-screen flex flex-col transition-colors duration-300">
       {/* Main Content Area */}
       <main className="flex-grow flex items-center justify-center p-4 relative overflow-hidden">
         {/* Abstract Background Pattern */}

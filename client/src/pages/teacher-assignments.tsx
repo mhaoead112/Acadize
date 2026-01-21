@@ -364,7 +364,7 @@ export default function TeacherAssignmentsPage() {
 
         {/* Stat Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 rounded-xl p-5 shadow-sm flex flex-col justify-between">
+          <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-5 shadow-sm flex flex-col justify-between">
             <div className="flex justify-between items-start mb-4">
               <div className="p-2 bg-navy/10 dark:bg-slate-800 rounded-lg text-navy dark:text-gold">
                 <span className="material-symbols-outlined">edit_note</span>
@@ -376,7 +376,7 @@ export default function TeacherAssignmentsPage() {
             </div>
           </div>
 
-          <div className="bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 rounded-xl p-5 shadow-sm flex flex-col justify-between">
+          <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-5 shadow-sm flex flex-col justify-between">
             <div className="flex justify-between items-start mb-4">
               <div className="p-2 bg-gold/10 dark:bg-gold/20 rounded-lg text-gold dark:text-gold-light">
                 <span className="material-symbols-outlined">schedule</span>
@@ -388,7 +388,7 @@ export default function TeacherAssignmentsPage() {
             </div>
           </div>
 
-          <div className="bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 rounded-xl p-5 shadow-sm flex flex-col justify-between">
+          <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-5 shadow-sm flex flex-col justify-between">
             <div className="flex justify-between items-start mb-4">
               <div className="p-2 bg-red-50 dark:bg-red-900/30 rounded-lg text-red-600 dark:text-red-400">
                 <span className="material-symbols-outlined">warning</span>
@@ -402,9 +402,9 @@ export default function TeacherAssignmentsPage() {
         </div>
 
         {/* Table Container */}
-        <div className="bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm overflow-hidden flex flex-col">
+        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm overflow-hidden flex flex-col">
           {/* Filter Toolbar */}
-          <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row gap-4 items-center justify-between bg-slate-50/50 dark:bg-surface-dark">
+          <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row gap-4 items-center justify-between bg-slate-50/50 dark:bg-slate-800">
             <div className="flex items-center gap-3 w-full sm:w-auto overflow-x-auto pb-2 sm:pb-0">
               <div className="relative group">
                 <select 
@@ -476,7 +476,7 @@ export default function TeacherAssignmentsPage() {
               </div>
             </div>
           ) : assignments.length === 0 ? (
-            <div className="py-12 text-center bg-white dark:bg-surface-dark">
+            <div className="py-12 text-center bg-white dark:bg-slate-800">
               <span className="material-symbols-outlined text-6xl mx-auto text-slate-400 mb-4 block">assignment</span>
               <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
                 No assignments yet
@@ -505,7 +505,7 @@ export default function TeacherAssignmentsPage() {
                   </thead>
                   <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
                     {paginatedAssignments.map((assignment) => (
-                      <tr key={assignment.id} className="bg-white dark:bg-surface-dark hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                      <tr key={assignment.id} className="bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
                             <div className="bg-navy/10 dark:bg-slate-800 text-navy dark:text-gold rounded p-2 hidden sm:block">
@@ -583,7 +583,7 @@ export default function TeacherAssignmentsPage() {
               </div>
 
               {/* Pagination */}
-              <div className="bg-slate-50 dark:bg-surface-dark px-6 py-4 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between">
+              <div className="bg-slate-50 dark:bg-slate-800 px-6 py-4 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between">
                 <span className="text-sm text-slate-500 dark:text-slate-400">
                   Showing <span className="font-bold text-slate-900 dark:text-white">{(currentPage - 1) * itemsPerPage + 1}-{Math.min(currentPage * itemsPerPage, filteredAssignments.length)}</span> of <span className="font-bold text-slate-900 dark:text-white">{filteredAssignments.length}</span> assignments
                 </span>

@@ -86,7 +86,7 @@ export default function Contact() {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-background-dark text-slate-900 dark:text-white font-sans antialiased overflow-x-hidden">
+    <div className="min-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-sans antialiased overflow-x-hidden">
 
       <section className="relative pt-16 pb-24 lg:pt-24 lg:pb-32 overflow-hidden">
         <motion.div className="absolute top-0 right-0 -z-10 h-[600px] w-[600px] bg-primary/5 blur-[120px] rounded-full" style={{ y: orbTopY }}></motion.div>
@@ -110,8 +110,8 @@ export default function Contact() {
               </div>
               
               <div className="space-y-6">
-                <motion.div className="flex items-start gap-4 p-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 dark:border-white/5 dark:bg-background-secondary/50 dark:hover:bg-background-secondary transition-colors group" whileHover={{ y: -4, rotateX: 2, rotateY: -2 }} transition={{ type: "spring", stiffness: 350, damping: 20 }} style={{ perspective: 1000, transformStyle: 'preserve-3d' }}>
-                  <div className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-background-dark border border-white/10 text-primary group-hover:scale-110 transition-transform">
+                <motion.div className="flex items-start gap-4 p-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 dark:border-white/5 dark:bg-slate-900/50 dark:hover:bg-slate-900 transition-colors group" whileHover={{ y: -4, rotateX: 2, rotateY: -2 }} transition={{ type: "spring", stiffness: 350, damping: 20 }} style={{ perspective: 1000, transformStyle: 'preserve-3d' }}>
+                  <div className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-slate-950 border border-white/10 text-primary group-hover:scale-110 transition-transform">
                     <Mail className="h-6 w-6" />
                   </div>
                   <div>
@@ -121,8 +121,8 @@ export default function Contact() {
                   </div>
                 </motion.div>
                 
-                <motion.div className="flex items-start gap-4 p-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 dark:border-white/5 dark:bg-background-secondary/50 dark:hover:bg-background-secondary transition-colors group" whileHover={{ y: -4, rotateX: 2, rotateY: -2 }} transition={{ type: "spring", stiffness: 350, damping: 20 }} style={{ perspective: 1000, transformStyle: 'preserve-3d' }}>
-                  <div className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-background-dark border border-white/10 text-primary group-hover:scale-110 transition-transform">
+                <motion.div className="flex items-start gap-4 p-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 dark:border-white/5 dark:bg-slate-900/50 dark:hover:bg-slate-900 transition-colors group" whileHover={{ y: -4, rotateX: 2, rotateY: -2 }} transition={{ type: "spring", stiffness: 350, damping: 20 }} style={{ perspective: 1000, transformStyle: 'preserve-3d' }}>
+                  <div className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-slate-950 border border-white/10 text-primary group-hover:scale-110 transition-transform">
                     <Headphones className="h-6 w-6" />
                   </div>
                   <div>
@@ -132,8 +132,8 @@ export default function Contact() {
                   </div>
                 </motion.div>
                 
-                <motion.div className="flex items-start gap-4 p-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 dark:border-white/5 dark:bg-background-secondary/50 dark:hover:bg-background-secondary transition-colors group" whileHover={{ y: -4, rotateX: 2, rotateY: -2 }} transition={{ type: "spring", stiffness: 350, damping: 20 }} style={{ perspective: 1000, transformStyle: 'preserve-3d' }}>
-                  <div className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-background-dark border border-white/10 text-primary group-hover:scale-110 transition-transform">
+                <motion.div className="flex items-start gap-4 p-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 dark:border-white/5 dark:bg-slate-900/50 dark:hover:bg-slate-900 transition-colors group" whileHover={{ y: -4, rotateX: 2, rotateY: -2 }} transition={{ type: "spring", stiffness: 350, damping: 20 }} style={{ perspective: 1000, transformStyle: 'preserve-3d' }}>
+                  <div className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-slate-950 border border-white/10 text-primary group-hover:scale-110 transition-transform">
                     <Phone className="h-6 w-6" />
                   </div>
                   <div>
@@ -158,7 +158,7 @@ export default function Contact() {
             {/* Right Column - Form */}
             <motion.div className="relative" variants={itemVariants}>
               <motion.div className="absolute -inset-1 bg-gradient-to-r from-primary/30 to-blue-500/30 rounded-2xl blur-lg opacity-50" style={{ y: orbTopY }}></motion.div>
-              <motion.div className="relative bg-white dark:bg-background-secondary border border-slate-200 dark:border-white/10 rounded-2xl p-6 sm:p-8 lg:p-10 shadow-2xl" initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+              <motion.div className="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl p-6 sm:p-8 lg:p-10 shadow-2xl" initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
                 <div className="mb-8">
                   <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Send us a message</h2>
                   <p className="text-slate-600 dark:text-text-muted text-sm">We typically reply within 2 hours during business days.</p>
@@ -173,7 +173,7 @@ export default function Contact() {
                           <User className="h-[18px] w-[18px]" />
                         </div>
                         <input 
-                          className="block w-full rounded-lg border border-slate-300 dark:border-white/10 bg-white dark:bg-background-dark/50 pl-10 py-2.5 text-slate-900 dark:text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm transition-colors" 
+                          className="block w-full rounded-lg border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-950/50 pl-10 py-2.5 text-slate-900 dark:text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm transition-colors" 
                           id="name" 
                           value={formData.name}
                           onChange={handleChange}
@@ -190,7 +190,7 @@ export default function Contact() {
                           <Mail className="h-[18px] w-[18px]" />
                         </div>
                         <input 
-                          className="block w-full rounded-lg border border-slate-300 dark:border-white/10 bg-white dark:bg-background-dark/50 pl-10 py-2.5 text-slate-900 dark:text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm transition-colors" 
+                          className="block w-full rounded-lg border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-950/50 pl-10 py-2.5 text-slate-900 dark:text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm transition-colors" 
                           id="email" 
                           value={formData.email}
                           onChange={handleChange}
@@ -209,7 +209,7 @@ export default function Contact() {
                         <FileText className="h-[18px] w-[18px]" />
                       </div>
                       <select 
-                        className="block w-full rounded-lg border border-slate-300 dark:border-white/10 bg-white dark:bg-background-dark/50 pl-10 py-2.5 text-slate-900 dark:text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm transition-colors [&>option]:bg-white dark:[&>option]:bg-background-secondary [&>option]:text-slate-900 dark:[&>option]:text-white" 
+                        className="block w-full rounded-lg border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-950/50 pl-10 py-2.5 text-slate-900 dark:text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm transition-colors [&>option]:bg-white dark:[&>option]:bg-slate-900 [&>option]:text-slate-900 dark:[&>option]:text-white" 
                         id="subject"
                         value={formData.subject}
                         onChange={handleChange}
@@ -229,7 +229,7 @@ export default function Contact() {
                     <label className="text-sm font-semibold text-slate-600 dark:text-text-muted" htmlFor="message">Message</label>
                     <div className="relative">
                       <textarea 
-                        className="block w-full rounded-lg border border-slate-300 dark:border-white/10 bg-white dark:bg-background-dark/50 p-3 text-slate-900 dark:text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm transition-colors resize-none" 
+                        className="block w-full rounded-lg border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-950/50 p-3 text-slate-900 dark:text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm transition-colors resize-none" 
                         id="message" 
                         value={formData.message}
                         onChange={handleChange}
@@ -242,7 +242,7 @@ export default function Contact() {
                   
                   <div className="flex items-center gap-2 mb-2">
                     <input 
-                      className="rounded border-slate-300 dark:border-white/20 bg-white dark:bg-background-dark text-primary focus:ring-primary/50" 
+                      className="rounded border-slate-300 dark:border-white/20 bg-white dark:bg-slate-950 text-primary focus:ring-primary/50" 
                       id="newsletter" 
                       type="checkbox"
                     />
@@ -264,19 +264,19 @@ export default function Contact() {
         </div>
       </section>
 
-      <section className="border-t border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-background-secondary/20 py-16">
+      <section className="border-t border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-slate-900/20 py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h2 className="text-2xl font-bold text-slate-900 dark:text-white text-center mb-10">Frequently Asked Questions</h2>
           <div className="grid md:grid-cols-3 gap-8 text-center">
-            <div className="p-6 rounded-xl border border-slate-200 bg-white dark:border-white/5 dark:bg-background-secondary/40">
+            <div className="p-6 rounded-xl border border-slate-200 bg-white dark:border-white/5 dark:bg-slate-900/40">
               <h3 className="font-bold text-slate-900 dark:text-white mb-2">What are your support hours?</h3>
               <p className="text-sm text-slate-600 dark:text-text-muted">Our support team is available Monday through Friday, 8am - 6pm EST. Critical issues are monitored 24/7.</p>
             </div>
-            <div className="p-6 rounded-xl border border-slate-200 bg-white dark:border-white/5 dark:bg-background-secondary/40">
+            <div className="p-6 rounded-xl border border-slate-200 bg-white dark:border-white/5 dark:bg-slate-900/40">
               <h3 className="font-bold text-slate-900 dark:text-white mb-2">Do you offer free trials?</h3>
               <p className="text-sm text-slate-600 dark:text-text-muted">Yes, we offer a 14-day free trial for all plans so you can explore the features before committing.</p>
             </div>
-            <div className="p-6 rounded-xl border border-slate-200 bg-white dark:border-white/5 dark:bg-background-secondary/40">
+            <div className="p-6 rounded-xl border border-slate-200 bg-white dark:border-white/5 dark:bg-slate-900/40">
               <h3 className="font-bold text-slate-900 dark:text-white mb-2">Where are you located?</h3>
               <p className="text-sm text-slate-600 dark:text-text-muted">We have remote teams supporting clients globally.</p>
             </div>

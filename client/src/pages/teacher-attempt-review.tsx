@@ -440,7 +440,7 @@ export default function TeacherAttemptReview() {
   // Loading state
   if (loading) {
     return (
-      <div className="min-h-screen bg-background-dark flex items-center justify-center">
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-primary"></div>
       </div>
     );
@@ -449,7 +449,7 @@ export default function TeacherAttemptReview() {
   // Error state
   if (error || !data) {
     return (
-      <div className="min-h-screen bg-background-dark flex flex-col items-center justify-center p-6 text-center">
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 text-center">
         <span className="material-symbols-outlined text-6xl text-slate-700 mb-4">error</span>
         <h2 className="text-2xl font-bold text-white mb-2">Failed to load review</h2>
         <p className="text-slate-400 mb-6">{error || 'Attempt data not found'}</p>
@@ -466,7 +466,7 @@ export default function TeacherAttemptReview() {
   const { attempt, student, exam, riskScore, events, statistics, answers } = data;
 
   return (
-    <div className={`review-dashboard min-h-screen bg-background-dark font-display text-slate-200 antialiased overflow-hidden ${isDark ? 'dark' : ''}`}>
+    <div className={`review-dashboard min-h-screen bg-slate-950 font-display text-slate-200 antialiased overflow-hidden ${isDark ? 'dark' : ''}`}>
       
       {/* Confirmation Dialog */}
       {showConfirmDialog && (

@@ -479,7 +479,7 @@ export default function Docs() {
   const currentSection = documentationSections.find(s => s.id === activeSection) || documentationSections[0];
 
   return (
-    <div className="min-h-screen bg-white dark:bg-background-dark text-slate-900 dark:text-white font-sans antialiased overflow-x-hidden">
+    <div className="min-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-sans antialiased overflow-x-hidden">
       {/* Hero Section */}
       <section className="relative py-20 px-4 sm:px-6 lg:px-8 border-b border-slate-200 dark:border-secondary-dark">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent"></div>
@@ -514,7 +514,7 @@ export default function Docs() {
                     setActiveSection(sectionId);
                     document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' });
                   }}
-                  className="group rounded-2xl border border-slate-200 dark:border-secondary-dark bg-white dark:bg-surface-dark p-6 hover:border-primary hover:shadow-2xl hover:shadow-primary/20 transition-all text-left"
+                  className="group rounded-2xl border border-slate-200 dark:border-secondary-dark bg-white dark:bg-slate-800 p-6 hover:border-primary hover:shadow-2xl hover:shadow-primary/20 transition-all text-left"
                 >
                   <div className="flex items-start gap-4">
                     <div className="flex size-12 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
@@ -557,7 +557,7 @@ export default function Docs() {
                       className={`block w-full text-left rounded-lg px-4 py-3 text-sm transition-all ${
                         activeSection === section.id
                           ? 'bg-primary/10 text-primary font-semibold'
-                          : 'text-slate-600 dark:text-text-muted hover:bg-slate-100 dark:hover:bg-surface-dark hover:text-slate-900 dark:hover:text-white'
+                          : 'text-slate-600 dark:text-text-muted hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
                       {section.title}
@@ -565,7 +565,7 @@ export default function Docs() {
                   ))}
                 </nav>
                 
-                <div className="mt-8 rounded-xl border border-slate-200 dark:border-secondary-dark bg-white dark:bg-surface-dark p-6">
+                <div className="mt-8 rounded-xl border border-slate-200 dark:border-secondary-dark bg-white dark:bg-slate-800 p-6">
                   <h3 className="text-lg font-bold mb-2">Need More Help?</h3>
                   <p className="text-sm text-slate-600 dark:text-text-muted mb-4">
                     Can't find what you're looking for? Our support team is here to help.
@@ -597,7 +597,7 @@ export default function Docs() {
                     {section.subSections && (
                       <div className="space-y-8">
                         {section.subSections.map((subSection, idx) => (
-                          <div key={idx} className="rounded-xl border border-slate-200 dark:border-secondary-dark bg-white dark:bg-surface-dark p-6">
+                          <div key={idx} className="rounded-xl border border-slate-200 dark:border-secondary-dark bg-white dark:bg-slate-800 p-6">
                             <h3 className="text-xl font-bold mb-3 text-primary flex items-center gap-2">
                               <PlayCircle className="w-5 h-5" />
                               {subSection.title}
@@ -619,7 +619,7 @@ export default function Docs() {
                             )}
                             
                             {subSection.tips && subSection.tips.length > 0 && (
-                              <div className="bg-slate-50 dark:bg-background-dark/50 p-4 rounded border border-slate-200 dark:border-primary/20">
+                              <div className="bg-slate-50 dark:bg-slate-950/50 p-4 rounded border border-slate-200 dark:border-primary/20">
                                 <h4 className="text-primary font-medium mb-2 flex items-center gap-2">
                                   <Star className="w-4 h-4" />
                                   Tips:
@@ -644,9 +644,9 @@ export default function Docs() {
       </section>
 
       {/* Need Help CTA */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-slate-50 dark:bg-surface-dark/30">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-slate-50 dark:bg-slate-800/30">
         <div className="mx-auto max-w-4xl">
-          <div className="rounded-2xl border border-slate-200 dark:border-secondary-dark bg-white dark:bg-surface-dark p-8 lg:p-12">
+          <div className="rounded-2xl border border-slate-200 dark:border-secondary-dark bg-white dark:bg-slate-800 p-8 lg:p-12">
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold mb-4">Need Help?</h2>
               <p className="text-slate-600 dark:text-text-muted text-lg">

@@ -292,7 +292,7 @@ export default function HelpCenter() {
   );
 
   return (
-    <div className="min-h-screen bg-background-dark text-white font-sans antialiased overflow-x-hidden">
+    <div className="min-h-screen bg-slate-950 text-white font-sans antialiased overflow-x-hidden">
 
       <section className="relative py-20 px-4 sm:px-6 lg:px-8">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent"></div>
@@ -325,7 +325,7 @@ export default function HelpCenter() {
                     <div
                       key={category.id}
                       onClick={() => setSelectedCategory(category.id)}
-                      className="group rounded-2xl border border-secondary-dark bg-surface-dark p-6 hover:border-primary hover:shadow-2xl hover:shadow-primary/20 transition-all cursor-pointer"
+                      className="group rounded-2xl border border-secondary-dark bg-slate-800 p-6 hover:border-primary hover:shadow-2xl hover:shadow-primary/20 transition-all cursor-pointer"
                     >
                       <div className="flex flex-col items-center text-center gap-4">
                         <div className="flex size-12 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
@@ -349,7 +349,7 @@ export default function HelpCenter() {
           </section>
 
           {/* Popular Articles */}
-          <section className="py-16 px-4 sm:px-6 lg:px-8 bg-surface-dark/30">
+          <section className="py-16 px-4 sm:px-6 lg:px-8 bg-slate-800/30">
             <div className="mx-auto max-w-7xl">
               <h2 className="text-2xl font-bold mb-6">Popular Articles</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-12">
@@ -357,7 +357,7 @@ export default function HelpCenter() {
                   <div
                     key={article.id}
                     onClick={() => setSelectedArticle(article.id)}
-                    className="group flex items-center gap-4 rounded-xl border border-secondary-dark bg-surface-dark p-5 hover:border-primary transition-all cursor-pointer"
+                    className="group flex items-center gap-4 rounded-xl border border-secondary-dark bg-slate-800 p-5 hover:border-primary transition-all cursor-pointer"
                   >
                     <Book className="h-5 w-5 text-primary shrink-0" />
                     <span className="flex-1 font-medium group-hover:text-primary transition-colors">
@@ -377,7 +377,7 @@ export default function HelpCenter() {
                   {faqs.map((faq, index) => (
                     <div
                       key={index}
-                      className="rounded-xl border border-secondary-dark bg-surface-dark overflow-hidden"
+                      className="rounded-xl border border-secondary-dark bg-slate-800 overflow-hidden"
                     >
                       <button
                         onClick={() => setExpandedFaq(expandedFaq === index ? null : index)}
@@ -421,7 +421,7 @@ export default function HelpCenter() {
                 <div
                   key={article.id}
                   onClick={() => setSelectedArticle(article.id)}
-                  className="group flex items-center gap-4 rounded-xl border border-secondary-dark bg-surface-dark p-5 hover:border-primary transition-all cursor-pointer"
+                  className="group flex items-center gap-4 rounded-xl border border-secondary-dark bg-slate-800 p-5 hover:border-primary transition-all cursor-pointer"
                 >
                   <Book className="h-5 w-5 text-primary shrink-0" />
                   <span className="flex-1 font-medium group-hover:text-primary transition-colors">
@@ -456,7 +456,7 @@ export default function HelpCenter() {
               if (!article) return null;
               
               return (
-                <div className="rounded-2xl border border-secondary-dark bg-surface-dark p-8">
+                <div className="rounded-2xl border border-secondary-dark bg-slate-800 p-8">
                   <h1 className="text-3xl font-bold mb-4">{article.title}</h1>
                   <p className="text-text-muted mb-8">{article.content}</p>
                   
@@ -480,7 +480,7 @@ export default function HelpCenter() {
                   )}
                   
                   {article.tips && article.tips.length > 0 && (
-                    <div className="bg-background-dark/50 p-6 rounded-lg border border-primary/20">
+                    <div className="bg-slate-950/50 p-6 rounded-lg border border-primary/20">
                       <h3 className="text-lg font-semibold text-primary mb-3 flex items-center gap-2">
                         <AlertCircle className="w-5 h-5" />
                         Helpful Tips
@@ -507,7 +507,7 @@ export default function HelpCenter() {
           <div className="mx-auto max-w-7xl">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
               <div className="lg:col-span-2 space-y-6">
-                <div className="rounded-xl border border-secondary-dark bg-surface-dark p-6">
+                <div className="rounded-xl border border-secondary-dark bg-slate-800 p-6">
                   <h3 className="text-lg font-bold mb-2">Still need help?</h3>
                   <p className="text-sm text-text-muted mb-4">
                     Can't find what you're looking for? Our support team is ready to assist you.
@@ -521,7 +521,7 @@ export default function HelpCenter() {
               </div>
 
               <div className="space-y-6">
-                <div className="rounded-xl border border-secondary-dark bg-surface-dark p-6">
+                <div className="rounded-xl border border-secondary-dark bg-slate-800 p-6">
                   <h3 className="text-lg font-bold mb-2">Video Tutorials</h3>
                   <p className="text-sm text-text-muted mb-4">
                     Watch step-by-step guides to master Eduverse
@@ -549,7 +549,7 @@ export default function HelpCenter() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-              <div className="rounded-2xl border border-secondary-dark bg-surface-dark p-8 text-center hover:border-primary transition-all">
+              <div className="rounded-2xl border border-secondary-dark bg-slate-800 p-8 text-center hover:border-primary transition-all">
                 <div className="flex justify-center mb-4">
                   <div className="flex size-16 items-center justify-center rounded-full bg-primary/10 text-primary">
                     <FileText className="h-8 w-8" />
@@ -569,7 +569,7 @@ export default function HelpCenter() {
                 </Link>
               </div>
 
-              <div className="rounded-2xl border border-secondary-dark bg-surface-dark p-8 text-center hover:border-primary transition-all">
+              <div className="rounded-2xl border border-secondary-dark bg-slate-800 p-8 text-center hover:border-primary transition-all">
                 <div className="flex justify-center mb-4">
                   <div className="flex size-16 items-center justify-center rounded-full bg-primary/10 text-primary">
                     <Book className="h-8 w-8" />

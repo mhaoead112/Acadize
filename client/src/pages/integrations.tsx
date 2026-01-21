@@ -52,7 +52,7 @@ export default function Integrations() {
   const categories = ["All", "Productivity", "Communication", "Payments", "CRM"];
 
   return (
-    <div className="min-h-screen bg-background-dark text-white font-sans antialiased overflow-x-hidden">
+    <div className="min-h-screen bg-slate-950 text-white font-sans antialiased overflow-x-hidden">
 
       <section className="relative py-20 px-4 sm:px-6 lg:px-8 animate-fade-in">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent"></div>
@@ -92,7 +92,7 @@ export default function Integrations() {
                 className={`px-6 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
                   selectedCategory === category
                     ? "bg-primary text-background-dark"
-                    : "bg-surface-dark border border-secondary-dark text-text-muted hover:bg-white/5 hover:border-primary"
+                    : "bg-slate-800 border border-secondary-dark text-text-muted hover:bg-white/5 hover:border-primary"
                 }`}
               >
                 {category}
@@ -113,7 +113,7 @@ export default function Integrations() {
               return (
                 <div
                   key={index}
-                  className="group relative rounded-2xl border border-secondary-dark bg-surface-dark p-6 transition-all hover:border-primary hover:shadow-2xl hover:shadow-primary/20 hover-lift animate-scale-in"
+                  className="group relative rounded-2xl border border-secondary-dark bg-slate-800 p-6 transition-all hover:border-primary hover:shadow-2xl hover:shadow-primary/20 hover-lift animate-scale-in"
                   style={{ animationDelay: `${index * 0.1}s` }}
                 >
                   <div className="flex items-start gap-4 mb-4">
@@ -140,7 +140,7 @@ export default function Integrations() {
       </section>
 
       {/* API Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-surface-dark/30">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-slate-800/30">
         <div className="mx-auto max-w-7xl">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div className="animate-slide-in-left">
@@ -170,7 +170,7 @@ export default function Integrations() {
                 </button>
               </Link>
             </div>
-            <div className="rounded-2xl border border-secondary-dark bg-background-dark p-6 font-mono text-sm animate-slide-in-right">
+            <div className="rounded-2xl border border-secondary-dark bg-slate-950 p-6 font-mono text-sm animate-slide-in-right">
               <div className="flex items-center gap-2 mb-4">
                 <div className="flex gap-1.5">
                   <div className="size-3 rounded-full bg-red-500"></div>

@@ -31,7 +31,7 @@ const Logos: React.FC = () => {
   };
 
   return (
-    <div className="border-y border-slate-200 dark:border-white/5 bg-slate-100 dark:bg-background-secondary py-12 overflow-hidden">
+    <div className="border-y border-slate-200 dark:border-white/5 bg-slate-100 dark:bg-slate-900 py-12 overflow-hidden">
       <div ref={ref} className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
         <motion.p 
           className="text-sm font-medium text-slate-500 dark:text-text-muted mb-8 uppercase tracking-widest opacity-60"

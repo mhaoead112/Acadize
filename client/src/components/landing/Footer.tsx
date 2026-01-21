@@ -8,7 +8,7 @@ const Footer: React.FC = () => {
   const isInView = useInView(ref, { once: true, amount: 0.2 });
 
   return (
-    <footer ref={ref} className="bg-slate-100 dark:bg-background-secondary border-t border-slate-200 dark:border-white/5 pt-16 pb-8">
+    <footer ref={ref} className="bg-slate-100 dark:bg-slate-900 border-t border-slate-200 dark:border-white/5 pt-16 pb-8">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <motion.div 
           className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 mb-12"

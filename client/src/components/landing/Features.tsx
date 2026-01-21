@@ -32,7 +32,7 @@ const Features: React.FC = () => {
   };
 
   return (
-    <section id="features" className="py-20 bg-slate-50 dark:bg-background-dark relative overflow-hidden">
+    <section id="features" className="py-20 bg-slate-50 dark:bg-slate-950 relative overflow-hidden">
       {/* Animated background gradient */}
       <motion.div 
         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-r from-primary/10 to-blue-500/10 rounded-full blur-3xl"
@@ -129,7 +129,7 @@ const Features: React.FC = () => {
 
 const FeatureCard: React.FC<{ icon: React.ReactNode; title: string; description: string }> = ({ icon, title, description }) => (
   <motion.div 
-    className="flex gap-4 p-6 rounded-xl border border-slate-200 dark:border-white/5 bg-white dark:bg-background-secondary transition-all h-full"
+    className="flex gap-4 p-6 rounded-xl border border-slate-200 dark:border-white/5 bg-white dark:bg-slate-900 transition-all h-full"
     whileHover={{ 
       y: -8,
       rotateX: 5,

@@ -270,7 +270,7 @@ export default function StudentGrades() {
   return (
     <StudentLayout>
       {/* Header */}
-      <header className="flex items-center justify-between px-8 py-5 border-b border-slate-200 dark:border-white/10 bg-white/95 dark:bg-background-dark/95 backdrop-blur-sm z-20">
+      <header className="flex items-center justify-between px-8 py-5 border-b border-slate-200 dark:border-white/10 bg-white/95 dark:bg-slate-950/95 backdrop-blur-sm z-20">
         <div className="flex-1">
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">My Grades</h1>
           <p className="mt-1 text-sm text-slate-600 dark:text-text-secondary">
@@ -282,7 +282,7 @@ export default function StudentGrades() {
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto p-4 md:p-8 lg:p-10 scroll-smooth bg-slate-50 dark:bg-background-dark">
+      <div className="flex-1 overflow-y-auto p-4 md:p-8 lg:p-10 scroll-smooth bg-slate-50 dark:bg-slate-950">
         <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">

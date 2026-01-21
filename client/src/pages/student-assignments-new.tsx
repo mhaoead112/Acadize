@@ -208,7 +208,7 @@ export default function StudentAssignments() {
 
   if (isLoading) {
     return (
-      <div className="font-display bg-slate-50 dark:bg-background-dark text-white h-screen flex items-center justify-center">
+      <div className="font-display bg-slate-50 dark:bg-slate-950 text-white h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     );
@@ -229,7 +229,7 @@ export default function StudentAssignments() {
         }
       `}</style>
 
-      <header className="flex items-center justify-between px-8 py-5 border-b border-slate-200 dark:border-white/10 bg-white/95 dark:bg-background-dark/95 backdrop-blur-sm z-20">
+      <header className="flex items-center justify-between px-8 py-5 border-b border-slate-200 dark:border-white/10 bg-white/95 dark:bg-slate-950/95 backdrop-blur-sm z-20">
         <div className="flex items-center gap-4 lg:hidden">
           <button className="text-secondary dark:text-white">
             <span className="material-symbols-outlined">menu</span>
@@ -239,7 +239,7 @@ export default function StudentAssignments() {
           </div>
         </div>
         <div className="hidden md:flex max-w-md w-full">
-          <label className="flex w-full items-center rounded-full bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 shadow-sm h-12 px-4 transition-all focus-within:ring-2 focus-within:ring-secondary/20 dark:focus-within:ring-primary/50 focus-within:border-secondary dark:focus-within:border-primary">
+          <label className="flex w-full items-center rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm h-12 px-4 transition-all focus-within:ring-2 focus-within:ring-secondary/20 dark:focus-within:ring-primary/50 focus-within:border-secondary dark:focus-within:border-primary">
             <span className="material-symbols-outlined text-slate-400 dark:text-slate-500">search</span>
             <input 
               value={searchQuery}
@@ -256,7 +256,7 @@ export default function StudentAssignments() {
         </div>
       </header>
 
-      <main className="flex-1 overflow-y-auto p-4 md:p-8 lg:p-10 scroll-smooth bg-slate-50 dark:bg-background-dark">
+      <main className="flex-1 overflow-y-auto p-4 md:p-8 lg:p-10 scroll-smooth bg-slate-50 dark:bg-slate-950">
         <div className="max-w-6xl mx-auto space-y-10">
           <div className="space-y-6">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
@@ -279,7 +279,7 @@ export default function StudentAssignments() {
                   className={`flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full px-5 transition-colors font-medium text-sm ${
                     filterStatus === "all"
                       ? 'bg-secondary dark:bg-white text-white dark:text-secondary shadow-md shadow-secondary/10'
-                      : 'bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 shadow-sm'
+                      : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 shadow-sm'
                   }`}
                 >
                   All
@@ -289,7 +289,7 @@ export default function StudentAssignments() {
                   className={`flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full px-5 transition-colors text-sm ${
                     filterStatus === "todo"
                       ? 'bg-secondary dark:bg-white text-white dark:text-secondary shadow-md shadow-secondary/10 font-medium'
-                      : 'bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 shadow-sm'
+                      : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 shadow-sm'
                   }`}
                 >
                   To Do
@@ -300,7 +300,7 @@ export default function StudentAssignments() {
                   className={`flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full px-5 transition-colors text-sm ${
                     filterStatus === "inprogress"
                       ? 'bg-secondary dark:bg-white text-white dark:text-secondary shadow-md shadow-secondary/10 font-medium'
-                      : 'bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 shadow-sm'
+                      : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 shadow-sm'
                   }`}
                 >
                   In Progress
@@ -311,7 +311,7 @@ export default function StudentAssignments() {
                   className={`flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full px-5 transition-colors text-sm ${
                     filterStatus === "graded"
                       ? 'bg-secondary dark:bg-white text-white dark:text-secondary shadow-md shadow-secondary/10 font-medium'
-                      : 'bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 shadow-sm'
+                      : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 shadow-sm'
                   }`}
                 >
                   Graded
@@ -321,7 +321,7 @@ export default function StudentAssignments() {
                   className={`flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full px-5 transition-colors text-sm ${
                     filterStatus === "overdue"
                       ? 'bg-secondary dark:bg-white text-white dark:text-secondary shadow-md shadow-secondary/10 font-medium'
-                      : 'bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 shadow-sm'
+                      : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 shadow-sm'
                   }`}
                 >
                   Overdue
@@ -336,7 +336,7 @@ export default function StudentAssignments() {
                   <select 
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
-                    className="w-full bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-sm rounded-lg pl-10 pr-4 py-2.5 focus:ring-1 focus:ring-secondary dark:focus:ring-primary focus:border-secondary dark:focus:border-primary appearance-none cursor-pointer shadow-sm"
+                    className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-sm rounded-lg pl-10 pr-4 py-2.5 focus:ring-1 focus:ring-secondary dark:focus:ring-primary focus:border-secondary dark:focus:border-primary appearance-none cursor-pointer shadow-sm"
                   >
                     <option value="dueDate">Sort by Due Date (Closest)</option>
                     <option value="course">Sort by Course</option>
@@ -408,7 +408,7 @@ export default function StudentAssignments() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               {filteredAssignments.slice(0, 6).map((assignment) => (
-                <div key={assignment.id} className={`bg-white dark:bg-surface-dark rounded-xl p-5 border border-slate-200 dark:border-slate-700 hover:border-secondary/30 dark:hover:border-primary/50 transition-all group flex flex-col justify-between h-full shadow-sm hover:shadow-md ${assignment.submission?.status === 'graded' ? 'opacity-60 hover:opacity-100' : ''}`}>
+                <div key={assignment.id} className={`bg-white dark:bg-slate-800 rounded-xl p-5 border border-slate-200 dark:border-slate-700 hover:border-secondary/30 dark:hover:border-primary/50 transition-all group flex flex-col justify-between h-full shadow-sm hover:shadow-md ${assignment.submission?.status === 'graded' ? 'opacity-60 hover:opacity-100' : ''}`}>
                   <div>
                     <div className="flex justify-between items-start mb-4">
                       <div className="flex items-center gap-3">
@@ -470,7 +470,7 @@ export default function StudentAssignments() {
 
       {/* Submit Assignment Dialog */}
       <Dialog open={isSubmitDialogOpen} onOpenChange={setIsSubmitDialogOpen}>
-        <DialogContent className="sm:max-w-[600px] bg-white dark:bg-surface-dark">
+        <DialogContent className="sm:max-w-[600px] bg-white dark:bg-slate-800">
           <DialogHeader>
             <DialogTitle className="text-2xl">Submit Assignment</DialogTitle>
             <DialogDescription className="text-base">
@@ -506,7 +506,7 @@ export default function StudentAssignments() {
                 placeholder="Write your submission here... (optional if uploading a file)"
                 value={submissionContent}
                 onChange={(e) => setSubmissionContent(e.target.value)}
-                className="min-h-[150px] resize-none bg-white dark:bg-surface-accent border-slate-200 dark:border-slate-700"
+                className="min-h-[150px] resize-none bg-white dark:bg-slate-700 border-slate-200 dark:border-slate-700"
               />
             </div>
 
@@ -514,7 +514,7 @@ export default function StudentAssignments() {
               <Label htmlFor="file" className="text-base font-medium">
                 Attach File (Optional)
               </Label>
-              <div className="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg p-6 text-center hover:border-secondary dark:hover:border-primary transition-colors cursor-pointer bg-slate-50 dark:bg-surface-accent/50">
+              <div className="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg p-6 text-center hover:border-secondary dark:hover:border-primary transition-colors cursor-pointer bg-slate-50 dark:bg-slate-700/50">
                 <input
                   type="file"
                   id="file"

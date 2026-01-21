@@ -24,7 +24,7 @@ export default function About() {
   ];
 
   return (
-    <div className="bg-white dark:bg-background-dark text-slate-900 dark:text-white overflow-x-hidden w-full min-h-screen font-sans antialiased">
+    <div className="bg-white dark:bg-slate-950 text-slate-900 dark:text-white overflow-x-hidden w-full min-h-screen font-sans antialiased">
 
       <section ref={heroRef} className="relative py-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
         <motion.div 
@@ -87,7 +87,7 @@ export default function About() {
       </section>
 
       {/* Mission & Vision */}
-      <section ref={missionRef} className="py-20 px-4 sm:px-6 lg:px-8 bg-slate-100 dark:bg-surface-dark/30 border-y border-slate-200 dark:border-secondary-dark">
+      <section ref={missionRef} className="py-20 px-4 sm:px-6 lg:px-8 bg-slate-100 dark:bg-slate-800/30 border-y border-slate-200 dark:border-secondary-dark">
         <div className="mx-auto max-w-7xl">
           <motion.div 
             className="text-center mb-12"
@@ -104,7 +104,7 @@ export default function About() {
             </p>
           </motion.div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="group rounded-2xl border border-slate-200 dark:border-secondary-dark bg-white dark:bg-surface-dark p-8 hover:border-primary transition-all duration-300 animate-slide-in-left">
+            <div className="group rounded-2xl border border-slate-200 dark:border-secondary-dark bg-white dark:bg-slate-800 p-8 hover:border-primary transition-all duration-300 animate-slide-in-left">
               <div className="flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary mb-6">
                 <Lightbulb className="h-6 w-6" />
               </div>
@@ -113,7 +113,7 @@ export default function About() {
                 To democratize education through scalable, accessible, and intuitive technology that empowers learners globally to achieve more.
               </p>
             </div>
-            <div className="group rounded-2xl border border-slate-200 dark:border-secondary-dark bg-white dark:bg-surface-dark p-8 hover:border-primary transition-all duration-300 animate-slide-in-right">
+            <div className="group rounded-2xl border border-slate-200 dark:border-secondary-dark bg-white dark:bg-slate-800 p-8 hover:border-primary transition-all duration-300 animate-slide-in-right">
               <div className="flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary mb-6">
                 <Globe className="h-6 w-6" />
               </div>
@@ -139,7 +139,7 @@ export default function About() {
               return (
                 <div 
                   key={idx} 
-                  className="group rounded-xl border border-slate-200 dark:border-secondary-dark bg-white dark:bg-surface-dark p-6 hover:border-primary hover:shadow-2xl hover:shadow-primary/20 transition-all duration-300 animate-fade-in-up"
+                  className="group rounded-xl border border-slate-200 dark:border-secondary-dark bg-white dark:bg-slate-800 p-6 hover:border-primary hover:shadow-2xl hover:shadow-primary/20 transition-all duration-300 animate-fade-in-up"
                   style={{ animationDelay: `${idx * 100}ms` }}
                 >
                   <Icon className="h-8 w-8 text-primary mb-4 group-hover:scale-110 transition-transform" />
@@ -153,7 +153,7 @@ export default function About() {
       </section>
 
       {/* Journey Timeline */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-slate-100 dark:bg-surface-dark/30 border-y border-slate-200 dark:border-secondary-dark">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-slate-100 dark:bg-slate-800/30 border-y border-slate-200 dark:border-secondary-dark">
         <div className="mx-auto max-w-7xl">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             <div className="space-y-6 animate-slide-in-left">
@@ -187,7 +187,7 @@ export default function About() {
             {stats.map((stat, idx) => (
               <div 
                 key={idx} 
-                className="rounded-2xl border border-slate-200 dark:border-secondary-dark bg-white dark:bg-surface-dark p-8 text-center hover:border-primary hover:shadow-2xl hover:shadow-primary/20 transition-all duration-300 animate-scale-in"
+                className="rounded-2xl border border-slate-200 dark:border-secondary-dark bg-white dark:bg-slate-800 p-8 text-center hover:border-primary hover:shadow-2xl hover:shadow-primary/20 transition-all duration-300 animate-scale-in"
                 style={{ animationDelay: `${idx * 100}ms` }}
               >
                 <p className="text-slate-600 dark:text-text-muted text-sm font-medium mb-2">{stat.label}</p>
@@ -201,7 +201,7 @@ export default function About() {
       {/* CTA */}
       <section className="relative py-24 px-4 sm:px-6 lg:px-8 overflow-hidden">
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2940&auto=format&fit=crop')] bg-cover bg-center"></div>
-        <div className="absolute inset-0 bg-slate-900/80 dark:bg-background-dark/90"></div>
+        <div className="absolute inset-0 bg-slate-900/80 dark:bg-slate-950/90"></div>
         <div className="relative mx-auto max-w-4xl text-center space-y-6 animate-fade-in">
           <h2 className="text-3xl sm:text-4xl font-bold text-white">
             Ready to Transform Your Learning Experience?

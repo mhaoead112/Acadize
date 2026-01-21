@@ -200,7 +200,7 @@ const Navbar: React.FC = () => {
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <div className="px-4 py-4 space-y-3 bg-white dark:bg-background-dark">
+            <div className="px-4 py-4 space-y-3 bg-white dark:bg-slate-950">
               <Link href={isHome ? "#features" : "/"}>
                 <motion.div
                   onClick={(e) => {

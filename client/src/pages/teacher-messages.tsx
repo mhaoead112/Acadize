@@ -1047,12 +1047,12 @@ export default function StudyGroupsChatPage() {
           -webkit-font-smoothing: antialiased;
         }
       `}</style>
-      <div className="flex h-[calc(100vh-4rem)] bg-white dark:bg-background-dark overflow-hidden transition-colors duration-300" >
+      <div className="flex h-[calc(100vh-4rem)] bg-white dark:bg-slate-950 overflow-hidden transition-colors duration-300" >
         {/* Left Sidebar - Conversations List */}
         <div className={`
           ${showMobileChat ? 'hidden md:flex' : 'flex'}
           w-full md:w-[320px] lg:w-[360px]
-          border-r border-slate-200 dark:border-white/10 flex-col bg-slate-50 dark:bg-surface-dark transition-colors duration-300
+          border-r border-slate-200 dark:border-white/10 flex-col bg-slate-50 dark:bg-slate-800 transition-colors duration-300
         `}>
           {/* Header & Search */}
           <div className="p-6 pb-2 flex flex-col gap-6">
@@ -1061,11 +1061,11 @@ export default function StudyGroupsChatPage() {
               <div className="flex gap-2">
                 <Dialog open={showCreateGroupDialog} onOpenChange={setShowCreateGroupDialog}>
                   <DialogTrigger asChild>
-                    <button className="bg-slate-200 dark:bg-surface-accent hover:bg-slate-300 dark:hover:bg-surface-accent/80 text-slate-900 dark:text-white rounded-full p-2 transition-colors duration-300" title="New Group">
+                    <button className="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-700/80 text-slate-900 dark:text-white rounded-full p-2 transition-colors duration-300" title="New Group">
                       <Users className="h-5 w-5" />
                     </button>
                   </DialogTrigger>
-                  <DialogContent className="bg-surface-dark border-white/10 text-white sm:max-w-[500px]">
+                  <DialogContent className="bg-slate-800 border-white/10 text-white sm:max-w-[500px]">
                     <DialogHeader>
                       <DialogTitle>Create New Group</DialogTitle>
                       <DialogDescription className="text-slate-400">
@@ -1080,7 +1080,7 @@ export default function StudyGroupsChatPage() {
                           placeholder="Enter group name"
                           value={groupName}
                           onChange={(e) => setGroupName(e.target.value)}
-                          className="bg-surface-accent border-white/10 text-white placeholder:text-slate-500"
+                          className="bg-slate-700 border-white/10 text-white placeholder:text-slate-500"
                         />
                       </div>
                       <div className="space-y-2">
@@ -1091,12 +1091,12 @@ export default function StudyGroupsChatPage() {
                           value={groupDescription}
                           onChange={(e) => setGroupDescription(e.target.value)}
                           rows={3}
-                          className="bg-surface-accent border-white/10 text-white placeholder:text-slate-500"
+                          className="bg-slate-700 border-white/10 text-white placeholder:text-slate-500"
                         />
                       </div>
                       <div className="space-y-2">
                         <Label className="text-slate-300">Select Members</Label>
-                        <ScrollArea className="h-[200px] border border-white/10 rounded-lg p-2 bg-surface-accent/30">
+                        <ScrollArea className="h-[200px] border border-white/10 rounded-lg p-2 bg-slate-700/30">
                           {availableUsers.map((user) => (
                             <div key={user.id} className="flex items-center space-x-2 py-2 hover:bg-white/5 rounded px-2">
                               <Checkbox
@@ -1143,11 +1143,11 @@ export default function StudyGroupsChatPage() {
 
                 <Dialog open={showNewDMDialog} onOpenChange={setShowNewDMDialog}>
                   <DialogTrigger asChild>
-                    <button className="bg-slate-200 dark:bg-surface-accent hover:bg-slate-300 dark:hover:bg-surface-accent/80 text-slate-900 dark:text-white rounded-full p-2 transition-colors duration-300" title="New Message">
+                    <button className="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-700/80 text-slate-900 dark:text-white rounded-full p-2 transition-colors duration-300" title="New Message">
                       <MessageCircle className="h-5 w-5" />
                     </button>
                   </DialogTrigger>
-                  <DialogContent className="bg-surface-dark border-white/10 text-white sm:max-w-[500px]">
+                  <DialogContent className="bg-slate-800 border-white/10 text-white sm:max-w-[500px]">
                     <DialogHeader>
                       <DialogTitle>Start a Direct Message</DialogTitle>
                       <DialogDescription className="text-slate-400">
@@ -1163,11 +1163,11 @@ export default function StudyGroupsChatPage() {
                             placeholder="Type a name or username..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="pl-10 bg-surface-accent border-white/10 text-white placeholder:text-slate-500"
+                            className="pl-10 bg-slate-700 border-white/10 text-white placeholder:text-slate-500"
                           />
                         </div>
                       </div>
-                      <ScrollArea className="h-[300px] border border-white/10 rounded-lg p-2 bg-surface-accent/30">
+                      <ScrollArea className="h-[300px] border border-white/10 rounded-lg p-2 bg-slate-700/30">
                         {(searchQuery ? searchResults : availableUsers).map((user) => (
                           <button
                             key={user.id}
@@ -1209,7 +1209,7 @@ export default function StudyGroupsChatPage() {
                 <Search className="h-4 w-4 text-slate-400 dark:text-slate-500" />
               </div>
               <input 
-                className="w-full bg-slate-100 dark:bg-surface-accent text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 text-sm rounded-full py-3 pl-12 pr-4 focus:outline-none focus:ring-2 focus:ring-primary/50 border-none transition-colors duration-300" 
+                className="w-full bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 text-sm rounded-full py-3 pl-12 pr-4 focus:outline-none focus:ring-2 focus:ring-primary/50 border-none transition-colors duration-300" 
                 placeholder="Search messages..." 
                 type="text"
                 value={searchQuery}
@@ -1219,22 +1219,22 @@ export default function StudyGroupsChatPage() {
 
             {/* Tabs */}
             <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
-              <TabsList className="w-full grid grid-cols-3 bg-slate-100 dark:bg-surface-accent p-1 rounded-lg h-10 transition-colors duration-300">
+              <TabsList className="w-full grid grid-cols-3 bg-slate-100 dark:bg-slate-700 p-1 rounded-lg h-10 transition-colors duration-300">
                 <TabsTrigger 
                   value="all" 
-                  className="text-xs data-[state=active]:bg-white dark:data-[state=active]:bg-surface-dark data-[state=active]:text-slate-900 dark:data-[state=active]:text-white text-slate-500 dark:text-slate-400 transition-colors duration-300"
+                  className="text-xs data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-slate-900 dark:data-[state=active]:text-white text-slate-500 dark:text-slate-400 transition-colors duration-300"
                 >
                   All
                 </TabsTrigger>
                 <TabsTrigger 
                   value="direct" 
-                  className="text-xs data-[state=active]:bg-white dark:data-[state=active]:bg-surface-dark data-[state=active]:text-slate-900 dark:data-[state=active]:text-white text-slate-500 dark:text-slate-400 transition-colors duration-300"
+                  className="text-xs data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-slate-900 dark:data-[state=active]:text-white text-slate-500 dark:text-slate-400 transition-colors duration-300"
                 >
                   Direct
                 </TabsTrigger>
                 <TabsTrigger 
                   value="channels" 
-                  className="text-xs data-[state=active]:bg-white dark:data-[state=active]:bg-surface-dark data-[state=active]:text-slate-900 dark:data-[state=active]:text-white text-slate-500 dark:text-slate-400 transition-colors duration-300"
+                  className="text-xs data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-slate-900 dark:data-[state=active]:text-white text-slate-500 dark:text-slate-400 transition-colors duration-300"
                 >
                   Groups
                 </TabsTrigger>
@@ -1252,18 +1252,18 @@ export default function StudyGroupsChatPage() {
                   onClick={() => selectConversation(dm, 'dm')}
                   className={`w-full flex items-center gap-4 px-4 py-4 rounded-2xl cursor-pointer transition-colors duration-300 border-l-4 text-left ${
                     selectedConversation?.id === dm.id 
-                      ? 'bg-slate-100 dark:bg-surface-accent/60 border-primary' 
-                      : 'hover:bg-slate-100/50 dark:hover:bg-surface-accent/30 border-transparent'
+                      ? 'bg-slate-100 dark:bg-slate-700/60 border-primary' 
+                      : 'hover:bg-slate-100/50 dark:hover:bg-slate-700/30 border-transparent'
                   }`}
                 >
                   <div className="relative">
-                    <Avatar className="h-12 w-12 border-2 border-surface-dark">
+                    <Avatar className="h-12 w-12 border-2 border-slate-800">
                       <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-500 text-white font-bold">
                         {dm.fullName.split(' ').map(n => n[0]).join('').substring(0, 2)}
                       </AvatarFallback>
                     </Avatar>
                     {dm.isOnline && (
-                      <div className="absolute bottom-0 right-0 h-3 w-3 bg-green-500 rounded-full border-2 border-surface-dark"></div>
+                      <div className="absolute bottom-0 right-0 h-3 w-3 bg-green-500 rounded-full border-2 border-slate-800"></div>
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -1298,12 +1298,12 @@ export default function StudyGroupsChatPage() {
                   onClick={() => selectConversation(group, 'group')}
                   className={`w-full flex items-center gap-4 px-4 py-4 rounded-2xl cursor-pointer transition-colors duration-300 border-l-4 text-left ${
                     selectedConversation?.id === group.id 
-                      ? 'bg-slate-100 dark:bg-surface-accent/60 border-primary' 
-                      : 'hover:bg-slate-100/50 dark:hover:bg-surface-accent/30 border-transparent'
+                      ? 'bg-slate-100 dark:bg-slate-700/60 border-primary' 
+                      : 'hover:bg-slate-100/50 dark:hover:bg-slate-700/30 border-transparent'
                   }`}
                 >
                   <div className="relative">
-                    <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0 border-2 border-surface-dark">
+                    <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0 border-2 border-slate-800">
                       {group.isPrivate ? (
                         <Lock className="h-5 w-5 text-white" />
                       ) : (
@@ -1342,12 +1342,12 @@ export default function StudyGroupsChatPage() {
         {/* Main Chat Area */}
         <div className={`
           ${showMobileChat ? 'flex' : 'hidden md:flex'}
-          flex-1 flex-col min-w-0 bg-white dark:bg-surface-dark relative transition-colors duration-300
+          flex-1 flex-col min-w-0 bg-white dark:bg-slate-800 relative transition-colors duration-300
         `}>
           {selectedConversation ? (
             <>
               {/* Chat Header */}
-              <div className="h-20 border-b border-slate-200 dark:border-white/10 flex items-center justify-between px-8 bg-white dark:bg-surface-dark shrink-0 z-10 transition-colors duration-300">
+              <div className="h-20 border-b border-slate-200 dark:border-white/10 flex items-center justify-between px-8 bg-white dark:bg-slate-800 shrink-0 z-10 transition-colors duration-300">
                 <div className="flex items-center gap-4 min-w-0">
                   {/* Mobile back button */}
                   <Button
@@ -1362,13 +1362,13 @@ export default function StudyGroupsChatPage() {
                   {conversationType === 'dm' ? (
                     <>
                       <div className="relative flex-shrink-0">
-                        <Avatar className="h-10 w-10 border-2 border-surface-dark">
+                        <Avatar className="h-10 w-10 border-2 border-slate-800">
                           <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-500 text-white font-bold">
                             {selectedConversation.fullName?.split(' ').map((n: string) => n[0]).join('').substring(0, 2)}
                           </AvatarFallback>
                         </Avatar>
                         {selectedConversation.isOnline && (
-                          <span className="absolute bottom-0 right-0 size-2.5 bg-green-500 border-2 border-surface-dark rounded-full"></span>
+                          <span className="absolute bottom-0 right-0 size-2.5 bg-green-500 border-2 border-slate-800 rounded-full"></span>
                         )}
                       </div>
                       <div className="min-w-0">
@@ -1380,7 +1380,7 @@ export default function StudyGroupsChatPage() {
                     </>
                   ) : (
                     <>
-                      <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0 border-2 border-surface-dark">
+                      <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0 border-2 border-slate-800">
                         {selectedConversation.isPrivate ? (
                           <Lock className="h-5 w-5 text-white" />
                         ) : (
@@ -1395,15 +1395,15 @@ export default function StudyGroupsChatPage() {
                   )}
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
-                  <button className="size-10 flex items-center justify-center rounded-full text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-surface-accent transition-colors duration-300 hidden sm:flex">
+                  <button className="size-10 flex items-center justify-center rounded-full text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors duration-300 hidden sm:flex">
                     <Phone className="h-5 w-5" />
                   </button>
-                  <button className="size-10 flex items-center justify-center rounded-full text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-surface-accent transition-colors duration-300 hidden sm:flex">
+                  <button className="size-10 flex items-center justify-center rounded-full text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors duration-300 hidden sm:flex">
                     <Video className="h-5 w-5" />
                   </button>
                   <button 
                     onClick={() => setShowRightPanel(!showRightPanel)}
-                    className={`size-10 flex items-center justify-center rounded-full transition-colors duration-300 ${showRightPanel ? 'text-slate-900 dark:text-white bg-slate-100 dark:bg-surface-accent' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-surface-accent'}`}
+                    className={`size-10 flex items-center justify-center rounded-full transition-colors duration-300 ${showRightPanel ? 'text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-700' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-700'}`}
                   >
                     <Settings className="h-5 w-5" />
                   </button>
@@ -1411,7 +1411,7 @@ export default function StudyGroupsChatPage() {
               </div>
 
               {/* Messages Area */}
-              <div className="flex-1 overflow-y-auto px-8 py-6 space-y-6 scroll-smooth bg-slate-50 dark:bg-background-dark/50 transition-colors duration-300">
+              <div className="flex-1 overflow-y-auto px-8 py-6 space-y-6 scroll-smooth bg-slate-50 dark:bg-slate-950/50 transition-colors duration-300">
                 {messages.map((message, index) => {
                   const isOwn = message.senderId === user?.id;
                   const showAvatar = index === 0 || messages[index - 1].senderId !== message.senderId;
@@ -1421,7 +1421,7 @@ export default function StudyGroupsChatPage() {
                       <div className={`size-8 shrink-0 mt-auto mb-1 ${!showAvatar && 'invisible'}`}>
                         {!isOwn && showAvatar && (
                           <Avatar className="size-8">
-                            <AvatarFallback className="bg-surface-accent text-white text-xs">
+                            <AvatarFallback className="bg-slate-700 text-white text-xs">
                               {message.senderName?.split(' ').map(n => n[0]).join('').substring(0, 2)}
                             </AvatarFallback>
                           </Avatar>
@@ -1436,7 +1436,7 @@ export default function StudyGroupsChatPage() {
                         <div className={`px-5 py-3 shadow-sm transition-colors duration-300 ${
                           isOwn 
                             ? 'bg-primary text-black rounded-2xl rounded-br-sm' 
-                            : 'bg-slate-100 dark:bg-surface-accent text-slate-900 dark:text-white rounded-2xl rounded-bl-sm'
+                            : 'bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white rounded-2xl rounded-bl-sm'
                         }`}>
                           {message.type === 'text' && (
                             <p className={`text-sm ${isOwn ? 'font-semibold' : 'font-normal'} leading-relaxed whitespace-pre-wrap break-words`}>
@@ -1507,11 +1507,11 @@ export default function StudyGroupsChatPage() {
 
               {/* Upload Progress */}
               {isUploading && (
-                <div className="px-8 py-2 bg-surface-dark border-t border-white/10 animate-slide-up">
+                <div className="px-8 py-2 bg-slate-800 border-t border-white/10 animate-slide-up">
                   <div className="flex items-center gap-3">
                     <Loader2 className="h-4 w-4 animate-spin text-primary" />
                     <div className="flex-1">
-                      <Progress value={uploadProgress} className="h-2 bg-surface-accent" />
+                      <Progress value={uploadProgress} className="h-2 bg-slate-700" />
                     </div>
                     <span className="text-sm text-slate-400">{Math.round(uploadProgress)}%</span>
                   </div>
@@ -1519,8 +1519,8 @@ export default function StudyGroupsChatPage() {
               )}
 
               {/* Message Input */}
-              <div className="p-6 pt-2 bg-white dark:bg-surface-dark shrink-0 transition-colors duration-300">
-                <div className="relative flex items-end gap-2 bg-slate-100 dark:bg-surface-accent/50 p-2 rounded-[2rem] border border-transparent focus-within:border-primary/30 transition-all">
+              <div className="p-6 pt-2 bg-white dark:bg-slate-800 shrink-0 transition-colors duration-300">
+                <div className="relative flex items-end gap-2 bg-slate-100 dark:bg-slate-700/50 p-2 rounded-[2rem] border border-transparent focus-within:border-primary/30 transition-all">
                   <input
                     ref={fileInputRef}
                     type="file"
@@ -1533,7 +1533,7 @@ export default function StudyGroupsChatPage() {
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={isUploading}
-                    className="size-10 flex items-center justify-center rounded-full text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-surface-accent hover:text-slate-900 dark:hover:text-white transition-colors duration-300 shrink-0"
+                    className="size-10 flex items-center justify-center rounded-full text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white transition-colors duration-300 shrink-0"
                   >
                     <Paperclip className="h-5 w-5" />
                   </button>
@@ -1556,7 +1556,7 @@ export default function StudyGroupsChatPage() {
                     
                     {/* Emoji Picker */}
                     {showEmojiPicker && (
-                      <div className="absolute bottom-full left-0 mb-4 bg-surface-dark border border-white/10 rounded-xl shadow-2xl p-3 w-[320px] max-h-[300px] overflow-y-auto z-50 animate-scale-in">
+                      <div className="absolute bottom-full left-0 mb-4 bg-slate-800 border border-white/10 rounded-xl shadow-2xl p-3 w-[320px] max-h-[300px] overflow-y-auto z-50 animate-scale-in">
                         <div className="flex items-center justify-between mb-2 pb-2 border-b border-white/10">
                           <span className="text-sm font-medium text-white">Emoji</span>
                           <Button 
@@ -1586,7 +1586,7 @@ export default function StudyGroupsChatPage() {
                   <button 
                     type="button"
                     onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                    className="size-10 flex items-center justify-center rounded-full text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-surface-accent hover:text-slate-900 dark:hover:text-white transition-colors duration-300 shrink-0 mr-1"
+                    className="size-10 flex items-center justify-center rounded-full text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white transition-colors duration-300 shrink-0 mr-1"
                   >
                     <Smile className="h-5 w-5" />
                   </button>
@@ -1619,19 +1619,19 @@ export default function StudyGroupsChatPage() {
 
         {/* Right Panel - Info */}
         {showRightPanel && selectedConversation && (
-          <div className="hidden lg:flex w-[300px] xl:w-[340px] border-l border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-surface-dark flex-col animate-slide-in-right transition-colors duration-300">
+          <div className="hidden lg:flex w-[300px] xl:w-[340px] border-l border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800 flex-col animate-slide-in-right transition-colors duration-300">
             <ScrollArea className="flex-1">
               <div className="p-6 space-y-6">
                 {/* Header Info */}
                 <div className="text-center">
                   {conversationType === 'dm' ? (
-                    <Avatar className="h-24 w-24 mx-auto mb-3 border-4 border-surface-accent">
+                    <Avatar className="h-24 w-24 mx-auto mb-3 border-4 border-slate-700">
                       <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-500 text-white text-3xl">
                         {selectedConversation.fullName?.split(' ').map((n: string) => n[0]).join('').substring(0, 2)}
                       </AvatarFallback>
                     </Avatar>
                   ) : (
-                    <div className="h-24 w-24 mx-auto mb-3 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center border-4 border-surface-accent">
+                    <div className="h-24 w-24 mx-auto mb-3 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center border-4 border-slate-700">
                       {selectedConversation.isPrivate ? (
                         <Lock className="h-10 w-10 text-white" />
                       ) : (
@@ -1653,7 +1653,7 @@ export default function StudyGroupsChatPage() {
                 {conversationType === 'group' && (
                   <div>
                     <h3 className="font-semibold text-white mb-2 text-sm">About</h3>
-                    <div className="bg-surface-accent/30 rounded-lg p-4 border border-white/5">
+                    <div className="bg-slate-700/30 rounded-lg p-4 border border-white/5">
                       <p className="text-sm text-slate-400">{selectedConversation.description || 'No description'}</p>
                     </div>
                   </div>
@@ -1673,7 +1673,7 @@ export default function StudyGroupsChatPage() {
                           href={file.fileUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="aspect-square rounded-lg overflow-hidden bg-surface-accent hover:scale-105 hover:shadow-lg transition-all duration-200 cursor-pointer border border-white/5"
+                          className="aspect-square rounded-lg overflow-hidden bg-slate-700 hover:scale-105 hover:shadow-lg transition-all duration-200 cursor-pointer border border-white/5"
                         >
                           {file.type === 'image' ? (
                             <img src={file.fileUrl} alt={file.fileName} className="w-full h-full object-cover" />
@@ -1704,7 +1704,7 @@ export default function StudyGroupsChatPage() {
                           href={link}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="block bg-surface-accent/30 rounded-lg p-3 border border-white/5 hover:bg-surface-accent/50 transition-colors"
+                          className="block bg-slate-700/30 rounded-lg p-3 border border-white/5 hover:bg-slate-700/50 transition-colors"
                         >
                           <p className="text-sm text-blue-400 truncate">{link}</p>
                         </a>
@@ -1729,7 +1729,7 @@ export default function StudyGroupsChatPage() {
                             <Plus className="h-4 w-4" />
                           </Button>
                         </DialogTrigger>
-                        <DialogContent className="bg-surface-dark border-white/10 text-white">
+                        <DialogContent className="bg-slate-800 border-white/10 text-white">
                           <DialogHeader>
                             <DialogTitle>Add Members</DialogTitle>
                             <DialogDescription className="text-slate-400">
@@ -1737,7 +1737,7 @@ export default function StudyGroupsChatPage() {
                             </DialogDescription>
                           </DialogHeader>
                           <div className="py-4">
-                            <ScrollArea className="h-[300px] border border-white/10 rounded-lg p-2 bg-surface-accent/30">
+                            <ScrollArea className="h-[300px] border border-white/10 rounded-lg p-2 bg-slate-700/30">
                               {availableUsers
                                 .filter(u => !groupMembers.some(m => m.id === u.id))
                                 .map((user) => (
@@ -1788,12 +1788,12 @@ export default function StudyGroupsChatPage() {
                         <div key={member.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 transition-all duration-200">
                           <div className="relative">
                             <Avatar className="h-8 w-8">
-                              <AvatarFallback className="bg-surface-accent text-white text-xs">
+                              <AvatarFallback className="bg-slate-700 text-white text-xs">
                                 {member.fullName.split(' ').map(n => n[0]).join('').substring(0, 2)}
                               </AvatarFallback>
                             </Avatar>
                             {member.isOnline && (
-                              <div className="absolute bottom-0 right-0 h-2.5 w-2.5 bg-green-500 rounded-full border border-surface-dark"></div>
+                              <div className="absolute bottom-0 right-0 h-2.5 w-2.5 bg-green-500 rounded-full border border-slate-800"></div>
                             )}
                           </div>
                           <div className="flex-1 min-w-0">

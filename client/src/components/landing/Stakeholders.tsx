@@ -27,7 +27,7 @@ const StakeholderCard: React.FC<StakeholderCardProps> = ({
   return (
     <motion.div 
       ref={ref}
-      className="group relative overflow-hidden rounded-2xl border border-slate-200 dark:border-white/5 bg-white dark:bg-background-secondary p-8 transition-all duration-300 hover:border-primary/50"
+      className="group relative overflow-hidden rounded-2xl border border-slate-200 dark:border-white/5 bg-white dark:bg-slate-900 p-8 transition-all duration-300 hover:border-primary/50"
       initial={{ opacity: 0, y: 50, rotateX: -15 }}
       animate={isInView ? { opacity: 1, y: 0, rotateX: 0 } : { opacity: 0, y: 50, rotateX: -15 }}
       transition={{ delay, duration: 0.7, ease: "easeOut" }}
@@ -97,7 +97,7 @@ const Stakeholders: React.FC = () => {
   const isInView = useInView(ref, { once: true, amount: 0.2 });
 
   return (
-    <section ref={ref} className="py-20 bg-white dark:bg-background-dark relative overflow-hidden">
+    <section ref={ref} className="py-20 bg-white dark:bg-slate-950 relative overflow-hidden">
       {/* Animated Background Elements */}
       <motion.div 
         className="absolute top-20 left-10 w-72 h-72 bg-primary/10 blur-[100px] rounded-full"

@@ -154,7 +154,7 @@ export default function TeacherStudents() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div className="bg-white dark:bg-surface-dark rounded-xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-1">
+        <div className="bg-white dark:bg-slate-800 rounded-xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-1">
           <div className="flex justify-between items-start">
             <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Total Students</p>
             <span className="material-symbols-outlined text-gold opacity-50">groups</span>
@@ -166,7 +166,7 @@ export default function TeacherStudents() {
             </span>
           </div>
         </div>
-        <div className="bg-white dark:bg-surface-dark rounded-xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-1">
+        <div className="bg-white dark:bg-slate-800 rounded-xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-1">
           <div className="flex justify-between items-start">
             <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Average Grade</p>
             <span className="material-symbols-outlined text-gold opacity-50">grade</span>
@@ -178,7 +178,7 @@ export default function TeacherStudents() {
             </span>
           </div>
         </div>
-        <div className="bg-white dark:bg-surface-dark rounded-xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-1">
+        <div className="bg-white dark:bg-slate-800 rounded-xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-1">
           <div className="flex justify-between items-start">
             <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Assignments Due</p>
             <span className="material-symbols-outlined text-gold opacity-50">assignment_late</span>
@@ -190,7 +190,7 @@ export default function TeacherStudents() {
             </span>
           </div>
         </div>
-        <div className="bg-white dark:bg-surface-dark rounded-xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-1 ring-1 ring-red-500/20">
+        <div className="bg-white dark:bg-slate-800 rounded-xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-1 ring-1 ring-red-500/20">
           <div className="flex justify-between items-start">
             <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">At Risk</p>
             <span className="material-symbols-outlined text-red-500 opacity-50">warning</span>
@@ -205,7 +205,7 @@ export default function TeacherStudents() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col gap-4  dark:bg-surface-dark p-5 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 mb-6">
+      <div className="flex flex-col gap-4  dark:bg-slate-800 p-5 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 mb-6">
         <div className="flex flex-col md:flex-row gap-4 items-end">
           <div className="flex-1 w-full relative group">
             <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-gold transition-colors">search</span>
@@ -260,7 +260,7 @@ export default function TeacherStudents() {
       </div>
 
       {/* Student Table */}
-      <div className="bg-white dark:bg-surface-dark rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden transition-colors duration-300">
+      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden transition-colors duration-300">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[800px] text-left border-collapse">
             <thead>

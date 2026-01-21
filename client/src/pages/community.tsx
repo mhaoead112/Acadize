@@ -64,7 +64,7 @@ export default function Community() {
   ];
 
   return (
-    <div className="min-h-screen bg-background-dark text-white font-sans antialiased overflow-x-hidden">
+    <div className="min-h-screen bg-slate-950 text-white font-sans antialiased overflow-x-hidden">
 
       <section className="relative py-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent"></div>
@@ -93,7 +93,7 @@ export default function Community() {
       </section>
 
       {/* Stats */}
-      <section className="py-12 px-4 sm:px-6 lg:px-8 border-y border-secondary-dark bg-surface-dark/30">
+      <section className="py-12 px-4 sm:px-6 lg:px-8 border-y border-secondary-dark bg-slate-800/30">
         <div className="mx-auto max-w-7xl">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
             {stats.map((stat, index) => {
@@ -128,7 +128,7 @@ export default function Community() {
               return (
                 <div
                   key={index}
-                  className="group rounded-2xl border border-secondary-dark bg-surface-dark p-6 hover:border-primary hover:shadow-2xl hover:shadow-primary/20 transition-all"
+                  className="group rounded-2xl border border-secondary-dark bg-slate-800 p-6 hover:border-primary hover:shadow-2xl hover:shadow-primary/20 transition-all"
                 >
                   <div className="flex items-start gap-4 mb-4">
                     <div className="flex size-12 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
@@ -157,7 +157,7 @@ export default function Community() {
       </section>
 
       {/* Upcoming Events */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-surface-dark/30">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-slate-800/30">
         <div className="mx-auto max-w-7xl">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
             <div className="lg:col-span-2">
@@ -168,7 +168,7 @@ export default function Community() {
                 {events.map((event, index) => (
                   <div
                     key={index}
-                    className="rounded-xl border border-secondary-dark bg-surface-dark p-6 hover:border-primary transition-all"
+                    className="rounded-xl border border-secondary-dark bg-slate-800 p-6 hover:border-primary transition-all"
                   >
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <div className="flex-1">
@@ -198,7 +198,7 @@ export default function Community() {
             </div>
 
             <div className="space-y-6">
-              <div className="rounded-xl border border-secondary-dark bg-surface-dark p-6">
+              <div className="rounded-xl border border-secondary-dark bg-slate-800 p-6">
                 <h3 className="text-lg font-bold mb-4">Community Guidelines</h3>
                 <ul className="space-y-3 text-sm text-text-muted">
                   <li className="flex items-start gap-2">
@@ -220,7 +220,7 @@ export default function Community() {
                 </ul>
               </div>
 
-              <div className="rounded-xl border border-secondary-dark bg-surface-dark p-6">
+              <div className="rounded-xl border border-secondary-dark bg-slate-800 p-6">
                 <h3 className="text-lg font-bold mb-2">Need Help?</h3>
                 <p className="text-sm text-text-muted mb-4">
                   Our support team is here to assist you

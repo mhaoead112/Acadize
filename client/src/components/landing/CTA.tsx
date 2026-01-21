@@ -7,7 +7,7 @@ const CTA: React.FC = () => {
   const isInView = useInView(ref, { once: true, amount: 0.3 });
 
   return (
-    <section ref={ref} className="relative py-24 overflow-hidden bg-slate-50 dark:bg-background-dark">
+    <section ref={ref} className="relative py-24 overflow-hidden bg-slate-50 dark:bg-slate-950">
       {/* Animated Background Layers */}
       <motion.div 
         className="absolute inset-0 bg-primary/5"
@@ -92,7 +92,7 @@ const CTA: React.FC = () => {
           </Link>
           <Link href="/contact">
             <motion.button 
-              className="flex items-center justify-center rounded-lg bg-white dark:bg-background-dark border border-slate-300 dark:border-white/20 px-8 py-4 text-base font-bold text-slate-900 dark:text-white w-full sm:w-auto"
+              className="flex items-center justify-center rounded-lg bg-white dark:bg-slate-950 border border-slate-300 dark:border-white/20 px-8 py-4 text-base font-bold text-slate-900 dark:text-white w-full sm:w-auto"
               whileHover={{ 
                 scale: 1.05,
                 backgroundColor: "rgba(241, 245, 249, 1)",

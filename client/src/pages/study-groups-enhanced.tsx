@@ -558,19 +558,19 @@ export default function StudyGroupsPage() {
           font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
       `}</style>
-      <div className="flex flex-1 h-[calc(100vh-64px)] overflow-hidden bg-background-dark">
+      <div className="flex flex-1 h-[calc(100vh-64px)] overflow-hidden bg-slate-950">
         {/* Sidebar */}
-        <section className="w-[320px] md:w-[400px] flex flex-col border-r border-white/10 bg-surface-dark shrink-0">
+        <section className="w-[320px] md:w-[400px] flex flex-col border-r border-white/10 bg-slate-800 shrink-0">
           <div className="p-6 pb-2 flex flex-col gap-6">
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-bold tracking-tight text-white">Messages</h2>
               <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
                 <DialogTrigger asChild>
-                  <button className="bg-surface-accent hover:bg-surface-accent/80 text-white rounded-full p-2 transition-colors" title="New Group">
+                  <button className="bg-slate-700 hover:bg-slate-700/80 text-white rounded-full p-2 transition-colors" title="New Group">
                     <span className="material-symbols-outlined text-[20px]">group_add</span>
                   </button>
                 </DialogTrigger>
-                <DialogContent className="bg-surface-dark border-white/10 text-white">
+                <DialogContent className="bg-slate-800 border-white/10 text-white">
                   <DialogHeader>
                     <DialogTitle>Create Study Group</DialogTitle>
                     <DialogDescription className="text-slate-400">
@@ -587,7 +587,7 @@ export default function StudyGroupsPage() {
                         name="name"
                         placeholder="Enter group name"
                         required
-                        className="mt-1 bg-surface-accent border-white/10 text-white placeholder:text-slate-500"
+                        className="mt-1 bg-slate-700 border-white/10 text-white placeholder:text-slate-500"
                       />
                     </div>
                     <div>
@@ -595,7 +595,7 @@ export default function StudyGroupsPage() {
                       <Textarea
                         name="description"
                         placeholder="Enter group description"
-                        className="mt-1 bg-surface-accent border-white/10 text-white placeholder:text-slate-500"
+                        className="mt-1 bg-slate-700 border-white/10 text-white placeholder:text-slate-500"
                         rows={3}
                       />
                     </div>
@@ -612,7 +612,7 @@ export default function StudyGroupsPage() {
                 <span className="material-symbols-outlined text-slate-400">search</span>
               </div>
               <input 
-                className="w-full bg-surface-accent text-white placeholder-slate-400 text-sm rounded-full py-3 pl-12 pr-4 focus:outline-none focus:ring-2 focus:ring-primary/50 border-none" 
+                className="w-full bg-slate-700 text-white placeholder-slate-400 text-sm rounded-full py-3 pl-12 pr-4 focus:outline-none focus:ring-2 focus:ring-primary/50 border-none" 
                 placeholder="Search messages..." 
                 type="text"
                 value={searchQuery}
@@ -644,12 +644,12 @@ export default function StudyGroupsPage() {
                   onClick={() => setSelectedGroup(group)}
                   className={`flex items-center gap-4 px-4 py-4 rounded-2xl cursor-pointer transition-colors border-l-4 ${
                     selectedGroup?.id === group.id 
-                      ? 'bg-surface-accent/60 border-primary' 
-                      : 'hover:bg-surface-accent/30 border-transparent'
+                      ? 'bg-slate-700/60 border-primary' 
+                      : 'hover:bg-slate-700/30 border-transparent'
                   }`}
                 >
                   <div className="relative">
-                    <Avatar className="size-12 border-2 border-surface-dark">
+                    <Avatar className="size-12 border-2 border-slate-800">
                       <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-500 text-white font-bold">
                         {group.name.substring(0, 2).toUpperCase()}
                       </AvatarFallback>
@@ -674,18 +674,18 @@ export default function StudyGroupsPage() {
         </section>
 
         {/* Main Chat Area */}
-        <section className="flex flex-col flex-1 bg-surface-dark relative">
+        <section className="flex flex-col flex-1 bg-slate-800 relative">
           {selectedGroup ? (
             <>
-              <header className="h-20 border-b border-white/10 flex items-center justify-between px-8 bg-surface-dark shrink-0 z-10">
+              <header className="h-20 border-b border-white/10 flex items-center justify-between px-8 bg-slate-800 shrink-0 z-10">
                 <div className="flex items-center gap-4 cursor-pointer" onClick={() => setShowGroupInfo(true)}>
                   <div className="relative">
-                    <Avatar className="size-10 border-2 border-surface-dark">
+                    <Avatar className="size-10 border-2 border-slate-800">
                       <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-500 text-white font-bold">
                         {selectedGroup.name.substring(0, 2).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
-                    <span className="absolute bottom-0 right-0 size-2.5 bg-primary border-2 border-surface-dark rounded-full"></span>
+                    <span className="absolute bottom-0 right-0 size-2.5 bg-primary border-2 border-slate-800 rounded-full"></span>
                   </div>
                   <div>
                     <h3 className="text-white font-bold text-lg leading-tight">{selectedGroup.name}</h3>
@@ -695,22 +695,22 @@ export default function StudyGroupsPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button className="size-10 flex items-center justify-center rounded-full text-slate-400 hover:text-white hover:bg-surface-accent transition-colors">
+                  <button className="size-10 flex items-center justify-center rounded-full text-slate-400 hover:text-white hover:bg-slate-700 transition-colors">
                     <span className="material-symbols-outlined">search</span>
                   </button>
-                  <button className="size-10 flex items-center justify-center rounded-full text-slate-400 hover:text-white hover:bg-surface-accent transition-colors">
+                  <button className="size-10 flex items-center justify-center rounded-full text-slate-400 hover:text-white hover:bg-slate-700 transition-colors">
                     <span className="material-symbols-outlined">videocam</span>
                   </button>
                   <button 
                     onClick={() => setShowGroupInfo(true)}
-                    className="size-10 flex items-center justify-center rounded-full text-slate-400 hover:text-white hover:bg-surface-accent transition-colors"
+                    className="size-10 flex items-center justify-center rounded-full text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
                   >
                     <span className="material-symbols-outlined">more_vert</span>
                   </button>
                 </div>
               </header>
 
-              <div className="flex-1 overflow-y-auto px-8 py-6 space-y-6 scroll-smooth bg-background-dark/50">
+              <div className="flex-1 overflow-y-auto px-8 py-6 space-y-6 scroll-smooth bg-slate-950/50">
                 {messages.map((message, index) => {
                   const isOwnMessage = message.senderId === user?.id;
                   const showAvatar = index === 0 || messages[index - 1].senderId !== message.senderId;
@@ -719,7 +719,7 @@ export default function StudyGroupsPage() {
                     <div key={message.id} className={`flex gap-4 max-w-[80%] ${isOwnMessage ? 'ml-auto flex-row-reverse' : ''}`}>
                       <div className={`size-8 shrink-0 mt-auto mb-1 ${!showAvatar && 'invisible'}`}>
                         <Avatar className="size-8">
-                          <AvatarFallback className="bg-surface-accent text-white text-xs">
+                          <AvatarFallback className="bg-slate-700 text-white text-xs">
                             {message.senderUsername.substring(0, 2).toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
@@ -733,7 +733,7 @@ export default function StudyGroupsPage() {
                         <div className={`px-5 py-3 shadow-sm ${
                           isOwnMessage 
                             ? 'bg-primary text-black rounded-2xl rounded-br-sm' 
-                            : 'bg-surface-accent text-white rounded-2xl rounded-bl-sm'
+                            : 'bg-slate-700 text-white rounded-2xl rounded-bl-sm'
                         }`}>
                           {message.type === 'text' ? (
                             <p className={`text-sm ${isOwnMessage ? 'font-semibold' : 'font-normal'} leading-relaxed whitespace-pre-wrap`}>
@@ -789,8 +789,8 @@ export default function StudyGroupsPage() {
                 )}
               </div>
 
-              <div className="p-6 pt-2 bg-surface-dark shrink-0">
-                <form onSubmit={handleSendMessage} className="relative flex items-end gap-2 bg-surface-accent/50 p-2 rounded-[2rem] border border-transparent focus-within:border-primary/30 transition-all">
+              <div className="p-6 pt-2 bg-slate-800 shrink-0">
+                <form onSubmit={handleSendMessage} className="relative flex items-end gap-2 bg-slate-700/50 p-2 rounded-[2rem] border border-transparent focus-within:border-primary/30 transition-all">
                   <input
                     ref={fileInputRef}
                     type="file"
@@ -802,13 +802,13 @@ export default function StudyGroupsPage() {
                   <button 
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="size-10 flex items-center justify-center rounded-full text-slate-400 hover:bg-surface-accent hover:text-white transition-colors shrink-0"
+                    className="size-10 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-700 hover:text-white transition-colors shrink-0"
                   >
                     <span className="material-symbols-outlined">add_circle</span>
                   </button>
                   <button 
                     type="button"
-                    className="size-10 flex items-center justify-center rounded-full text-slate-400 hover:bg-surface-accent hover:text-white transition-colors shrink-0"
+                    className="size-10 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-700 hover:text-white transition-colors shrink-0"
                   >
                     <span className="material-symbols-outlined">image</span>
                   </button>
@@ -828,7 +828,7 @@ export default function StudyGroupsPage() {
                   
                   <button 
                     type="button"
-                    className="size-10 flex items-center justify-center rounded-full text-slate-400 hover:bg-surface-accent hover:text-white transition-colors shrink-0 mr-1"
+                    className="size-10 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-700 hover:text-white transition-colors shrink-0 mr-1"
                   >
                     <span className="material-symbols-outlined">sentiment_satisfied</span>
                   </button>
@@ -860,7 +860,7 @@ export default function StudyGroupsPage() {
 
         {/* Group Info Dialog - Kept mostly same but styled */}
         <Dialog open={showGroupInfo} onOpenChange={setShowGroupInfo}>
-          <DialogContent className="max-w-md max-h-[80vh] overflow-hidden flex flex-col bg-surface-dark border-white/10 text-white">
+          <DialogContent className="max-w-md max-h-[80vh] overflow-hidden flex flex-col bg-slate-800 border-white/10 text-white">
             <DialogHeader>
               <DialogTitle>Group Info</DialogTitle>
             </DialogHeader>
@@ -868,7 +868,7 @@ export default function StudyGroupsPage() {
             <ScrollArea className="flex-1">
               <div className="space-y-6">
                 <div className="text-center">
-                  <Avatar className="h-24 w-24 mx-auto mb-3 border-4 border-surface-accent">
+                  <Avatar className="h-24 w-24 mx-auto mb-3 border-4 border-slate-700">
                     <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-500 text-white text-3xl">
                       {selectedGroup?.name.substring(0, 2).toUpperCase()}
                     </AvatarFallback>
@@ -918,7 +918,7 @@ export default function StudyGroupsPage() {
                         >
                           <div className="flex items-center gap-3">
                             <Avatar className="h-10 w-10">
-                              <AvatarFallback className="bg-surface-accent text-white">
+                              <AvatarFallback className="bg-slate-700 text-white">
                                 {member.username.substring(0, 2).toUpperCase()}
                               </AvatarFallback>
                             </Avatar>

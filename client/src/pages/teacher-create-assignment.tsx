@@ -184,7 +184,7 @@ export default function TeacherCreateAssignment() {
 
   return (
     <div className="flex-1 flex flex-col h-full overflow-y-auto bg-slate-50 dark:bg-navy-dark transition-colors duration-200">
-      <header className="sticky top-0 z-50 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-surface-dark/80 backdrop-blur-md px-6 py-4 flex items-center justify-between">
+      <header className="sticky top-0 z-50 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <button 
             onClick={() => setLocation("/teacher/assignments")} 
@@ -232,7 +232,7 @@ export default function TeacherCreateAssignment() {
           {/* Main content */}
           <div className="lg:col-span-8 space-y-6">
             {/* Course Selection */}
-            <div className="bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm">
+            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm">
               <div className="flex flex-col gap-2">
                 <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Select Course</label>
                 <select
@@ -251,7 +251,7 @@ export default function TeacherCreateAssignment() {
             </div>
 
             {/* Assignment Details */}
-            <div className="bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm">
+            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm">
               <div className="flex flex-col gap-6">
                 <div className="flex flex-col gap-2">
                   <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Assignment Name</label>
@@ -266,7 +266,7 @@ export default function TeacherCreateAssignment() {
                 <div className="flex flex-col gap-2">
                   <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Instructions</label>
                   <div className="rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden bg-slate-50 dark:bg-navy-dark">
-                    <div className="p-2 border-b border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-surface-dark/50 flex gap-2">
+                    <div className="p-2 border-b border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800/50 flex gap-2">
                       <button type="button" className="p-1 text-slate-500 hover:text-gold transition-colors">
                         <span className="material-symbols-outlined">format_bold</span>
                       </button>
@@ -289,7 +289,7 @@ export default function TeacherCreateAssignment() {
             </div>
 
             {/* Submission Type */}
-            <div className="bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm">
+            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm">
               <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6">Submission Type</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div 
@@ -339,7 +339,7 @@ export default function TeacherCreateAssignment() {
           {/* Settings Sidebar */}
           <div className="lg:col-span-4 space-y-6">
             {/* Grading Section */}
-            <section className="bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm">
+            <section className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm">
               <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-6 flex items-center gap-2">
                 <span className="material-symbols-outlined text-gold">leaderboard</span>
                 Grading
@@ -385,7 +385,7 @@ export default function TeacherCreateAssignment() {
             </section>
 
             {/* Availability Section */}
-            <section className="bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm">
+            <section className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm">
               <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-6 flex items-center gap-2">
                 <span className="material-symbols-outlined text-gold">event_available</span>
                 Availability

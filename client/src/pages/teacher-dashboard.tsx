@@ -229,7 +229,7 @@ export default function TeacherDashboard() {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <div className="flex flex-col gap-2 rounded-xl p-5 border border-slate-200 dark:border-gray-800 bg-white dark:bg-surface-dark shadow-sm transition-colors duration-300">
+          <div className="flex flex-col gap-2 rounded-xl p-5 border border-slate-200 dark:border-gray-800 bg-white dark:bg-slate-800 shadow-sm transition-colors duration-300">
             <div className="flex justify-between items-start">
               <p className="text-slate-500 dark:text-gray-400 text-sm font-medium leading-normal">Active Classes</p>
 <div className="p-2 rounded-lg bg-navy/10 dark:bg-gold/10">
@@ -241,7 +241,7 @@ export default function TeacherDashboard() {
             </p>
           </div>
 
-          <div className="flex flex-col gap-2 rounded-xl p-5 border border-slate-200 dark:border-gray-800 bg-white dark:bg-surface-dark shadow-sm transition-colors duration-300">
+          <div className="flex flex-col gap-2 rounded-xl p-5 border border-slate-200 dark:border-gray-800 bg-white dark:bg-slate-800 shadow-sm transition-colors duration-300">
             <div className="flex justify-between items-start">
               <p className="text-slate-500 dark:text-gray-400 text-sm font-medium leading-normal">Total Students</p>
               <Users className="h-5 w-5 text-navy dark:text-gold" />
@@ -251,7 +251,7 @@ export default function TeacherDashboard() {
             </p>
           </div>
 
-          <div className="flex flex-col gap-2 rounded-xl p-5 border border-slate-200 dark:border-gray-800 bg-white dark:bg-surface-dark shadow-sm relative overflow-hidden transition-colors duration-300">
+          <div className="flex flex-col gap-2 rounded-xl p-5 border border-slate-200 dark:border-gray-800 bg-white dark:bg-slate-800 shadow-sm relative overflow-hidden transition-colors duration-300">
             <div className="absolute right-0 top-0 p-5 opacity-5">
               <Clock className="h-20 w-20" />
             </div>
@@ -267,7 +267,7 @@ export default function TeacherDashboard() {
             )}
           </div>
 
-          <div className="flex flex-col gap-2 rounded-xl p-5 border border-slate-200 dark:border-gray-800 bg-white dark:bg-surface-dark shadow-sm transition-colors duration-300">
+          <div className="flex flex-col gap-2 rounded-xl p-5 border border-slate-200 dark:border-gray-800 bg-white dark:bg-slate-800 shadow-sm transition-colors duration-300">
             <div className="flex justify-between items-start">
               <p className="text-slate-500 dark:text-gray-400 text-sm font-medium leading-normal">Unread Messages</p>
               <Bell className="h-5 w-5 text-navy dark:text-gold" />
@@ -293,7 +293,7 @@ export default function TeacherDashboard() {
               </div>
 
               {courses.length === 0 ? (
-                <div className="rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-surface-dark p-12 text-center transition-colors duration-300">
+                <div className="rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-slate-800 p-12 text-center transition-colors duration-300">
                   <BookOpen className="h-16 w-16 text-gray-400 mx-auto mb-4" />
                   <p className="text-gray-600 dark:text-gray-400 mb-4">
                     No courses yet. Create your first course to get started!
@@ -310,7 +310,7 @@ export default function TeacherDashboard() {
                     return (
                       <Link key={course.id} href={`/teacher/courses/${course.id}`}>
                         <a className="block">
-                          <div className="flex flex-col gap-3 rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-surface-dark p-4 shadow-sm hover:shadow-md transition-all cursor-pointer group">
+                          <div className="flex flex-col gap-3 rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-slate-800 p-4 shadow-sm hover:shadow-md transition-all cursor-pointer group">
                             <div className="flex items-center gap-3">
                               <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-emerald-200 to-teal-300 flex items-center justify-center text-2xl flex-shrink-0">
                                 {emoji}
@@ -349,7 +349,7 @@ export default function TeacherDashboard() {
                 </Link>
               </div>
 
-              <div className="rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-surface-dark shadow-sm overflow-hidden transition-colors duration-300">
+              <div className="rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-slate-800 shadow-sm overflow-hidden transition-colors duration-300">
                 {assignments.length === 0 ? (
                   <div className="p-12 text-center">
                     <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -411,7 +411,7 @@ export default function TeacherDashboard() {
           {/* Sidebar - Takes 1 column */}
           <div className="flex flex-col gap-6">
             {/* Upcoming Schedule */}
-            <div className="rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-surface-dark p-5 shadow-sm transition-colors duration-300">
+            <div className="rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-slate-800 p-5 shadow-sm transition-colors duration-300">
               <h3 className="text-navy dark:text-white text-lg font-bold leading-tight mb-4">
                 Upcoming Schedule
               </h3>
@@ -443,7 +443,7 @@ export default function TeacherDashboard() {
             </div>
 
             {/* Quick Announcements */}
-            <div className="rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-surface-dark p-5 shadow-sm flex flex-col flex-1 transition-colors duration-300">
+            <div className="rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-slate-800 p-5 shadow-sm flex flex-col flex-1 transition-colors duration-300">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-navy dark:text-white text-lg font-bold leading-tight">
                   Announcements

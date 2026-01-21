@@ -45,7 +45,7 @@ export default function CreateCoursePage() {
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-navy-dark flex items-center justify-center p-4">
-        <div className="bg-surface-dark rounded-2xl shadow-2xl p-10 max-w-md w-full text-center border border-gray-800">
+        <div className="bg-slate-800 rounded-2xl shadow-2xl p-10 max-w-md w-full text-center border border-gray-800">
           <div className="w-20 h-20 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-6">
             <Lock className="w-10 h-10 text-red-400" />
           </div>
@@ -68,7 +68,7 @@ export default function CreateCoursePage() {
   if (user?.role !== 'teacher' && user?.role !== 'admin') {
     return (
       <div className="min-h-screen bg-navy-dark flex items-center justify-center p-4">
-        <div className="bg-surface-dark rounded-2xl shadow-2xl p-10 max-w-md w-full text-center border border-gray-800">
+        <div className="bg-slate-800 rounded-2xl shadow-2xl p-10 max-w-md w-full text-center border border-gray-800">
           <div className="w-20 h-20 rounded-full bg-amber-500/20 flex items-center justify-center mx-auto mb-6">
             <ShieldAlert className="w-10 h-10 text-amber-400" />
           </div>
@@ -236,7 +236,7 @@ export default function CreateCoursePage() {
     <TeacherLayout>
       <div className="flex-1 flex flex-col h-full overflow-y-auto bg-slate-50 dark:bg-navy-dark transition-colors duration-200">
         {/* Top Header Section */}
-        <header className="sticky top-0 z-50 flex items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-surface-dark/80 backdrop-blur-md px-6 py-3">
+        <header className="sticky top-0 z-50 flex items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md px-6 py-3">
           <div className="flex items-center gap-4">
             <button 
               onClick={() => setLocation('/teacher/courses')}
@@ -280,7 +280,7 @@ export default function CreateCoursePage() {
             {/* Main Content Column */}
             <div className="lg:col-span-8 flex flex-col gap-8">
               {/* General Info */}
-              <section className="bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm">
+              <section className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm">
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
                   <span className="material-symbols-outlined text-gold">edit_document</span>
                   General Information
@@ -328,7 +328,7 @@ export default function CreateCoursePage() {
               </section>
 
               {/* Media Upload */}
-              <section className="bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm">
+              <section className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm">
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
                   <span className="material-symbols-outlined text-gold">image</span>
                   Course Media
@@ -347,7 +347,7 @@ export default function CreateCoursePage() {
                         <X className="w-4 h-4" />
                       </button>
                       {uploadProgress > 0 && uploadProgress < 100 && (
-                        <div className="absolute bottom-4 left-4 right-4 bg-white dark:bg-surface-dark rounded-lg p-2">
+                        <div className="absolute bottom-4 left-4 right-4 bg-white dark:bg-slate-800 rounded-lg p-2">
                           <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
                             <div className="bg-gold h-2 rounded-full transition-all duration-300" style={{ width: `${uploadProgress}%` }}></div>
                           </div>
@@ -379,7 +379,7 @@ export default function CreateCoursePage() {
 
             {/* Sidebar Column */}
             <div className="lg:col-span-4 flex flex-col gap-6">
-              <section className="bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm sticky top-24">
+              <section className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm sticky top-24">
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
                   <span className="material-symbols-outlined text-gold">settings</span>
                   Course Settings
