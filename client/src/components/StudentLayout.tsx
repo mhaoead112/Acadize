@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, Link } from 'wouter';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
@@ -42,7 +42,28 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  // Initialize from URL if available
+  const [searchQuery, setSearchQuery] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('q') || '';
+  });
+
+  // Debounced live search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchQuery.trim()) {
+        const params = new URLSearchParams(window.location.search);
+        const currentQ = params.get('q');
+        
+        // Only navigate if query changed
+        if (currentQ !== searchQuery.trim()) {
+          setLocation(`/student/search?q=${encodeURIComponent(searchQuery.trim())}`);
+        }
+      }
+    }, 500); // 500ms debounce
+
+    return () => clearTimeout(timer);
+  }, [searchQuery, setLocation]);
 
   const handleLogout = () => {
     logout();
@@ -52,7 +73,6 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      // Navigate to search results page with query parameter
       setLocation(`/student/search?q=${encodeURIComponent(searchQuery.trim())}`);
     }
   };

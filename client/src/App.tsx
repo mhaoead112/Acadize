@@ -115,6 +115,9 @@ import ParentCourses from "@/pages/parent-courses";
 import ParentLessons from "@/pages/parent-lessons";
 import ParentProgress from "@/pages/parent-progress";
 import ParentReports from "@/pages/parent-reports";
+import TeacherSearchResultsPage from "@/pages/teacher-search-results";
+import AdminSearchResultsPage from "@/pages/admin-search-results";
+import ParentSearchResultsPage from "@/pages/parent-search-results";
 // New landing pages
 import Pricing from "@/pages/pricing";
 import Integrations from "@/pages/integrations";
@@ -390,6 +393,12 @@ function Router() {
             </AdminRoute>
           </Route>
 
+          <Route path="/admin/search">
+            <AdminRoute>
+              <AdminSearchResultsPage />
+            </AdminRoute>
+          </Route>
+
           {/* Admin Analytics - Admin only */}
           <Route path="/admin/analytics">
             <AdminRoute>
@@ -469,6 +478,12 @@ function Router() {
           <Route path="/parent/dashboard">
             <ParentRoute>
               <ParentDashboardModern />
+            </ParentRoute>
+          </Route>
+
+          <Route path="/parent/search">
+            <ParentRoute>
+              <ParentSearchResultsPage />
             </ParentRoute>
           </Route>
 
@@ -627,6 +642,12 @@ function Router() {
           <Route path="/teacher/profile">
             <TeacherRoute>
               <TeacherProfile />
+            </TeacherRoute>
+          </Route>
+
+          <Route path="/teacher/search">
+            <TeacherRoute>
+              <TeacherSearchResultsPage />
             </TeacherRoute>
           </Route>
 

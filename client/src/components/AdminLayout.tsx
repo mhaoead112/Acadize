@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, Link } from 'wouter';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -28,6 +28,29 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const { user, logout } = useAuth();
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
+
+  // Initialize from URL if available
+  const [searchQuery, setSearchQuery] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('q') || '';
+  });
+
+  // Debounced live search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchQuery.trim()) {
+        const params = new URLSearchParams(window.location.search);
+        const currentQ = params.get('q');
+        
+        // Only navigate if query changed
+        if (currentQ !== searchQuery.trim()) {
+          setLocation(`/admin/search?q=${encodeURIComponent(searchQuery.trim())}`);
+        }
+      }
+    }, 500); // 500ms debounce
+
+    return () => clearTimeout(timer);
+  }, [searchQuery, setLocation]);
 
   const handleLogout = () => {
     logout();
@@ -241,6 +264,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               type="text"
               placeholder="Search users, courses, calendar..."
               className="h-10 w-full px-3 bg-slate-100 dark:bg-[#112240] border border-slate-200 dark:border-white/10 rounded-lg text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#001f3f]/20 dark:focus:ring-[#FFD700]/30"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
           <div className="flex items-center gap-3">
