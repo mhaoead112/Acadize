@@ -51,6 +51,8 @@ export default function StudentCourseLessonsPage() {
   const [showProfileMenu, setShowProfileMenu] = useState<boolean>(false);
   const [showSearch, setShowSearch] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false);
+  const [chatWidth, setChatWidth] = useState<number>(384); // 24rem = w-96
 
   const formatTime = useCallback((seconds: number) => {
     const m = Math.floor(seconds / 60);
@@ -114,7 +116,7 @@ export default function StudentCourseLessonsPage() {
         const items = data?.lessons || [];
         const lessonsWithUrls = items.map((lesson: Lesson) => ({
           ...lesson,
-          fileUrl: apiEndpoint(`/api/lessons/${lesson.id}/download`)
+          fileUrl: apiEndpoint(`/api/lessons/${lesson.id}/download?view=inline`)
         }));
         setLessons(lessonsWithUrls);
         if (lessonsWithUrls.length > 0) {
@@ -276,14 +278,26 @@ export default function StudentCourseLessonsPage() {
       <main className="flex flex-1 overflow-hidden">
         {/* Lessons Sidebar */}
         <motion.aside 
-          className="w-80 bg-white dark:bg-[#112240] border-r border-slate-200 dark:border-white/10 flex flex-col shrink-0 transition-all duration-300 hidden md:flex"
+          className={`${sidebarCollapsed ? 'w-16' : 'w-80'} bg-white dark:bg-[#112240] border-r border-slate-200 dark:border-white/10 flex flex-col shrink-0 transition-all duration-300 hidden md:flex`}
           initial={{ x: -50, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={springConfigs.gentle}
         >
-          <div className="p-5 border-b border-slate-200 dark:border-white/10">
-            <h3 className="font-bold text-lg text-slate-900 dark:text-white mb-1">{course?.title || 'Course Lessons'}</h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400">{lessons.length} lesson{lessons.length !== 1 ? 's' : ''} available</p>
+          {/* Sidebar Header with Toggle */}
+          <div className="p-4 border-b border-slate-200 dark:border-white/10 flex items-center justify-between">
+            {!sidebarCollapsed && (
+              <div>
+                <h3 className="font-bold text-lg text-slate-900 dark:text-white mb-1">{course?.title || 'Course Lessons'}</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">{lessons.length} lesson{lessons.length !== 1 ? 's' : ''} available</p>
+              </div>
+            )}
+            <button
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 text-slate-600 dark:text-slate-400 transition-all hover:scale-105"
+              title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            >
+              <span className="material-symbols-outlined text-xl">{sidebarCollapsed ? 'chevron_right' : 'chevron_left'}</span>
+            </button>
           </div>
           <motion.div 
             className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-hide"
@@ -307,8 +321,9 @@ export default function StudentCourseLessonsPage() {
                   variants={fadeInUpVariants}
                   whileHover={{ scale: 1.02, transition: springConfigs.snappy }}
                   whileTap={{ scale: 0.98 }}
+                  title={sidebarCollapsed ? (lesson.title || lesson.fileName || 'Lesson') : undefined}
                 >
-                  <div className="flex items-center gap-3 p-3">
+                  <div className={`flex items-center gap-3 ${sidebarCollapsed ? 'p-2 justify-center' : 'p-3'}`}>
                     <div className="flex-shrink-0">
                       {isSelected ? (
                         <span className="material-symbols-outlined text-primary text-[18px]">play_circle</span>
@@ -318,43 +333,49 @@ export default function StudentCourseLessonsPage() {
                         </span>
                       )}
                     </div>
-                    <div className="flex-1">
-                      <p className={`text-sm font-medium ${isSelected ? 'text-slate-900 dark:text-white' : 'text-slate-700 dark:text-slate-300'}`}>
-                        {lesson.title || lesson.fileName || 'Untitled'}
-                      </p>
-                      <div className="flex items-center gap-2 text-xs text-slate-500 mt-1">
-                        <span className="material-symbols-outlined text-[14px]">
-                          {getFileTypeIcon(lesson.fileType, lesson.fileName)}
-                        </span>
-                        <span>{getFileTypeLabel(lesson.fileType, lesson.fileName)}</span>
-                      </div>
-                    </div>
-                    <div className="flex-shrink-0">
-                      {bookmarkedLessons.has(lesson.id) && (
-                        <span className="material-symbols-outlined text-primary text-[16px]" style={{fontVariationSettings: "'FILL' 1"}}>bookmark</span>
-                      )}
-                      {viewedLessons.has(lesson.id) && !isSelected && (
-                        <span className="material-symbols-outlined text-green-400 text-[16px]">check_circle</span>
-                      )}
-                    </div>
+                    {!sidebarCollapsed && (
+                      <>
+                        <div className="flex-1">
+                          <p className={`text-sm font-medium ${isSelected ? 'text-slate-900 dark:text-white' : 'text-slate-700 dark:text-slate-300'}`}>
+                            {lesson.title || lesson.fileName || 'Untitled'}
+                          </p>
+                          <div className="flex items-center gap-2 text-xs text-slate-500 mt-1">
+                            <span className="material-symbols-outlined text-[14px]">
+                              {getFileTypeIcon(lesson.fileType, lesson.fileName)}
+                            </span>
+                            <span>{getFileTypeLabel(lesson.fileType, lesson.fileName)}</span>
+                          </div>
+                        </div>
+                        <div className="flex-shrink-0">
+                          {bookmarkedLessons.has(lesson.id) && (
+                            <span className="material-symbols-outlined text-primary text-[16px]" style={{fontVariationSettings: "'FILL' 1"}}>bookmark</span>
+                          )}
+                          {viewedLessons.has(lesson.id) && !isSelected && (
+                            <span className="material-symbols-outlined text-green-400 text-[16px]">check_circle</span>
+                          )}
+                        </div>
+                      </>
+                    )}
                   </div>
                 </motion.button>
               );
             })}
           </motion.div>
-          <div className="p-4 border-t border-slate-200 dark:border-white/10">
-            <Link href={`/student/courses/${courseId}`}>
-              <motion.button 
-                className="w-full flex items-center justify-center gap-2 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 py-2.5 rounded-lg hover:bg-slate-200 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-white transition-colors text-sm font-medium"
-                variants={buttonVariants}
-                whileHover="hover"
-                whileTap="tap"
-              >
-                <span className="material-symbols-outlined text-[18px]">arrow_back</span>
-                Back to Course
-              </motion.button>
-            </Link>
-          </div>
+          {!sidebarCollapsed && (
+            <div className="p-4 border-t border-slate-200 dark:border-white/10">
+              <Link href={`/student/courses/${courseId}`}>
+                <motion.button 
+                  className="w-full flex items-center justify-center gap-2 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 py-2.5 rounded-lg hover:bg-slate-200 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-white transition-colors text-sm font-medium"
+                  variants={buttonVariants}
+                  whileHover="hover"
+                  whileTap="tap"
+                >
+                  <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+                  Back to Course
+                </motion.button>
+              </Link>
+            </div>
+          )}
         </motion.aside>
 
         {/* Main Content */}
@@ -545,9 +566,37 @@ export default function StudentCourseLessonsPage() {
           </div>
         </motion.section>
 
-        {/* AI Study Buddy Sidebar - Enhanced */}
+        {/* Versa AI Chat Sidebar - Resizable */}
         {showAIChat && selectedLesson && (
-          <aside className="w-96 bg-gradient-to-b from-[#112240] via-[#0d1b2a] to-[#0a192f] border-l border-purple-500/20 flex flex-col shrink-0 shadow-2xl z-10 relative hidden xl:flex">
+          <aside 
+            className="bg-gradient-to-b from-[#112240] via-[#0d1b2a] to-[#0a192f] border-l border-purple-500/20 flex flex-col shrink-0 shadow-2xl z-10 relative hidden xl:flex"
+            style={{ width: `${chatWidth}px`, minWidth: '320px', maxWidth: '600px' }}
+          >
+            {/* Resize Handle */}
+            <div 
+              className="absolute left-0 top-0 bottom-0 w-1.5 cursor-col-resize hover:bg-purple-500/50 transition-colors group z-20"
+              onMouseDown={(e) => {
+                e.preventDefault();
+                const startX = e.clientX;
+                const startWidth = chatWidth;
+                
+                const onMouseMove = (moveEvent: MouseEvent) => {
+                  const delta = startX - moveEvent.clientX;
+                  const newWidth = Math.min(600, Math.max(320, startWidth + delta));
+                  setChatWidth(newWidth);
+                };
+                
+                const onMouseUp = () => {
+                  document.removeEventListener('mousemove', onMouseMove);
+                  document.removeEventListener('mouseup', onMouseUp);
+                };
+                
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+              }}
+            >
+              <div className="absolute left-0.5 top-1/2 -translate-y-1/2 w-0.5 h-12 bg-purple-500/30 rounded-full group-hover:bg-purple-400 transition-colors" />
+            </div>
             <div className="p-4 border-b border-white/10 flex items-center justify-between bg-gradient-to-r from-purple-900/30 via-pink-900/20 to-blue-900/30 backdrop-blur-sm">
               <div className="flex items-center gap-3">
                 <div className="relative">
@@ -560,7 +609,7 @@ export default function StudentCourseLessonsPage() {
                 </div>
                 <div>
                   <h3 className="font-bold text-white text-sm flex items-center gap-2">
-                    AI Study Buddy
+                    Versa
                     <span className="px-2 py-0.5 bg-gradient-to-r from-amber-400 to-orange-500 text-[9px] font-black text-white rounded-full uppercase tracking-wide shadow-lg">
                       Pro
                     </span>
@@ -614,9 +663,9 @@ export default function StudentCourseLessonsPage() {
               </span>
             </div>
             
-            {/* AI label */}
-            <div className="absolute -left-2 -bottom-1 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow-lg uppercase tracking-wide">
-              AI
+            {/* Versa label */}
+            <div className="absolute -left-2 -bottom-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow-lg uppercase tracking-wide">
+              Versa
             </div>
           </motion.button>
         )}

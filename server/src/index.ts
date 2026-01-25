@@ -220,6 +220,7 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false, // Disable to allow cross-origin iframes
   crossOriginResourcePolicy: { policy: "cross-origin" }, // Allow cross-origin resources
   crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
+  frameguard: false, // Disable X-Frame-Options to allow PDF viewing in iframes
   hsts: isProduction ? {
     maxAge: 31536000,
     includeSubDomains: true,
@@ -398,10 +399,18 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 import { WebSocketService } from './services/websocket.service.js';
 WebSocketService.initialize(server);
 
+// Initialize AI Lesson Digestion Service
+import { initLessonDigestion } from './services/lesson-digestion.service.js';
+
 server.listen(PORT, () => {
   logger.info(`✅ Eduverse backend server is running on http://localhost:${PORT}`);
   logger.info(`🔌 WebSocket server is running on ws://localhost:${PORT}/ws`);
   logger.info(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
   logger.info(`🔒 Security: Helmet enabled, CORS configured`);
   logger.info(`⏱️  Rate limiting: ${isProduction ? 'STRICT' : 'RELAXED'} mode`);
+
+  // Start AI lesson digestion in background (non-blocking)
+  initLessonDigestion().catch(err => {
+    logger.warn('AI Lesson Digestion initialization failed:', err.message);
+  });
 });

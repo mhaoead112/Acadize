@@ -89,13 +89,13 @@ router.post('/upload', isAuthenticated, upload.single('file'), async (req, res) 
         const course = await getCourseById(courseId);
         if (!course) {
             // Delete uploaded file if course doesn't exist
-            await fs.unlink(file.path).catch(() => {});
+            await fs.unlink(file.path).catch(() => { });
             return res.status(404).json({ message: 'Course not found.' });
         }
 
         if (course.teacherId !== user.id && user.role !== 'admin') {
             // Delete uploaded file if user doesn't own the course
-            await fs.unlink(file.path).catch(() => {});
+            await fs.unlink(file.path).catch(() => { });
             return res.status(403).json({ message: "You don't have permission to add lessons to this course." });
         }
 
@@ -119,22 +119,30 @@ router.post('/upload', isAuthenticated, upload.single('file'), async (req, res) 
 
         // Trigger AI digestion in background (non-blocking)
         // This indexes the lesson content for the AI Study Buddy
-        // Note: AI digestion works best with local files, so we check if file still exists
         try {
-            const { processLessonFile } = await import('../services/lesson-digestion.service.js');
+            const { processLessonFile, processCloudLesson } = await import('../services/lesson-digestion.service.js');
             const lessonId = `${courseId}-${newLesson.id}`;
-            
-            // If using cloud storage, the local file was deleted after upload
-            // For AI indexing with cloud files, we'd need to download first (future enhancement)
-            // For now, only process if file still exists locally (non-cloud mode)
-            const localPath = uploadResult.isCloudinary ? null : path.join(process.cwd(), uploadResult.url);
-            
-            if (localPath) {
-                // Process in background - don't wait for completion
+
+            if (uploadResult.isCloudinary) {
+                // For cloud files, use processCloudLesson which downloads and processes
+                processCloudLesson(uploadResult.url, lessonId, file.originalname)
+                    .then(result => {
+                        if (result.success) {
+                            console.log(`✅ AI indexed cloud lesson: ${lessonId} (${result.chunksProcessed} chunks)`);
+                        } else {
+                            console.warn(`⚠️ AI indexing skipped for ${lessonId}: ${result.message}`);
+                        }
+                    })
+                    .catch(err => {
+                        console.warn(`⚠️ AI indexing failed for ${lessonId}:`, err.message);
+                    });
+            } else {
+                // For local files, process directly
+                const localPath = path.join(process.cwd(), uploadResult.url);
                 processLessonFile(localPath, lessonId)
                     .then(result => {
                         if (result.success) {
-                            console.log(`✅ AI indexed lesson: ${lessonId} (${result.chunksProcessed} chunks)`);
+                            console.log(`✅ AI indexed local lesson: ${lessonId} (${result.chunksProcessed} chunks)`);
                         } else {
                             console.warn(`⚠️ AI indexing skipped for ${lessonId}: ${result.message}`);
                         }
@@ -156,7 +164,7 @@ router.post('/upload', isAuthenticated, upload.single('file'), async (req, res) 
         console.error('Error uploading lesson:', error);
         // Clean up uploaded file on error
         if (req.file) {
-            await fs.unlink(req.file.path).catch(() => {});
+            await fs.unlink(req.file.path).catch(() => { });
         }
         res.status(500).json({
             message: 'Failed to upload lesson',
@@ -371,15 +379,93 @@ router.get('/:id/download', async (req, res) => {
 
         // Check if file is stored in cloud (Cloudinary URL)
         if (lesson.filePath.startsWith('http://') || lesson.filePath.startsWith('https://')) {
-            // Redirect to cloud URL for direct access
+            // For Cloudinary files, proxy through server to handle authentication
+            if (lesson.filePath.includes('cloudinary.com')) {
+                try {
+                    const axios = (await import('axios')).default;
+                    const { v2: cloudinary } = await import('cloudinary');
+
+                    // Configure Cloudinary
+                    cloudinary.config({
+                        cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+                        api_key: process.env.CLOUDINARY_API_KEY,
+                        api_secret: process.env.CLOUDINARY_API_SECRET,
+                        secure: true,
+                    });
+
+                    // Extract public_id from Cloudinary URL
+                    // URL format: https://res.cloudinary.com/{cloud}/raw/upload/v{version}/{folder}/{filename}
+                    const urlParts = lesson.filePath.split('/upload/');
+                    if (urlParts.length < 2) {
+                        throw new Error('Invalid Cloudinary URL format');
+                    }
+
+                    // Get everything after /upload/ and remove version prefix if present
+                    let publicIdWithExt = urlParts[1].replace(/^v\d+\//, '');
+
+                    console.log(`📥 Extracting public_id from URL: ${lesson.filePath}`);
+                    console.log(`📦 Public ID: ${publicIdWithExt}`);
+
+                    // Generate signed URL using Cloudinary SDK
+                    const signedUrl = cloudinary.url(publicIdWithExt, {
+                        resource_type: 'raw',
+                        type: 'upload',
+                        sign_url: true,
+                        secure: true,
+                    });
+
+                    console.log('🔐 Generated signed URL:', signedUrl);
+                    console.log('🔗 Original URL:', lesson.filePath);
+
+                    // Download from signed URL and stream to client
+                    const response = await axios({
+                        method: 'GET',
+                        url: signedUrl,
+                        responseType: 'stream',
+                        timeout: 60000,
+                    });
+
+                    // Determine if inline view or download
+                    const isInlineView = req.query.view === 'inline';
+                    const disposition = isInlineView ? 'inline' : 'attachment';
+
+                    // Set headers - remove X-Frame-Options to allow iframe embedding
+                    res.removeHeader('X-Frame-Options');
+                    res.setHeader('Content-Type', lesson.fileType);
+                    res.setHeader('Content-Disposition', `${disposition}; filename="${lesson.fileName}"`);
+                    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+                    res.setHeader('Access-Control-Allow-Origin', '*');
+
+                    // Forward content length if available
+                    if (response.headers['content-length']) {
+                        res.setHeader('Content-Length', response.headers['content-length']);
+                    }
+
+                    console.log('✅ Streaming file to client:', lesson.fileName);
+
+                    // Stream the response
+                    response.data.pipe(res);
+                    return;
+                } catch (cloudinaryError: any) {
+                    console.error('❌ Error proxying Cloudinary file:', cloudinaryError.message);
+                    console.error('URL:', lesson.filePath);
+                    // Return error instead of redirecting
+                    return res.status(500).json({
+                        error: 'Failed to load file from cloud storage',
+                        message: cloudinaryError.message
+                    });
+                }
+            }
+
+            // For non-Cloudinary cloud URLs, redirect directly
             return res.redirect(lesson.filePath);
         }
 
         // For local files, check if file exists
-        const localPath = lesson.filePath.startsWith('/') 
+        const localPath = lesson.filePath.startsWith('/')
             ? path.join(process.cwd(), lesson.filePath)
             : lesson.filePath;
-            
+
         try {
             await fs.access(localPath);
         } catch {
@@ -389,11 +475,11 @@ router.get('/:id/download', async (req, res) => {
         // Determine if inline view or download
         const isInlineView = req.query.view === 'inline';
         const disposition = isInlineView ? 'inline' : 'attachment';
-        
+
         // Set headers
         res.setHeader('Content-Type', lesson.fileType);
         res.setHeader('Content-Disposition', `${disposition}; filename="${lesson.fileName}"`);
-        
+
         // Allow cross-origin for viewing in iframes
         res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
 

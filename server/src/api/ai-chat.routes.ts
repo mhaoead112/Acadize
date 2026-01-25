@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { Pool } from 'pg';
-import { GoogleGenerativeAI, TaskType } from '@google/generative-ai';
+import OpenAI from 'openai';
 import { isAuthenticated } from '../middleware/auth.middleware.js';
 
 const router = Router();
@@ -9,10 +9,7 @@ const router = Router();
 const isProduction = process.env.NODE_ENV === 'production';
 
 // PostgreSQL Pool for AI Database
-// In production (Render), uses environment variables set in Render dashboard
-// In development, uses DATABASE_URL or falls back to local defaults
 const getAiDbConfig = () => {
-  // If AI-specific DB vars are set, use them (both production and dev)
   if (process.env.AI_DB_HOST) {
     return {
       host: process.env.AI_DB_HOST,
@@ -23,16 +20,14 @@ const getAiDbConfig = () => {
       ssl: process.env.AI_DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
     };
   }
-  
-  // Fall back to main DATABASE_URL if AI_DB not configured
+
   if (process.env.DATABASE_URL) {
     return {
       connectionString: process.env.DATABASE_URL,
       ssl: { rejectUnauthorized: false },
     };
   }
-  
-  // Local development defaults
+
   return {
     host: 'localhost',
     port: 5432,
@@ -45,22 +40,27 @@ const getAiDbConfig = () => {
 
 const aiPool = new Pool(getAiDbConfig());
 
-const GEMINI_KEY = process.env.GEMINI_API_KEY;
-const EMBED_MODEL = process.env.EMBED_MODEL || 'text-embedding-004';
-const GEN_MODEL = 'gemini-2.5-flash'; // Using experimental 2.0 model
+// HackClub Proxy Configuration
+const AI_API_KEY = process.env.AI_API_KEY || process.env.GEMINI_API_KEY; // Fallback for backward compatibility
+const EMBED_MODEL = process.env.EMBED_MODEL || 'qwen/qwen3-embedding-8b'; // HackClub proxy embedding model
+const GEN_MODEL = 'google/gemini-2.5-flash-lite-preview-09-2025';
 const TOP_K_LESSONS = 3;
 const CHUNK_FETCH_LIMIT = 50;
 
-if (!GEMINI_KEY) {
-  console.warn('⚠️  GEMINI_API_KEY not found in environment variables');
+if (!AI_API_KEY) {
+  console.warn('⚠️  AI_API_KEY not found in environment variables');
   if (isProduction) {
-    console.warn('   Add GEMINI_API_KEY to Render dashboard -> Environment tab');
+    console.warn('   Add AI_API_KEY to Render dashboard -> Environment tab');
   } else {
-    console.warn('   Add GEMINI_API_KEY to .env or .env.ai file');
+    console.warn('   Add AI_API_KEY to .env or .env.ai file');
   }
 }
 
-const genAI = GEMINI_KEY ? new GoogleGenerativeAI(GEMINI_KEY) : null;
+// Initialize OpenAI client for HackClub Proxy
+const openai = new OpenAI({
+  apiKey: AI_API_KEY || 'dummy_key', // Client requires a key, even if invalid/missing for init
+  baseURL: 'https://ai.hackclub.com/proxy/v1',
+});
 
 // Retry helper for rate limiting
 async function retryWithBackoff<T>(
@@ -72,18 +72,17 @@ async function retryWithBackoff<T>(
     try {
       return await fn();
     } catch (error: any) {
-      const isRateLimit = error?.message?.includes('429') || error?.status === 429;
+      const isRateLimit = error?.status === 429;
       const isLastAttempt = i === maxRetries - 1;
-      
+
       if (!isRateLimit || isLastAttempt) {
         throw error;
       }
-      
-      // Extract retry delay from API response if available
-      const retryDelay = error?.errorDetails?.find((d: any) => d['@type']?.includes('RetryInfo'))?.retryDelay;
+
+      const retryDelay = error?.headers?.['retry-after'];
       const delaySeconds = retryDelay ? parseFloat(retryDelay) : null;
       const delay = delaySeconds ? delaySeconds * 1000 : baseDelay * Math.pow(2, i);
-      
+
       console.log(`⏳ Rate limited. Retrying in ${Math.round(delay)}ms... (attempt ${i + 1}/${maxRetries})`);
       await new Promise(resolve => setTimeout(resolve, delay));
     }
@@ -107,23 +106,73 @@ const PERSONAS: Record<string, { name: string; instruction: string }> = {
   }
 };
 
-// Embed query using Gemini
+// Decode base64 embedding to float array
+function decodeBase64Embedding(base64String: string): number[] {
+  // Remove "base64:" prefix if present
+  const cleanBase64 = base64String.startsWith('base64:')
+    ? base64String.slice(7)
+    : base64String;
+
+  const buffer = Buffer.from(cleanBase64, 'base64');
+  const floatArray: number[] = [];
+
+  // Each float32 is 4 bytes
+  for (let i = 0; i < buffer.length; i += 4) {
+    floatArray.push(buffer.readFloatLE(i));
+  }
+
+  return floatArray;
+}
+
+// Embed query using OpenAI Compatible Endpoint (HackClub Proxy)
 async function embedQuery(text: string): Promise<number[]> {
-  if (!genAI) throw new Error('Gemini API not configured');
-  
+  if (!AI_API_KEY) throw new Error('AI API Key not configured');
+
   return retryWithBackoff(async () => {
-    const model = genAI!.getGenerativeModel({ model: EMBED_MODEL });
-    // Use simple string format for embedding
-    const result = await model.embedContent(text);
-    
-    return result.embedding.values || [];
+    let response: any = await openai.embeddings.create({
+      model: EMBED_MODEL,
+      input: text,
+    });
+
+    // HackClub proxy sometimes returns response as a JSON string instead of parsed object
+    if (typeof response === 'string') {
+      console.log('Response is a string, parsing JSON...');
+      response = JSON.parse(response.trim());
+    }
+
+    console.log('Parsed response.data exists?', !!response.data);
+    console.log('Parsed response.data length:', response.data?.length);
+
+    // Safety check for response structure
+    if (!response.data || response.data.length === 0) {
+      console.error('Embedding response missing data:', JSON.stringify(response));
+      throw new Error('Embedding response did not contain valid data');
+    }
+
+    const embedding = response.data[0].embedding;
+    console.log('Embedding type:', typeof embedding);
+    console.log('Embedding preview:', typeof embedding === 'string' ? embedding.substring(0, 50) : 'array');
+
+    // Handle base64-encoded embeddings from HackClub proxy
+    if (typeof embedding === 'string') {
+      const decoded = decodeBase64Embedding(embedding);
+      console.log('Decoded embedding length:', decoded.length);
+      return decoded;
+    }
+
+    // If it's already an array, return as-is
+    if (Array.isArray(embedding)) {
+      return embedding;
+    }
+
+    throw new Error('Unexpected embedding format');
   });
 }
 
 // Retrieve top K lessons by similarity
 async function retrieveContext(queryEmb: number[]): Promise<any[]> {
   const vectorStr = `[${queryEmb.join(',')}]`;
-  
+
   const query = `
     SELECT lessonid, chunktxt, (vector <=> $1) as distance
     FROM lesson_vectors
@@ -132,7 +181,7 @@ async function retrieveContext(queryEmb: number[]): Promise<any[]> {
   `;
 
   const res = await aiPool.query(query, [vectorStr, CHUNK_FETCH_LIMIT]);
-  
+
   // Group by lesson
   const lessonsMap = new Map<string, any[]>();
   for (const r of res.rows) {
@@ -157,12 +206,12 @@ async function retrieveContext(queryEmb: number[]): Promise<any[]> {
     .slice(0, TOP_K_LESSONS);
 }
 
-// Generate answer with Gemini
+// Generate answer with HackClub Proxy (OpenAI Compatible)
 async function generateAnswer(lessons: any[], question: string, persona: string): Promise<string> {
-  if (!genAI) throw new Error('Gemini API not configured');
-  
+  if (!AI_API_KEY) throw new Error('AI API Key not configured');
+
   const personaConfig = PERSONAS[persona] || PERSONAS.alex;
-  
+
   const contextBlock = lessons.length > 0
     ? lessons.map(l => `SOURCE LESSON: ${l.lesson_id}\n${l.chunks.map((c: any) => c.text).join('\n\n')}`).join('\n\n')
     : 'No specific lesson context found.';
@@ -185,9 +234,11 @@ Answer as ${personaConfig.name}:
 `;
 
   return retryWithBackoff(async () => {
-    const model = genAI!.getGenerativeModel({ model: GEN_MODEL });
-    const result = await model.generateContent(prompt);
-    return result.response.text();
+    const response = await openai.chat.completions.create({
+      model: GEN_MODEL,
+      messages: [{ role: 'user', content: prompt }],
+    });
+    return response.choices[0].message.content || 'No response generated.';
   });
 }
 
@@ -200,8 +251,8 @@ router.post('/chat', isAuthenticated, async (req, res) => {
       return res.status(400).json({ error: 'Question is required' });
     }
 
-    if (!genAI) {
-      return res.status(503).json({ error: 'AI service not configured. Please add GEMINI_API_KEY to .env.ai' });
+    if (!AI_API_KEY) {
+      return res.status(503).json({ error: 'AI service not configured. Please add AI_API_KEY to .env' });
     }
 
     // Safety check
@@ -212,10 +263,10 @@ router.post('/chat', isAuthenticated, async (req, res) => {
 
     // Embed question
     const queryEmb = await embedQuery(question);
-    
+
     // Retrieve relevant lessons
     const lessons = await retrieveContext(queryEmb);
-    
+
     // Generate answer
     const answer = await generateAnswer(lessons, question, persona);
 
@@ -227,19 +278,18 @@ router.post('/chat', isAuthenticated, async (req, res) => {
 
   } catch (error: any) {
     console.error('AI Chat Error:', error);
-    
+
     // Handle rate limit errors with user-friendly message
     if (error?.status === 429) {
-      const retryAfter = error?.errorDetails?.find((d: any) => d['@type']?.includes('RetryInfo'))?.retryDelay;
-      const waitTime = retryAfter ? `Please wait ${retryAfter} before trying again.` : 'Please wait a minute before trying again.';
-      
-      return res.status(429).json({ 
+      const waitTime = 'Please wait a minute before trying again.';
+
+      return res.status(429).json({
         error: 'Rate limit exceeded. The free tier has limited requests per minute.',
         message: waitTime,
         suggestion: 'Try asking a simpler question or wait before retrying.'
       });
     }
-    
+
     res.status(500).json({ error: 'Failed to generate answer', details: error.message });
   }
 });
@@ -253,8 +303,8 @@ router.post('/general', async (req, res) => {
       return res.status(400).json({ error: 'Question is required' });
     }
 
-    if (!genAI) {
-      return res.status(503).json({ error: 'AI service not configured. Please add GEMINI_API_KEY to .env.ai' });
+    if (!AI_API_KEY) {
+      return res.status(503).json({ error: 'AI service not configured. Please add AI_API_KEY to .env' });
     }
 
     // Safety check
@@ -280,9 +330,11 @@ ${question}
 Your response:`;
 
     const answer = await retryWithBackoff(async () => {
-      const model = genAI!.getGenerativeModel({ model: GEN_MODEL });
-      const result = await model.generateContent(prompt);
-      return result.response.text();
+      const response = await openai.chat.completions.create({
+        model: GEN_MODEL,
+        messages: [{ role: 'user', content: prompt }],
+      });
+      return response.choices[0].message.content || 'No response generated.';
     });
 
     res.json({
@@ -292,19 +344,18 @@ Your response:`;
 
   } catch (error: any) {
     console.error('Versa Chat Error:', error);
-    
+
     // Handle rate limit errors
     if (error?.status === 429) {
-      const retryAfter = error?.errorDetails?.find((d: any) => d['@type']?.includes('RetryInfo'))?.retryDelay;
-      const waitTime = retryAfter ? `Please wait ${retryAfter} before trying again.` : 'Please wait a minute before trying again.';
-      
-      return res.status(429).json({ 
+      const waitTime = 'Please wait a minute before trying again.';
+
+      return res.status(429).json({
         error: 'Rate limit exceeded. The free tier has limited requests per minute.',
         message: waitTime,
         suggestion: 'Try asking a simpler question or wait before retrying.'
       });
     }
-    
+
     res.status(500).json({ error: 'Failed to generate answer', details: error.message });
   }
 });
@@ -324,17 +375,17 @@ router.get('/status', async (req, res) => {
   try {
     const { checkAiDatabaseConnection } = await import('../services/lesson-digestion.service.js');
     const dbStatus = await checkAiDatabaseConnection();
-    
+
     res.json({
-      geminiConfigured: !!GEMINI_KEY,
+      geminiConfigured: !!AI_API_KEY,
       database: dbStatus,
       embedModel: EMBED_MODEL,
       generationModel: GEN_MODEL,
-      ready: !!GEMINI_KEY && dbStatus.connected
+      ready: !!AI_API_KEY && dbStatus.connected
     });
   } catch (error: any) {
     res.json({
-      geminiConfigured: !!GEMINI_KEY,
+      geminiConfigured: !!AI_API_KEY,
       database: { connected: false, message: error.message },
       embedModel: EMBED_MODEL,
       generationModel: GEN_MODEL,
@@ -350,15 +401,15 @@ router.post('/digest-lesson', isAuthenticated, async (req, res) => {
     if (!user || (user.role !== 'teacher' && user.role !== 'admin')) {
       return res.status(403).json({ error: 'Teachers or Admins only' });
     }
-    
+
     const { lessonId, filePath } = req.body;
     if (!lessonId || !filePath) {
       return res.status(400).json({ error: 'lessonId and filePath are required' });
     }
-    
+
     const { processLessonFile } = await import('../services/lesson-digestion.service.js');
     const result = await processLessonFile(filePath, lessonId);
-    
+
     res.json(result);
   } catch (error: any) {
     console.error('Lesson digestion error:', error);
@@ -373,12 +424,12 @@ router.post('/digest-all', isAuthenticated, async (req, res) => {
     if (!user || user.role !== 'admin') {
       return res.status(403).json({ error: 'Admins only' });
     }
-    
+
     const { processAllLessons } = await import('../services/lesson-digestion.service.js');
     const lessonsFolder = process.env.LESSON_FOLDER || 'server/uploads/lessons';
-    
+
     const result = await processAllLessons(lessonsFolder);
-    
+
     res.json({
       message: `Processed ${result.processed}/${result.total} lessons`,
       ...result

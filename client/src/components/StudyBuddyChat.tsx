@@ -4,8 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { apiEndpoint } from "@/lib/config";
-import { Send, Bot, User, Sparkles, GraduationCap, Zap, Heart, RefreshCw } from "lucide-react";
+import { Send, Bot, User, Sparkles, GraduationCap, Zap, Heart, RefreshCw, Gamepad2, Flame } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import ReactMarkdown from 'react-markdown';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
 
 interface Props {
   lessonId?: string;
@@ -20,14 +24,14 @@ interface ChatMessage {
   persona?: string;
 }
 
-// Persona definitions with avatars and colors
+// Persona definitions with icons and colors
 const PERSONAS = {
   alex: {
     id: 'alex',
     name: 'Alex',
     subtitle: 'The Fun Learner',
-    emoji: '🎮',
-    icon: Zap,
+    icon: Gamepad2,
+    activeIcon: Zap,
     color: 'from-amber-400 to-orange-500',
     bgColor: 'bg-gradient-to-br from-amber-50 to-orange-50',
     textColor: 'text-amber-700',
@@ -38,8 +42,8 @@ const PERSONAS = {
     id: 'doctor',
     name: 'Dr. Focus',
     subtitle: 'The Academic',
-    emoji: '🎓',
     icon: GraduationCap,
+    activeIcon: GraduationCap,
     color: 'from-blue-500 to-indigo-600',
     bgColor: 'bg-gradient-to-br from-blue-50 to-indigo-50',
     textColor: 'text-blue-700',
@@ -50,8 +54,8 @@ const PERSONAS = {
     id: 'coach',
     name: 'Coach Inspire',
     subtitle: 'The Motivator',
-    emoji: '💪',
-    icon: Heart,
+    icon: Flame,
+    activeIcon: Heart,
     color: 'from-pink-500 to-rose-600',
     bgColor: 'bg-gradient-to-br from-pink-50 to-rose-50',
     textColor: 'text-pink-700',
@@ -77,9 +81,9 @@ export const StudyBuddyChat: React.FC<Props> = ({ lessonId, lessonTitle }) => {
     // Welcome message contextualized to lesson and persona
     const persona = PERSONAS[selectedPersona];
     const welcomeMessages: Record<PersonaKey, string> = {
-      alex: `Hey there! 🎮 I'm Alex, your fun study buddy! Let's make "${lessonTitle || "this lesson"}" super interesting! Got questions? Hit me up! 🚀`,
+      alex: `Hey there! I'm Alex, your fun Versa buddy! Let's make "${lessonTitle || "this lesson"}" super interesting! Got questions? Hit me up!`,
       doctor: `Good day. I'm Dr. Focus. I'll help you understand "${lessonTitle || "this lesson"}" with clear, structured explanations. What would you like to explore?`,
-      coach: `YOU'VE GOT THIS! 💪 I'm Coach Inspire, and together we'll conquer "${lessonTitle || "this lesson"}"! What's on your mind, champion?`
+      coach: `YOU'VE GOT THIS! I'm Coach Inspire, and together we'll conquer "${lessonTitle || "this lesson"}"! What's on your mind, champion?`
     };
     
     const welcome: ChatMessage = {
@@ -93,7 +97,17 @@ export const StudyBuddyChat: React.FC<Props> = ({ lessonId, lessonTitle }) => {
   }, [lessonId, lessonTitle, selectedPersona]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    // Scroll to bottom after a short delay to ensure content is rendered
+    const scrollTimeout = setTimeout(() => {
+      if (messagesEndRef.current) {
+        const scrollContainer = messagesEndRef.current.parentElement;
+        if (scrollContainer) {
+          scrollContainer.scrollTop = scrollContainer.scrollHeight;
+        }
+      }
+    }, 100);
+    
+    return () => clearTimeout(scrollTimeout);
   }, [messages]);
 
   const handleSubmit = async (e?: React.FormEvent) => {
@@ -158,21 +172,6 @@ export const StudyBuddyChat: React.FC<Props> = ({ lessonId, lessonTitle }) => {
     setSelectedPersona(persona);
   };
 
-  const PersonaAvatar = ({ persona, size = 'md' }: { persona: PersonaKey; size?: 'sm' | 'md' | 'lg' }) => {
-    const p = PERSONAS[persona];
-    const sizeClasses = {
-      sm: 'h-8 w-8 text-lg',
-      md: 'h-10 w-10 text-xl',
-      lg: 'h-14 w-14 text-2xl'
-    };
-    
-    return (
-      <div className={`${sizeClasses[size]} rounded-full bg-gradient-to-br ${p.color} flex items-center justify-center shadow-lg flex-shrink-0`}>
-        <span>{p.emoji}</span>
-      </div>
-    );
-  };
-
   return (
     <div className="flex flex-col h-full bg-gradient-to-br from-slate-50 via-blue-50/30 to-purple-50/30 dark:from-[#0a192f] dark:via-[#112240] dark:to-[#0a192f]">
       {/* Persona Selector - Enhanced */}
@@ -181,7 +180,7 @@ export const StudyBuddyChat: React.FC<Props> = ({ lessonId, lessonTitle }) => {
           <div className="flex items-center justify-center gap-2 mb-3">
             <Sparkles className="h-4 w-4 text-purple-600 dark:text-purple-400 animate-pulse" />
             <p className="text-xs font-semibold text-purple-900 dark:text-purple-300 text-center uppercase tracking-wide">
-              Choose Your Study Buddy
+              Choose Your Versa Persona
             </p>
             <Sparkles className="h-4 w-4 text-purple-600 dark:text-purple-400 animate-pulse" />
           </div>
@@ -207,11 +206,14 @@ export const StudyBuddyChat: React.FC<Props> = ({ lessonId, lessonTitle }) => {
                         ? 'bg-white/30 backdrop-blur-sm' 
                         : 'bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-800'
                     }`}>
-                      {isSelected ? (
-                        <span className="text-2xl">{p.emoji}</span>
-                      ) : (
-                        <Icon className={`h-6 w-6 ${isSelected ? 'text-white' : 'text-slate-600 dark:text-slate-400 group-hover:text-purple-600'}`} />
-                      )}
+                      {(() => {
+                        const ActiveIcon = p.activeIcon;
+                        return isSelected ? (
+                          <ActiveIcon className="h-6 w-6 text-white" />
+                        ) : (
+                          <Icon className={`h-6 w-6 ${isSelected ? 'text-white' : 'text-slate-600 dark:text-slate-400 group-hover:text-purple-600'}`} />
+                        );
+                      })()}
                     </div>
                     {isSelected && (
                       <div className="absolute -top-1 -right-1 h-5 w-5 bg-green-400 rounded-full border-2 border-white flex items-center justify-center">
@@ -244,11 +246,14 @@ export const StudyBuddyChat: React.FC<Props> = ({ lessonId, lessonTitle }) => {
             
             return (
               <div key={m.id} className={m.isUser ? "flex justify-end gap-3 animate-in slide-in-from-right duration-300" : "flex gap-3 animate-in slide-in-from-left duration-300"}>
-                {!m.isUser && (
-                  <div className={`h-10 w-10 rounded-2xl bg-gradient-to-br ${msgPersona.color} flex items-center justify-center shadow-lg flex-shrink-0 ring-2 ring-white dark:ring-slate-800`}>
-                    <span className="text-xl">{msgPersona.emoji}</span>
-                  </div>
-                )}
+                {!m.isUser && (() => {
+                  const PersonaIcon = msgPersona.activeIcon;
+                  return (
+                    <div className={`h-10 w-10 rounded-2xl bg-gradient-to-br ${msgPersona.color} flex items-center justify-center shadow-lg flex-shrink-0 ring-2 ring-white dark:ring-slate-800`}>
+                      <PersonaIcon className="h-5 w-5 text-white" />
+                    </div>
+                  );
+                })()}
                 {m.isUser ? (
                   <div className="bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-white p-4 rounded-2xl rounded-tr-md max-w-[80%] shadow-xl shadow-purple-500/20 backdrop-blur-sm border border-white/20">
                     <p className="text-sm whitespace-pre-wrap leading-relaxed">{m.message}</p>
@@ -262,7 +267,11 @@ export const StudyBuddyChat: React.FC<Props> = ({ lessonId, lessonTitle }) => {
                       <span className="text-[10px] text-slate-400 dark:text-slate-500">•</span>
                       <span className="text-[10px] text-slate-400 dark:text-slate-500 italic">{msgPersona.subtitle}</span>
                     </div>
-                    <p className="text-sm text-slate-800 dark:text-slate-200 whitespace-pre-wrap leading-relaxed">{m.message}</p>
+                    <div className="text-sm text-slate-800 dark:text-slate-200 leading-relaxed prose prose-sm dark:prose-invert max-w-none prose-p:my-1 prose-headings:my-2 prose-ul:my-1 prose-ol:my-1 prose-li:my-0">
+                      <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
+                        {m.message}
+                      </ReactMarkdown>
+                    </div>
                   </div>
                 )}
                 {m.isUser && (
@@ -274,11 +283,13 @@ export const StudyBuddyChat: React.FC<Props> = ({ lessonId, lessonTitle }) => {
             );
           })}
           
-          {isLoading && (
-            <div className="flex gap-3 animate-in fade-in duration-300">
-              <div className={`h-10 w-10 rounded-2xl bg-gradient-to-br ${currentPersona.color} flex items-center justify-center shadow-lg flex-shrink-0 ring-2 ring-white dark:ring-slate-800 animate-pulse`}>
-                <span className="text-xl">{currentPersona.emoji}</span>
-              </div>
+          {isLoading && (() => {
+            const LoadingIcon = currentPersona.activeIcon;
+            return (
+              <div className="flex gap-3 animate-in fade-in duration-300">
+                <div className={`h-10 w-10 rounded-2xl bg-gradient-to-br ${currentPersona.color} flex items-center justify-center shadow-lg flex-shrink-0 ring-2 ring-white dark:ring-slate-800 animate-pulse`}>
+                  <LoadingIcon className="h-5 w-5 text-white" />
+                </div>
               <div className="bg-white dark:bg-slate-800 border-2 border-slate-200/50 dark:border-slate-700/50 p-4 rounded-2xl rounded-tl-md shadow-lg">
                 <div className="flex items-center gap-3">
                   <RefreshCw className="h-4 w-4 animate-spin text-purple-500" />
@@ -291,7 +302,7 @@ export const StudyBuddyChat: React.FC<Props> = ({ lessonId, lessonTitle }) => {
                 </div>
               </div>
             </div>
-          )}
+          );})()}
           <div ref={messagesEndRef} />
         </div>
       </ScrollArea>
@@ -319,15 +330,20 @@ export const StudyBuddyChat: React.FC<Props> = ({ lessonId, lessonTitle }) => {
         <div className="flex items-center justify-center gap-2 mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
           <Sparkles className="h-3 w-3 text-purple-400 dark:text-purple-500" />
           <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wide">Chatting with</span>
-          <button
-            onClick={() => setShowPersonaSelector(true)}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r ${currentPersona.color} hover:shadow-lg transition-all hover:scale-105`}
-          >
-            <span className="text-sm">{currentPersona.emoji}</span>
-            <span className="text-xs font-bold text-white">
-              {currentPersona.name}
-            </span>
-          </button>
+          {(() => {
+            const CurrentIcon = currentPersona.activeIcon;
+            return (
+              <button
+                onClick={() => setShowPersonaSelector(true)}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r ${currentPersona.color} hover:shadow-lg transition-all hover:scale-105`}
+              >
+                <CurrentIcon className="h-4 w-4 text-white" />
+                <span className="text-xs font-bold text-white">
+                  {currentPersona.name}
+                </span>
+              </button>
+            );
+          })()}
           <Sparkles className="h-3 w-3 text-purple-400 dark:text-purple-500" />
         </div>
       </div>

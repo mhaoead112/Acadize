@@ -4,17 +4,26 @@
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
+import os from 'os';
 import { Pool } from 'pg';
 import mammoth from 'mammoth';
 import AdmZip from 'adm-zip';
 import { parseStringPromise } from 'xml2js';
+import OpenAI from 'openai';
 import axios from 'axios';
 
 // Configuration
-const EMBED_MODEL = process.env.EMBED_MODEL || 'text-embedding-004';
+const AI_API_KEY = process.env.AI_API_KEY || process.env.GEMINI_API_KEY;
+const EMBED_MODEL = process.env.EMBED_MODEL || 'qwen/qwen3-embedding-8b'; // HackClub proxy embedding model
 const CHUNK_SIZE = parseInt(process.env.CHUNK_SIZE || '1000');
 const CHUNK_OVERLAP = parseInt(process.env.CHUNK_OVERLAP || '200');
 const DELAY_BETWEEN_EMBEDS = parseFloat(process.env.DELAY_BETWEEN_EMBEDS || '0.2');
+
+// Initialize OpenAI client for HackClub Proxy
+const openai = new OpenAI({
+  apiKey: AI_API_KEY || 'dummy_key',
+  baseURL: 'https://ai.hackclub.com/proxy/v1',
+});
 
 // Get AI database configuration
 const getAiDbConfig = () => {
@@ -28,14 +37,14 @@ const getAiDbConfig = () => {
       ssl: process.env.AI_DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
     };
   }
-  
+
   if (process.env.DATABASE_URL) {
     return {
       connectionString: process.env.DATABASE_URL,
       ssl: { rejectUnauthorized: false },
     };
   }
-  
+
   return {
     host: 'localhost',
     port: 5432,
@@ -46,14 +55,109 @@ const getAiDbConfig = () => {
   };
 };
 
-// Lazy pool creation
-let pool: Pool | null = null;
-const getPool = () => {
-  if (!pool) {
-    pool = new Pool(getAiDbConfig());
+// Get main database configuration (for lessons table)
+const getMainDbConfig = () => {
+  if (process.env.DATABASE_URL) {
+    return {
+      connectionString: process.env.DATABASE_URL,
+      ssl: { rejectUnauthorized: false },
+    };
   }
-  return pool;
+  return getAiDbConfig();
 };
+
+// Lazy pool creation
+let aiPool: Pool | null = null;
+let mainPool: Pool | null = null;
+
+const getAiPool = () => {
+  if (!aiPool) {
+    aiPool = new Pool(getAiDbConfig());
+  }
+  return aiPool;
+};
+
+const getMainPool = () => {
+  if (!mainPool) {
+    mainPool = new Pool(getMainDbConfig());
+  }
+  return mainPool;
+};
+
+// Backward compatibility
+const getPool = getAiPool;
+
+// Helper: Download file from cloud URL to temp directory
+async function downloadCloudFile(url: string, fileName: string): Promise<string | null> {
+  try {
+    const tempDir = os.tmpdir();
+    const tempPath = path.join(tempDir, `lesson-${Date.now()}-${fileName}`);
+
+    let downloadUrl = url;
+
+    // If it's a Cloudinary URL and we have credentials, generate an authenticated URL
+    if (url.includes('cloudinary.com') && process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
+      try {
+        // Import Cloudinary SDK
+        const { v2: cloudinary } = await import('cloudinary');
+
+        // Configure Cloudinary
+        cloudinary.config({
+          cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+          api_key: process.env.CLOUDINARY_API_KEY,
+          api_secret: process.env.CLOUDINARY_API_SECRET,
+          secure: true,
+        });
+
+        // Extract public_id from URL
+        // URL format: https://res.cloudinary.com/cloud_name/resource_type/upload/version/public_id.ext
+        const urlMatch = url.match(/\/upload\/(?:v\\d+\/)?(.*)/);
+        if (urlMatch) {
+          // For raw resources, the public_id INCLUDES the extension
+          const publicId = urlMatch[1];
+
+          // Generate a signed URL with a short expiration (1 hour)
+          const signedUrl = cloudinary.url(publicId, {
+            resource_type: 'raw',
+            type: 'upload',
+            sign_url: true,
+            secure: true,
+          });
+
+          downloadUrl = signedUrl;
+          console.log(`  🔐 Using Cloudinary signed URL`);
+        }
+      } catch (cloudinaryError: any) {
+        console.log(`  ⚠️ Cloudinary SDK error, falling back to direct download:`, cloudinaryError.message);
+      }
+    }
+
+    const response = await axios({
+      method: 'GET',
+      url: downloadUrl,
+      responseType: 'arraybuffer',
+      timeout: 60000, // 60 second timeout for large files
+    });
+
+    fs.writeFileSync(tempPath, Buffer.from(response.data));
+    console.log(`  ⬇️ Downloaded ${fileName} to temp: ${tempPath}`);
+    return tempPath;
+  } catch (err: any) {
+    console.error(`  ❌ Failed to download ${url}:`, err.message);
+    return null;
+  }
+}
+
+// Helper: Clean up temp file
+function cleanupTempFile(filePath: string) {
+  try {
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+  } catch (err) {
+    // Ignore cleanup errors
+  }
+}
 
 // Helper: File hash for incremental updates
 function getFileHash(filePath: string): string {
@@ -63,13 +167,23 @@ function getFileHash(filePath: string): string {
   return hashSum.digest('hex');
 }
 
+// Helper: URL hash for cloud files
+function getUrlHash(url: string): string {
+  const hashSum = crypto.createHash('md5');
+  hashSum.update(url);
+  return hashSum.digest('hex');
+}
+
 // PDF text extraction
 async function extractPdfText(filePath: string): Promise<string> {
   try {
-    const pdfParse = require('pdf-parse') as (data: Buffer) => Promise<{ text: string }>;
+    // pdf-parse v2 uses PDFParse class with LoadParameters
+    const { PDFParse } = await import('pdf-parse');
     const data = fs.readFileSync(filePath);
-    const pdf = await pdfParse(data);
-    return pdf.text;
+    const pdfParse = new PDFParse({ data });
+
+    const result = await pdfParse.getText();
+    return result.text || '';
   } catch (err: any) {
     console.error(`PDF extraction failed for ${filePath}:`, err?.message || err);
     return '';
@@ -149,37 +263,58 @@ function chunkText(text: string): string[] {
   return chunks;
 }
 
-// Generate embedding using Gemini
-async function generateEmbedding(text: string): Promise<number[]> {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    throw new Error('GEMINI_API_KEY not configured');
+// Decode base64 embedding to float array
+function decodeBase64Embedding(base64String: string): number[] {
+  // Remove "base64:" prefix if present
+  const cleanBase64 = base64String.startsWith('base64:')
+    ? base64String.slice(7)
+    : base64String;
+
+  const buffer = Buffer.from(cleanBase64, 'base64');
+  const floatArray: number[] = [];
+
+  // Each float32 is 4 bytes
+  for (let i = 0; i < buffer.length; i += 4) {
+    floatArray.push(buffer.readFloatLE(i));
   }
-  
+
+  return floatArray;
+}
+
+// Generate embedding using OpenAI Compatible Endpoint (HackClub Proxy)
+async function generateEmbedding(text: string): Promise<number[]> {
+  if (!AI_API_KEY) {
+    throw new Error('AI_API_KEY not configured');
+  }
+
   if (!text.trim()) return [];
 
   try {
-    const response = await axios.post(
-      `https://generativelanguage.googleapis.com/v1beta/models/${EMBED_MODEL}:embedContent`,
-      {
-        model: `models/${EMBED_MODEL}`,
-        content: { parts: [{ text }] },
-      },
-      {
-        headers: {
-          'x-goog-api-key': apiKey,
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    let response: any = await openai.embeddings.create({
+      model: EMBED_MODEL,
+      input: text,
+    });
 
-    if (response.data?.embedding?.values) {
-      return response.data.embedding.values;
-    } else {
-      throw new Error('Unexpected Gemini API response');
+    // HackClub proxy sometimes returns response as a JSON string instead of parsed object
+    if (typeof response === 'string') {
+      response = JSON.parse(response.trim());
     }
+
+    const embedding = response.data[0].embedding;
+
+    // Handle base64-encoded embeddings from HackClub proxy
+    if (typeof embedding === 'string') {
+      return decodeBase64Embedding(embedding);
+    }
+
+    // If it's already an array, return as-is
+    if (Array.isArray(embedding)) {
+      return embedding;
+    }
+
+    throw new Error('Unexpected embedding format');
   } catch (err: any) {
-    throw new Error(`Embedding generation failed: ${err?.response?.status || err.message}`);
+    throw new Error(`Embedding generation failed: ${err.message}`);
   }
 }
 
@@ -189,26 +324,26 @@ async function delay(ms: number) {
 
 // Ensure AI tables exist
 async function ensureTablesExist() {
-  const dbPool = getPool();
-  
+  const dbPool = getAiPool();
+
   // Check if pgvector extension exists
   try {
     await dbPool.query('CREATE EXTENSION IF NOT EXISTS vector');
   } catch (err) {
     console.warn('pgvector extension may already exist or not be available');
   }
-  
+
   // Create lesson_vectors table if not exists
   await dbPool.query(`
     CREATE TABLE IF NOT EXISTS lesson_vectors (
       id SERIAL PRIMARY KEY,
       lessonid TEXT NOT NULL,
       chunktxt TEXT NOT NULL,
-      vector vector(768),
+      vector vector(4096),
       createdat TIMESTAMP DEFAULT NOW()
     )
   `);
-  
+
   // Create processed_files table if not exists
   await dbPool.query(`
     CREATE TABLE IF NOT EXISTS processed_files (
@@ -218,7 +353,7 @@ async function ensureTablesExist() {
       processed_at TIMESTAMP DEFAULT NOW()
     )
   `);
-  
+
   // Create index for vector similarity search
   try {
     await dbPool.query(`
@@ -231,24 +366,24 @@ async function ensureTablesExist() {
   }
 }
 
-// Process a single lesson file
+// Process a single lesson file (local path)
 export async function processLessonFile(filePath: string, lessonId: string): Promise<{
   success: boolean;
   message: string;
   chunksProcessed?: number;
 }> {
-  const dbPool = getPool();
-  
-  if (!process.env.GEMINI_API_KEY) {
+  const dbPool = getAiPool();
+
+  if (!AI_API_KEY) {
     return {
       success: false,
-      message: 'GEMINI_API_KEY not configured. Add it to Render environment variables.'
+      message: 'AI_API_KEY not configured. Add it to environment variables.'
     };
   }
-  
+
   try {
     await ensureTablesExist();
-    
+
     const currentHash = getFileHash(filePath);
 
     // Check if file already processed
@@ -275,7 +410,7 @@ export async function processLessonFile(filePath: string, lessonId: string): Pro
 
     let text = await extractText(filePath);
     text = cleanText(text);
-    
+
     if (!text) {
       return {
         success: false,
@@ -326,7 +461,204 @@ export async function processLessonFile(filePath: string, lessonId: string): Pro
   }
 }
 
-// Process all lessons in a folder
+// Process a single lesson from cloud URL
+export async function processCloudLesson(
+  cloudUrl: string,
+  lessonId: string,
+  fileName: string
+): Promise<{
+  success: boolean;
+  message: string;
+  chunksProcessed?: number;
+}> {
+  const dbPool = getAiPool();
+
+  if (!AI_API_KEY) {
+    return {
+      success: false,
+      message: 'AI_API_KEY not configured.'
+    };
+  }
+
+  try {
+    await ensureTablesExist();
+
+    // Use URL hash as file hash for cloud files
+    const currentHash = getUrlHash(cloudUrl);
+
+    // Check if already processed
+    const res = await dbPool.query(
+      'SELECT file_hash FROM processed_files WHERE filename = $1',
+      [lessonId]
+    );
+    const dbHash = res.rows[0]?.file_hash;
+
+    if (dbHash === currentHash) {
+      return {
+        success: true,
+        message: `Lesson "${lessonId}" already indexed (unchanged)`,
+        chunksProcessed: 0
+      };
+    }
+
+    console.log(`📥 Processing cloud lesson: ${lessonId}`);
+
+    // Download file to temp
+    const tempPath = await downloadCloudFile(cloudUrl, fileName);
+    if (!tempPath) {
+      return {
+        success: false,
+        message: `Failed to download lesson from cloud: ${fileName}`
+      };
+    }
+
+    try {
+      // Re-index if hash changed
+      if (dbHash && dbHash !== currentHash) {
+        console.log(`  [UPDATE] ${lessonId} changed. Re-indexing...`);
+        await dbPool.query('DELETE FROM lesson_vectors WHERE lessonid = $1', [lessonId]);
+      }
+
+      // Extract text
+      let text = await extractText(tempPath);
+      text = cleanText(text);
+
+      if (!text) {
+        return {
+          success: false,
+          message: `No text could be extracted from ${fileName}`
+        };
+      }
+
+      const chunks = chunkText(text);
+      console.log(`  📄 Extracted ${chunks.length} chunks from ${lessonId}`);
+
+      let successfulChunks = 0;
+      for (const chunk of chunks) {
+        try {
+          const vector = await generateEmbedding(chunk);
+          if (!vector.length) continue;
+
+          await dbPool.query(
+            `INSERT INTO lesson_vectors (lessonid, chunktxt, vector, createdat) VALUES ($1, $2, $3, NOW())`,
+            [lessonId, chunk, JSON.stringify(vector)]
+          );
+
+          successfulChunks++;
+          await delay(DELAY_BETWEEN_EMBEDS * 1000);
+        } catch (chunkErr: any) {
+          console.error(`  ⚠️ Embedding error:`, chunkErr.message);
+        }
+      }
+
+      // Mark as processed
+      await dbPool.query(
+        `INSERT INTO processed_files (filename, file_hash, processed_at)
+         VALUES ($1, $2, NOW())
+         ON CONFLICT (filename) DO UPDATE SET file_hash = $2, processed_at = NOW()`,
+        [lessonId, currentHash]
+      );
+
+      console.log(`  ✅ Indexed ${successfulChunks} chunks for ${lessonId}`);
+
+      return {
+        success: true,
+        message: `Successfully indexed "${lessonId}"`,
+        chunksProcessed: successfulChunks
+      };
+    } finally {
+      // Clean up temp file
+      cleanupTempFile(tempPath);
+    }
+  } catch (err: any) {
+    console.error(`Failed to process cloud lesson ${lessonId}:`, err);
+    return {
+      success: false,
+      message: `Failed to process lesson: ${err.message}`
+    };
+  }
+}
+
+// Process all lessons from database (Cloudinary URLs)
+export async function processAllCloudLessons(): Promise<{
+  total: number;
+  processed: number;
+  skipped: number;
+  failed: number;
+  results: Array<{ lessonId: string; success: boolean; message: string }>;
+}> {
+  const results: Array<{ lessonId: string; success: boolean; message: string }> = [];
+  let processed = 0;
+  let skipped = 0;
+  let failed = 0;
+
+  if (!AI_API_KEY) {
+    console.warn('⚠️ AI_API_KEY not configured. Skipping lesson digestion.');
+    return { total: 0, processed: 0, skipped: 0, failed: 0, results: [] };
+  }
+
+  console.log('🔍 Fetching lessons from database...');
+
+  try {
+    const mainDb = getMainPool();
+
+    // Fetch all lessons from main database (use snake_case column names)
+    const lessonsResult = await mainDb.query(`
+      SELECT id, course_id, title, file_name, file_path, file_type
+      FROM lessons
+      WHERE file_path IS NOT NULL
+    `);
+
+    const lessons = lessonsResult.rows;
+    console.log(`📚 Found ${lessons.length} lessons in database`);
+
+    for (const lesson of lessons) {
+      const lessonId = `${lesson.course_id}-${lesson.id}`;
+
+      // Check if it's a cloud URL
+      if (!lesson.file_path.startsWith('http://') && !lesson.file_path.startsWith('https://')) {
+        console.log(`  ⏭️ Skipping local file: ${lessonId}`);
+        skipped++;
+        continue;
+      }
+
+      const result = await processCloudLesson(
+        lesson.file_path,
+        lessonId,
+        lesson.file_name || `lesson-${lesson.id}`
+      );
+
+      results.push({ lessonId, ...result });
+
+      if (result.chunksProcessed === 0 && result.success) {
+        skipped++; // Already processed
+      } else if (result.success) {
+        processed++;
+      } else {
+        failed++;
+      }
+    }
+
+    console.log(`\n📊 Digestion Summary:`);
+    console.log(`   Total: ${lessons.length}`);
+    console.log(`   Processed: ${processed}`);
+    console.log(`   Skipped (already indexed): ${skipped}`);
+    console.log(`   Failed: ${failed}`);
+
+    return {
+      total: lessons.length,
+      processed,
+      skipped,
+      failed,
+      results
+    };
+  } catch (err: any) {
+    console.error('❌ Error fetching lessons from database:', err.message);
+    return { total: 0, processed: 0, skipped: 0, failed: 0, results: [] };
+  }
+}
+
+// Process all lessons in a local folder (legacy support)
 export async function processAllLessons(lessonsFolder: string): Promise<{
   total: number;
   processed: number;
@@ -336,30 +668,30 @@ export async function processAllLessons(lessonsFolder: string): Promise<{
   const results: Array<{ lessonId: string; success: boolean; message: string }> = [];
   let processed = 0;
   let failed = 0;
-  
+
   if (!fs.existsSync(lessonsFolder)) {
     return { total: 0, processed: 0, failed: 0, results: [] };
   }
-  
+
   const files = fs.readdirSync(lessonsFolder);
-  const supportedFiles = files.filter(f => 
+  const supportedFiles = files.filter(f =>
     ['.pdf', '.docx', '.txt', '.pptx'].includes(path.extname(f).toLowerCase())
   );
-  
+
   for (const file of supportedFiles) {
     const fullPath = path.join(lessonsFolder, file);
     const lessonId = path.parse(file).name;
-    
+
     const result = await processLessonFile(fullPath, lessonId);
     results.push({ lessonId, ...result });
-    
+
     if (result.success) {
       processed++;
     } else {
       failed++;
     }
   }
-  
+
   return {
     total: supportedFiles.length,
     processed,
@@ -376,21 +708,21 @@ export async function checkAiDatabaseConnection(): Promise<{
   message: string;
 }> {
   try {
-    const dbPool = getPool();
-    
+    const dbPool = getAiPool();
+
     // Test connection
     await dbPool.query('SELECT 1');
-    
+
     // Check if lesson_vectors table exists and has data
     try {
       const result = await dbPool.query('SELECT COUNT(*) as count FROM lesson_vectors');
       const count = parseInt(result.rows[0].count);
-      
+
       return {
         connected: true,
         hasVectors: count > 0,
         vectorCount: count,
-        message: count > 0 
+        message: count > 0
           ? `Connected. ${count} lesson chunks indexed.`
           : 'Connected but no lessons indexed yet.'
       };
@@ -411,3 +743,30 @@ export async function checkAiDatabaseConnection(): Promise<{
     };
   }
 }
+
+// Initialize lesson digestion on server startup
+export async function initLessonDigestion(): Promise<void> {
+  console.log('\n🚀 Initializing AI Lesson Digestion Service...');
+
+  // Check AI database connection
+  const dbStatus = await checkAiDatabaseConnection();
+  console.log(`📊 AI Database: ${dbStatus.message}`);
+
+  if (!dbStatus.connected) {
+    console.warn('⚠️ AI Database not connected. Lesson digestion disabled.');
+    return;
+  }
+
+  // Run digestion in background
+  console.log('🔄 Starting background lesson digestion...');
+  processAllCloudLessons()
+    .then(result => {
+      if (result.processed > 0 || result.failed > 0) {
+        console.log(`✅ Background digestion complete: ${result.processed} processed, ${result.failed} failed`);
+      }
+    })
+    .catch(err => {
+      console.error('❌ Background digestion error:', err.message);
+    });
+}
+

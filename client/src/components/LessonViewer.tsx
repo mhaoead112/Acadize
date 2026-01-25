@@ -177,10 +177,8 @@ export const LessonViewer: React.FC<Props> = ({ fileUrl, fileType, fileName, vid
 
   // PDF preview with multiple fallback strategies
   if (type.includes("pdf") || fileUrl?.endsWith(".pdf")) {
-    // Build PDF URL with view parameter to prevent download
-    const pdfViewUrl = fileUrl?.includes('?') 
-      ? `${fileUrl}&view=inline#toolbar=1&navpanes=0` 
-      : `${fileUrl}?view=inline#toolbar=1&navpanes=0`;
+    // PDF URL already has view=inline parameter from the API
+    const pdfViewUrl = `${fileUrl}#toolbar=1&navpanes=0`;
     
     // Google Docs viewer as fallback (works for public URLs)
     const googleDocsUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl || '')}&embedded=true`;

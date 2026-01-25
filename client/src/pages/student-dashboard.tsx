@@ -509,7 +509,7 @@ export default function StudentDashboard() {
                                       custom={index}
                                       whileHover="hover"
                                       whileTap="tap"
-                                      onClick={() => setLocation(`/student/course/${enrollment.courseId}`)}
+                                      onClick={() => setLocation(`/student/courses/${enrollment.courseId}`)}
                                       style={{
                                         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
                                       }}
