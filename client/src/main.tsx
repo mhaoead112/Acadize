@@ -1,4 +1,5 @@
 import { createRoot } from "react-dom/client";
+import "./lib/config"; // Initialize tenant config & global fetch interceptor early
 import App from "./App";
 import "./index.css";
 

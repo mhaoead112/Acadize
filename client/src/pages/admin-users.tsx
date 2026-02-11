@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import AdminLayout from "@/components/AdminLayout";
-import { apiEndpoint } from "@/lib/config";
+import { apiEndpoint, getSubdomain } from "@/lib/config";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -92,7 +92,8 @@ export default function AdminUsers() {
       const response = await fetch(apiEndpoint('/api/admin/users'), {
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'X-Tenant-Subdomain': getSubdomain(),
         },
         credentials: 'include'
       });
@@ -146,7 +147,8 @@ export default function AdminUsers() {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'X-Tenant-Subdomain': getSubdomain(),
         },
         credentials: 'include',
         body: JSON.stringify({
@@ -285,7 +287,8 @@ export default function AdminUsers() {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'X-Tenant-Subdomain': getSubdomain(),
         },
         credentials: 'include'
       });
@@ -314,7 +317,8 @@ export default function AdminUsers() {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'X-Tenant-Subdomain': getSubdomain(),
         },
         credentials: 'include',
         body: JSON.stringify({ status: newStatus })

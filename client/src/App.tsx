@@ -55,6 +55,7 @@ import AdminDashboard from "@/pages/admin-dashboard";
 import AdminAnalytics from "@/pages/admin-analytics";
 import AdminReports from "@/pages/admin-reports";
 import AdminSettings from "@/pages/admin-settings";
+import AdminOrganizations from "@/pages/admin-organizations";
 import LessonManagement from "@/pages/lesson-management";
 import CreateCoursePage from "@/pages/create-course";
 import TeacherCourseManage from "@/pages/teacher-course-manage";
@@ -769,6 +770,13 @@ function Router() {
           <Route path="/privacy" component={Privacy} />
           <Route path="/terms" component={Terms} />
           
+          {/* Admin Organizations - Admin only */}
+          <Route path="/admin/organizations">
+            <MultiRoleRoute roles={['admin']}>
+              <AdminOrganizations />
+            </MultiRoleRoute>
+          </Route>
+
           {/* Fallback */}
           <Route component={NotFound} />
         </Switch>

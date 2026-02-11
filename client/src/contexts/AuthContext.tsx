@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import type { User } from '@shared/schema';
-import { apiEndpoint } from '@/lib/config';
+import { apiEndpoint, getSubdomain } from '@/lib/config';
 import { refreshTokenIfNeeded, isTokenExpired, clearAuthData } from '@/lib/api-client';
 
 interface AuthState {
@@ -45,6 +45,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const storedUser = localStorage.getItem('user') || localStorage.getItem('eduverse_user');
       
       if (storedToken && storedUser) {
+        // Validate subdomain matches stored session
+        const storedSubdomain = localStorage.getItem('eduverse_subdomain');
+        const currentSubdomain = getSubdomain();
+        
+        if (storedSubdomain && storedSubdomain !== currentSubdomain) {
+          console.log('Subdomain mismatch (session from ' + storedSubdomain + '), clearing auth');
+          clearAuthData();
+          localStorage.removeItem('eduverse_subdomain');
+          setAuthState({ user: null, token: null, isAuthenticated: false });
+          setIsLoading(false);
+          return;
+        }
+
         // If token is expired, try to refresh it immediately
         if (isTokenExpired()) {
           console.log('Initial token expired, attempting refresh...');
@@ -52,6 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (!refreshed) {
             console.log('Initial refresh failed, clearing auth');
             clearAuthData();
+            localStorage.removeItem('eduverse_subdomain');
             setAuthState({ user: null, token: null, isAuthenticated: false });
             setIsLoading(false);
             return;
@@ -76,6 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             });
           } catch (error) {
             clearAuthData();
+            localStorage.removeItem('eduverse_subdomain');
             setAuthState({ user: null, token: null, isAuthenticated: false });
           }
         }
@@ -147,6 +162,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'X-Tenant-Subdomain': getSubdomain(),
         },
         body: JSON.stringify(loginData),
       });
@@ -161,6 +177,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Store auth data
       localStorage.setItem('eduverse_token', token);
       localStorage.setItem('eduverse_user', JSON.stringify(user));
+      localStorage.setItem('eduverse_subdomain', getSubdomain());
       
       setAuthState({
         user,
@@ -183,6 +200,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('eduverse_token');
     localStorage.removeItem('user');
     localStorage.removeItem('eduverse_user');
+    localStorage.removeItem('eduverse_subdomain');
     setAuthState({
       user: null,
       token: null,
@@ -199,14 +217,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const getAuthHeaders = (): HeadersInit => {
+    const subdomain = getSubdomain();
     if (authState.token) {
       return {
         'Authorization': `Bearer ${authState.token}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'X-Tenant-Subdomain': subdomain,
       };
     }
     return {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      'X-Tenant-Subdomain': subdomain,
     };
   };
 
