@@ -1,6 +1,6 @@
 import { db } from '../db/index.js';
 import { users } from '../db/schema.js';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 
@@ -18,6 +18,7 @@ export interface RegisterUserDto {
     password: string;
     name: string;
     username?: string;
+    organizationId: string; // Required: organization the user belongs to
     // Role is optional, defaults to 'student' if not provided
     role?: 'student' | 'teacher' | 'admin';
 }
@@ -26,6 +27,7 @@ export interface RegisterUserDto {
 export interface LoginUserDto {
     email: string;
     password: string;
+    organizationId: string; // Required: tenant context from subdomain
 }
 
 // Defines the shape of the data we send back on successful login
@@ -35,6 +37,7 @@ export interface AuthResponse {
     expiresIn: number;
     user: {
         id: string;
+        organizationId: string;
         fullName: string;
         username: string;
         email: string;
@@ -54,13 +57,15 @@ export interface AuthResponse {
  * @returns The newly created user's public information.
  */
 export const registerUser = async (userData: RegisterUserDto) => {
-    const { email, password, name, username, role = 'student' } = userData;
+    const { email, password, name, username, organizationId, role = 'student' } = userData;
 
     // Generate username from email if not provided
     const finalUsername = username || email.split('@')[0] + '_' + Date.now().toString(36);
 
-    // 1. Check if a user with that email already exists
-    const existingUser = await db.select().from(users).where(eq(users.email, email.toLowerCase()));
+    // 1. Check if a user with that email already exists IN THIS ORGANIZATION
+    const existingUser = await db.select().from(users).where(
+        and(eq(users.email, email.toLowerCase()), eq(users.organizationId, organizationId))
+    );
     if (existingUser.length > 0) {
         // Use a generic error to prevent email enumeration
         throw new Error("A user with this email already exists.");
@@ -77,6 +82,7 @@ export const registerUser = async (userData: RegisterUserDto) => {
 
     // 3. Insert the new user into the database
     const newUser = await db.insert(users).values({
+        organizationId,
         email: email.toLowerCase(),
         password: hashedPassword,
         fullName: name, // Use 'name' as fullName
@@ -118,10 +124,12 @@ export const registerUser = async (userData: RegisterUserDto) => {
  * @returns An object containing the JWT tokens and public user information.
  */
 export const loginUser = async (credentials: LoginUserDto): Promise<AuthResponse> => {
-    const { email, password } = credentials;
+    const { email, password, organizationId } = credentials;
 
-    // 1. Find the user by their email
-    const potentialUser = await db.select().from(users).where(eq(users.email, email.toLowerCase()));
+    // 1. Find the user by their email WITHIN THIS ORGANIZATION
+    const potentialUser = await db.select().from(users).where(
+        and(eq(users.email, email.toLowerCase()), eq(users.organizationId, organizationId))
+    );
     if (potentialUser.length === 0) {
         // Use a generic error to prevent timing attacks and email enumeration
         throw new Error("Invalid credentials.");
@@ -138,6 +146,7 @@ export const loginUser = async (credentials: LoginUserDto): Promise<AuthResponse
     const { TokenService } = await import('./token.service.js');
     const tokenPair = await TokenService.generateTokenPair({
         id: user.id,
+        organizationId: user.organizationId,
         email: user.email,
         role: user.role,
         fullName: user.fullName,
@@ -152,6 +161,7 @@ export const loginUser = async (credentials: LoginUserDto): Promise<AuthResponse
         expiresIn: tokenPair.expiresIn,
         user: {
             id: user.id,
+            organizationId: user.organizationId,
             fullName: user.fullName,
             username: user.username,
             email: user.email,

@@ -8,6 +8,7 @@ const JWT_SECRET = process.env.JWT_SECRET;
 
 interface AuthenticatedUser {
   id: string;
+  organizationId: string; // Multi-tenant organization ID
   role: "student" | "teacher" | "admin" | "parent";
   email?: string;
   fullName?: string;
@@ -40,6 +41,15 @@ export const isAuthenticated = (
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as AuthenticatedUser;
     req.user = decoded;
+
+    // STRICT TENANT CHECK
+    // If request has a tenant context, user MUST belong to it
+    if (req.tenant && req.user.organizationId !== req.tenant.organizationId) {
+      return res.status(403).json({
+        message: "Forbidden: Access denied to this organization."
+      });
+    }
+
     next();
   } catch (error: any) {
     if (error.name === 'TokenExpiredError') {

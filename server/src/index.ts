@@ -92,6 +92,7 @@ import recordingUploadRoutes from './api/recording-upload.routes.js';
 import adminUsersRoutes from './api/admin-users.routes.js';
 import passwordResetRoutes from './api/password-reset.routes.js';
 import emailTestRoutes from './api/email-test.routes.js';
+import { tenantMiddleware, validateUserTenant } from './middleware/tenant.middleware.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -174,6 +175,8 @@ const corsConfig = cors({
       if (allowed === origin) return true;
       // Allow all Vercel preview deployments
       if (origin.includes('eduverse-initial') && origin.includes('.vercel.app')) return true;
+      // Allow all lvh.me subdomains for local multi-tenant testing
+      if (origin.endsWith('lvh.me:5173') || origin.endsWith('.lvh.me:5174')) return true;
       return false;
     });
 
@@ -188,7 +191,7 @@ const corsConfig = cors({
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-Tenant-Subdomain'],
   exposedHeaders: ['Content-Range', 'X-Content-Range'],
   maxAge: 600, // Cache preflight for 10 minutes
   optionsSuccessStatus: 204 // Some legacy browsers choke on 204
@@ -324,6 +327,21 @@ const uploadLimiter = rateLimit({
 
 logger.info('🚀 Starting Eduverse API server...');
 
+// --- Multi-tenant middleware ---
+// Resolve organization from subdomain/custom domain
+// For development, use X-Tenant-Subdomain header or defaults to 'default'
+app.use('/api', tenantMiddleware);
+app.use('/api', validateUserTenant);
+
+// --- Scoped Query Middleware ---
+// Sets RLS tenant context for database queries
+// NOTE: Disabled for now - RLS not set up in cloud database
+// import { scopedQueryMiddleware } from './middleware/scoped-query.middleware.js';
+// app.use('/api', scopedQueryMiddleware);
+
+logger.info('🏢 Multi-tenant middleware enabled');
+// logger.info('🔒 Row-Level Security context middleware enabled');
+
 // --- API Route Definitions ---
 app.use('/api/auth', authRoutes);
 app.use('/api/ai', aiLimiter, aiRoutes);
@@ -351,6 +369,8 @@ app.use('/api/email-test', apiLimiter, emailTestRoutes);
 app.use('/api/parent', apiLimiter, parentRoutes);
 app.use('/api/schedule', apiLimiter, scheduleRoutes);
 app.use('/api/admin/settings', apiLimiter, adminSettingsRoutes);
+import adminOrganizationsRoutes from './api/admin-organizations.routes.js';
+app.use('/api/admin/organizations', apiLimiter, adminOrganizationsRoutes);
 app.use('/api/push', apiLimiter, pushRoutes);
 app.use('/api/upload', uploadLimiter, uploadRoutes);
 app.use('/api/contacts', apiLimiter, contactsRoutes);

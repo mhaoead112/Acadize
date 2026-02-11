@@ -9,6 +9,9 @@ export const conversationTypeEnum = pgEnum('conversation_type', ['group', 'direc
 export const eventTypeEnum = pgEnum('event_type', ['class', 'meeting', 'holiday', 'exam', 'announcement']);
 export const attendanceStatusEnum = pgEnum('attendance_status', ['present', 'absent', 'tardy', 'excused']);
 
+// Organization Plan Enum
+export const organizationPlanEnum = pgEnum('organization_plan', ['free', 'starter', 'professional', 'enterprise']);
+
 // Exam & Anti-Cheat Enums
 export const examStatusEnum = pgEnum('exam_status', ['draft', 'scheduled', 'active', 'completed', 'archived']);
 export const questionTypeEnum = pgEnum('question_type', ['multiple_choice', 'true_false', 'short_answer', 'essay', 'code', 'matching', 'fill_blank']);
@@ -26,11 +29,73 @@ export const mistakeTypeEnum = pgEnum('mistake_type', ['wrong_answer', 'partial_
 export const remediationStatusEnum = pgEnum('remediation_status', ['not_started', 'in_progress', 'completed', 'skipped']);
 export const retakeStatusEnum = pgEnum('retake_status', ['pending', 'available', 'in_progress', 'completed', 'expired', 'cancelled']);
 
+// =====================================================
+// ORGANIZATIONS (Multi-Tenant Core)
+// =====================================================
+export const organizations = pgTable("organizations", {
+  id: text("id").primaryKey().$defaultFn(() => createId()),
+  name: varchar("name", { length: 255 }).notNull(),
+  subdomain: varchar("subdomain", { length: 63 }).notNull().unique(),
+  customDomain: varchar("custom_domain", { length: 255 }).unique(),
+
+  // Branding
+  logoUrl: text("logo_url"),
+  faviconUrl: text("favicon_url"),
+  primaryColor: varchar("primary_color", { length: 7 }).default("#6366f1"),
+  secondaryColor: varchar("secondary_color", { length: 7 }).default("#8b5cf6"),
+
+  // Plan & Billing
+  plan: organizationPlanEnum("plan").default("free").notNull(),
+  maxUsers: integer("max_users").default(50),
+  maxStorageGb: integer("max_storage_gb").default(5),
+
+  // Feature Configuration
+  config: jsonb("config").default({}), // { features: {}, limits: {}, settings: {} }
+
+  // Contact
+  contactEmail: varchar("contact_email", { length: 255 }),
+  contactPhone: varchar("contact_phone", { length: 50 }),
+  address: text("address"),
+
+  // Status
+  isActive: boolean("is_active").default(true).notNull(),
+  suspendedAt: timestamp("suspended_at"),
+  suspensionReason: text("suspension_reason"),
+
+  // Metadata
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
+}, (table) => ({
+  subdomainIdx: uniqueIndex("org_subdomain_idx").on(table.subdomain),
+  customDomainIdx: index("org_custom_domain_idx").on(table.customDomain),
+  planIdx: index("org_plan_idx").on(table.plan),
+  activeIdx: index("org_active_idx").on(table.isActive),
+}));
+
+// Organization Invites (for inviting users to an organization)
+export const organizationInvites = pgTable("organization_invites", {
+  id: text("id").primaryKey().$defaultFn(() => createId()),
+  organizationId: text("organization_id").notNull().references(() => organizations.id, { onDelete: 'cascade' }),
+  email: varchar("email", { length: 255 }).notNull(),
+  role: userRoleEnum("role").default("student").notNull(),
+  invitedBy: text("invited_by").notNull(), // user id who sent invite
+  token: text("token").notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  acceptedAt: timestamp("accepted_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  orgIdx: index("org_invite_org_idx").on(table.organizationId),
+  emailIdx: index("org_invite_email_idx").on(table.email),
+  tokenIdx: uniqueIndex("org_invite_token_idx").on(table.token),
+}));
+
+
 export const users = pgTable("users", {
   id: text("id").primaryKey().$defaultFn(() => createId()),
-  username: varchar("username", { length: 255 }).notNull().unique(),
+  organizationId: text("organization_id").notNull().references(() => organizations.id, { onDelete: 'cascade' }),
+  username: varchar("username", { length: 255 }).notNull(),
   fullName: varchar("full_name", { length: 255 }).notNull(),
-  email: varchar("email", { length: 255 }).notNull().unique(),
+  email: varchar("email", { length: 255 }).notNull(),
   password: text("password_hash").notNull(),
   role: userRoleEnum("role").default("student").notNull(),
   isActive: boolean("is_active").default(true).notNull(),
@@ -47,7 +112,11 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
   isTemporaryPassword: boolean("is_temporary_password").default(false).notNull(),
-});
+}, (table) => ({
+  orgIdx: index("users_org_idx").on(table.organizationId),
+  orgEmailIdx: uniqueIndex("users_org_email_idx").on(table.organizationId, table.email),
+  orgUsernameIdx: uniqueIndex("users_org_username_idx").on(table.organizationId, table.username),
+}));
 
 // Refresh Tokens for JWT authentication
 export const refreshTokens = pgTable("refresh_tokens", {
@@ -65,6 +134,7 @@ export const refreshTokens = pgTable("refresh_tokens", {
 
 export const courses = pgTable("courses", {
   id: text("id").primaryKey().$defaultFn(() => createId()),
+  organizationId: text("organization_id").notNull().references(() => organizations.id, { onDelete: 'cascade' }),
   title: text("title").notNull(),
   description: text("description"),
   teacherId: text("teacher_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
@@ -72,7 +142,10 @@ export const courses = pgTable("courses", {
   imageUrl: text("image_url"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
-});
+}, (table) => ({
+  orgIdx: index("courses_org_idx").on(table.organizationId),
+  teacherIdx: index("courses_teacher_idx").on(table.teacherId),
+}));
 
 export const enrollments = pgTable("enrollments", {
   id: text("id").$defaultFn(() => createId()).primaryKey(),
@@ -460,6 +533,7 @@ export const staffAchievements = pgTable("staff_achievements", {
 // --- EXAMS ---
 export const exams = pgTable("exams", {
   id: text("id").primaryKey().$defaultFn(() => createId()),
+  organizationId: text("organization_id").notNull().references(() => organizations.id, { onDelete: 'cascade' }),
   courseId: text("course_id").notNull().references(() => courses.id, { onDelete: 'cascade' }),
   createdBy: text("created_by").notNull().references(() => users.id, { onDelete: 'cascade' }),
 

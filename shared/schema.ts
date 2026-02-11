@@ -1,6 +1,6 @@
 // shared/schema.ts
 
-import { pgTable, text, varchar, timestamp, pgEnum, boolean } from 'drizzle-orm/pg-core';
+import { pgTable, text, varchar, timestamp, pgEnum, boolean, integer, jsonb } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm'; // <-- CRITICAL: Import 'sql' from the main package
 import { createId } from '@paralleldrive/cuid2';
 import { createInsertSchema } from 'drizzle-zod';
@@ -13,6 +13,40 @@ export const eventTypeEnum = pgEnum('event_type', ['assignment', 'exam', 'class'
 export const examStatusEnum = pgEnum('exam_status', ['draft', 'scheduled', 'active', 'completed', 'archived']);
 export const questionTypeEnum = pgEnum('question_type', ['multiple_choice', 'true_false', 'short_answer', 'essay', 'code']);
 export const attemptStatusEnum = pgEnum('attempt_status', ['in_progress', 'submitted', 'graded', 'flagged', 'under_review', 'invalidated']);
+export const organizationPlanEnum = pgEnum('organization_plan', ['free', 'pro', 'enterprise']);
+
+// --- MULTI-TENANT: ORGANIZATIONS TABLE ---
+export const organizations = pgTable('organizations', {
+  id: text('id').$defaultFn(() => `org_${createId()}`).primaryKey(),
+  name: varchar('name', { length: 255 }).notNull(),
+  subdomain: varchar('subdomain', { length: 63 }).notNull().unique(),
+  customDomain: varchar('custom_domain', { length: 255 }).unique(),
+  logoUrl: text('logo_url'),
+  primaryColor: varchar('primary_color', { length: 7 }).default('#6366f1'),
+  secondaryColor: varchar('secondary_color', { length: 7 }).default('#8b5cf6'),
+  plan: organizationPlanEnum('plan').default('free').notNull(),
+  isActive: boolean('is_active').default(true).notNull(),
+  contactEmail: varchar('contact_email', { length: 255 }),
+  contactPhone: varchar('contact_phone', { length: 50 }),
+  config: jsonb('config').default({}),
+  maxUsers: integer('max_users'),
+  maxCourses: integer('max_courses'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().$onUpdate(() => new Date()),
+});
+
+// --- MULTI-TENANT: ORGANIZATION INVITES TABLE ---
+export const organizationInvites = pgTable('organization_invites', {
+  id: text('id').$defaultFn(() => `inv_${createId()}`).primaryKey(),
+  organizationId: text('organization_id').notNull().references(() => organizations.id, { onDelete: 'cascade' }),
+  email: varchar('email', { length: 255 }).notNull(),
+  role: userRoleEnum('role').default('student').notNull(),
+  token: text('token').notNull().unique(),
+  expiresAt: timestamp('expires_at').notNull(),
+  acceptedAt: timestamp('accepted_at'),
+  invitedBy: text('invited_by').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
 
 // --- CORE TABLES (Auth and Users) ---
 export const users = pgTable('users', {
@@ -22,6 +56,7 @@ export const users = pgTable('users', {
   email: varchar('email', { length: 255 }).notNull().unique(),
   password: text('password_hash').notNull(),
   role: userRoleEnum('role').default('student').notNull(),
+  organizationId: text('organization_id').references(() => organizations.id, { onDelete: 'set null' }),
   profilePicture: text('profile_picture'),
   phone: text('phone'),
   bio: text('bio'),
@@ -329,6 +364,35 @@ export const insertUserSchema = createInsertSchema(users, {
 
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
+
+// Organization schemas
+export const insertOrganizationSchema = z.object({
+  name: z.string().min(1, "Organization name is required").max(255),
+  subdomain: z.string().min(2, "Subdomain must be at least 2 characters").max(63)
+    .regex(/^[a-z0-9-]+$/, "Subdomain can only contain lowercase letters, numbers, and hyphens"),
+  customDomain: z.string().optional().nullable(),
+  logoUrl: z.string().optional().nullable(),
+  primaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Invalid color format").optional(),
+  secondaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Invalid color format").optional(),
+  plan: z.enum(['free', 'pro', 'enterprise']).optional(),
+  contactEmail: z.string().email().optional().nullable(),
+  contactPhone: z.string().optional().nullable(),
+  config: z.any().optional(),
+  maxUsers: z.number().optional().nullable(),
+  maxCourses: z.number().optional().nullable(),
+});
+
+export const insertOrganizationInviteSchema = z.object({
+  organizationId: z.string().min(1, "Organization ID is required"),
+  email: z.string().email("Valid email is required"),
+  role: z.enum(['student', 'teacher', 'admin', 'parent']).optional(),
+});
+
+export type Organization = typeof organizations.$inferSelect;
+export type InsertOrganization = z.infer<typeof insertOrganizationSchema>;
+export type OrganizationInvite = typeof organizationInvites.$inferSelect;
+export type InsertOrganizationInvite = z.infer<typeof insertOrganizationInviteSchema>;
+export type OrganizationPlan = 'free' | 'pro' | 'enterprise';
 
 // Course schemas
 export const insertCourseSchema = z.object({
