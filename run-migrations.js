@@ -17,39 +17,53 @@ async function runMigrations() {
     
     console.log('Running migrations...\n');
     
-    // Migration 3: Fix users schema
-    console.log('Running 0003_fix_users_schema.sql...');
-    const migration3 = fs.readFileSync(
-      path.join(__dirname, 'migrations', '0003_fix_users_schema.sql'),
+    // Migration: Multi-tenant organizations
+    console.log('Running 0002_add_organizations_multi_tenant.sql...');
+    const migrationMultiTenant = fs.readFileSync(
+      path.join(__dirname, 'server', 'migrations', '0002_add_organizations_multi_tenant.sql'),
       'utf8'
     );
-    await client.query(migration3);
-    console.log('✓ Completed 0003_fix_users_schema.sql\n');
+    await client.query(migrationMultiTenant);
+    console.log('✓ Completed 0002_add_organizations_multi_tenant.sql\\n');
     
-    // Migration 6: Add profile picture and grade
-    console.log('Running 0006_add_profile_picture.sql...');
-    const migration6 = fs.readFileSync(
-      path.join(__dirname, 'migrations', '0006_add_profile_picture.sql'),
+    // Migration: Row-Level Security
+    console.log('Running 0003_add_row_level_security.sql...');
+    const migrationRLS = fs.readFileSync(
+      path.join(__dirname, 'server', 'migrations', '0003_add_row_level_security.sql'),
       'utf8'
     );
-    await client.query(migration6);
-    console.log('✓ Completed 0006_add_profile_picture.sql\n');
+    await client.query(migrationRLS);
+    console.log('✓ Completed 0003_add_row_level_security.sql\\n');
     
     await client.query('COMMIT');
     console.log('All migrations completed successfully!');
     
-    // Verify the columns
-    const result = await client.query(`
-      SELECT column_name 
-      FROM information_schema.columns 
-      WHERE table_name = 'users' 
-      AND column_name IN ('username', 'full_name', 'profile_picture', 'grade')
-      ORDER BY column_name;
+    // Verify the tables
+    const tablesResult = await client.query(`
+      SELECT table_name 
+      FROM information_schema.tables 
+      WHERE table_schema = 'public' 
+      AND table_name IN ('organizations', 'organization_invites')
+      ORDER BY table_name;
     `);
     
-    console.log('\nVerified columns in users table:');
-    result.rows.forEach(row => {
-      console.log(`  ✓ ${row.column_name}`);
+    console.log('\nVerified multi-tenant tables:');
+    tablesResult.rows.forEach(row => {
+      console.log(`  ✓ ${row.table_name}`);
+    });
+    
+    // Verify the organization_id columns
+    const columnsResult = await client.query(`
+      SELECT table_name, column_name 
+      FROM information_schema.columns 
+      WHERE column_name = 'organization_id' 
+      AND table_name IN ('users', 'courses', 'exams')
+      ORDER BY table_name;
+    `);
+    
+    console.log('\nVerified organization_id columns:');
+    columnsResult.rows.forEach(row => {
+      console.log(`  ✓ ${row.table_name}.${row.column_name}`);
     });
     
   } catch (error) {
