@@ -10,6 +10,7 @@ export interface CreateUserInput {
   fullName: string;
   role: 'student' | 'teacher' | 'admin' | 'parent';
   password: string;
+  organizationId?: string;
 }
 
 export interface UpdateUserInput {
@@ -49,43 +50,57 @@ export interface UserGrowthData {
 /**
  * Get system overview statistics
  */
-export async function getSystemStats(): Promise<SystemStats> {
+export async function getSystemStats(organizationId?: string): Promise<SystemStats> {
   const now = new Date();
   const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
   const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
-  // Total users
-  const [totalUsersResult] = await db
-    .select({ count: count() })
-    .from(users);
+  const orgFilter = organizationId ? eq(users.organizationId, organizationId) : undefined;
+  const courseOrgFilter = organizationId ? eq(courses.organizationId, organizationId) : undefined;
 
-  // Active users (logged in within last 7 days - for now just get active accounts)
-  const [activeUsersResult] = await db
-    .select({ count: count() })
-    .from(users)
-    .where(eq(users.isActive, true));
+  // Total users
+  const [totalUsersResult] = orgFilter
+    ? await db.select({ count: count() }).from(users).where(orgFilter)
+    : await db.select({ count: count() }).from(users);
+
+  // Active users
+  const [activeUsersResult] = orgFilter
+    ? await db.select({ count: count() }).from(users).where(and(eq(users.isActive, true), orgFilter)!)
+    : await db.select({ count: count() }).from(users).where(eq(users.isActive, true));
 
   // Total courses
-  const [totalCoursesResult] = await db
-    .select({ count: count() })
-    .from(courses);
+  const [totalCoursesResult] = courseOrgFilter
+    ? await db.select({ count: count() }).from(courses).where(courseOrgFilter)
+    : await db.select({ count: count() }).from(courses);
 
-  // Total enrollments
-  const [totalEnrollmentsResult] = await db
+  // Total enrollments - filtered by org via courses
+  let enrollStatsQuery = db
     .select({ count: count() })
     .from(enrollments);
+  if (organizationId) {
+    enrollStatsQuery = enrollStatsQuery
+      .innerJoin(courses, eq(enrollments.courseId, courses.id)) as any;
+  }
+  const [totalEnrollmentsResult] = organizationId
+    ? await (enrollStatsQuery as any).where(eq(courses.organizationId, organizationId))
+    : await enrollStatsQuery;
 
   // Recent signups (last 7 days)
-  const [recentSignupsResult] = await db
-    .select({ count: count() })
-    .from(users)
-    .where(sql`${users.createdAt} >= ${oneWeekAgo}`);
+  const [recentSignupsResult] = orgFilter
+    ? await db.select({ count: count() }).from(users).where(and(sql`${users.createdAt} >= ${oneWeekAgo}`, orgFilter)!)
+    : await db.select({ count: count() }).from(users).where(sql`${users.createdAt} >= ${oneWeekAgo}`);
 
-  // Pending reports
-  const [pendingReportsResult] = await db
+  // Pending reports - filtered by org via reported user
+  let pendingReportsQuery = db
     .select({ count: count() })
-    .from(reportedUsers)
-    .where(eq(reportedUsers.status, 'pending'));
+    .from(reportedUsers);
+  if (organizationId) {
+    pendingReportsQuery = pendingReportsQuery
+      .innerJoin(users, eq(reportedUsers.reportedUserId, users.id)) as any;
+  }
+  const [pendingReportsResult] = organizationId
+    ? await (pendingReportsQuery as any).where(and(eq(reportedUsers.status, 'pending'), eq(users.organizationId, organizationId))!)
+    : await pendingReportsQuery.where(eq(reportedUsers.status, 'pending'));
 
   return {
     totalUsers: totalUsersResult.count,
@@ -100,18 +115,15 @@ export async function getSystemStats(): Promise<SystemStats> {
 /**
  * Get user statistics by role
  */
-export async function getUserStats(): Promise<UserStats> {
+export async function getUserStats(organizationId?: string): Promise<UserStats> {
   const now = new Date();
   const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const orgFilter = organizationId ? eq(users.organizationId, organizationId) : undefined;
 
   // Count by role
-  const usersByRole = await db
-    .select({ 
-      role: users.role, 
-      count: count() 
-    })
-    .from(users)
-    .groupBy(users.role);
+  const usersByRole = orgFilter
+    ? await db.select({ role: users.role, count: count() }).from(users).where(orgFilter).groupBy(users.role)
+    : await db.select({ role: users.role, count: count() }).from(users).groupBy(users.role);
 
   const stats = {
     students: 0,
@@ -130,19 +142,16 @@ export async function getUserStats(): Promise<UserStats> {
   });
 
   // New users this week
-  const [newUsersResult] = await db
-    .select({ count: count() })
-    .from(users)
-    .where(sql`${users.createdAt} >= ${oneWeekAgo}`);
-  
+  const [newUsersResult] = orgFilter
+    ? await db.select({ count: count() }).from(users).where(and(sql`${users.createdAt} >= ${oneWeekAgo}`, orgFilter)!)
+    : await db.select({ count: count() }).from(users).where(sql`${users.createdAt} >= ${oneWeekAgo}`);
+
   stats.newUsersThisWeek = newUsersResult.count;
 
-  // Active today (users with isActive = true, in production track last login)
-  stats.activeToday = await db
-    .select({ count: count() })
-    .from(users)
-    .where(eq(users.isActive, true))
-    .then(result => result[0].count);
+  // Active today
+  stats.activeToday = orgFilter
+    ? await db.select({ count: count() }).from(users).where(and(eq(users.isActive, true), orgFilter)!).then(r => r[0].count)
+    : await db.select({ count: count() }).from(users).where(eq(users.isActive, true)).then(r => r[0].count);
 
   return stats;
 }
@@ -156,16 +165,22 @@ export async function getAllUsers(filters?: {
   search?: string;
   limit?: number;
   offset?: number;
+  organizationId?: string;
 }) {
   let query = db.select().from(users);
 
   // Apply filters
   const conditions = [];
-  
+
+  // Always filter by organization if provided
+  if (filters?.organizationId) {
+    conditions.push(eq(users.organizationId, filters.organizationId));
+  }
+
   if (filters?.role && filters.role !== 'all') {
     conditions.push(eq(users.role, filters.role as any));
   }
-  
+
   if (filters?.status) {
     if (filters.status === 'active') {
       conditions.push(eq(users.isActive, true));
@@ -173,7 +188,7 @@ export async function getAllUsers(filters?: {
       conditions.push(eq(users.isActive, false));
     }
   }
-  
+
   if (filters?.search) {
     const searchTerm = `%${filters.search}%`;
     conditions.push(
@@ -198,7 +213,7 @@ export async function getAllUsers(filters?: {
   }
 
   const result = await query.orderBy(desc(users.createdAt));
-  
+
   // Remove password from response
   return result.map(user => {
     const { password, ...userWithoutPassword } = user;
@@ -228,14 +243,21 @@ export async function getUserById(userId: string) {
  * Create a new user
  */
 export async function createUser(input: CreateUserInput) {
-  // Check if username or email already exists
+  if (!input.organizationId) {
+    throw new Error('Organization ID is required to create a user');
+  }
+
+  // Check if username or email already exists within the same organization
   const existingUser = await db
     .select()
     .from(users)
     .where(
-      or(
-        eq(users.username, input.username),
-        eq(users.email, input.email)
+      and(
+        eq(users.organizationId, input.organizationId),
+        or(
+          eq(users.username, input.username),
+          eq(users.email, input.email)
+        )!
       )!
     )
     .limit(1);
@@ -252,6 +274,7 @@ export async function createUser(input: CreateUserInput) {
     .insert(users)
     .values({
       id: createId(),
+      organizationId: input.organizationId,
       username: input.username,
       email: input.email,
       fullName: input.fullName,
@@ -323,7 +346,7 @@ export async function deleteUser(userId: string) {
 export async function toggleUserStatus(userId: string, status: boolean) {
   const [updatedUser] = await db
     .update(users)
-    .set({ 
+    .set({
       isActive: status,
       updatedAt: new Date()
     })
@@ -341,8 +364,14 @@ export async function getAllCourses(filters?: {
   published?: boolean;
   teacherId?: string;
   search?: string;
+  organizationId?: string;
 }) {
   const conditions = [];
+
+  // Always filter by organization if provided
+  if (filters?.organizationId) {
+    conditions.push(eq(courses.organizationId, filters.organizationId));
+  }
 
   if (filters?.published !== undefined) {
     conditions.push(eq(courses.isPublished, filters.published));
@@ -425,32 +454,35 @@ export async function removeEnrollment(enrollmentId: string) {
 /**
  * Get platform analytics
  */
-export async function getPlatformAnalytics() {
+export async function getPlatformAnalytics(organizationId?: string) {
   const now = new Date();
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+  const orgFilter = organizationId ? eq(users.organizationId, organizationId) : undefined;
+  const courseOrgFilter = organizationId ? eq(courses.organizationId, organizationId) : undefined;
 
   // User growth over last 10 months
   const userGrowth: UserGrowthData[] = [];
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  
+
   for (let i = 9; i >= 0; i--) {
     const date = new Date();
     date.setMonth(date.getMonth() - i);
     const monthStart = new Date(date.getFullYear(), date.getMonth(), 1);
     const monthEnd = new Date(date.getFullYear(), date.getMonth() + 1, 0);
 
+    const dateConditions = [
+      sql`${users.createdAt} <= ${monthEnd}`,
+      sql`${users.createdAt} >= ${new Date(2024, 0, 1)}`
+    ];
+    if (orgFilter) dateConditions.push(orgFilter as any);
+
     const usersByRole = await db
-      .select({ 
+      .select({
         role: users.role,
         count: count()
       })
       .from(users)
-      .where(
-        and(
-          sql`${users.createdAt} <= ${monthEnd}`,
-          sql`${users.createdAt} >= ${new Date(2024, 0, 1)}` // Start of tracking
-        )!
-      )
+      .where(and(...dateConditions)!)
       .groupBy(users.role);
 
     const monthData = {
@@ -471,31 +503,66 @@ export async function getPlatformAnalytics() {
     userGrowth.push(monthData);
   }
 
-  // Recent activity (assignments, submissions, announcements)
-  const [recentAssignments] = await db
+  // Recent activity (assignments, submissions, announcements) - filtered by org via courses
+  let recentAssignmentsQuery = db
     .select({ count: count() })
-    .from(assignments)
-    .where(sql`${assignments.createdAt} >= ${thirtyDaysAgo}`);
+    .from(assignments);
+  if (organizationId) {
+    recentAssignmentsQuery = recentAssignmentsQuery
+      .innerJoin(courses, eq(assignments.courseId, courses.id)) as any;
+  }
+  const [recentAssignments] = await (recentAssignmentsQuery as any)
+    .where(
+      organizationId
+        ? and(sql`${assignments.createdAt} >= ${thirtyDaysAgo}`, eq(courses.organizationId, organizationId))!
+        : sql`${assignments.createdAt} >= ${thirtyDaysAgo}`
+    );
 
-  const [recentSubmissions] = await db
+  let recentSubmissionsQuery = db
     .select({ count: count() })
-    .from(submissions)
-    .where(sql`${submissions.submittedAt} >= ${thirtyDaysAgo}`);
+    .from(submissions);
+  if (organizationId) {
+    recentSubmissionsQuery = recentSubmissionsQuery
+      .innerJoin(assignments, eq(submissions.assignmentId, assignments.id))
+      .innerJoin(courses, eq(assignments.courseId, courses.id)) as any;
+  }
+  const [recentSubmissions] = await (recentSubmissionsQuery as any)
+    .where(
+      organizationId
+        ? and(sql`${submissions.submittedAt} >= ${thirtyDaysAgo}`, eq(courses.organizationId, organizationId))!
+        : sql`${submissions.submittedAt} >= ${thirtyDaysAgo}`
+    );
 
-  const [recentAnnouncements] = await db
+  let recentAnnouncementsQuery = db
     .select({ count: count() })
-    .from(announcements)
-    .where(sql`${announcements.createdAt} >= ${thirtyDaysAgo}`);
+    .from(announcements);
+  if (organizationId) {
+    recentAnnouncementsQuery = recentAnnouncementsQuery
+      .innerJoin(courses, eq(announcements.courseId, courses.id)) as any;
+  }
+  const [recentAnnouncements] = await (recentAnnouncementsQuery as any)
+    .where(
+      organizationId
+        ? and(sql`${announcements.createdAt} >= ${thirtyDaysAgo}`, eq(courses.organizationId, organizationId))!
+        : sql`${announcements.createdAt} >= ${thirtyDaysAgo}`
+    );
 
   // Course statistics
-  const [publishedCourses] = await db
-    .select({ count: count() })
-    .from(courses)
-    .where(eq(courses.isPublished, true));
+  const [publishedCourses] = courseOrgFilter
+    ? await db.select({ count: count() }).from(courses).where(and(eq(courses.isPublished, true), courseOrgFilter)!)
+    : await db.select({ count: count() }).from(courses).where(eq(courses.isPublished, true));
 
-  const [totalEnrollments] = await db
+  // Enrollments - filtered by org via courses
+  let enrollmentsQuery = db
     .select({ count: count() })
     .from(enrollments);
+  if (organizationId) {
+    enrollmentsQuery = enrollmentsQuery
+      .innerJoin(courses, eq(enrollments.courseId, courses.id)) as any;
+  }
+  const [totalEnrollments] = organizationId
+    ? await (enrollmentsQuery as any).where(eq(courses.organizationId, organizationId))
+    : await enrollmentsQuery;
 
   return {
     userGrowth,
@@ -517,10 +584,22 @@ export async function getPlatformAnalytics() {
 export async function getModerationReports(filters?: {
   status?: 'pending' | 'reviewed' | 'resolved';
   limit?: number;
+  organizationId?: string;
 }) {
   const { alias } = await import('drizzle-orm/pg-core');
   const reporter = alias(users, 'reporter');
   const reportedUser = alias(users, 'reportedUser');
+
+  const conditions: any[] = [];
+
+  if (filters?.status) {
+    conditions.push(eq(reportedUsers.status, filters.status));
+  }
+
+  // Filter by organization - only show reports where the reported user belongs to this org
+  if (filters?.organizationId) {
+    conditions.push(eq(reportedUser.organizationId, filters.organizationId));
+  }
 
   let query = db
     .select({
@@ -532,8 +611,8 @@ export async function getModerationReports(filters?: {
     .leftJoin(reporter, eq(reportedUsers.reporterId, reporter.id))
     .leftJoin(reportedUser, eq(reportedUsers.reportedUserId, reportedUser.id));
 
-  if (filters?.status) {
-    query = query.where(eq(reportedUsers.status, filters.status)) as any;
+  if (conditions.length > 0) {
+    query = query.where(and(...conditions)!) as any;
   }
 
   if (filters?.limit) {
@@ -678,7 +757,12 @@ export async function unlinkStudentFromParent(studentId: string) {
 /**
  * Get all students with their parent information
  */
-export async function getStudentsWithParents() {
+export async function getStudentsWithParents(organizationId?: string) {
+  const conditions: any[] = [eq(users.role, 'student')];
+  if (organizationId) {
+    conditions.push(eq(users.organizationId, organizationId));
+  }
+
   const result = await db
     .select({
       id: users.id,
@@ -698,7 +782,7 @@ export async function getStudentsWithParents() {
       sql`${users} as parent_user`,
       sql`parent_user.id = ${parentChildren.parentId}`
     )
-    .where(eq(users.role, 'student'))
+    .where(and(...conditions)!)
     .orderBy(asc(users.fullName));
 
   return result.map(row => ({

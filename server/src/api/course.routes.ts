@@ -2,7 +2,7 @@
 
 import express from 'express';
 // We need to add the .js extension for NodeNext module resolution
-import { isAuthenticated } from '../middleware/auth.middleware.js'; 
+import { isAuthenticated } from '../middleware/auth.middleware.js';
 import { createCourse, getCoursesByTeacher, getPublishedCourses, getCourseById, updateCoursePublishStatus, deleteCourse } from '../services/course.service.js';
 import { getLessonById, updateLesson, deleteLesson } from '../services/lesson.service.js';
 import { db } from '../db/index.js';
@@ -18,7 +18,8 @@ const router = express.Router();
  */
 router.get('/', async (req, res) => {
     try {
-        const courses = await getPublishedCourses();
+        const orgId = (req as any).tenant?.organizationId;
+        const courses = await getPublishedCourses(orgId);
         res.status(200).json(courses);
     } catch (error) {
         console.error("Error fetching published courses:", error);
@@ -55,8 +56,14 @@ router.get('/:id', isAuthenticated, async (req, res) => {
     try {
         const courseId = req.params.id;
         const course = await getCourseById(courseId);
-        
+
         if (!course) {
+            return res.status(404).json({ message: 'Course not found.' });
+        }
+
+        // Verify course belongs to current tenant
+        const orgId = (req as any).tenant?.organizationId;
+        if (orgId && course.organizationId !== orgId) {
             return res.status(404).json({ message: 'Course not found.' });
         }
 
@@ -177,7 +184,7 @@ router.put('/:id', isAuthenticated, async (req, res) => {
 
         // Update the course
         const [updatedCourse] = await db.update(courses)
-            .set({ 
+            .set({
                 title: title || existingCourse.title,
                 description: description !== undefined ? description : existingCourse.description,
                 updatedAt: new Date()
@@ -416,9 +423,9 @@ router.patch('/:courseId/lessons/:lessonId/publish', isAuthenticated, async (req
 
         // Note: isPublished field doesn't exist in current schema
         // Return success for now (lessons are always published once uploaded)
-        res.status(200).json({ 
+        res.status(200).json({
             message: 'Lesson is published',
-            lesson 
+            lesson
         });
     } catch (error) {
         console.error('Error publishing lesson:', error);

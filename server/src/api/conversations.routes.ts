@@ -107,24 +107,24 @@ router.get('/direct', isAuthenticated, async (req, res) => {
 
         const unreadMessages = readIds.length > 0
           ? await db
-              .select({ count: sql<number>`COUNT(*)` })
-              .from(messages)
-              .where(
-                and(
-                  eq(messages.conversationId, conv.id),
-                  not(eq(messages.senderId, userId)),
-                  notInArray(messages.id, readIds)
-                )
+            .select({ count: sql<number>`COUNT(*)` })
+            .from(messages)
+            .where(
+              and(
+                eq(messages.conversationId, conv.id),
+                not(eq(messages.senderId, userId)),
+                notInArray(messages.id, readIds)
               )
+            )
           : await db
-              .select({ count: sql<number>`COUNT(*)` })
-              .from(messages)
-              .where(
-                and(
-                  eq(messages.conversationId, conv.id),
-                  not(eq(messages.senderId, userId))
-                )
-              );
+            .select({ count: sql<number>`COUNT(*)` })
+            .from(messages)
+            .where(
+              and(
+                eq(messages.conversationId, conv.id),
+                not(eq(messages.senderId, userId))
+              )
+            );
 
         return {
           id: conv.id,
@@ -458,6 +458,7 @@ router.get('/search', isAuthenticated, async (req, res) => {
       .where(
         and(
           not(eq(users.id, userId)),
+          eq(users.organizationId, req.user!.organizationId),
           or(
             sql`${users.username} ILIKE ${searchQuery}`,
             sql`${users.fullName} ILIKE ${searchQuery}`
@@ -478,6 +479,17 @@ router.post('/direct/:targetUserId', isAuthenticated, async (req, res) => {
   try {
     const userId = req.user!.id;
     const { targetUserId } = req.params;
+
+    // Verify target user belongs to same organization
+    const [targetUser] = await db
+      .select({ organizationId: users.organizationId })
+      .from(users)
+      .where(eq(users.id, targetUserId))
+      .limit(1);
+
+    if (!targetUser || targetUser.organizationId !== req.user!.organizationId) {
+      return res.status(404).json({ error: 'User not found' });
+    }
 
     // Find existing direct conversation
     const existingConversations = await db

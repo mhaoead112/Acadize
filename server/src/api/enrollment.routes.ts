@@ -272,7 +272,10 @@ router.get('/students/available/:courseId', isAuthenticated, async (req, res) =>
                 email: users.email,
             })
             .from(users)
-            .where(eq(users.role, 'student'));
+            .where(and(
+                eq(users.role, 'student'),
+                eq(users.organizationId, user.organizationId)
+            ));
 
         // Get already enrolled student IDs
         const enrolled = await db
@@ -315,7 +318,10 @@ router.get('/students/all', isAuthenticated, async (req, res) => {
                 email: users.email,
             })
             .from(users)
-            .where(eq(users.role, 'student'));
+            .where(and(
+                eq(users.role, 'student'),
+                eq(users.organizationId, user.organizationId)
+            ));
 
         // Get teacher's courses
         const teacherCourses = await db
@@ -390,6 +396,17 @@ router.post('/enroll', isAuthenticated, async (req, res) => {
 
         if (!course) {
             return res.status(403).json({ message: 'You do not have permission to enroll students in this course' });
+        }
+
+        // Verify student belongs to same organization
+        const [studentUser] = await db
+            .select()
+            .from(users)
+            .where(eq(users.id, studentId))
+            .limit(1);
+
+        if (!studentUser || studentUser.organizationId !== user.organizationId) {
+            return res.status(404).json({ message: 'Student not found' });
         }
 
         // Check if already enrolled

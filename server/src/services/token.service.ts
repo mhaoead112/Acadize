@@ -16,6 +16,7 @@ export interface TokenPayload {
     email: string;
     role: string;
     fullName: string;
+    organizationId: string; // Multi-tenant organization ID
 }
 
 export interface TokenPair {

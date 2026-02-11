@@ -1,7 +1,7 @@
 import express from 'express';
 import { db } from '../db/index.js';
 import { events, eventParticipants, users, courses } from '../db/schema.js';
-import { eq, and, gte, lte, or, inArray, sql } from 'drizzle-orm';
+import { eq, and, gte, lte, or, inArray, sql, isNull } from 'drizzle-orm';
 import { isAuthenticated, optionalAuth } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
@@ -12,6 +12,7 @@ router.get('/events', optionalAuth, async (req, res) => {
     const userId = req.user?.id;
     const userRole = req.user?.role;
     const { startDate, endDate, type, courseId } = req.query;
+    const orgId = (req as any).tenant?.organizationId;
 
     let query = db.select({
       id: events.id,
@@ -28,11 +29,22 @@ router.get('/events', optionalAuth, async (req, res) => {
       maxParticipants: events.maxParticipants,
       createdAt: events.createdAt,
     })
-    .from(events)
-    .leftJoin(courses, eq(events.courseId, courses.id));
+      .from(events)
+      .leftJoin(courses, eq(events.courseId, courses.id));
 
     // Build filter conditions
     const conditions: any[] = [];
+
+    // Filter by tenant organization (events linked to courses in this org,
+    // or events with no course that were created by users in this org)
+    if (orgId) {
+      conditions.push(
+        or(
+          eq(courses.organizationId, orgId),
+          isNull(events.courseId)
+        )!
+      );
+    }
 
     // Filter by date range
     if (startDate) {
@@ -65,9 +77,9 @@ router.get('/events', optionalAuth, async (req, res) => {
     const eventIds = allEvents.map(e => e.id);
     const participantCounts = eventIds.length > 0
       ? await db.select({
-          eventId: eventParticipants.eventId,
-          count: sql<number>`cast(count(${eventParticipants.id}) as integer)`,
-        })
+        eventId: eventParticipants.eventId,
+        count: sql<number>`cast(count(${eventParticipants.id}) as integer)`,
+      })
         .from(eventParticipants)
         .where(inArray(eventParticipants.eventId, eventIds))
         .groupBy(eventParticipants.eventId)
@@ -110,9 +122,9 @@ router.get('/events/:id', isAuthenticated, async (req, res) => {
       maxParticipants: events.maxParticipants,
       createdAt: events.createdAt,
     })
-    .from(events)
-    .leftJoin(courses, eq(events.courseId, courses.id))
-    .where(eq(events.id, id));
+      .from(events)
+      .leftJoin(courses, eq(events.courseId, courses.id))
+      .where(eq(events.id, id));
 
     if (!event) {
       return res.status(404).json({ error: 'Event not found' });
@@ -125,9 +137,9 @@ router.get('/events/:id', isAuthenticated, async (req, res) => {
       status: eventParticipants.status,
       registeredAt: eventParticipants.registeredAt,
     })
-    .from(eventParticipants)
-    .innerJoin(users, eq(eventParticipants.userId, users.id))
-    .where(eq(eventParticipants.eventId, id));
+      .from(eventParticipants)
+      .innerJoin(users, eq(eventParticipants.userId, users.id))
+      .where(eq(eventParticipants.eventId, id));
 
     // Check if current user is registered
     const isRegistered = participants.some(p => p.userId === userId);

@@ -8,6 +8,12 @@ const router = express.Router();
 router.post('/register', async (req, res) => {
     const { email, password, name, role, username } = req.body;
 
+    // Get organization from tenant context
+    if (!req.tenant) {
+        return res.status(400).json({ message: 'Organization context required.' });
+    }
+    const organizationId = req.tenant.organizationId;
+
     // 1. Basic Input Validation
     if (!email || !password || !name) {
         return res.status(400).json({ message: 'Email, password, and name are required.' });
@@ -18,7 +24,7 @@ router.post('/register', async (req, res) => {
 
     try {
         // 2. Call the service to handle the complex logic
-        const newUser = await registerUser({ email, password, name, role, username });
+        const newUser = await registerUser({ email, password, name, role, username, organizationId });
         // 3. Send a success response
         res.status(201).json({
             message: 'User registered successfully!',
@@ -36,6 +42,12 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
     const { email, password } = req.body;
 
+    // Get organization from tenant context
+    if (!req.tenant) {
+        return res.status(400).json({ message: 'Organization context required.' });
+    }
+    const organizationId = req.tenant.organizationId;
+
     // 1. Basic Input Validation
     if (!email || !password) {
         return res.status(400).json({ message: 'Email and password are required.' });
@@ -43,7 +55,7 @@ router.post('/login', async (req, res) => {
 
     try {
         // 2. Call the service to handle the login logic
-        const authResponse = await loginUser({ email, password });
+        const authResponse = await loginUser({ email, password, organizationId });
         // 3. Send a success response with the token and user info
         res.status(200).json(authResponse);
     } catch (error) {
@@ -79,6 +91,7 @@ router.post('/refresh', async (req, res) => {
         const [user] = await db
             .select({
                 id: users.id,
+                organizationId: users.organizationId,
                 email: users.email,
                 role: users.role,
                 fullName: users.fullName,
@@ -91,9 +104,17 @@ router.post('/refresh', async (req, res) => {
             return res.status(401).json({ message: 'User not found.' });
         }
 
+        // Verify user belongs to the current tenant's organization
+        const tenantOrgId = (req as any).tenant?.organizationId;
+        if (tenantOrgId && user.organizationId !== tenantOrgId) {
+            console.warn(`[Auth] Refresh token cross-tenant attempt: user org ${user.organizationId} vs tenant org ${tenantOrgId}`);
+            return res.status(403).json({ message: 'Access denied: wrong organization.' });
+        }
+
         // Generate new access token
         const accessToken = TokenService.generateAccessToken({
             id: user.id,
+            organizationId: user.organizationId,
             email: user.email,
             role: user.role,
             fullName: user.fullName,

@@ -3,7 +3,7 @@
 import express, { Request, Response } from 'express';
 import { db } from '../db/index.js';
 import { users } from '../db/schema.js';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 import { isAuthenticated } from '../middleware/auth.middleware.js';
@@ -67,11 +67,16 @@ router.post('/', isAuthenticated, async (req: Request, res: Response) => {
             });
         }
 
-        // Check if user already exists
+        // Check if user already exists in this organization
+        const checkOrgId = (req as any).tenant?.organizationId;
+        const emailConditions: any[] = [eq(users.email, email.toLowerCase())];
+        if (checkOrgId) {
+            emailConditions.push(eq(users.organizationId, checkOrgId));
+        }
         const [existingUser] = await db
             .select()
             .from(users)
-            .where(eq(users.email, email.toLowerCase()))
+            .where(and(...emailConditions)!)
             .limit(1);
 
         if (existingUser) {
@@ -99,7 +104,8 @@ router.post('/', isAuthenticated, async (req: Request, res: Response) => {
         const passwordExpiry = new Date();
         passwordExpiry.setDate(passwordExpiry.getDate() + 7);
 
-        // Create user
+        // Create user with organization scoping
+        const tenantOrgId = (req as any).tenant?.organizationId;
         const [newUser] = await db
             .insert(users)
             .values({
@@ -111,6 +117,7 @@ router.post('/', isAuthenticated, async (req: Request, res: Response) => {
                 isActive: true,
                 emailVerified: false, // Will be verified on first login
                 passwordResetExpires: passwordExpiry, // Temporary password expires in 7 days
+                ...(tenantOrgId ? { organizationId: tenantOrgId } : {}),
             })
             .returning({
                 id: users.id,
@@ -234,11 +241,14 @@ router.post('/:userId/reset-password', isAuthenticated, async (req: Request, res
 
 /**
  * GET /api/admin/users
- * List all users (admin only)
+ * List all users (admin only) - filtered by organization
  */
 router.get('/', isAuthenticated, async (req: Request, res: Response) => {
     try {
         const adminId = (req as any).user?.id;
+        const tenantOrgId = (req as any).tenant?.organizationId; // From tenant middleware
+
+        console.log('[AdminUsers] Tenant context:', { tenantOrgId, tenant: (req as any).tenant });
 
         // Verify admin role
         const [admin] = await db
@@ -251,6 +261,13 @@ router.get('/', isAuthenticated, async (req: Request, res: Response) => {
             return res.status(403).json({ message: 'Admin access required' });
         }
 
+        // If no tenant context, return empty (don't allow cross-tenant access)
+        if (!tenantOrgId) {
+            console.log('[AdminUsers] No tenant context - returning empty');
+            return res.status(200).json({ users: [] });
+        }
+
+        // Build query - ALWAYS filter by organization
         const allUsers = await db
             .select({
                 id: users.id,
@@ -262,9 +279,13 @@ router.get('/', isAuthenticated, async (req: Request, res: Response) => {
                 emailVerified: users.emailVerified,
                 lastLoginAt: users.lastLoginAt,
                 createdAt: users.createdAt,
+                organizationId: users.organizationId,
             })
             .from(users)
+            .where(eq(users.organizationId, tenantOrgId))
             .orderBy(users.createdAt);
+
+        console.log('[AdminUsers] Found users:', allUsers.length, 'for org:', tenantOrgId);
 
         res.status(200).json({ users: allUsers });
     } catch (error) {

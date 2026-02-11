@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url';
 import fs from 'fs/promises';
 import { db } from '../db/index.js';
 import { users } from '../db/schema.js';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { isAuthenticated } from '../middleware/auth.middleware.js';
 import bcrypt from 'bcryptjs';
 
@@ -56,7 +56,10 @@ router.get('/', isAuthenticated, async (req, res) => {
         role: users.role,
       })
       .from(users)
-      .where(eq(users.isActive, true));
+      .where(and(
+        eq(users.isActive, true),
+        eq(users.organizationId, (req as any).user.organizationId)
+      ));
 
     res.json(allUsers);
   } catch (error) {
@@ -69,7 +72,7 @@ router.get('/', isAuthenticated, async (req, res) => {
 router.get('/students', isAuthenticated, async (req, res) => {
   try {
     const user = req.user;
-    
+
     if (user?.role !== 'teacher' && user?.role !== 'admin') {
       return res.status(403).json({ message: 'Access denied' });
     }
@@ -84,7 +87,10 @@ router.get('/students', isAuthenticated, async (req, res) => {
         createdAt: users.createdAt,
       })
       .from(users)
-      .where(eq(users.role, 'student'));
+      .where(and(
+        eq(users.role, 'student'),
+        eq(users.organizationId, user.organizationId)
+      ));
 
     res.json(students);
   } catch (error) {
@@ -119,6 +125,7 @@ router.get('/:id', isAuthenticated, async (req, res) => {
         fullName: users.fullName,
         email: users.email,
         role: users.role,
+        organizationId: users.organizationId,
         phone: users.phone,
         bio: users.bio,
         profilePicture: users.profilePicture,
@@ -131,6 +138,11 @@ router.get('/:id', isAuthenticated, async (req, res) => {
       .limit(1);
 
     if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Verify user belongs to same organization
+    if (user.organizationId !== requestingUser.organizationId) {
       return res.status(404).json({ message: 'User not found' });
     }
 
@@ -149,7 +161,7 @@ router.get('/:id', isAuthenticated, async (req, res) => {
 router.get('/me', isAuthenticated, async (req, res) => {
   try {
     const user = req.user;
-    
+
     if (!user) {
       return res.status(401).json({ message: 'Unauthorized' });
     }
@@ -161,6 +173,7 @@ router.get('/me', isAuthenticated, async (req, res) => {
         fullName: users.fullName,
         email: users.email,
         role: users.role,
+        organizationId: users.organizationId,
         phone: users.phone,
         bio: users.bio,
         avatarUrl: users.profilePicture,
@@ -190,7 +203,7 @@ router.get('/me', isAuthenticated, async (req, res) => {
 router.put('/me', isAuthenticated, async (req, res) => {
   try {
     const user = req.user;
-    
+
     if (!user) {
       return res.status(401).json({ message: 'Unauthorized' });
     }
@@ -237,7 +250,7 @@ router.put('/me', isAuthenticated, async (req, res) => {
 router.post('/upload-avatar', isAuthenticated, avatarUpload.single('avatar'), async (req, res) => {
   try {
     const user = req.user;
-    
+
     if (!user) {
       return res.status(401).json({ message: 'Unauthorized' });
     }
@@ -273,7 +286,7 @@ router.post('/upload-avatar', isAuthenticated, avatarUpload.single('avatar'), as
     console.error('Upload avatar error:', error);
     // Clean up uploaded file on error
     if (req.file) {
-      await fs.unlink(req.file.path).catch(() => {});
+      await fs.unlink(req.file.path).catch(() => { });
     }
     res.status(500).json({ message: 'Failed to upload avatar' });
   }
@@ -287,7 +300,7 @@ router.post('/upload-avatar', isAuthenticated, avatarUpload.single('avatar'), as
 router.put('/change-password', isAuthenticated, async (req, res) => {
   try {
     const user = req.user;
-    
+
     if (!user) {
       return res.status(401).json({ message: 'Unauthorized' });
     }
@@ -346,7 +359,7 @@ router.put('/change-password', isAuthenticated, async (req, res) => {
 router.post('/enable-2fa', isAuthenticated, async (req, res) => {
   try {
     const user = req.user;
-    
+
     if (!user) {
       return res.status(401).json({ message: 'Unauthorized' });
     }
@@ -357,8 +370,8 @@ router.post('/enable-2fa', isAuthenticated, async (req, res) => {
     // - Verifying TOTP codes
     // - Storing 2FA secret in database
 
-    res.json({ 
-      message: '2FA setup initiated', 
+    res.json({
+      message: '2FA setup initiated',
       secret: 'PLACEHOLDER_SECRET',
       qrCode: 'data:image/png;base64,placeholder'
     });
@@ -376,7 +389,7 @@ router.post('/enable-2fa', isAuthenticated, async (req, res) => {
 router.put('/notifications', isAuthenticated, async (req, res) => {
   try {
     const user = req.user;
-    
+
     if (!user) {
       return res.status(401).json({ message: 'Unauthorized' });
     }
@@ -385,7 +398,7 @@ router.put('/notifications', isAuthenticated, async (req, res) => {
 
     // Store notification preferences (would require adding these columns to users table)
     // For now, just return success
-    res.json({ 
+    res.json({
       message: 'Notification preferences updated',
       preferences: {
         emailNotifications,

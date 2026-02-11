@@ -3,37 +3,44 @@
 import { db } from '../db/index.js';
 // We use the relative path. It's more robust than an alias.
 // Path from server/src/services/ -> server/ -> / -> shared/
-import { courses, users } from '../db/schema.js'; 
+import { courses, users } from '../db/schema.js';
 import { and, eq } from 'drizzle-orm';
 
 export interface CreateCourseDto {
     title: string;
-    description?: string; 
+    description?: string;
     imageUrl?: string | null;
     isPublished?: boolean;
     teacherId: string;
+    organizationId?: string;
 }
 
 export const createCourse = async (courseData: CreateCourseDto) => {
-    const { title, description, imageUrl, isPublished, teacherId } = courseData;
+    const { title, description, imageUrl, isPublished, teacherId, organizationId } = courseData;
 
     const teacher = await db
         .select()
         .from(users)
         .where(and(eq(users.id, teacherId), eq(users.role, 'teacher')));
-        
+
     if (teacher.length === 0) {
         throw new Error("User does not exist or is not a teacher.");
+    }
+
+    // Use the teacher's organizationId if not explicitly provided
+    const orgId = organizationId || teacher[0].organizationId;
+    if (!orgId) {
+        throw new Error("Organization ID is required to create a course.");
     }
 
     const newCourse = await db.insert(courses).values({
         title,
         description,
         imageUrl,
-        isPublished,
+        organizationId: orgId,
         teacherId,
-        isPublished: false, 
-    }).returning(); 
+        isPublished: false,
+    }).returning();
 
     if (!newCourse[0]) {
         throw new Error("Failed to create the course.");
@@ -50,11 +57,15 @@ export const getCoursesByTeacher = async (teacherId: string) => {
     return teacherCourses;
 };
 
-export const getPublishedCourses = async () => {
+export const getPublishedCourses = async (organizationId?: string) => {
+    const conditions: any[] = [eq(courses.isPublished, true)];
+    if (organizationId) {
+        conditions.push(eq(courses.organizationId, organizationId));
+    }
     const publishedCourses = await db
         .select()
         .from(courses)
-        .where(eq(courses.isPublished, true));
+        .where(and(...conditions)!);
     return publishedCourses;
 };
 
@@ -73,11 +84,11 @@ export const updateCoursePublishStatus = async (courseId: string, isPublished: b
         .set({ isPublished })
         .where(eq(courses.id, courseId))
         .returning();
-    
+
     if (!updatedCourse[0]) {
         throw new Error("Failed to update course publish status.");
     }
-    
+
     return updatedCourse[0];
 };
 
@@ -86,10 +97,10 @@ export const deleteCourse = async (courseId: string) => {
         .delete(courses)
         .where(eq(courses.id, courseId))
         .returning();
-    
+
     if (!deletedCourse[0]) {
         throw new Error("Failed to delete course.");
     }
-    
+
     return deletedCourse[0];
 };
