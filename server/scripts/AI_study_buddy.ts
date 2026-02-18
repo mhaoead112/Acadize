@@ -1,10 +1,15 @@
 import * as readline from 'readline';
 import * as dotenv from 'dotenv';
+import path from 'path';
 import { Pool } from 'pg';
 import { GoogleGenerativeAI, TaskType } from '@google/generative-ai';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // ------------- CONFIG -------------
-dotenv.config();
+dotenv.config({ path: path.join(__dirname, '../../.env') });
 
 const GEMINI_KEY = process.env.GEMINI_API_KEY;
 
