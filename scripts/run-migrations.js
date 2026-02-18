@@ -20,7 +20,7 @@ async function runMigrations() {
     // Migration: Multi-tenant organizations
     console.log('Running 0002_add_organizations_multi_tenant.sql...');
     const migrationMultiTenant = fs.readFileSync(
-      path.join(__dirname, 'server', 'migrations', '0002_add_organizations_multi_tenant.sql'),
+      path.join(__dirname, '../server', 'migrations', '0002_add_organizations_multi_tenant.sql'),
       'utf8'
     );
     await client.query(migrationMultiTenant);
@@ -29,7 +29,7 @@ async function runMigrations() {
     // Migration: Row-Level Security
     console.log('Running 0003_add_row_level_security.sql...');
     const migrationRLS = fs.readFileSync(
-      path.join(__dirname, 'server', 'migrations', '0003_add_row_level_security.sql'),
+      path.join(__dirname, '../server', 'migrations', '0003_add_row_level_security.sql'),
       'utf8'
     );
     await client.query(migrationRLS);

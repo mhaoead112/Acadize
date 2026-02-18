@@ -7,7 +7,7 @@ import dotenv from 'dotenv';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Load environment variables from server/.env
-dotenv.config({ path: path.join(__dirname, 'server', '.env') });
+dotenv.config({ path: path.join(__dirname, '../server', '.env') });
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL
@@ -19,7 +19,7 @@ async function runMigration() {
   try {
     console.log('🔄 Running exam system migration...\n');
     
-    const migrationPath = path.join(__dirname, 'server', 'migrations', '0001_add_exam_system_tables.sql');
+    const migrationPath = path.join(__dirname, '../server', 'migrations', '0001_add_exam_system_tables.sql');
     console.log(`📂 Reading migration from: ${migrationPath}`);
     
     const sql = fs.readFileSync(migrationPath, 'utf8');
