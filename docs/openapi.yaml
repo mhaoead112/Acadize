@@ -1,0 +1,1807 @@
+openapi: 3.1.0
+info:
+  title: Eduverse LMS API
+  version: 1.0.0
+  description: |
+    REST API for the Eduverse Learning Management System.
+
+    **Multi-tenant / organization_id isolation:** All data is scoped to the request's organization. The organization
+    is resolved from (1) subdomain (e.g. school1.eduverse.com), or (2) in development the header
+    `X-Tenant-Subdomain` or `X-Organization-Subdomain`. Every authenticated request validates that the user's
+    organizationId matches the tenant; otherwise 403 Forbidden is returned.
+
+    **JWT authentication flow:**
+    1. POST /api/auth/login with email, password (and tenant context) → returns accessToken and refreshToken.
+    2. Send accessToken in header: Authorization: Bearer <accessToken>.
+    3. When accessToken expires (4h), POST /api/auth/refresh with body { "refreshToken": "..." } → new accessToken.
+    4. POST /api/auth/logout with refreshToken to revoke it (optional).
+
+    Most endpoints require both authentication and an active subscription (402 if payment required).
+  contact:
+    name: Eduverse API Support
+  license:
+    name: Proprietary
+
+servers:
+  - url: http://localhost:3001
+    description: Development server
+  - url: https://api.eduverse.example.com
+    description: Production (placeholder)
+
+tags:
+  - name: Health & Tenant
+    description: Health check and tenant context
+  - name: Auth
+    description: Login, register, refresh, logout
+  - name: Registration
+    description: Public registration, pricing, coupons
+  - name: Password Reset
+    description: Request and reset password
+  - name: Users
+    description: User CRUD and profile
+  - name: Profile
+    description: Current user profile and picture
+  - name: Admin
+    description: Admin-only operations (org-scoped)
+  - name: Admin Users
+    description: Admin user creation and password reset
+  - name: Admin Settings
+    description: Organization settings
+  - name: Admin Organizations
+    description: Super-admin organization management
+  - name: Courses
+    description: Course CRUD and lessons
+  - name: Lessons
+    description: Lesson upload and management
+  - name: Enrollments
+    description: Enrollments and student lists
+  - name: Assignments
+    description: Assignments and submissions
+  - name: Exams
+    description: Exam CRUD and questions
+  - name: Exam Attempts
+    description: Start, submit, review attempts
+  - name: Anti-Cheat
+    description: Anti-cheat events and integrity
+  - name: Mistakes
+    description: Mistake tracking and retake
+  - name: Risk Scoring
+    description: Exam risk scoring (teacher)
+  - name: Retakes
+    description: Retake requests and config
+  - name: Retake Exams
+    description: Retake exam generation
+  - name: Retake Submissions
+    description: Retake submission and history
+  - name: Sessions
+    description: Attendance sessions (physical/online)
+  - name: Attendance
+    description: QR scan, manual mark, reports
+  - name: Session QR
+    description: QR token for sessions (teacher)
+  - name: Progress
+    description: Student progress
+  - name: Grades
+    description: Grades by student/course
+  - name: Report Cards
+    description: Report card upload and view
+  - name: Announcements
+    description: Course announcements
+  - name: Events
+    description: Calendar events
+  - name: Schedule
+    description: User schedule
+  - name: Study Groups
+    description: Study groups and chat
+  - name: Conversations
+    description: Direct messages
+  - name: Notifications
+    description: Notifications and blocks
+  - name: Analytics
+    description: Analytics and trends
+  - name: AI
+    description: AI ask and chat
+  - name: AI Chat
+    description: AI chat and digest
+  - name: Subscription
+    description: Subscription and checkout
+  - name: Push
+    description: Push notification subscription
+  - name: Upload
+    description: File upload (Cloudinary)
+  - name: Recordings
+    description: Exam recording upload
+  - name: Contacts
+    description: Contact form
+  - name: Student
+    description: Student-specific endpoints
+  - name: Teacher
+    description: Teacher notes and exams
+  - name: Parent
+    description: Parent dashboard and children
+  - name: Streak
+    description: Login streak
+  - name: Webhooks
+    description: Paymob and Zoom webhooks
+  - name: Email Test
+    description: Admin email testing
+
+security:
+  - bearerAuth: []
+  - tenantHeader: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Access token from login or refresh. Send as `Authorization: Bearer <token>`.
+    tenantHeader:
+      type: apiKey
+      in: header
+      name: X-Tenant-Subdomain
+      description: Organization subdomain (e.g. `school1`). Required when not using subdomain in host. Use `X-Organization-Subdomain` as alias.
+
+  schemas:
+    Error:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+          example: "Validation failed"
+        error:
+          type: string
+        code:
+          type: string
+          example: "MISSING_FIELDS"
+        details:
+          type: array
+          items:
+            type: string
+        stack:
+          type: string
+          description: Only in development
+      example:
+        message: "Email and password are required."
+        code: "VALIDATION_ERROR"
+
+    Pagination:
+      type: object
+      properties:
+        cursor:
+          type: string
+          nullable: true
+        limit:
+          type: integer
+          default: 20
+        hasMore:
+          type: boolean
+
+    User:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        organizationId: { type: string }
+        email: { type: string, format: email }
+        fullName: { type: string }
+        username: { type: string }
+        role: { type: string, enum: [student, teacher, admin, parent, proctor] }
+        profilePicture: { type: string, nullable: true }
+        grade: { type: string, nullable: true }
+        isActive: { type: boolean }
+        emailVerified: { type: boolean }
+        isTemporaryPassword: { type: boolean }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    AuthResponse:
+      type: object
+      required: [token, refreshToken, user]
+      properties:
+        token: { type: string, description: "Access token (JWT)" }
+        refreshToken: { type: string, description: "Refresh token (opaque)" }
+        expiresIn: { type: integer, description: "Access token TTL in seconds" }
+        user: { $ref: "#/components/schemas/User" }
+
+    TenantInfo:
+      type: object
+      properties:
+        organizationId: { type: string }
+        name: { type: string }
+        subdomain: { type: string }
+        plan: { type: string, enum: [free, starter, professional, enterprise] }
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string }
+
+    RegisterRequest:
+      type: object
+      required: [email, password, name]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, minLength: 8 }
+        name: { type: string }
+        role: { type: string, enum: [student, teacher, admin] }
+        username: { type: string }
+
+    RefreshRequest:
+      type: object
+      required: [refreshToken]
+      properties:
+        refreshToken: { type: string }
+
+    AttendanceScanRequest:
+      type: object
+      required: [token, sessionId]
+      properties:
+        token: { type: string }
+        sessionId: { type: string, format: uuid }
+        gpsLat: { type: number, format: float }
+        gpsLng: { type: number, format: float }
+
+    AttendanceManualRequest:
+      type: object
+      required: [sessionId, userId, status]
+      properties:
+        sessionId: { type: string }
+        userId: { type: string }
+        status: { type: string, enum: [present, absent, late, excused] }
+
+    SessionCreateRequest:
+      type: object
+      required: [courseId, sessionType, title, startTime, endTime]
+      properties:
+        courseId: { type: string }
+        sessionType: { type: string, enum: [physical, online] }
+        title: { type: string }
+        startTime: { type: string, format: date-time }
+        endTime: { type: string, format: date-time }
+        gpsRequired: { type: boolean }
+        gpsLat: { type: number }
+        gpsLng: { type: number }
+        gpsRadius: { type: number }
+        zoomMeetingId: { type: string }
+        minAttendancePercent: { type: number }
+        qrExpiryMinutes: { type: integer }
+        qrRotationEnabled: { type: boolean }
+        qrRotationIntervalSeconds: { type: integer }
+
+paths:
+  /api/health:
+    get:
+      tags: [Health & Tenant]
+      summary: Health check
+      security: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: ok }
+                  timestamp: { type: string, format: date-time }
+                  environment: { type: string }
+                  uptime: { type: number }
+
+  /api/tenant/info:
+    get:
+      tags: [Health & Tenant]
+      summary: Get tenant/organization info
+      description: Returns current organization context. Tenant must be resolved (subdomain or header).
+      security: []
+      responses:
+        "200":
+          description: Tenant info
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TenantInfo" }
+        "400":
+          description: Organization context required
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /api/auth/register:
+    post:
+      tags: [Auth]
+      summary: Register new user
+      description: Requires tenant context. Email must be unique within organization. Password min 8 characters.
+      security: [tenantHeader]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RegisterRequest" }
+            example:
+              email: "student@school.edu"
+              password: "SecurePass123"
+              name: "John Doe"
+              role: "student"
+      responses:
+        "201":
+          description: User registered
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+                  user: { $ref: "#/components/schemas/User" }
+        "400":
+          description: Validation error (missing fields, password too short)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "409":
+          description: Email or username already exists
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /api/auth/login:
+    post:
+      tags: [Auth]
+      summary: Login
+      description: Returns access token and refresh token. Tenant context required.
+      security: [tenantHeader]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LoginRequest" }
+            example:
+              email: "student@school.edu"
+              password: "SecurePass123"
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AuthResponse" }
+              example:
+                token: "eyJhbGciOiJIUzI1NiIs..."
+                refreshToken: "a1b2c3..."
+                expiresIn: 14400
+                user:
+                  id: "clxx..."
+                  organizationId: "org_1"
+                  email: "student@school.edu"
+                  fullName: "John Doe"
+                  username: "johndoe"
+                  role: "student"
+        "400":
+          description: Email and password required
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /api/auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Refresh access token
+      description: Exchange refresh token for new access token. Tenant must match user's organization.
+      security: [tenantHeader]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RefreshRequest" }
+      responses:
+        "200":
+          description: New access token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token: { type: string }
+                  user: { $ref: "#/components/schemas/User" }
+                  expiresIn: { type: integer }
+        "400":
+          description: Refresh token required
+        "401":
+          description: Invalid or expired refresh token
+        "403":
+          description: Wrong organization
+
+  /api/auth/logout:
+    post:
+      tags: [Auth]
+      summary: Logout and revoke refresh token
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RefreshRequest" }
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string, example: "Logged out successfully." }
+
+  # --- Attendance & Sessions (critical for mobile app) ---
+  /api/attendance/scan:
+    post:
+      tags: [Attendance]
+      summary: Scan QR for attendance
+      description: Student checks in using QR token. Rate limited (5/min per user). GPS optional unless session requires it.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AttendanceScanRequest" }
+            example:
+              token: "hex-token-from-qr"
+              sessionId: "session-uuid"
+              gpsLat: 40.7128
+              gpsLng: -74.006
+      responses:
+        "200":
+          description: Attendance recorded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+                  record: { type: object }
+        "400":
+          description: Missing token/sessionId or invalid GPS
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "403":
+          description: Not enrolled in course
+        "429":
+          description: Too many scan attempts (Retry-After header)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+                  code: { type: string, example: "RATE_LIMITED" }
+
+  /api/attendance/my:
+    get:
+      tags: [Attendance]
+      summary: My attendance history
+      description: Student's own attendance with optional courseId, dateFrom, dateTo.
+      parameters:
+        - name: courseId
+          in: query
+          schema: { type: string }
+        - name: dateFrom
+          in: query
+          schema: { type: string, format: date }
+        - name: dateTo
+          in: query
+          schema: { type: string, format: date }
+      responses:
+        "200":
+          description: Records and course summaries
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  records: { type: array, items: { type: object } }
+                  courseSummaries: { type: array }
+        "400":
+          description: Organization context required
+
+  /api/attendance/session/{sessionId}:
+    get:
+      tags: [Attendance]
+      summary: Attendance list for session
+      description: Teacher/Admin see full list; Student sees only own record.
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Session + records (or single record for student)
+        "403":
+          description: Access denied
+        "404":
+          description: Session not found
+
+  /api/attendance/manual:
+    post:
+      tags: [Attendance]
+      summary: Manual attendance override
+      description: Teacher/Admin only. Upsert attendance for a user in a session.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AttendanceManualRequest" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+                  attendanceId: { type: string }
+                  updated: { type: boolean }
+        "201":
+          description: Created
+        "400":
+          description: Invalid status or user not enrolled
+        "403":
+          description: Teacher/Admin required
+        "404":
+          description: Session not found
+
+  /api/attendance/report/summary:
+    get:
+      tags: [Attendance]
+      summary: Attendance summary report
+      description: Teacher/Admin. Query by courseId, dateFrom, dateTo, studentId.
+      parameters:
+        - name: courseId
+          in: query
+          schema: { type: string }
+        - name: dateFrom
+          in: query
+          schema: { type: string, format: date-time }
+        - name: dateTo
+          in: query
+          schema: { type: string, format: date-time }
+        - name: studentId
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: summaries, count
+        "403":
+          description: Teacher/Admin required
+
+  /api/attendance/report/session/{sessionId}:
+    get:
+      tags: [Attendance]
+      summary: Session report
+      description: Teacher/Admin. Full roster for one session.
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Report data
+        "403":
+          description: Access denied
+        "404":
+          description: Session not found
+
+  /api/attendance/report/export:
+    get:
+      tags: [Attendance]
+      summary: Export attendance (xlsx/pdf)
+      description: Teacher/Admin. format=xlsx (default) or pdf. PDF may return 501.
+      parameters:
+        - name: format
+          in: query
+          schema: { type: string, enum: [xlsx, pdf] }
+          default: xlsx
+        - name: courseId
+          in: query
+          schema: { type: string }
+        - name: dateFrom
+          in: query
+          schema: { type: string, format: date-time }
+        - name: dateTo
+          in: query
+          schema: { type: string, format: date-time }
+      responses:
+        "200":
+          description: File download (xlsx) or JSON error
+        "501":
+          description: PDF not implemented
+
+  /api/sessions:
+    post:
+      tags: [Sessions]
+      summary: Create session
+      description: Teacher/Admin. courseId, sessionType (physical|online), title, startTime, endTime required.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SessionCreateRequest" }
+      responses:
+        "201":
+          description: Session created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+                  session: { type: object }
+        "400":
+          description: Missing fields or invalid sessionType
+        "403":
+          description: Teacher/Admin required
+
+    get:
+      tags: [Sessions]
+      summary: List sessions
+      description: Query courseId, status, dateFrom, dateTo, teacherId, cursor, limit. Teachers see own; Admins see all.
+      parameters:
+        - name: courseId
+          in: query
+          schema: { type: string }
+        - name: status
+          in: query
+          schema: { type: string }
+        - name: dateFrom
+          in: query
+          schema: { type: string, format: date-time }
+        - name: dateTo
+          in: query
+          schema: { type: string, format: date-time }
+        - name: teacherId
+          in: query
+          schema: { type: string }
+        - name: cursor
+          in: query
+          schema: { type: string }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20 }
+      responses:
+        "200":
+          description: Paginated sessions
+        "400":
+          description: Organization context required
+        "403":
+          description: Forbidden (e.g. parent)
+
+  /api/sessions/{id}:
+    get:
+      tags: [Sessions]
+      summary: Get session
+      description: Students do not receive qrToken in response.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Session object
+        "403":
+          description: Forbidden
+        "404":
+          description: Session not found
+
+    put:
+      tags: [Sessions]
+      summary: Update session config
+      description: Teacher/Admin. qrExpiryMinutes, gpsRequired, gpsRadius, minAttendancePercent, qrRotation*, etc.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                qrExpiryMinutes: { type: integer }
+                gpsRequired: { type: boolean }
+                gpsRadius: { type: number }
+                minAttendancePercent: { type: number }
+                qrRotationEnabled: { type: boolean }
+                qrRotationIntervalSeconds: { type: integer }
+      responses:
+        "200":
+          description: Session config updated
+        "403":
+          description: Teacher/Admin required
+        "404":
+          description: Session not found
+
+    delete:
+      tags: [Sessions]
+      summary: Delete session
+      description: Only if status is scheduled or cancelled.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Session deleted
+        "400":
+          description: Cannot delete active/completed session
+        "403":
+          description: Access denied
+        "404":
+          description: Session not found
+
+  /api/sessions/{id}/start:
+    post:
+      tags: [Sessions]
+      summary: Start session
+      description: Sets status=active and generates initial QR token.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Session started; includes qrData
+        "403":
+          description: Teacher/Admin required
+        "404":
+          description: Session not found
+
+  /api/sessions/{id}/end:
+    post:
+      tags: [Sessions]
+      summary: End session
+      description: Finalizes attendance and marks absences.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Session ended; absentCount
+        "403":
+          description: Teacher/Admin required
+        "404":
+          description: Session not found
+
+  /api/sessions/{id}/qr:
+    get:
+      tags: [Session QR]
+      summary: Get current QR token
+      description: Teacher/Admin. For physical sessions only; session must be active.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+          description: Session ID
+      responses:
+        "200":
+          description: token, expiresAt, qrPayload, rotationEnabled, rotationIntervalSeconds, autoGenerated
+        "400":
+          description: Session not physical or not active
+        "403":
+          description: Teacher/Admin or not owner
+        "404":
+          description: Session not found
+
+    post:
+      tags: [Session QR]
+      summary: Rotate QR token
+      description: Force-rotate; expires current unused tokens and mints new one.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: New token, expiresAt, qrPayload
+        "400":
+          description: Not physical session
+        "403":
+          description: Teacher/Admin or not owner
+        "404":
+          description: Session not found
+
+  # --- Additional high-level paths (summary) ---
+  /api/courses:
+    get:
+      tags: [Courses]
+      summary: List courses (published) or user courses
+      security: []
+      parameters:
+        - name: (none for public list)
+          in: query
+      responses:
+        "200":
+          description: List of courses
+    post:
+      tags: [Courses]
+      summary: Create course
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title]
+              properties:
+                title: { type: string }
+                description: { type: string }
+                imageUrl: { type: string }
+                isPublished: { type: boolean }
+      responses:
+        "201":
+          description: Course created
+        "403":
+          description: Teacher required
+
+  /api/courses/{id}:
+    get:
+      tags: [Courses]
+      summary: Get course by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Course
+        "404":
+          description: Not found
+
+  /api/profile/me:
+    get:
+      tags: [Profile]
+      summary: Current user profile
+      responses:
+        "200":
+          description: User object
+        "404":
+          description: Not found
+
+    put:
+      tags: [Profile]
+      summary: Update profile
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fullName: { type: string, minLength: 2 }
+                grade: { type: string }
+      responses:
+        "200":
+          description: Updated user
+
+  /api/users/me:
+    get:
+      tags: [Users]
+      summary: Current user
+      responses:
+        "200":
+          description: User object
+
+  /api/subscription/status:
+    get:
+      tags: [Subscription]
+      summary: Subscription status
+      responses:
+        "200":
+          description: Access/subscription object
+        "402":
+          description: Payment required
+
+  /api/subscription/check-subscription:
+    get:
+      tags: [Subscription]
+      summary: Check subscription (access gate)
+      responses:
+        "200":
+          description: Access allowed
+        "402":
+          description: Payment required
+
+  /api/push/vapid-key:
+    get:
+      tags: [Push]
+      summary: Get VAPID public key
+      security: []
+      responses:
+        "200":
+          description: publicKey
+
+  /api/push/subscribe:
+    post:
+      tags: [Push]
+      summary: Subscribe to push
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [subscription]
+              properties:
+                subscription:
+                  type: object
+                  required: [endpoint, keys]
+      responses:
+        "200":
+          description: subscriptionId
+
+  /api/registration/pricing:
+    get:
+      tags: [Registration]
+      summary: Get pricing for tenant
+      security: [tenantHeader]
+      responses:
+        "200":
+          description: Pricing object
+        "404":
+          description: Org not found
+
+  /api/registration/validate-coupon:
+    post:
+      tags: [Registration]
+      summary: Validate promo coupon
+      security: [tenantHeader]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code]
+              properties:
+                code: { type: string }
+      responses:
+        "200":
+          description: valid, code, trialDays, etc.
+        "400":
+          description: Invalid
+
+  /api/password-reset/request:
+    post:
+      tags: [Password Reset]
+      summary: Request password reset email
+      security: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string, format: email }
+      responses:
+        "200":
+          description: Generic message (no email enumeration)
+
+  /api/password-reset/reset:
+    post:
+      tags: [Password Reset]
+      summary: Reset password with token
+      security: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token, newPassword]
+              properties:
+                token: { type: string }
+                newPassword: { type: string, minLength: 8 }
+      responses:
+        "200":
+          description: Password reset
+        "400":
+          description: Invalid or expired token
+
+  /api/contacts:
+    post:
+      tags: [Contacts]
+      summary: Contact form
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, subject, message]
+              properties:
+                name: { type: string }
+                email: { type: string, format: email }
+                subject: { type: string }
+                message: { type: string }
+      responses:
+        "200":
+          description: success, message
+        "400":
+          description: Validation error
+
+  /api/lessons/course/{courseId}:
+    get:
+      tags: [Lessons]
+      summary: List lessons for course
+      security: []
+      parameters:
+        - name: courseId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: List of lessons
+
+  /api/enrollments/my-courses:
+    get:
+      tags: [Enrollments]
+      summary: My enrolled courses
+      responses:
+        "200":
+          description: Enrollments/courses
+
+  /api/assignments/student:
+    get:
+      tags: [Assignments]
+      summary: Student assignments with submission status
+      responses:
+        "200":
+          description: Assignments array
+
+  /api/exams/student/available:
+    get:
+      tags: [Exams]
+      summary: Available exams for student
+      responses:
+        "200":
+          description: Exams array
+
+  /api/exam-attempts/start:
+    post:
+      tags: [Exam Attempts]
+      summary: Start exam attempt
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [examId, consent]
+              properties:
+                examId: { type: string }
+                consent: { type: boolean }
+                deviceInfo: { type: object }
+      responses:
+        "201":
+          description: attempt, examSnapshot, expiresAt
+
+  /api/events/events:
+    get:
+      tags: [Events]
+      summary: List events
+      parameters:
+        - name: startDate
+          in: query
+          schema: { type: string }
+        - name: endDate
+          in: query
+          schema: { type: string }
+        - name: type
+          in: query
+          schema: { type: string }
+        - name: courseId
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: Events (optionalAuth)
+
+  /api/ai/ask:
+    post:
+      tags: [AI]
+      summary: RAG question
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [question]
+              properties:
+                question: { type: string }
+      responses:
+        "200":
+          description: answer
+
+  /api/upload:
+    post:
+      tags: [Upload]
+      summary: Upload image (Cloudinary)
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file: { type: string, format: binary }
+      responses:
+        "200":
+          description: filePath, url, etc.
+
+  /api/recordings/upload-chunk:
+    post:
+      tags: [Recordings]
+      summary: Upload recording chunk
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                chunk: { type: string, format: binary }
+                chunkIndex: { type: integer }
+                attemptId: { type: string }
+      responses:
+        "200":
+          description: chunkUrl, chunkIndex, publicId
+
+  /api/recordings/finalize:
+    post:
+      tags: [Recordings]
+      summary: Finalize recording
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                recording: { type: string, format: binary }
+                attemptId: { type: string }
+      responses:
+        "200":
+          description: recordingUrl, publicId
+
+  /api/recordings/{attemptId}:
+    get:
+      tags: [Recordings]
+      summary: Get recording URL (teacher/admin)
+      parameters:
+        - name: attemptId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: recordingUrl, metadata
+        "403":
+          description: Access denied
+
+  /api/admin/organizations:
+    get:
+      tags: [Admin Organizations]
+      summary: List all organizations (super-admin)
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, default: 1 }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20 }
+        - name: search
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: organizations (with userCount, courseCount), pagination
+    post:
+      tags: [Admin Organizations]
+      summary: Create organization
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, subdomain]
+              properties:
+                name: { type: string }
+                subdomain: { type: string }
+                customDomain: { type: string }
+                plan: { type: string, enum: [free, starter, professional, enterprise] }
+                contactEmail: { type: string }
+                contactPhone: { type: string }
+                logoUrl: { type: string }
+                primaryColor: { type: string }
+                secondaryColor: { type: string }
+                config: { type: object }
+                maxUsers: { type: integer }
+                maxCourses: { type: integer }
+      responses:
+        "201":
+          description: Created organization
+        "400":
+          description: Name and subdomain required
+        "409":
+          description: Subdomain already exists
+
+  /api/admin/organizations/{id}:
+    get:
+      tags: [Admin Organizations]
+      summary: Get organization by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Organization with stats (userCount, courseCount, examCount)
+        "404":
+          description: Organization not found
+    put:
+      tags: [Admin Organizations]
+      summary: Update organization
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                subdomain: { type: string }
+                customDomain: { type: string }
+                plan: { type: string }
+                contactEmail: { type: string }
+                contactPhone: { type: string }
+                logoUrl: { type: string }
+                primaryColor: { type: string }
+                secondaryColor: { type: string }
+                config: { type: object }
+                maxUsers: { type: integer }
+                maxCourses: { type: integer }
+                isActive: { type: boolean }
+      responses:
+        "200":
+          description: Updated organization
+        "404":
+          description: Organization not found
+        "409":
+          description: Subdomain already exists
+    delete:
+      tags: [Admin Organizations]
+      summary: Delete organization (soft or hard)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+        - name: hard
+          in: query
+          schema: { type: string, enum: [true, false] }
+          description: "true for hard delete"
+      responses:
+        "200":
+          description: Organization deleted
+        "403":
+          description: Cannot delete system organization
+
+  /api/admin/organizations/{id}/users:
+    get:
+      tags: [Admin Organizations]
+      summary: List users in organization
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+        - name: page
+          in: query
+          schema: { type: integer, default: 1 }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20 }
+      responses:
+        "200":
+          description: users, pagination
+
+  /api/admin/organizations/{id}/invite:
+    post:
+      tags: [Admin Organizations]
+      summary: Create organization invite
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string, format: email }
+                role: { type: string, default: student }
+      responses:
+        "201":
+          description: invite, inviteLink
+        "400":
+          description: Email required
+        "404":
+          description: Organization not found
+
+  /api/admin/organizations/{id}/invites:
+    get:
+      tags: [Admin Organizations]
+      summary: List pending invites for organization
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: invites
+
+  /api/admin/organizations/{id}/invites/{inviteId}:
+    delete:
+      tags: [Admin Organizations]
+      summary: Cancel invite
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+        - name: inviteId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Invite cancelled
+
+  /api/admin/settings:
+    get:
+      tags: [Admin Settings]
+      summary: Get all system settings (admin)
+      responses:
+        "200":
+          description: settings
+    put:
+      tags: [Admin Settings]
+      summary: Update all settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [settings]
+              properties:
+                settings: { type: object }
+      responses:
+        "200":
+          description: message, settings
+        "400":
+          description: Settings object required
+
+  /api/admin/settings/reset:
+    post:
+      tags: [Admin Settings]
+      summary: Reset settings to defaults
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                category: { type: string }
+      responses:
+        "200":
+          description: message, settings
+        "404":
+          description: Category not found
+
+  /api/admin/settings/public/config:
+    get:
+      tags: [Admin Settings]
+      summary: Get public config (no auth)
+      security: []
+      responses:
+        "200":
+          description: Public settings subset
+
+  /api/admin/settings/{category}:
+    get:
+      tags: [Admin Settings]
+      summary: Get settings by category
+      parameters:
+        - name: category
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: category, settings
+        "404":
+          description: Category not found
+    patch:
+      tags: [Admin Settings]
+      summary: Update category settings
+      parameters:
+        - name: category
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: message, category, settings
+        "404":
+          description: Category not found
+
+  /api/admin-users:
+    get:
+      tags: [Admin Users]
+      summary: List users (admin, org-scoped)
+      responses:
+        "200":
+          description: users (empty if no tenant)
+        "403":
+          description: Admin required
+    post:
+      tags: [Admin Users]
+      summary: Create user with temporary password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, fullName, role, temporaryPassword]
+              properties:
+                email: { type: string, format: email }
+                fullName: { type: string }
+                username: { type: string }
+                role: { type: string }
+                temporaryPassword: { type: string, minLength: 8 }
+      responses:
+        "201":
+          description: message, user, temporaryPassword
+        "400":
+          description: Validation error or password too short
+        "403":
+          description: Only admins can create users
+        "409":
+          description: Email or username already exists
+
+  /api/admin-users/{userId}/reset-password:
+    post:
+      tags: [Admin Users]
+      summary: Reset user password (admin)
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Password reset, email sent
+        "403":
+          description: Admin required
+        "404":
+          description: User not found
+
+  /api/assignments/submissions/{submissionId}/grade:
+    post:
+      tags: [Assignments]
+      summary: Grade submission (teacher)
+      parameters:
+        - name: submissionId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [grade]
+              properties:
+                grade: { type: string }
+                feedback: { type: string }
+      responses:
+        "200":
+          description: Updated grade
+        "400":
+          description: grade required
+        "403":
+          description: Teacher required
+
+  /api/assignments/{assignmentId}/submissions:
+    get:
+      tags: [Assignments]
+      summary: List submissions for assignment (teacher)
+      parameters:
+        - name: assignmentId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Submissions list
+        "403":
+          description: Teacher required
+
+  /api/retakes/retakes:
+    post:
+      tags: [Retakes]
+      summary: Generate retake exam from mistake pool
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [topicNames, questionCount, difficulty]
+              properties:
+                topicNames: { type: array, items: { type: string } }
+                questionCount: { type: integer, minimum: 5, maximum: 30 }
+                difficulty: { type: string, enum: [review, challenge] }
+      responses:
+        "201":
+          description: retakeData
+        "400":
+          description: Invalid topicNames, questionCount, or difficulty
+
+  /api/retakes/retakes/{retakeId}:
+    get:
+      tags: [Retakes]
+      summary: Get retake exam by ID
+      parameters:
+        - name: retakeId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: retakeData
+        "404":
+          description: Retake exam not found
+
+  /api/retakes/retakes/{retakeId}/submit:
+    post:
+      tags: [Retakes]
+      summary: Submit retake exam answers
+      parameters:
+        - name: retakeId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [answers, durationSeconds]
+              properties:
+                answers: { type: array, items: { type: object } }
+                durationSeconds: { type: number, minimum: 0 }
+      responses:
+        "200":
+          description: result
+        "400":
+          description: Invalid answers or duration
+        "404":
+          description: Retake exam not found
+
+  /api/email-test/config:
+    get:
+      tags: [Email Test]
+      summary: Get email config (admin)
+      responses:
+        "200":
+          description: message, config
+  /api/email-test/send:
+    post:
+      tags: [Email Test]
+      summary: Send test email
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [to]
+              properties:
+                to: { type: string, format: email }
+      responses:
+        "200":
+          description: message, recipient
+        "400":
+          description: to required
+  /api/email-test/connection:
+    post:
+      tags: [Email Test]
+      summary: Test SMTP connection
+      responses:
+        "200":
+          description: message, connected
+
+  /api/subscription/admin/subscriptions:
+    get:
+      tags: [Subscription]
+      summary: List org subscriptions (admin)
+      responses:
+        "200":
+          description: subscriptions
+  /api/subscription/admin/promo-codes:
+    get:
+      tags: [Subscription]
+      summary: List promo codes (admin)
+      responses:
+        "200":
+          description: promo codes
+    post:
+      tags: [Subscription]
+      summary: Create promo code (admin)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code: { type: string }
+                trialDays: { type: integer }
+                maxUses: { type: integer }
+                expiresAt: { type: string, format: date-time }
+                isGlobal: { type: boolean }
+      responses:
+        "201":
+          description: promo code
+  /api/subscription/admin/promo-codes/{id}:
+    delete:
+      tags: [Subscription]
+      summary: Deactivate promo code (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Deactivated
+  /api/subscription/admin/pricing:
+    patch:
+      tags: [Subscription]
+      summary: Update pricing (admin)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userSubscriptionEnabled: { type: boolean }
+                userMonthlyPricePiasters: { type: integer }
+                userAnnualPricePiasters: { type: integer }
+                userCurrency: { type: string }
+      responses:
+        "200":
+          description: Updated
+  /api/subscription/admin/revenue:
+    get:
+      tags: [Subscription]
+      summary: Revenue stats (admin)
+      responses:
+        "200":
+          description: revenue
+  /api/subscription/admin/bulk-subscribe:
+    post:
+      tags: [Subscription]
+      summary: Bulk subscribe org users (admin)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                billingCycle: { type: string }
+                periodDays: { type: integer }
+                periodStart: { type: string }
+      responses:
+        "200":
+          description: result
+
+  /api/admin/stats:
+    get:
+      tags: [Admin]
+      summary: System stats
+      responses:
+        "200":
+          description: Stats object
+
+  /api/admin/users:
+    get:
+      tags: [Admin]
+      summary: List users (query role, status, search, limit, offset)
+      parameters:
+        - name: role
+          in: query
+          schema: { type: string }
+        - name: status
+          in: query
+          schema: { type: string }
+        - name: search
+          in: query
+          schema: { type: string }
+        - name: limit
+          in: query
+          schema: { type: integer }
+        - name: offset
+          in: query
+          schema: { type: integer }
+      responses:
+        "200":
+          description: users, total
+
+  /api/webhooks/paymob:
+    post:
+      tags: [Webhooks]
+      summary: Paymob callback
+      security: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                obj: { type: object }
+                hmac: { type: string }
+      responses:
+        "200":
+          description: received
+
+  /api/webhooks/zoom:
+    post:
+      tags: [Webhooks]
+      summary: Zoom webhook (HMAC verified)
+      security: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Validation or received

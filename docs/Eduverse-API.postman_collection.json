@@ -1,0 +1,788 @@
+{
+  "info": {
+    "name": "Acadize LMS API",
+    "description": "REST API for Acadize Learning Management System. Multi-tenant; use variable `tenant_subdomain` or header X-Tenant-Subdomain. JWT via Auth tab or variable `access_token`.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "acadize-docs"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{access_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:3001" },
+    { "key": "tenant_subdomain", "value": "default" },
+    { "key": "access_token", "value": "" },
+    { "key": "refresh_token", "value": "" },
+    { "key": "sessionId", "value": "" },
+    { "key": "courseId", "value": "" },
+    { "key": "orgId", "value": "" },
+    { "key": "userId", "value": "" },
+    { "key": "retakeId", "value": "" },
+    { "key": "submissionId", "value": "" },
+    { "key": "assignmentId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Health & Tenant",
+      "item": [
+        {
+          "name": "Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/health",
+            "description": "Health check. No auth."
+          }
+        },
+        {
+          "name": "Tenant Info",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Tenant-Subdomain", "value": "{{tenant_subdomain}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/api/tenant/info",
+            "description": "Current organization context."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "X-Tenant-Subdomain", "value": "{{tenant_subdomain}}", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"student@school.edu\",\n  \"password\": \"SecurePass123\",\n  \"name\": \"John Doe\",\n  \"role\": \"student\"\n}"
+            },
+            "url": "{{base_url}}/api/auth/register",
+            "description": "Register new user. Password min 8 chars."
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const j = pm.response.json();",
+                  "  if (j.token) pm.collectionVariables.set('access_token', j.token);",
+                  "  if (j.refreshToken) pm.collectionVariables.set('refresh_token', j.refreshToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "X-Tenant-Subdomain", "value": "{{tenant_subdomain}}", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"student@school.edu\",\n  \"password\": \"SecurePass123\"\n}"
+            },
+            "url": "{{base_url}}/api/auth/login",
+            "description": "Returns accessToken and refreshToken. Saves to collection variables."
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "X-Tenant-Subdomain", "value": "{{tenant_subdomain}}", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}"
+            },
+            "url": "{{base_url}}/api/auth/refresh",
+            "description": "Exchange refresh token for new access token."
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}"
+            },
+            "url": "{{base_url}}/api/auth/logout",
+            "description": "Revoke refresh token."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Attendance",
+      "item": [
+        {
+          "name": "Scan QR",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "X-Tenant-Subdomain", "value": "{{tenant_subdomain}}", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"hex-token-from-qr\",\n  \"sessionId\": \"session-uuid\",\n  \"gpsLat\": 40.7128,\n  \"gpsLng\": -74.006\n}"
+            },
+            "url": "{{base_url}}/api/attendance/scan",
+            "description": "Student check-in via QR. Rate limited."
+          }
+        },
+        {
+          "name": "My Attendance",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Tenant-Subdomain", "value": "{{tenant_subdomain}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/attendance/my?courseId=&dateFrom=&dateTo=",
+              "host": ["{{base_url}}"],
+              "path": ["api", "attendance", "my"],
+              "query": [
+                { "key": "courseId", "value": "" },
+                { "key": "dateFrom", "value": "" },
+                { "key": "dateTo", "value": "" }
+              ]
+            },
+            "description": "Student's attendance history."
+          }
+        },
+        {
+          "name": "Session Attendance",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Tenant-Subdomain", "value": "{{tenant_subdomain}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/api/attendance/session/{{sessionId}}",
+            "description": "Teacher: full list; Student: own record. Set variable sessionId."
+          }
+        },
+        {
+          "name": "Manual Attendance",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "X-Tenant-Subdomain", "value": "{{tenant_subdomain}}", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sessionId\": \"\",\n  \"userId\": \"\",\n  \"status\": \"present\"\n}"
+            },
+            "url": "{{base_url}}/api/attendance/manual",
+            "description": "Teacher/Admin. status: present|absent|late|excused."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sessions",
+      "item": [
+        {
+          "name": "Create Session",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "X-Tenant-Subdomain", "value": "{{tenant_subdomain}}", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"courseId\": \"\",\n  \"sessionType\": \"physical\",\n  \"title\": \"Math 101\",\n  \"startTime\": \"2026-02-20T10:00:00Z\",\n  \"endTime\": \"2026-02-20T11:00:00Z\"\n}"
+            },
+            "url": "{{base_url}}/api/sessions",
+            "description": "Teacher/Admin. sessionType: physical|online."
+          }
+        },
+        {
+          "name": "List Sessions",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Tenant-Subdomain", "value": "{{tenant_subdomain}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/sessions?courseId=&status=&dateFrom=&dateTo=&limit=20",
+              "host": ["{{base_url}}"],
+              "path": ["api", "sessions"],
+              "query": [
+                { "key": "courseId", "value": "" },
+                { "key": "status", "value": "" },
+                { "key": "dateFrom", "value": "" },
+                { "key": "dateTo", "value": "" },
+                { "key": "limit", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Session",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Tenant-Subdomain", "value": "{{tenant_subdomain}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/api/sessions/{{sessionId}}"
+          }
+        },
+        {
+          "name": "Start Session",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "X-Tenant-Subdomain", "value": "{{tenant_subdomain}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/api/sessions/{{sessionId}}/start",
+            "description": "Generates initial QR."
+          }
+        },
+        {
+          "name": "End Session",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "X-Tenant-Subdomain", "value": "{{tenant_subdomain}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/api/sessions/{{sessionId}}/end"
+          }
+        },
+        {
+          "name": "Get QR",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Tenant-Subdomain", "value": "{{tenant_subdomain}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/api/sessions/{{sessionId}}/qr",
+            "description": "Teacher. Physical + active session only."
+          }
+        },
+        {
+          "name": "Rotate QR",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "X-Tenant-Subdomain", "value": "{{tenant_subdomain}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/api/sessions/{{sessionId}}/qr/rotate"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Profile & Users",
+      "item": [
+        {
+          "name": "Profile Me",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Tenant-Subdomain", "value": "{{tenant_subdomain}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/api/profile/me"
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "X-Tenant-Subdomain", "value": "{{tenant_subdomain}}", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"John Doe\",\n  \"grade\": \"10\"\n}"
+            },
+            "url": "{{base_url}}/api/profile/me"
+          }
+        },
+        {
+          "name": "Users Me",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Tenant-Subdomain", "value": "{{tenant_subdomain}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/api/users/me"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Courses",
+      "item": [
+        {
+          "name": "List Courses",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Tenant-Subdomain", "value": "{{tenant_subdomain}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/api/courses",
+            "description": "Published courses (no auth)."
+          }
+        },
+        {
+          "name": "Get Course",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Tenant-Subdomain", "value": "{{tenant_subdomain}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/api/courses/{{courseId}}"
+          }
+        },
+        {
+          "name": "Create Course",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "X-Tenant-Subdomain", "value": "{{tenant_subdomain}}", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Math 101\",\n  \"description\": \"Intro to Math\"\n}"
+            },
+            "url": "{{base_url}}/api/courses"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Enrollments",
+      "item": [
+        {
+          "name": "My Courses",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Tenant-Subdomain", "value": "{{tenant_subdomain}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/api/enrollments/my-courses"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Subscription",
+      "item": [
+        {
+          "name": "Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Tenant-Subdomain", "value": "{{tenant_subdomain}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/api/subscription/status"
+          }
+        },
+        {
+          "name": "Check Subscription",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Tenant-Subdomain", "value": "{{tenant_subdomain}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/api/subscription/check-subscription"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Registration",
+      "item": [
+        {
+          "name": "Pricing",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [
+              { "key": "X-Tenant-Subdomain", "value": "{{tenant_subdomain}}", "type": "text" }
+            ],
+            "url": "{{base_url}}/api/registration/pricing"
+          }
+        },
+        {
+          "name": "Validate Coupon",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "X-Tenant-Subdomain", "value": "{{tenant_subdomain}}", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"PROMO2025\"\n}"
+            },
+            "url": "{{base_url}}/api/registration/validate-coupon"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Password Reset",
+      "item": [
+        {
+          "name": "Request Reset",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@school.edu\"\n}"
+            },
+            "url": "{{base_url}}/api/password-reset/request"
+          }
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"\",\n  \"newPassword\": \"NewSecurePass123\"\n}"
+            },
+            "url": "{{base_url}}/api/password-reset/reset"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Push",
+      "item": [
+        {
+          "name": "VAPID Key",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": "{{base_url}}/api/push/vapid-key"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Contacts",
+      "item": [
+        {
+          "name": "Contact Form",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jane\",\n  \"email\": \"jane@example.com\",\n  \"subject\": \"Support\",\n  \"message\": \"Hello\"\n}"
+            },
+            "url": "{{base_url}}/api/contacts"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin Organizations",
+      "item": [
+        {
+          "name": "List Organizations",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "X-Tenant-Subdomain", "value": "{{tenant_subdomain}}", "type": "text" }],
+            "url": "{{base_url}}/api/admin/organizations?page=1&limit=20"
+          }
+        },
+        {
+          "name": "Get Organization",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "X-Tenant-Subdomain", "value": "{{tenant_subdomain}}", "type": "text" }],
+            "url": "{{base_url}}/api/admin/organizations/{{orgId}}"
+          }
+        },
+        {
+          "name": "Create Organization",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "X-Tenant-Subdomain", "value": "{{tenant_subdomain}}", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"New School\",\n  \"subdomain\": \"newschool\",\n  \"plan\": \"free\"\n}"
+            },
+            "url": "{{base_url}}/api/admin/organizations"
+          }
+        },
+        {
+          "name": "List Org Users",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "X-Tenant-Subdomain", "value": "{{tenant_subdomain}}", "type": "text" }],
+            "url": "{{base_url}}/api/admin/organizations/{{orgId}}/users?page=1&limit=20"
+          }
+        },
+        {
+          "name": "Create Invite",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "X-Tenant-Subdomain", "value": "{{tenant_subdomain}}", "type": "text" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"invite@example.com\",\n  \"role\": \"student\"\n}" },
+            "url": "{{base_url}}/api/admin/organizations/{{orgId}}/invite"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin Settings",
+      "item": [
+        {
+          "name": "Get All Settings",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "X-Tenant-Subdomain", "value": "{{tenant_subdomain}}", "type": "text" }],
+            "url": "{{base_url}}/api/admin/settings"
+          }
+        },
+        {
+          "name": "Get Public Config",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": "{{base_url}}/api/admin/settings/public/config"
+          }
+        },
+        {
+          "name": "Get Category",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "X-Tenant-Subdomain", "value": "{{tenant_subdomain}}", "type": "text" }],
+            "url": "{{base_url}}/api/admin/settings/general"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin Users",
+      "item": [
+        {
+          "name": "List Users",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "X-Tenant-Subdomain", "value": "{{tenant_subdomain}}", "type": "text" }],
+            "url": "{{base_url}}/api/admin-users"
+          }
+        },
+        {
+          "name": "Create User",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "X-Tenant-Subdomain", "value": "{{tenant_subdomain}}", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"newuser@school.edu\",\n  \"fullName\": \"New User\",\n  \"role\": \"student\",\n  \"temporaryPassword\": \"TempPass123!\"\n}"
+            },
+            "url": "{{base_url}}/api/admin-users"
+          }
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "X-Tenant-Subdomain", "value": "{{tenant_subdomain}}", "type": "text" }],
+            "url": "{{base_url}}/api/admin-users/{{userId}}/reset-password"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Retakes",
+      "item": [
+        {
+          "name": "Generate Retake",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "X-Tenant-Subdomain", "value": "{{tenant_subdomain}}", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"topicNames\": [\"Algebra\"],\n  \"questionCount\": 10,\n  \"difficulty\": \"review\"\n}"
+            },
+            "url": "{{base_url}}/api/retakes/retakes"
+          }
+        },
+        {
+          "name": "Get Retake",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "X-Tenant-Subdomain", "value": "{{tenant_subdomain}}", "type": "text" }],
+            "url": "{{base_url}}/api/retakes/retakes/{{retakeId}}"
+          }
+        },
+        {
+          "name": "Submit Retake",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "X-Tenant-Subdomain", "value": "{{tenant_subdomain}}", "type": "text" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"answers\": [],\n  \"durationSeconds\": 300\n}" },
+            "url": "{{base_url}}/api/retakes/retakes/{{retakeId}}/submit"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Email Test",
+      "item": [
+        {
+          "name": "Get Config",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "X-Tenant-Subdomain", "value": "{{tenant_subdomain}}", "type": "text" }],
+            "url": "{{base_url}}/api/email-test/config"
+          }
+        },
+        {
+          "name": "Send Test Email",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "X-Tenant-Subdomain", "value": "{{tenant_subdomain}}", "type": "text" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"to\": \"test@example.com\"\n}" },
+            "url": "{{base_url}}/api/email-test/send"
+          }
+        },
+        {
+          "name": "Test Connection",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "X-Tenant-Subdomain", "value": "{{tenant_subdomain}}", "type": "text" }],
+            "url": "{{base_url}}/api/email-test/connection"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Subscription Admin",
+      "item": [
+        {
+          "name": "List Subscriptions",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "X-Tenant-Subdomain", "value": "{{tenant_subdomain}}", "type": "text" }],
+            "url": "{{base_url}}/api/subscription/admin/subscriptions"
+          }
+        },
+        {
+          "name": "List Promo Codes",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "X-Tenant-Subdomain", "value": "{{tenant_subdomain}}", "type": "text" }],
+            "url": "{{base_url}}/api/subscription/admin/promo-codes"
+          }
+        },
+        {
+          "name": "Create Promo Code",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "X-Tenant-Subdomain", "value": "{{tenant_subdomain}}", "type": "text" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"code\": \"PROMO2025\",\n  \"trialDays\": 14\n}" },
+            "url": "{{base_url}}/api/subscription/admin/promo-codes"
+          }
+        },
+        {
+          "name": "Get Revenue",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "X-Tenant-Subdomain", "value": "{{tenant_subdomain}}", "type": "text" }],
+            "url": "{{base_url}}/api/subscription/admin/revenue"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Assignments (Teacher)",
+      "item": [
+        {
+          "name": "Grade Submission",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "X-Tenant-Subdomain", "value": "{{tenant_subdomain}}", "type": "text" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"grade\": \"85\",\n  \"feedback\": \"Good work\"\n}" },
+            "url": "{{base_url}}/api/assignments/submissions/{{submissionId}}/grade"
+          }
+        },
+        {
+          "name": "List Submissions",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "X-Tenant-Subdomain", "value": "{{tenant_subdomain}}", "type": "text" }],
+            "url": "{{base_url}}/api/assignments/{{assignmentId}}/submissions"
+          }
+        }
+      ]
+    }
+  ]
+}
