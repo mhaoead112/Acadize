@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useLocation } from 'wouter';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -62,6 +63,7 @@ type CategoryType = 'main' | 'mock' | 'practice' | 'all';
 // ============================================================================
 
 const StudentExams: React.FC = () => {
+  const { t } = useTranslation('dashboard');
   const [, setLocation] = useLocation();
   const { user, getAuthHeaders, isAuthenticated } = useAuth();
   const { toast } = useToast();
@@ -135,7 +137,7 @@ const StudentExams: React.FC = () => {
       ]);
 
       if (!availableResponse.ok || !attemptsResponse.ok || !enrollmentsResponse.ok) {
-        throw new Error('Failed to fetch exam data');
+        throw new Error(t('failedToFetchExamData'));
       }
 
       const availableExams: Exam[] = await availableResponse.json();
@@ -195,7 +197,7 @@ const StudentExams: React.FC = () => {
         const enrollment = enrollments.find((e: any) => e.courseId === exam.courseId);
         return {
           ...exam,
-          courseName: enrollment?.course?.title || 'Unknown Course'
+          courseName: enrollment?.course?.title || t('unknownCourse')
         };
       });
 
@@ -208,7 +210,7 @@ const StudentExams: React.FC = () => {
 
     } catch (err) {
       console.error('Error fetching exam data:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load exams');
+      setError(err instanceof Error ? err.message : t('failedToLoadExams'));
     } finally {
       setLoading(false);
     }
@@ -222,8 +224,8 @@ const StudentExams: React.FC = () => {
     // Exam lock: prevent starting new exam if one is active
     if (activeExamLock && activeExamLock !== exam.id) {
       toast({
-        title: "Exam Session Active",
-        description: "You have an active exam in progress. Please complete or submit it before starting a new exam.",
+        title: t('examSessionActive'),
+        description: t('examSessionActiveDesc'),
         variant: "destructive",
       });
       
@@ -238,8 +240,8 @@ const StudentExams: React.FC = () => {
     // Check if exam is within scheduled time window
     if (exam.scheduledStartAt && new Date(exam.scheduledStartAt) > new Date()) {
       toast({
-        title: "Exam Not Available Yet",
-        description: `This exam starts on ${new Date(exam.scheduledStartAt).toLocaleString()}`,
+        title: t('examNotAvailableYet'),
+        description: t('examStartsOn', { date: new Date(exam.scheduledStartAt).toLocaleString() }),
         variant: "default",
       });
       return;
@@ -247,8 +249,8 @@ const StudentExams: React.FC = () => {
 
     if (exam.scheduledEndAt && new Date(exam.scheduledEndAt) < new Date()) {
       toast({
-        title: "Exam Period Ended",
-        description: "This exam period has ended and is no longer available.",
+        title: t('examPeriodEnded'),
+        description: t('examPeriodEndedDesc'),
         variant: "destructive",
       });
       return;
@@ -299,7 +301,7 @@ const StudentExams: React.FC = () => {
   };
 
   const formatDate = (dateString: string | null) => {
-    if (!dateString) return 'No date';
+    if (!dateString) return t('noDate');
     return new Date(dateString).toLocaleDateString(undefined, {
       month: 'short',
       day: 'numeric',
@@ -328,9 +330,9 @@ const StudentExams: React.FC = () => {
     return (
       <div className="flex gap-4 overflow-x-auto pb-2 md:pb-0">
         {[
-          { label: 'Assigned', count: totalAssigned, color: 'dark:text-primary text-yellow-600' },
-          { label: 'Completed', count: totalCompleted, color: 'dark:text-green-400 text-green-600' },
-          { label: 'Total Score', count: `${Math.round(averageScore)}%`, color: 'dark:text-white text-slate-700' }
+          { label: t('assigned'), count: totalAssigned, color: 'dark:text-primary text-yellow-600' },
+          { label: t('completed'), count: totalCompleted, color: 'dark:text-green-400 text-green-600' },
+          { label: t('totalScore'), count: `${Math.round(averageScore)}%`, color: 'dark:text-white text-slate-700' }
         ].map((stat, i) => (
           <div key={i} className="dark:bg-navy-card dark:border-navy-border bg-white border border-slate-200 p-4 rounded-xl min-w-[120px] shrink-0 shadow-lg dark:shadow-lg">
             <span className="text-[10px] font-bold dark:text-slate-500 text-slate-500 uppercase tracking-widest block mb-1">{stat.label}</span>
@@ -358,13 +360,13 @@ const StudentExams: React.FC = () => {
           
           <div>
             <span className="text-[10px] font-bold dark:text-primary text-yellow-600 uppercase tracking-widest mb-1 block">
-              {exam.courseName || 'Course'}
+              {exam.courseName || t('course')}
             </span>
             <h4 className="text-lg font-bold dark:text-white text-slate-900 leading-tight dark:group-hover:text-primary group-hover:text-yellow-600 transition-colors">
               {exam.title}
             </h4>
             <p className="text-sm dark:text-slate-400 text-slate-600 mt-2 line-clamp-2">
-              {exam.description || 'No description available'}
+              {exam.description || t('noDescriptionAvailable')}
             </p>
           </div>
 
@@ -452,7 +454,7 @@ const StudentExams: React.FC = () => {
           {attempt.isRetake && (
             <div className="flex items-center gap-2 px-3 py-2 dark:bg-blue-500/10 dark:border-blue-500/20 bg-blue-100 border border-blue-300 rounded-lg">
               <span className="material-symbols-outlined dark:text-blue-400 text-blue-600 text-[18px]">refresh</span>
-              <span className="text-xs dark:text-blue-400 text-blue-600 font-medium">Retake Attempt</span>
+              <span className="text-xs dark:text-blue-400 text-blue-600 font-medium">{t('retakeAttempt')}</span>
             </div>
           )}
         </div>
@@ -497,16 +499,16 @@ const StudentExams: React.FC = () => {
         <div className="p-6 flex-1 space-y-4">
           <div className="flex justify-between items-start">
             <span className="px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider border dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20 bg-blue-100 text-blue-600 border-blue-300">
-              Retake Available
+              {t('retakeAvailable')}
             </span>
           </div>
           
           <div>
             <h4 className="text-lg font-bold dark:text-white text-slate-900 leading-tight">
-              {exam?.title || 'Exam Retake'}
+              {exam?.title || t('examRetake')}
             </h4>
             <p className="text-sm dark:text-slate-400 text-slate-600 mt-2">
-              Focus on {eligibility.mistakesAvailable || 0} unresolved mistakes
+              {t('focusOnMistakes', { count: eligibility.mistakesAvailable || 0 })}
             </p>
           </div>
 
@@ -522,7 +524,7 @@ const StudentExams: React.FC = () => {
             className="w-full py-2.5 dark:bg-blue-500 dark:hover:bg-blue-400 bg-blue-400 hover:bg-blue-500 dark:text-white text-slate-900 font-bold rounded-lg transition-all flex items-center justify-center gap-2"
           >
             <span className="material-symbols-outlined text-[18px]">refresh</span>
-            Start Retake
+            {t('startRetake')}
           </button>
         </div>
       </div>
@@ -541,7 +543,7 @@ const StudentExams: React.FC = () => {
         <div className="max-w-7xl mx-auto w-full p-4 sm:p-8 flex items-center justify-center min-h-screen">
           <div className="text-center space-y-4">
             <div className="animate-spin rounded-full h-16 w-16 border-b-2 dark:border-primary border-yellow-400 mx-auto"></div>
-            <p className="dark:text-slate-400 text-slate-600">Loading your exams...</p>
+            <p className="dark:text-slate-400 text-slate-600">{t('loadingExams')}</p>
           </div>
         </div>
       </StudentLayout>
@@ -621,7 +623,7 @@ const StudentExams: React.FC = () => {
                 <span className="material-symbols-outlined">pending_actions</span>
               </div>
               <div>
-                <h3 className="text-xl font-bold dark:text-white text-slate-900">In Progress</h3>
+                <h3 className="text-xl font-bold dark:text-white text-slate-900">{t('inProgress')}</h3>
                 <p className="text-xs dark:text-slate-500 text-slate-600">{examData.inProgress.length} active session(s)</p>
               </div>
             </div>
@@ -640,7 +642,7 @@ const StudentExams: React.FC = () => {
                 <span className="material-symbols-outlined">verified_user</span>
               </div>
               <div>
-                <h3 className="text-xl font-bold dark:text-white text-slate-900">Available Exams</h3>
+                <h3 className="text-xl font-bold dark:text-white text-slate-900">{t('availableExams')}</h3>
                 <p className="text-xs dark:text-slate-500 text-slate-600">{examData.available.length} exam(s) available</p>
               </div>
             </div>
@@ -670,7 +672,7 @@ const StudentExams: React.FC = () => {
           ) : (
             <div className="col-span-full py-12 dark:bg-navy-dark/30 dark:border-navy-border bg-slate-100 border-2 border-dashed border-slate-300 rounded-2xl flex flex-col items-center justify-center text-center">
               <span className="material-symbols-outlined text-4xl dark:text-slate-700 text-slate-400 mb-2">inbox</span>
-              <p className="dark:text-slate-500 text-slate-600 font-medium">No {selectedCategory !== 'all' ? selectedCategory : ''} exams currently assigned.</p>
+              <p className="dark:text-slate-500 text-slate-600 font-medium">{selectedCategory === 'all' ? t('noExamsAvailable') : t('noExamsInCategory', { category: t(selectedCategory + 'Category') })}</p>
             </div>
           )}
         </section>
@@ -683,7 +685,7 @@ const StudentExams: React.FC = () => {
                 <span className="material-symbols-outlined">refresh</span>
               </div>
               <div>
-                <h3 className="text-xl font-bold dark:text-white text-slate-900">Retake Opportunities</h3>
+                <h3 className="text-xl font-bold dark:text-white text-slate-900">{t('retakeOpportunities')}</h3>
                 <p className="text-xs dark:text-slate-500 text-slate-600">{examData.retakeEligible.length} retake(s) available</p>
               </div>
             </div>
@@ -702,7 +704,7 @@ const StudentExams: React.FC = () => {
                 <span className="material-symbols-outlined">check_circle</span>
               </div>
               <div>
-                <h3 className="text-xl font-bold dark:text-white text-slate-900">Completed Exams</h3>
+                <h3 className="text-xl font-bold dark:text-white text-slate-900">{t('completedExams')}</h3>
                 <p className="text-xs dark:text-slate-500 text-slate-600">{examData.completed.length} exam(s) completed</p>
               </div>
             </div>

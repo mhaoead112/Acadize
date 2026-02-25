@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
 import ParentLayout from "@/components/ParentLayout";
 import { apiEndpoint } from "@/lib/config";
@@ -42,6 +43,7 @@ interface Child {
 }
 
 export default function ParentChildren() {
+  const { t } = useTranslation('parent');
   const { user, token } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
@@ -91,8 +93,8 @@ export default function ParentChildren() {
         setChildren(mappedChildren);
       } else if (response.status === 401) {
         toast({
-          title: "Authentication Error",
-          description: "Please log in again",
+          title: t('toast.authError'),
+          description: t('toast.pleaseLogInAgain'),
           variant: "destructive"
         });
         setLocation('/login');
@@ -111,8 +113,8 @@ export default function ParentChildren() {
   const handleLinkChild = async () => {
     if (!linkCode.trim()) {
       toast({
-        title: "Error",
-        description: "Please enter a valid link code",
+        title: t('common:toast.error'),
+        description: t('toast.invalidLinkCode'),
         variant: "destructive"
       });
       return;
@@ -132,8 +134,8 @@ export default function ParentChildren() {
 
       if (response.ok) {
         toast({
-          title: "Success",
-          description: "Child linked successfully!"
+          title: t('common:toast.success'),
+          description: t('toast.childLinkedSuccess')
         });
         setLinkDialogOpen(false);
         setLinkCode("");
@@ -141,15 +143,15 @@ export default function ParentChildren() {
       } else {
         const error = await response.json();
         toast({
-          title: "Error",
-          description: error.message || "Failed to link child",
+          title: t('common:toast.error'),
+          description: error.message || t('toast.failedToLinkChild'),
           variant: "destructive"
         });
       }
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to link child. Please try again.",
+        title: t('common:toast.error'),
+        description: t('toast.failedToLinkChild'),
         variant: "destructive"
       });
     } finally {
@@ -172,15 +174,15 @@ export default function ParentChildren() {
 
       if (response.ok) {
         toast({
-          title: "Success",
-          description: "Child unlinked successfully"
+          title: t('common:toast.success'),
+          description: t('toast.childUnlinkedSuccess')
         });
         setChildren(children.filter(c => c.id !== childId));
       }
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to unlink child",
+        title: t('common:toast.error'),
+        description: t('toast.failedToUnlinkChild'),
         variant: "destructive"
       });
     }
@@ -202,7 +204,7 @@ export default function ParentChildren() {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">My Children</h1>
+            <h1 className="text-2xl font-bold text-gray-900">{t('myChildren')}</h1>
             <p className="text-gray-600">Manage your linked student accounts</p>
           </div>
           <Dialog open={linkDialogOpen} onOpenChange={setLinkDialogOpen}>
@@ -346,7 +348,7 @@ export default function ParentChildren() {
         {/* How to Link Section */}
         <Card className="bg-gradient-to-r from-pink-50 to-purple-50 border-pink-200">
           <CardHeader>
-            <CardTitle className="text-lg">How to Link a Child Account</CardTitle>
+            <CardTitle className="text-lg">{t('howToLinkChild')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

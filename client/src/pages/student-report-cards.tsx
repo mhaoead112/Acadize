@@ -1,4 +1,5 @@
-﻿import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from "framer-motion";
 import StudentLayout from "@/components/StudentLayout";
 import { useAuth } from '@/hooks/useAuth';
@@ -54,6 +55,7 @@ const ACADEMIC_YEARS = [
 ];
 
 export default function StudentReportCards() {
+  const { t } = useTranslation('dashboard');
   const { token, user } = useAuth();
   const [reportCards, setReportCards] = useState<ReportCardWithDetails[]>([]);
   const [selectedYear, setSelectedYear] = useState(ACADEMIC_YEARS[0]);
@@ -166,7 +168,7 @@ export default function StudentReportCards() {
           <div>
             <h1 className="text-3xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <FileText className="h-8 w-8 text-primary dark:text-[#FFD700]" />
-              Report Cards
+              {t('reportCards')}
             </h1>
             <p className="text-slate-600 dark:text-slate-400 mt-1">
               View and download your academic progress reports
@@ -229,7 +231,7 @@ export default function StudentReportCards() {
           <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-white/10">
             <CardContent className="flex items-center justify-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-primary dark:text-[#FFD700]" />
-              <span className="ml-3 text-slate-600 dark:text-slate-400">Loading report cards...</span>
+              <span className="ml-3 text-slate-600 dark:text-slate-400">{t('loadingReportCards')}</span>
             </CardContent>
           </Card>
           </div>
@@ -256,10 +258,10 @@ export default function StudentReportCards() {
                 <CardContent className="flex flex-col items-center justify-center py-12">
                   <FileText className="h-16 w-16 text-slate-300 dark:text-slate-600 mb-4" />
                   <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
-                    No Report Cards Found
+                    {t('noReportCardsFound')}
                   </h3>
                   <p className="text-slate-600 dark:text-slate-400 text-center max-w-md">
-                    Report cards for the selected period will appear here once they are uploaded by your teachers.
+                    {t('noReportCardsDescription')}
                   </p>
                 </CardContent>
               </Card>

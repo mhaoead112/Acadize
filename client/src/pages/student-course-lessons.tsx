@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef, useMemo, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { useRoute, Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
@@ -34,6 +35,7 @@ interface Course {
 }
 
 export default function StudentCourseLessonsPage() {
+  const { t } = useTranslation(['dashboard', 'common']);
   const [match, params] = useRoute("/student/courses/:courseId/lessons");
   const courseId = params?.courseId as string | undefined;
   const { getAuthHeaders, user } = useAuth();
@@ -204,8 +206,9 @@ export default function StudentCourseLessonsPage() {
 
   if (isLoading) {
     return (
-      <div className="font-display bg-slate-50 dark:bg-background text-slate-900 dark:text-white overflow-hidden h-screen flex items-center justify-center">
+      <div className="font-display bg-slate-50 dark:bg-background text-slate-900 dark:text-white overflow-hidden h-screen flex flex-col items-center justify-center gap-4">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <p className="text-slate-600 dark:text-slate-400 text-sm">{t('common:common.loading')}</p>
       </div>
     );
   }
@@ -371,7 +374,7 @@ export default function StudentCourseLessonsPage() {
                   whileTap="tap"
                 >
                   <span className="material-symbols-outlined text-[18px]">arrow_back</span>
-                  Back to Course
+                  {t('backToCourse')}
                 </motion.button>
               </Link>
             </div>
@@ -558,8 +561,8 @@ export default function StudentCourseLessonsPage() {
               ) : (
                 <div className="text-center py-20">
                   <span className="material-symbols-outlined text-6xl text-slate-600 mb-4 block">description</span>
-                  <h3 className="text-xl font-semibold text-white mb-2">No Lesson Selected</h3>
-                  <p className="text-slate-400">Choose a lesson from the sidebar to view its content.</p>
+                  <h3 className="text-xl font-semibold text-white mb-2">{t('noLessonSelected')}</h3>
+                  <p className="text-slate-400">{t('noLessonSelectedDesc')}</p>
                 </div>
               )}
             </div>

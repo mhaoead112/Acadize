@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import AdminLayout from "@/components/AdminLayout";
 import { apiEndpoint } from "@/lib/config";
@@ -24,6 +25,7 @@ import {
 } from "lucide-react";
 
 export default function AdminSettings() {
+  const { t } = useTranslation('admin');
   const { toast } = useToast();
   const { token } = useAuth();
   const queryClient = useQueryClient();
@@ -105,6 +107,55 @@ export default function AdminSettings() {
     minimumPayout: "50",
   });
 
+  const [localeSettings, setLocaleSettings] = useState({ defaultLocale: "en", enabledLocales: ["en"] as string[] });
+
+  const { data: localeData, refetch: refetchLocale } = useQuery({
+    queryKey: ['admin-settings-locale'],
+    queryFn: async () => {
+      const response = await fetch(apiEndpoint('/api/admin/settings/locale'), {
+        headers: { Authorization: `Bearer ${token}` },
+        credentials: 'include'
+      });
+      if (!response.ok) throw new Error('Failed to fetch locale settings');
+      return response.json();
+    },
+    enabled: !!token
+  });
+
+  useEffect(() => {
+    if (localeData) {
+      setLocaleSettings({
+        defaultLocale: localeData.defaultLocale ?? 'en',
+        enabledLocales: Array.isArray(localeData.enabledLocales) ? localeData.enabledLocales : ['en'],
+      });
+    }
+  }, [localeData]);
+
+  const localeSaveMutation = useMutation({
+    mutationFn: async (payload: { defaultLocale?: string; enabledLocales?: string[] }) => {
+      const response = await fetch(apiEndpoint('/api/admin/settings/locale'), {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify(payload)
+      });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || 'Failed to update locale settings');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({ title: t('toast.localeSaved') });
+      refetchLocale();
+      queryClient.invalidateQueries({ queryKey: ['admin-settings-locale'] });
+    },
+    onError: (e: Error) => toast({ title: e.message, variant: 'destructive' }),
+  });
+
   // Update local state when settings are fetched
   useEffect(() => {
     if (settingsData?.settings) {
@@ -134,16 +185,17 @@ export default function AdminSettings() {
       return response.json();
     },
     onSuccess: (data, variables) => {
+      const category = variables.category.charAt(0).toUpperCase() + variables.category.slice(1);
       toast({
-        title: "Success",
-        description: `${variables.category.charAt(0).toUpperCase() + variables.category.slice(1)} settings saved successfully`,
+        title: t('common:toast.success'),
+        description: t('toast.categorySettingsSaved', { category }),
       });
       queryClient.invalidateQueries({ queryKey: ["admin-settings"] });
     },
     onError: (error) => {
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to save settings",
+        title: t('common:toast.error'),
+        description: error instanceof Error ? error.message : t('common:toast.failed'),
         variant: "destructive",
       });
     },
@@ -165,15 +217,15 @@ export default function AdminSettings() {
     },
     onSuccess: () => {
       toast({
-        title: "Success",
-        description: "Settings reset to defaults",
+        title: t('common:toast.success'),
+        description: t('toast.settingsReset'),
       });
       queryClient.invalidateQueries({ queryKey: ["admin-settings"] });
     },
     onError: () => {
       toast({
-        title: "Error",
-        description: "Failed to reset settings",
+        title: t('common:toast.error'),
+        description: t('toast.settingsResetError'),
         variant: "destructive",
       });
     },
@@ -223,7 +275,7 @@ export default function AdminSettings() {
         {/* Header */}
         <div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            System Settings ⚙️
+            {t('systemSettings')} ⚙️
           </h1>
           <p className="text-gray-600">
             Configure platform settings and preferences
@@ -253,7 +305,69 @@ export default function AdminSettings() {
               <DollarSign className="h-4 w-4 mr-2" />
               Payment
             </TabsTrigger>
+            <TabsTrigger value="locale">
+              <Globe className="h-4 w-4 mr-2" />
+              Language
+            </TabsTrigger>
           </TabsList>
+
+          {/* Locale (i18n) Settings */}
+          <TabsContent value="locale">
+            <Card>
+              <CardHeader>
+                <CardTitle>Language (i18n)</CardTitle>
+                <CardDescription>Default language and enabled languages for this organization</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <Label>Default language</Label>
+                  <Select
+                    value={localeSettings.defaultLocale}
+                    onValueChange={(v) => setLocaleSettings((s) => ({ ...s, defaultLocale: v }))}
+                  >
+                    <SelectTrigger className="w-48">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="en">English</SelectItem>
+                      <SelectItem value="ar">العربية (Arabic)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Enabled languages</Label>
+                  <div className="flex gap-4">
+                    {['en', 'ar'].map((code) => (
+                      <label key={code} className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={localeSettings.enabledLocales.includes(code)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setLocaleSettings((s) => ({ ...s, enabledLocales: [...s.enabledLocales, code] }));
+                            } else {
+                              setLocaleSettings((s) => ({
+                                ...s,
+                                enabledLocales: s.enabledLocales.filter((l) => l !== code),
+                                defaultLocale: s.defaultLocale === code ? (s.enabledLocales.find((l) => l !== code) || 'en') : s.defaultLocale,
+                              }));
+                            }
+                          }}
+                          className="rounded border-gray-300"
+                        />
+                        <span>{code === 'en' ? 'English' : 'العربية (Arabic)'}</span>
+                      </label>
+                    ))}
+                  </div>
+                  <p className="text-sm text-muted-foreground">Users can only choose from enabled languages. At least one must be enabled.</p>
+                </div>
+                <Button onClick={() => localeSaveMutation.mutate(localeSettings)} disabled={localeSaveMutation.isPending}>
+                  <Save className="h-4 w-4 mr-2" />
+                  Save locale settings
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           {/* General Settings */}
           <TabsContent value="general">

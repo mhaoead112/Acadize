@@ -1,41 +1,43 @@
+import { useTranslation } from "react-i18next";
 import { Users, MessageSquare, Calendar, Trophy, TrendingUp, Heart } from "lucide-react";
 import { Link } from "wouter";
 import { useState } from "react";
 
 export default function Community() {
+  const { t } = useTranslation('landing');
   const [activeTab, setActiveTab] = useState("discussions");
   const stats = [
-    { icon: Users, value: "50K+", label: "Community Members" },
-    { icon: MessageSquare, value: "100K+", label: "Discussions" },
-    { icon: Calendar, value: "500+", label: "Events Hosted" },
-    { icon: Trophy, value: "1K+", label: "Success Stories" }
+    { icon: Users, value: "50K+", label: t('community.communityMembers') },
+    { icon: MessageSquare, value: "100K+", label: t('community.discussions') },
+    { icon: Calendar, value: "500+", label: t('community.eventsHosted') },
+    { icon: Trophy, value: "1K+", label: t('community.successStories') }
   ];
 
   const forums = [
     {
-      title: "General Discussion",
-      description: "Share ideas, ask questions, and connect with other educators",
+      title: t('community.generalDiscussion'),
+      description: t('community.generalDiscussionDesc'),
       members: "12.5K",
       posts: "45.2K",
       icon: MessageSquare
     },
     {
-      title: "Course Design",
-      description: "Best practices and tips for creating engaging course content",
+      title: t('community.courseDesign'),
+      description: t('community.courseDesignDesc'),
       members: "8.3K",
       posts: "23.1K",
       icon: TrendingUp
     },
     {
-      title: "Student Success",
-      description: "Strategies to help students achieve their learning goals",
+      title: t('community.studentSuccess'),
+      description: t('community.studentSuccessDesc'),
       members: "10.1K",
       posts: "31.5K",
       icon: Trophy
     },
     {
-      title: "Technical Support",
-      description: "Get help with technical issues and platform features",
+      title: t('community.technicalSupport'),
+      description: t('community.technicalSupportDesc'),
       members: "15.2K",
       posts: "52.8K",
       icon: Users
@@ -44,19 +46,19 @@ export default function Community() {
 
   const events = [
     {
-      title: "Webinar: Advanced Analytics for Educators",
+      title: t('community.webinarTitle'),
       date: "Dec 18, 2024",
       time: "2:00 PM EST",
       attendees: "234 registered"
     },
     {
-      title: "Monthly Community Meetup",
+      title: t('community.meetupTitle'),
       date: "Dec 22, 2024",
       time: "3:00 PM EST",
       attendees: "156 registered"
     },
     {
-      title: "Workshop: Creating Interactive Assessments",
+      title: t('community.workshopTitle'),
       date: "Dec 28, 2024",
       time: "1:00 PM EST",
       attendees: "189 registered"
@@ -73,7 +75,7 @@ export default function Community() {
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6">
             Join Our{" "}
             <span className="bg-gradient-to-r from-primary to-yellow-400 bg-clip-text text-transparent">
-              Community
+              {t('communityTitle')}
             </span>
           </h1>
           <p className="text-lg sm:text-xl text-text-muted max-w-3xl mx-auto mb-8">

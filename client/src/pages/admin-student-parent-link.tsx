@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import AdminLayout from "@/components/AdminLayout";
 import { apiEndpoint } from "@/lib/config";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -59,6 +60,7 @@ interface StudentParentLink {
 }
 
 export default function AdminStudentParentLink() {
+  const { t } = useTranslation('admin');
   const { token } = useAuth();
   const { toast } = useToast();
   
@@ -107,8 +109,8 @@ export default function AdminStudentParentLink() {
     } catch (error) {
       console.error('Failed to fetch data:', error);
       toast({
-        title: "Error",
-        description: "Failed to load students and parents",
+        title: t('common:toast.error'),
+        description: t('toast.failedToLoadStudentsAndParents'),
         variant: "destructive",
       });
     } finally {
@@ -136,8 +138,8 @@ export default function AdminStudentParentLink() {
 
       if (response.ok) {
         toast({
-          title: "Success",
-          description: `${selectedStudent.fullName} has been linked to parent`,
+          title: t('common:toast.success'),
+          description: t('toast.linkSuccessWithName', { name: selectedStudent.fullName }),
         });
         setIsLinkModalOpen(false);
         setSelectedStudent(null);
@@ -149,8 +151,8 @@ export default function AdminStudentParentLink() {
       }
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: error.message || "Failed to link student with parent",
+        title: t('common:toast.error'),
+        description: error.message || t('toast.linkError'),
         variant: "destructive",
       });
     } finally {
@@ -173,8 +175,8 @@ export default function AdminStudentParentLink() {
 
       if (response.ok) {
         toast({
-          title: "Success",
-          description: "Student has been unlinked from parent",
+          title: t('common:toast.success'),
+          description: t('toast.unlinkSuccess'),
         });
         fetchData(); // Refresh data
       } else {
@@ -183,8 +185,8 @@ export default function AdminStudentParentLink() {
       }
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: error.message || "Failed to unlink student from parent",
+        title: t('common:toast.error'),
+        description: error.message || t('toast.unlinkError'),
         variant: "destructive",
       });
     } finally {
@@ -240,7 +242,7 @@ export default function AdminStudentParentLink() {
             className="mb-8"
           >
             <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
-              Student-Parent Links
+              {t('studentParentLinks')}
             </h1>
             <p className="text-slate-600 dark:text-slate-400">
               Manage relationships between students and their parents

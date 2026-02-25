@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useRoute, useLocation } from 'wouter';
 import { useAuth } from '@/hooks/useAuth';
 import { apiEndpoint } from '@/lib/config';
@@ -46,6 +47,7 @@ interface ExamDetails {
 }
 
 export default function TeacherExamQuestions() {
+  const { t } = useTranslation('teacher');
   const [match, params] = useRoute('/teacher/exams/:id/questions');
   const examId = params?.id;
   const [, setLocation] = useLocation();
@@ -158,7 +160,7 @@ export default function TeacherExamQuestions() {
       }
     } catch (error) {
       console.error(error);
-      toast({ title: 'Error', description: 'Failed to load exam data', variant: 'destructive' });
+      toast({ title: t('common:toast.error'), description: t('toast.failedToLoadExamData'), variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -280,10 +282,10 @@ export default function TeacherExamQuestions() {
       }
       
       setLastSaved(new Date());
-      toast({ title: 'Saved', description: 'Question saved successfully' });
+      toast({ title: t('common:toast.saved'), description: t('toast.questionSaved') });
     } catch (error) {
       console.error(error);
-      toast({ title: 'Error', description: 'Failed to save question', variant: 'destructive' });
+      toast({ title: t('common:toast.error'), description: t('toast.failedToSaveQuestion'), variant: 'destructive' });
     } finally {
       setSaving(false);
     }
@@ -344,7 +346,7 @@ export default function TeacherExamQuestions() {
           {/* Left Sidebar: Question List */}
           <aside className="w-full lg:w-[320px] xl:w-[380px] flex flex-col gap-4 shrink-0">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Questions ({questions.length})</h3>
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{t('questions')} ({questions.length})</h3>
               <span className="text-xs font-medium bg-slate-100 dark:bg-navy-card border border-slate-200 dark:border-navy-border px-2 py-1 rounded text-slate-500 dark:text-slate-400">
                 Total: {questions.reduce((acc, q) => acc + (q.points || 0), 0)}pts
               </span>

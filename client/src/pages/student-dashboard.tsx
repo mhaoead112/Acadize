@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, memo } from "react";
+import { useTranslation } from "react-i18next";
 import { useLocation, Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -69,6 +70,7 @@ interface Assignment {
 }
 
 export default function StudentDashboard() {
+  const { t } = useTranslation('dashboard');
   const { user, token, isLoading: authLoading } = useAuth();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -115,16 +117,20 @@ export default function StudentDashboard() {
       const authHeaders = getAuthHeaders();
 
       // Parallelize all API calls for better performance
-      const [enrollmentsRes, progressRes, streakRes] = await Promise.all([
+      const [enrollmentsRes, progressOverallRes, progressCoursesRes, streakRes] = await Promise.all([
         fetch(apiEndpoint("/api/enrollments/student"), {
           headers: authHeaders,
           credentials: "include",
         }),
-        fetch(apiEndpoint("/api/progress/student"), {
+        fetch(apiEndpoint("/api/progress/overall"), {
           headers: authHeaders,
           credentials: "include",
         }).catch(() => null),
-        fetch(apiEndpoint("/api/streak"), {
+        fetch(apiEndpoint("/api/progress/courses"), {
+          headers: authHeaders,
+          credentials: "include",
+        }).catch(() => null),
+        fetch(apiEndpoint("/api/streaks/me"), {
           headers: authHeaders,
           credentials: "include",
         }).catch(() => null),
@@ -245,35 +251,49 @@ export default function StudentDashboard() {
       setLessons(Array(totalLessons).fill({}));
 
       // Handle progress data if available
-      if (progressRes?.ok) {
-        const progressData = await progressRes.json();
-        if (progressData.overallProgress) {
-          setOverallProgress(progressData.overallProgress);
-        }
-        if (progressData.courseProgress) {
-          const progress: Record<string, number> = {};
-          progressData.courseProgress.forEach((cp: any) => {
-            progress[cp.courseId] = cp.progressPercentage;
-          });
-          setCourseProgress(progress);
-        }
+      let nextOverall = overallProgress;
+      if (progressOverallRes?.ok) {
+        const overallData = await progressOverallRes.json();
+        nextOverall = {
+          totalScore: overallData.totalScore ?? 0,
+          totalMaxScore: overallData.totalMaxScore ?? 0,
+          progressPercentage: overallData.progressPercentage ?? 0,
+          totalBonusPoints: overallData.totalBonusPoints ?? 0,
+          assignmentsCompleted: overallData.assignmentsCompleted ?? 0,
+          totalAssignments: overallData.totalAssignments ?? 0,
+        };
+        setOverallProgress(nextOverall);
+      }
+      if (progressCoursesRes?.ok) {
+        const coursesData = await progressCoursesRes.json();
+        const progress: Record<string, number> = {};
+        (Array.isArray(coursesData) ? coursesData : []).forEach((cp: any) => {
+          if (cp?.courseId != null) progress[cp.courseId] = cp.progressPercentage ?? 0;
+        });
+        setCourseProgress(progress);
       }
 
       // Handle streak data if available
       if (streakRes?.ok) {
         const streakData = await streakRes.json();
-        setStreakInfo(streakData);
+        const nextStreak = {
+          currentStreak: streakData.currentStreak ?? 0,
+          longestStreak: streakData.longestStreak ?? 0,
+          totalActiveDays: streakData.totalActiveDays ?? 0,
+          weeklyGoalHours: streakData.weeklyGoalHours ?? 10,
+          currentWeekHours: streakData.currentWeekHours ?? 0,
+          weeklyProgress: streakData.weeklyProgress ?? 0,
+        };
+        setStreakInfo(nextStreak);
         checkWeeklyGoalPrompt(streakData);
-        
-        // Trigger progress nudges
-        checkProgressNudges(overallProgress, streakData, enrollmentsList);
+        checkProgressNudges(nextOverall, nextStreak, enrollmentsList);
       }
 
     } catch (error) {
       console.error("Failed to fetch dashboard data:", error);
       toast({
-        title: "Error",
-        description: "Failed to load dashboard data",
+        title: t('error'),
+        description: t('failedToLoadDashboard'),
         variant: "destructive",
       });
     } finally {
@@ -327,15 +347,15 @@ export default function StudentDashboard() {
         localStorage.setItem('lastWeeklyGoalPrompt', new Date().toISOString());
         setShowGoalDialog(false);
         toast({
-          title: 'Goal Updated',
-          description: `Your weekly study goal is now ${weeklyGoal} hours`,
+          title: t('goalUpdated'),
+          description: t('goalUpdatedDesc', { hours: weeklyGoal }),
         });
       }
     } catch (error) {
       console.error('Failed to update weekly goal:', error);
       toast({
-        title: 'Error',
-        description: 'Failed to update weekly goal',
+        title: t('error'),
+        description: t('failedToUpdateGoal'),
         variant: 'destructive',
       });
     }
@@ -387,35 +407,49 @@ export default function StudentDashboard() {
 
   const quickActions = useMemo(() => [
     {
-      title: 'View Announcements',
-      description: 'Check latest updates',
+      title: t('scanAttendance'),
+      description: t('scanAttendanceDesc'),
+      icon: CheckCircle2,
+      color: 'green' as const,
+      onClick: () => setLocation('/student/attendance/scan')
+    },
+    {
+      title: t('myAttendance'),
+      description: t('myAttendanceDesc'),
+      icon: Calendar,
+      color: 'blue' as const,
+      onClick: () => setLocation('/student/attendance')
+    },
+    {
+      title: t('viewAnnouncements'),
+      description: t('viewAnnouncementsDesc'),
       icon: Megaphone,
       color: 'blue' as const,
       onClick: () => setLocation('/student/announcements'),
       badge: announcements.length > 0 ? `${announcements.length}` : undefined
     },
     {
-      title: 'My Classes',
-      description: 'Browse your enrolled classes',
+      title: t('myClasses'),
+      description: t('myClassesDesc'),
       icon: BookOpen,
       color: 'green' as const,
       onClick: () => setLocation('/student/courses')
     },
     {
-      title: 'Lessons',
-      description: 'Access course materials',
+      title: t('lessons'),
+      description: t('lessonsDesc'),
       icon: FileText,
       color: 'purple' as const,
       onClick: () => setLocation('/student/courses')
     },
     {
-      title: 'View Schedule',
-      description: 'Check upcoming classes',
+      title: t('viewSchedule'),
+      description: t('viewScheduleDesc'),
       icon: Calendar,
       color: 'orange' as const,
       onClick: () => setLocation('/student/courses')
     }
-  ], [announcements.length, setLocation]);
+  ], [t, announcements.length, setLocation]);
 
   // Use the overall progress from API (calculated from total scores / total max scores)
   const displayProgress = useMemo(() => Math.round(overallProgress.progressPercentage), [overallProgress.progressPercentage]);
@@ -424,12 +458,13 @@ export default function StudentDashboard() {
     return (
       <StudentLayout>
         <motion.div 
-          className="flex-1 flex items-center justify-center bg-background"
+          className="flex-1 flex flex-col items-center justify-center gap-4 bg-background"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={springConfigs.smooth}
         >
           <Loader2 className="h-8 w-8 animate-spin text-[#FFD700]" />
+          <p className="text-slate-600 dark:text-slate-400 text-sm">{t('common:common.loading')}</p>
         </motion.div>
       </StudentLayout>
     );
@@ -458,18 +493,65 @@ export default function StudentDashboard() {
               <h1 
                 className="text-3xl md:text-4xl font-bold mb-2 text-white"
               >
-                Welcome back, {user?.fullName?.split(' ')[0]}! 
+                {t('welcomeBack', { name: user?.fullName?.split(' ')[0] ?? '' })} 
               </h1>
               <p 
                 className="text-slate-300 text-lg mb-4"
               >
-                You have <span className="text-[#FFD700] font-bold">{assignments.length} assignments</span> due soon. Keep up the momentum!
+                {t('assignmentsDueSoon', { count: assignments.length })}
               </p>
               <Button onClick={() => setLocation('/student/assignments')} className="bg-[#FFD700] text-slate-900 hover:bg-yellow-500 rounded-full px-6 py-2 font-semibold transition-all shadow-lg shadow-[#FFD700]/30">
-                View Assignments <ArrowRight className="ml-2 h-4 w-4" />
+                {t('viewAssignments')} <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </div>
           </div>
+
+          {/* Quick Actions */}
+          <motion.section
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={springConfigs.gentle}
+            className="flex flex-col gap-4"
+          >
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white">{t('quickActions')}</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+              {quickActions.map((action, index) => {
+                const Icon = action.icon;
+                const iconColorMap = {
+                  green: 'text-emerald-600 dark:text-emerald-400',
+                  blue: 'text-blue-600 dark:text-blue-400',
+                  purple: 'text-purple-600 dark:text-purple-400',
+                  orange: 'text-orange-600 dark:text-orange-400',
+                };
+                const iconColor = iconColorMap[action.color] || iconColorMap.green;
+                return (
+                  <motion.button
+                    key={action.title}
+                    type="button"
+                    onClick={action.onClick}
+                    className="min-h-[48px] flex flex-col items-center justify-center gap-1 p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#112240]/80 shadow-sm hover:shadow-md hover:border-[#FFD700]/30 dark:hover:border-[#FFD700]/30 transition-all text-slate-900 dark:text-white"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    variants={fadeInUpVariants}
+                    custom={index}
+                  >
+                    <div className="relative flex items-center justify-center">
+                      <Icon className={`h-6 w-6 sm:h-7 sm:w-7 ${iconColor}`} />
+                      {action.badge != null && (
+                        <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 flex items-center justify-center text-[10px] font-bold rounded-full bg-[#FFD700] text-slate-900">
+                          {action.badge}
+                        </span>
+                      )}
+                    </div>
+                    <span className="font-semibold text-sm truncate w-full text-center">{action.title}</span>
+                    {action.description && (
+                      <span className="text-xs text-slate-500 dark:text-slate-400 truncate w-full text-center hidden sm:block">{action.description}</span>
+                    )}
+                  </motion.button>
+                );
+              })}
+            </div>
+          </motion.section>
 
           <div 
             className="grid grid-cols-1 lg:grid-cols-3 gap-8"
@@ -487,9 +569,9 @@ export default function StudentDashboard() {
                           animate={{ opacity: 1, x: 0 }}
                           transition={springConfigs.gentle}
                         >
-                            <h2 className="text-xl font-bold text-slate-900 dark:text-white">My Classes</h2>
+                            <h2 className="text-xl font-bold text-slate-900 dark:text-white">{t('myCourses')}</h2>
                             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                              <Button variant="link" onClick={() => setLocation('/student/courses')} className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">View All</Button>
+                              <Button variant="link" onClick={() => setLocation('/student/courses')} className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">{t('viewAll')}</Button>
                             </motion.div>
                         </motion.div>
                         <motion.div 
@@ -547,7 +629,7 @@ export default function StudentDashboard() {
                                             <p className="text-slate-600 dark:text-slate-400 text-sm mb-4 line-clamp-2">{enrollment.course.description}</p>
                                             <div className="space-y-2">
                                                 <div className="flex justify-between text-xs text-slate-600 dark:text-slate-400">
-                                                    <span>Progress</span>
+                                                    <span>{t('progress')}</span>
                                                     <motion.span
                                                       initial={{ opacity: 0, scale: 0.8 }}
                                                       animate={{ opacity: 1, scale: 1 }}
@@ -569,7 +651,7 @@ export default function StudentDashboard() {
                                   animate={{ opacity: 1, scale: 1 }}
                                   transition={springConfigs.bouncy}
                                 >
-                                    No classes enrolled yet.
+                                    {t('noClassesEnrolledYet')}
                                 </motion.div>
                             )}
                         </motion.div>
@@ -583,7 +665,7 @@ export default function StudentDashboard() {
                           animate={{ opacity: 1, x: 0 }}
                           transition={springConfigs.gentle}
                         >
-                          Upcoming Due Dates
+                          {t('upcomingDueDates')}
                         </motion.h2>
                         <motion.div 
                           className="space-y-3"
@@ -621,7 +703,7 @@ export default function StudentDashboard() {
                                         </div>
                                         <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                                           <Button onClick={() => setLocation('/student/assignments')} size="sm" variant={assignment.status === 'submitted' ? "outline" : "default"} className={assignment.status === 'submitted' ? "border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300" : "bg-[#FFD700] text-slate-900 hover:bg-yellow-500"}>
-                                              {assignment.status === 'submitted' ? 'View' : 'Start'}
+                                              {assignment.status === 'submitted' ? t('view') : t('start')}
                                           </Button>
                                         </motion.div>
                                     </motion.div>
@@ -634,7 +716,7 @@ export default function StudentDashboard() {
                                   animate={{ opacity: 1, scale: 1 }}
                                   transition={springConfigs.bouncy}
                                 >
-                                  No upcoming assignments
+                                  {t('noUpcomingAssignments')}
                                 </motion.div>
                             )}
                         </motion.div>
@@ -665,7 +747,7 @@ export default function StudentDashboard() {
                       }}
                     >
                         <div className="flex justify-between items-center mb-4">
-                            <h3 className="font-semibold text-slate-900 dark:text-white">Weekly Study Time</h3>
+                            <h3 className="font-semibold text-slate-900 dark:text-white">{t('weeklyStudyTime')}</h3>
                             <motion.span 
                               className="text-xs text-slate-600 dark:text-slate-400"
                               initial={{ opacity: 0, scale: 0.8 }}
@@ -697,7 +779,7 @@ export default function StudentDashboard() {
                             ))}
                         </div>
                         <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400">
-                            <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+                            <span>{t('mon')}</span><span>{t('tue')}</span><span>{t('wed')}</span><span>{t('thu')}</span><span>{t('fri')}</span><span>{t('sat')}</span><span>{t('sun')}</span>
                         </div>
                     </motion.div>
 
@@ -711,7 +793,7 @@ export default function StudentDashboard() {
                       }}
                     >
                         <div className="flex justify-between items-center mb-2">
-                            <h3 className="font-semibold text-slate-900 dark:text-white">Overall Progress</h3>
+                            <h3 className="font-semibold text-slate-900 dark:text-white">{t('overallProgress')}</h3>
                             <motion.span 
                               className="text-sm text-[#FFD700]"
                               initial={{ opacity: 0 }}
@@ -755,7 +837,7 @@ export default function StudentDashboard() {
                             >
                               {streakInfo.currentStreak}
                             </motion.div>
-                            <div className="text-sm text-orange-600 dark:text-orange-300">Day Streak!</div>
+                            <div className="text-sm text-orange-600 dark:text-orange-300">{t('dayStreak')}</div>
                         </div>
                         <motion.div 
                           className="h-12 w-12 bg-orange-500/20 rounded-full flex items-center justify-center relative z-10"
@@ -781,7 +863,7 @@ export default function StudentDashboard() {
                       }}
                     >
                         <div className="flex justify-between items-center mb-4">
-                            <h3 className="font-semibold text-slate-900 dark:text-white">Recent Assignments</h3>
+                            <h3 className="font-semibold text-slate-900 dark:text-white">{t('recentAssignments')}</h3>
                         </div>
                         <motion.div 
                           className="space-y-4"
@@ -816,13 +898,13 @@ export default function StudentDashboard() {
                                           animate={{ opacity: 1, scale: 1 }}
                                           transition={{ delay: 0.2 + i * 0.1 }}
                                         >
-                                          {assignment.status === 'graded' ? '95%' : 'Pending'}
+                                          {assignment.status === 'graded' ? '95%' : t('pending')}
                                         </motion.p>
                                         <p className="text-xs text-green-600 dark:text-green-400">{assignment.status === 'graded' ? '+2%' : ''}</p>
                                     </div>
                                 </motion.div>
                             ))}
-                            {assignments.length === 0 && <p className="text-sm text-slate-500 dark:text-slate-400">No recent assignments</p>}
+                            {assignments.length === 0 && <p className="text-sm text-slate-500 dark:text-slate-400">{t('noRecentAssignments')}</p>}
                         </motion.div>
                     </motion.div>
                 </motion.div>
@@ -834,7 +916,7 @@ export default function StudentDashboard() {
         <Dialog open={showGoalDialog} onOpenChange={setShowGoalDialog}>
              <DialogContent className="sm:max-w-[425px] bg-white dark:bg-[#112240] text-slate-900 dark:text-white border-slate-200 dark:border-slate-700">
                 <DialogHeader>
-                    <DialogTitle>Set Your Weekly Study Goal</DialogTitle>
+                    <DialogTitle>{t('setWeeklyGoal')}</DialogTitle>
                     <DialogDescription className="text-slate-600 dark:text-slate-400">
                     How many hours do you want to study this week? Setting a goal helps you stay motivated!
                     </DialogDescription>

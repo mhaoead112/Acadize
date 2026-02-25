@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import ParentLayout from "@/components/ParentLayout";
 import { useAuth } from "@/hooks/useAuth";
 import { useWebSocket } from "@/hooks/useWebSocket";
@@ -290,6 +291,7 @@ interface TypingUser {
 }
 
 export default function ParentMessagesPage() {
+  const { t } = useTranslation('parent');
   const { user, token, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   
@@ -546,8 +548,8 @@ export default function ParentMessagesPage() {
     } catch (error) {
       console.error("Failed to send message:", error);
       toast({
-        title: "Error",
-        description: "Failed to send message",
+        title: t('common:toast.error'),
+        description: t('toast.failedToSendMessage'),
         variant: "destructive",
       });
     } finally {
@@ -617,8 +619,8 @@ export default function ParentMessagesPage() {
             // Media files will be updated when WebSocket message arrives
             
             toast({
-              title: "Success",
-              description: "File uploaded successfully",
+              title: t('common:toast.success'),
+              description: t('toast.fileUploadedSuccessfully'),
             });
           }
         }
@@ -626,8 +628,8 @@ export default function ParentMessagesPage() {
 
       xhr.addEventListener('error', () => {
         toast({
-          title: "Error",
-          description: "Failed to upload file",
+          title: t('common:toast.error'),
+          description: t('toast.failedToUploadFile'),
           variant: "destructive",
         });
       });
@@ -641,8 +643,8 @@ export default function ParentMessagesPage() {
     } catch (error) {
       console.error("Failed to upload file:", error);
       toast({
-        title: "Error",
-        description: "Failed to upload file",
+        title: t('common:toast.error'),
+        description: t('toast.failedToUploadFile'),
         variant: "destructive",
       });
     } finally {
@@ -707,8 +709,8 @@ export default function ParentMessagesPage() {
   const handleCreateGroup = async () => {
     if (!groupName.trim()) {
       toast({
-        title: "Error",
-        description: "Group name is required",
+        title: t('common:toast.error'),
+        description: t('toast.groupNameRequired'),
         variant: "destructive",
       });
       return;
@@ -738,15 +740,15 @@ export default function ParentMessagesPage() {
         setSelectedMembers([]);
         
         toast({
-          title: "Success",
-          description: "Group created successfully",
+          title: t('common:toast.success'),
+          description: t('toast.groupCreatedSuccessfully'),
         });
       }
     } catch (error) {
       console.error("Failed to create group:", error);
       toast({
-        title: "Error",
-        description: "Failed to create group",
+        title: t('common:toast.error'),
+        description: t('toast.failedToCreateGroup'),
         variant: "destructive",
       });
     }
@@ -770,8 +772,8 @@ export default function ParentMessagesPage() {
 
       if (response.ok) {
         toast({
-          title: "Success",
-          description: "Members added successfully",
+          title: t('common:toast.success'),
+          description: t('toast.membersAddedSuccessfully'),
         });
         setShowAddMembersDialog(false);
         setMembersToAdd([]);
@@ -784,8 +786,8 @@ export default function ParentMessagesPage() {
     } catch (error) {
       console.error("Failed to add members:", error);
       toast({
-        title: "Error",
-        description: "Failed to add members",
+title: t('common:toast.error'),
+          description: t('toast.failedToAddMembers'),
         variant: "destructive",
       });
     }
@@ -831,8 +833,8 @@ export default function ParentMessagesPage() {
     } catch (error) {
       console.error("Failed to start direct message:", error);
       toast({
-        title: "Error",
-        description: "Failed to start conversation",
+        title: t('common:toast.error'),
+        description: t('toast.failedToStartConversation'),
         variant: "destructive",
       });
     }
@@ -1056,7 +1058,7 @@ export default function ParentMessagesPage() {
           {/* Header & Search */}
           <div className="p-6 pb-2 flex flex-col gap-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold tracking-tight text-white">Messages</h2>
+              <h2 className="text-2xl font-bold tracking-tight text-white">{t('messages')}</h2>
               <div className="flex gap-2">
                 <Dialog open={showCreateGroupDialog} onOpenChange={setShowCreateGroupDialog}>
                   <DialogTrigger asChild>
@@ -1388,7 +1390,7 @@ export default function ParentMessagesPage() {
                       </div>
                       <div className="min-w-0">
                         <h2 className="font-bold text-white text-lg leading-tight truncate">{selectedConversation.name}</h2>
-                        <p className="text-primary text-xs font-medium">{selectedConversation.memberCount} members • Active</p>
+                        <p className="text-primary text-xs font-medium">{selectedConversation.memberCount} members ï¿½ Active</p>
                       </div>
                     </>
                   )}

@@ -1,4 +1,5 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import AdminLayout from "@/components/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -62,6 +63,7 @@ interface Course {
 }
 
 export default function AdminAnnouncements() {
+  const { t } = useTranslation('admin');
   const { token } = useAuth();
   const { toast } = useToast();
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
@@ -157,8 +159,8 @@ export default function AdminAnnouncements() {
   const handleCreateAnnouncement = async () => {
     if (!newAnnouncement.title || !newAnnouncement.content) {
       toast({
-        title: "Validation Error",
-        description: "Please fill in the title and content",
+        title: t('toast.validationError'),
+        description: t('toast.fillTitleAndContentShort'),
         variant: "destructive"
       });
       return;
@@ -184,8 +186,8 @@ export default function AdminAnnouncements() {
 
       if (response.ok) {
         toast({
-          title: "Announcement Created",
-          description: "The announcement has been published successfully"
+          title: t('toast.announcementCreatedTitle'),
+          description: t('toast.announcementCreated')
         });
         fetchAnnouncements();
         setCreateDialogOpen(false);
@@ -195,8 +197,8 @@ export default function AdminAnnouncements() {
       }
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to create announcement",
+        title: t('common:toast.error'),
+        description: t('toast.announcementCreateError'),
         variant: "destructive"
       });
     } finally {
@@ -219,8 +221,8 @@ export default function AdminAnnouncements() {
 
       if (response.ok) {
         toast({
-          title: "Announcement Deleted",
-          description: "The announcement has been removed"
+          title: t('toast.announcementDeletedTitle'),
+          description: t('toast.announcementRemoved')
         });
         fetchAnnouncements();
       } else {
@@ -228,8 +230,8 @@ export default function AdminAnnouncements() {
       }
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to delete announcement",
+        title: t('common:toast.error'),
+        description: t('toast.announcementDeleteError'),
         variant: "destructive"
       });
     } finally {
@@ -255,14 +257,14 @@ export default function AdminAnnouncements() {
       if (response.ok) {
         fetchAnnouncements();
         toast({
-          title: announcement.isPinned ? "Unpinned" : "Pinned",
-          description: `Announcement has been ${announcement.isPinned ? 'unpinned' : 'pinned'}`
+          title: announcement.isPinned ? t('toast.unpinned') : t('toast.pinned'),
+          description: announcement.isPinned ? t('toast.announcementUnpinned') : t('toast.announcementPinned')
         });
       }
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to update announcement",
+        title: t('common:toast.error'),
+        description: t('toast.announcementUpdateError'),
         variant: "destructive"
       });
     }
@@ -328,7 +330,7 @@ export default function AdminAnnouncements() {
                 <Megaphone className="h-8 w-8 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl md:text-3xl font-bold text-white">Announcements</h1>
+                <h1 className="text-2xl md:text-3xl font-bold text-white">{t('announcements')}</h1>
                 <p className="text-purple-200 mt-1 text-sm md:text-base">Manage school-wide and course announcements</p>
               </div>
             </div>

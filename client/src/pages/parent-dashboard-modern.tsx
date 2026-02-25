@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
 import ParentLayout from "@/components/ParentLayout";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -181,6 +182,7 @@ const buildActivityFeed = (activity?: DashboardData["recentActivity"]) => {
 };
 
 export default function ParentDashboardModern() {
+  const { t } = useTranslation('parent');
   const { token } = useAuth();
   const [, setLocation] = useLocation();
   const [data, setData] = useState<DashboardData | null>(null);
@@ -536,7 +538,7 @@ export default function ParentDashboardModern() {
                         <p className="text-white font-bold text-sm">{activity.user}</p>
                         <p className="text-slate-500 text-[10px] font-medium">{activity.time}</p>
                       </div>
-                      <p className="text-slate-400 text-sm mt-1 line-clamp-2 leading-relaxed">{activity.description}</p>
+                      <p className="text-slate-400 text-sm mt-1 line-clamp-2 leading-relaxed">{activity.isPlaceholder ? t('toast.noRecentActivity') : activity.description}</p>
                     </div>
                   </div>
                 ))}
@@ -567,7 +569,7 @@ export default function ParentDashboardModern() {
                   </div>
                   <div className="flex flex-col">
                     {idx === 0 && !item.isPlaceholder && <span className="text-[10px] font-black text-red-400 uppercase tracking-widest mb-1">Due Tomorrow</span>}
-                    <h4 className="text-white font-bold text-sm leading-tight group-hover:text-primary transition-colors">{item.title}</h4>
+                    <h4 className="text-white font-bold text-sm leading-tight group-hover:text-primary transition-colors">{item.isPlaceholder ? t('toast.noAssignmentsScheduled') : item.title}</h4>
                     <p className="text-slate-500 text-xs mt-1">{item.dueDate} • {item.subject || item.course || 'General'}</p>
                   </div>
                 </div>

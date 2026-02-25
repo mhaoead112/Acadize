@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import AdminLayout from '@/components/AdminLayout';
@@ -31,6 +32,7 @@ const categoryDistribution = [
 const COLORS = ['#FFD700', '#cbc290', '#3d3920', '#242114'];
 
 export default function AdminReports() {
+  const { t } = useTranslation('admin');
   const { token } = useAuth();
   const { toast } = useToast();
   const [timeRange, setTimeRange] = useState('6months');
@@ -58,8 +60,8 @@ export default function AdminReports() {
 
   const handleExportPDF = () => {
     toast({
-      title: 'Export Started',
-      description: 'PDF report will be generated and downloaded shortly.',
+      title: t('toast.exportStarted'),
+      description: t('toast.exportPdfDescription'),
     });
     // TODO: Implement actual PDF export functionality
   };
@@ -81,7 +83,7 @@ export default function AdminReports() {
         {/* Header Section */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
           <div>
-            <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter leading-none">Intelligence Reports</h1>
+            <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter leading-none">{t('intelligenceReports')}</h1>
             <p className="text-slate-600 dark:text-slate-400 mt-2 font-medium">In-depth performance analysis and financial forecasting.</p>
           </div>
           <div className="flex gap-3">

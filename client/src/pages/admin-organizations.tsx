@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import AdminLayout from "@/components/AdminLayout";
 import { apiEndpoint } from "@/lib/config";
 import { useAuth } from "@/hooks/useAuth";
@@ -28,6 +29,7 @@ interface Organization {
 }
 
 export default function AdminOrganizations() {
+  const { t } = useTranslation('admin');
   const { user, token } = useAuth();
   const { toast } = useToast();
   const [organizations, setOrganizations] = useState<Organization[]>([]);
@@ -93,7 +95,7 @@ export default function AdminOrganizations() {
   const handleCreateOrg = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newOrg.name || !newOrg.subdomain) {
-      toast({ title: 'Missing info', description: 'Name and subdomain are required', variant: 'destructive' });
+      toast({ title: t('common:toast.missingInfo'), description: t('toast.missingInfo'), variant: 'destructive' });
       return;
     }
 
@@ -126,11 +128,11 @@ export default function AdminOrganizations() {
       setOrganizations(prev => [{ ...created, userCount: 0, courseCount: 0 }, ...prev]);
       setIsAddModalOpen(false);
       setNewOrg({ name: '', subdomain: '', plan: 'free', contactEmail: '', primaryColor: '#6366f1', maxUsers: '', maxCourses: '' });
-      toast({ title: 'Success', description: 'Organization created successfully' });
+      toast({ title: t('common:toast.success'), description: t('toast.organizationCreated') });
     } catch (error) {
       toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Unable to create organization',
+        title: t('common:toast.error'),
+        description: error instanceof Error ? error.message : t('toast.organizationUpdateError'),
         variant: 'destructive'
       });
     } finally {
@@ -159,15 +161,15 @@ export default function AdminOrganizations() {
       setOrganizations(prev => prev.map(o => o.id === updated.id ? { ...o, ...updated } : o));
       setIsEditModalOpen(false);
       setEditingOrg(null);
-      toast({ title: 'Success', description: 'Organization updated' });
+      toast({ title: t('common:toast.success'), description: t('toast.organizationUpdated') });
     } catch (error) {
-      toast({ title: 'Error', description: 'Failed to update organization', variant: 'destructive' });
+      toast({ title: t('common:toast.error'), description: t('toast.organizationUpdateError'), variant: 'destructive' });
     }
   };
 
   const handleDeleteOrg = async (orgId: string) => {
     if (orgId === 'org_default_system') {
-      toast({ title: 'Error', description: 'Cannot delete system organization', variant: 'destructive' });
+      toast({ title: t('common:toast.error'), description: t('toast.cannotDeleteSystemOrg'), variant: 'destructive' });
       return;
     }
     if (!confirm("Are you sure you want to deactivate this organization?")) return;
@@ -179,9 +181,9 @@ export default function AdminOrganizations() {
         credentials: 'include'
       });
       setOrganizations(prev => prev.map(o => o.id === orgId ? { ...o, isActive: false } : o));
-      toast({ title: 'Success', description: 'Organization deactivated' });
+      toast({ title: t('common:toast.success'), description: t('toast.organizationDeactivated') });
     } catch (error) {
-      toast({ title: 'Error', description: 'Failed to delete organization', variant: 'destructive' });
+      toast({ title: t('common:toast.error'), description: t('toast.organizationDeleteError'), variant: 'destructive' });
     }
   };
 
@@ -197,9 +199,9 @@ export default function AdminOrganizations() {
         body: JSON.stringify({ isActive: !currentActive })
       });
       setOrganizations(prev => prev.map(o => o.id === orgId ? { ...o, isActive: !currentActive } : o));
-      toast({ title: 'Success', description: `Organization ${!currentActive ? 'activated' : 'deactivated'}` });
+      toast({ title: t('common:toast.success'), description: t('toast.organizationStatusUpdated', { status: t(!currentActive ? 'activated' : 'deactivated') }) });
     } catch (error) {
-      toast({ title: 'Error', description: 'Failed to update status', variant: 'destructive' });
+      toast({ title: t('common:toast.error'), description: t('toast.statusUpdateError'), variant: 'destructive' });
     }
   };
 
@@ -258,7 +260,7 @@ export default function AdminOrganizations() {
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
           <div>
-            <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter leading-none">Organizations</h1>
+            <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter leading-none">{t('organizations')}</h1>
             <p className="text-slate-600 dark:text-slate-300 mt-2 font-medium">Manage multi-tenant organizations and their settings.</p>
           </div>
           <button 
@@ -377,7 +379,7 @@ export default function AdminOrganizations() {
                       </td>
                       <td className="p-6">
                         <code className="bg-slate-100 dark:bg-[#0a192f] px-3 py-1 rounded-lg text-sm font-mono text-slate-700 dark:text-slate-300">
-                          {org.subdomain}.eduverse.io
+                          {org.subdomain}.acadize.com
                         </code>
                       </td>
                       <td className="p-6">
@@ -524,7 +526,7 @@ export default function AdminOrganizations() {
                         className="flex-1 h-12 bg-white dark:bg-[#0a192f] border border-slate-200 dark:border-white/10 rounded-l-2xl px-4 text-slate-900 dark:text-white font-bold focus:ring-[#FFD700]/20 focus:border-[#FFD700] transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500"
                       />
                       <div className="h-12 px-4 bg-slate-100 dark:bg-[#0a192f] border-y border-r border-slate-200 dark:border-white/10 rounded-r-2xl flex items-center text-slate-500 dark:text-slate-400 font-mono text-sm">
-                        .eduverse.io
+                        .acadize.com
                       </div>
                     </div>
                   </div>
@@ -646,7 +648,7 @@ export default function AdminOrganizations() {
                         className="flex-1 h-12 bg-white dark:bg-[#0a192f] border border-slate-200 dark:border-white/10 rounded-l-2xl px-4 text-slate-900 dark:text-white font-bold"
                       />
                       <div className="h-12 px-4 bg-slate-100 dark:bg-[#0a192f] border-y border-r border-slate-200 dark:border-white/10 rounded-r-2xl flex items-center text-slate-500 dark:text-slate-400 font-mono text-sm">
-                        .eduverse.io
+                        .acadize.com
                       </div>
                     </div>
                   </div>

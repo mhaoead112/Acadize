@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import AdminLayout from "@/components/AdminLayout";
 import { apiEndpoint } from "@/lib/config";
 import { Card, CardContent } from "@/components/ui/card";
@@ -63,6 +64,7 @@ interface Message {
 }
 
 export default function AdminMessages() {
+  const { t } = useTranslation('admin');
   const { user, token } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -126,13 +128,13 @@ export default function AdminMessages() {
       setCreateAnnouncementOpen(false);
       setNewAnnouncement({ title: "", content: "", audience: "all" });
       toast({ 
-        title: "Success", 
-        description: "Announcement published successfully" 
+        title: t('common:toast.success'), 
+        description: t('toast.announcementPublished') 
       });
     },
     onError: (error: Error) => {
       toast({
-        title: "Error",
+        title: t('common:toast.error'),
         description: error.message,
         variant: "destructive"
       });
@@ -163,7 +165,7 @@ export default function AdminMessages() {
     },
     onError: (error: Error) => {
       toast({
-        title: "Error",
+        title: t('common:toast.error'),
         description: error.message,
         variant: "destructive"
       });
@@ -191,13 +193,13 @@ export default function AdminMessages() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-announcements'] });
       toast({ 
-        title: "Success", 
-        description: "Announcement deleted successfully" 
+        title: t('common:toast.success'), 
+        description: t('toast.announcementDeleted') 
       });
     },
     onError: (error: Error) => {
       toast({
-        title: "Error",
+        title: t('common:toast.error'),
         description: error.message,
         variant: "destructive"
       });
@@ -289,8 +291,8 @@ export default function AdminMessages() {
   const handleCreateAnnouncement = async () => {
     if (!newAnnouncement.title || !newAnnouncement.content) {
       toast({
-        title: "Error",
-        description: "Please fill in title and content",
+        title: t('common:toast.error'),
+        description: t('toast.fillTitleAndContent'),
         variant: "destructive"
       });
       return;
@@ -363,7 +365,7 @@ export default function AdminMessages() {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Messages & Announcements</h1>
+            <h1 className="text-2xl font-bold text-gray-900">{t('messagesAndAnnouncements')}</h1>
             <p className="text-gray-600">Manage communications across the platform</p>
           </div>
         </div>

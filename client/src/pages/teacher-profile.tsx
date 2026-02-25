@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -117,6 +118,7 @@ interface TeacherProfile {
 }
 
 export default function TeacherProfile() {
+  const { t } = useTranslation('teacher');
   const [activeTab, setActiveTab] = useState("profile");
   const [isEditing, setIsEditing] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
@@ -135,7 +137,7 @@ export default function TeacherProfile() {
     phone: "+1 (555) 123-4567",
     bio: "Passionate educator with 8 years of experience in mathematics education. Specialized in making complex concepts accessible to students of all learning styles.",
     department: "Mathematics",
-    title: "Senior Mathematics Teacher",
+    title: t('toast.seniorMathematicsTeacher'),
     officeLocation: "Room 205, Math Building",
     officeHours: "Monday-Friday, 2:00 PM - 4:00 PM",
     expertise: "Algebra, Calculus, Statistics, Educational Technology",
@@ -202,42 +204,42 @@ export default function TeacherProfile() {
   const updateProfileMutation = useMutation({
     mutationFn: (data: ProfileFormData) => apiRequest('PUT', '/api/teacher/profile', data),
     onSuccess: () => {
-      toast({ title: "Success", description: "Profile updated successfully!" });
+      toast({ title: t('common:toast.success'), description: t('toast.profileUpdated') });
       setIsEditing(false);
     },
     onError: (error: any) => {
-      toast({ title: "Error", description: error.message || "Failed to update profile", variant: "destructive" });
+      toast({ title: t('common:toast.error'), description: error.message || t('toast.failedToUpdateProfile'), variant: "destructive" });
     },
   });
 
   const updateSecurityMutation = useMutation({
     mutationFn: (data: SecurityFormData) => apiRequest('PUT', '/api/teacher/security', data),
     onSuccess: () => {
-      toast({ title: "Success", description: "Security settings updated successfully!" });
+      toast({ title: t('common:toast.success'), description: t('toast.securitySettingsUpdated') });
       securityForm.reset();
     },
     onError: (error: any) => {
-      toast({ title: "Error", description: error.message || "Failed to update security settings", variant: "destructive" });
+      toast({ title: t('common:toast.error'), description: error.message || t('toast.failedToUpdateSecurity'), variant: "destructive" });
     },
   });
 
   const updateNotificationsMutation = useMutation({
     mutationFn: (data: NotificationFormData) => apiRequest('PUT', '/api/teacher/notifications', data),
     onSuccess: () => {
-      toast({ title: "Success", description: "Notification preferences updated!" });
+      toast({ title: t('common:toast.success'), description: t('toast.notificationPrefsUpdated') });
     },
     onError: (error: any) => {
-      toast({ title: "Error", description: error.message || "Failed to update notifications", variant: "destructive" });
+      toast({ title: t('common:toast.error'), description: error.message || t('toast.failedToUpdateNotifications'), variant: "destructive" });
     },
   });
 
   const updatePreferencesMutation = useMutation({
     mutationFn: (data: PreferencesFormData) => apiRequest('PUT', '/api/teacher/preferences', data),
     onSuccess: () => {
-      toast({ title: "Success", description: "Preferences updated successfully!" });
+      toast({ title: t('common:toast.success'), description: t('toast.preferencesUpdated') });
     },
     onError: (error: any) => {
-      toast({ title: "Error", description: error.message || "Failed to update preferences", variant: "destructive" });
+      toast({ title: t('common:toast.error'), description: error.message || t('toast.failedToUpdatePreferences'), variant: "destructive" });
     },
   });
 
@@ -248,10 +250,10 @@ export default function TeacherProfile() {
       return apiRequest('POST', '/api/teacher/avatar', formData);
     },
     onSuccess: () => {
-      toast({ title: "Success", description: "Profile picture updated!" });
+      toast({ title: t('common:toast.success'), description: t('toast.profilePictureUpdated') });
     },
     onError: (error: any) => {
-      toast({ title: "Error", description: error.message || "Failed to upload image", variant: "destructive" });
+      toast({ title: t('common:toast.error'), description: error.message || t('toast.failedToUploadImage'), variant: "destructive" });
     },
   });
 
@@ -275,7 +277,7 @@ export default function TeacherProfile() {
     const file = event.target.files?.[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) { // 5MB limit
-        toast({ title: "Error", description: "File size must be less than 5MB", variant: "destructive" });
+        toast({ title: t('common:toast.error'), description: t('toast.fileSizeMustBeLessThan5MB'), variant: "destructive" });
         return;
       }
       uploadAvatarMutation.mutate(file);
@@ -304,12 +306,12 @@ export default function TeacherProfile() {
 
   const handle2FAVerification = () => {
     if (verify2FACode.length !== 6) {
-      toast({ title: "Error", description: "Please enter a 6-digit verification code", variant: "destructive" });
+      toast({ title: t('common:toast.error'), description: t('toast.enter6DigitCode'), variant: "destructive" });
       return;
     }
     
     // Mock verification
-    toast({ title: "Success", description: "Two-Factor Authentication has been enabled!" });
+    toast({ title: t('common:toast.success'), description: t('toast.twoFactorEnabled') });
     setShow2FAModal(false);
     setVerify2FACode("");
   };
@@ -321,10 +323,10 @@ export default function TeacherProfile() {
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Profile & Settings
+              {t('profileSettings')}
             </h1>
             <p className="text-gray-600">
-              Manage your profile, preferences, and account settings
+              {t('profileSettingsDesc')}
             </p>
           </div>
           
@@ -339,7 +341,7 @@ export default function TeacherProfile() {
         {/* Main Content */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList>
-            <TabsTrigger value="profile" data-testid="tab-profile">Profile</TabsTrigger>
+            <TabsTrigger value="profile" data-testid="tab-profile">{t('profile')}</TabsTrigger>
             <TabsTrigger value="security" data-testid="tab-security">Security</TabsTrigger>
             <TabsTrigger value="notifications" data-testid="tab-notifications">Notifications</TabsTrigger>
             <TabsTrigger value="preferences" data-testid="tab-preferences">Preferences</TabsTrigger>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link, useLocation } from 'wouter';
 import StudentLayout from '@/components/StudentLayout';
 import NotificationBell from '@/components/NotificationBell';
@@ -28,6 +29,7 @@ interface Enrollment {
 }
 
 export default function StudentProfilePage() {
+    const { t } = useTranslation(['dashboard', 'common']);
     const [, setLocation] = useLocation();
     const { user, token, getAuthHeaders, updateUser } = useAuth();
     const { toast } = useToast();
@@ -258,8 +260,9 @@ export default function StudentProfilePage() {
     if (loading) {
         return (
             <StudentLayout>
-                <div className="flex items-center justify-center h-full">
+                <div className="flex flex-col items-center justify-center gap-4 h-full">
                     <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                    <p className="text-slate-600 dark:text-slate-400 text-sm">{t('common:common.loading')}</p>
                 </div>
             </StudentLayout>
         );
@@ -281,7 +284,7 @@ export default function StudentProfilePage() {
                 <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
                     <Link href="/student/dashboard" className="hover:text-slate-900 dark:hover:text-white transition-colors">Home</Link>
                     <span className="material-symbols-outlined text-xs">chevron_right</span>
-                    <span className="text-slate-900 dark:text-white font-medium">Profile</span>
+                    <span className="text-slate-900 dark:text-white font-medium">{t('profile')}</span>
                 </div>
                 <div className="flex items-center gap-4">
                     <NotificationBell />
@@ -435,7 +438,7 @@ export default function StudentProfilePage() {
                                         <div className="md:col-span-2 flex flex-col gap-2 pt-4 border-t border-slate-200 dark:border-navy-border">
                                             <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Bio</span>
                                             <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-sm">
-                                                {profile.bio || 'No bio provided yet.'}
+                                                {profile.bio || t('noBioProvided')}
                                             </p>
                                         </div>
                                     </div>
@@ -467,7 +470,7 @@ export default function StudentProfilePage() {
                                                     </div>
                                                 ))
                                             ) : (
-                                                <p className="text-slate-500 dark:text-slate-400 text-sm">No enrolled courses yet.</p>
+                                                <p className="text-slate-500 dark:text-slate-400 text-sm">{t('noEnrolledCoursesYet')}</p>
                                             )}
                                         </div>
                                     </div>
@@ -495,7 +498,7 @@ export default function StudentProfilePage() {
                                         <Link href="/student/calendar" className="text-xs text-primary hover:underline font-bold">View All</Link>
                                     </div>
                                     <div className="p-4 flex flex-col gap-3">
-                                        <p className="text-slate-500 dark:text-slate-400 text-sm">No classes scheduled for today.</p>
+                                        <p className="text-slate-500 dark:text-slate-400 text-sm">{t('noClassesScheduledToday')}</p>
                                     </div>
                                 </section>
                             </div>

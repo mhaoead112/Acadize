@@ -1,4 +1,5 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
 import { Megaphone, Pin, Loader2, BookOpen } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -28,6 +29,7 @@ interface Enrollment {
 }
 
 export default function StudentAllAnnouncementsPage() {
+  const { t } = useTranslation(['dashboard', 'common']);
   const { toast } = useToast();
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(true);
@@ -142,8 +144,9 @@ export default function StudentAllAnnouncementsPage() {
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center justify-center gap-4 min-h-[400px]">
           <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+          <p className="text-slate-600 dark:text-slate-400 text-sm">{t('common:common.loading')}</p>
         </div>
       </DashboardLayout>
     );
@@ -155,10 +158,10 @@ export default function StudentAllAnnouncementsPage() {
         {/* Header */}
         <div>
           <h1 className="text-3xl font-bold text-gray-900">
-            Recent Announcements
+            {t('allAnnouncements')}
           </h1>
-          <p className="text-gray-600 mt-2">
-            Stay updated with the latest announcements from all your classes
+          <p className="text-gray-600 dark:text-slate-400 mt-2">
+            {t('allAnnouncementsSubtitle')}
           </p>
         </div>
 
@@ -167,8 +170,8 @@ export default function StudentAllAnnouncementsPage() {
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
               <Megaphone className="h-12 w-12 text-gray-400 mb-4" />
-              <p className="text-gray-600 text-center">
-                No announcements yet. Check back later for updates from your instructors.
+              <p className="text-gray-600 dark:text-slate-400 text-center">
+                {t('noAnnouncementsYet')}
               </p>
             </CardContent>
           </Card>

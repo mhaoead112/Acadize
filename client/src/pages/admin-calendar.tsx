@@ -1,4 +1,5 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import AdminLayout from "@/components/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -44,6 +45,7 @@ interface CalendarEvent {
 }
 
 export default function AdminCalendar() {
+  const { t } = useTranslation('admin');
   const { token } = useAuth();
   const { toast } = useToast();
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -110,8 +112,8 @@ export default function AdminCalendar() {
   const handleCreateEvent = async () => {
     if (!newEvent.title || !newEvent.date) {
       toast({
-        title: "Validation Error",
-        description: "Please fill in the title and date",
+        title: t('toast.validationError'),
+        description: t('toast.fillTitleAndDate'),
         variant: "destructive"
       });
       return;
@@ -144,8 +146,8 @@ export default function AdminCalendar() {
 
       if (response.ok) {
         toast({
-          title: "Event Created",
-          description: "The event has been added to the calendar"
+          title: t('eventCreatedShort'),
+          description: t('toast.eventCreated')
         });
         fetchEvents();
         setCreateDialogOpen(false);
@@ -156,8 +158,8 @@ export default function AdminCalendar() {
       }
     } catch (error) {
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to create event",
+        title: t('common:toast.error'),
+        description: error instanceof Error ? error.message : t('toast.eventCreateError'),
         variant: "destructive"
       });
     } finally {
@@ -182,8 +184,8 @@ export default function AdminCalendar() {
 
       if (response.ok) {
         toast({
-          title: "Event Updated",
-          description: "The event has been updated successfully"
+          title: t('eventUpdatedShort'),
+          description: t('toast.eventUpdated')
         });
         fetchEvents();
         setEditDialogOpen(false);
@@ -193,8 +195,8 @@ export default function AdminCalendar() {
       }
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to update event",
+        title: t('common:toast.error'),
+        description: t('toast.eventUpdateError'),
         variant: "destructive"
       });
     } finally {
@@ -369,7 +371,7 @@ export default function AdminCalendar() {
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
           <div>
-            <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter leading-none">Platform Schedule</h1>
+            <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter leading-none">{t('platformSchedule')}</h1>
             <p className="text-slate-600 dark:text-slate-400 mt-2 font-medium">Coordinate sessions, exams, and academic milestones.</p>
           </div>
           <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
@@ -379,37 +381,45 @@ export default function AdminCalendar() {
                 Add New Event
               </button>
             </DialogTrigger>
-            <DialogContent className="max-w-lg">
+            <DialogContent className="max-w-lg bg-white dark:bg-[#112240] border-slate-200 dark:border-white/10 shadow-2xl">
                   <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2">
-                      <CalendarIcon className="h-5 w-5 text-purple-600" />
+                    <DialogTitle className="flex items-center gap-2 text-xl font-bold text-slate-900 dark:text-white">
+                      <div className="p-2 bg-purple-100 dark:bg-purple-500/20 rounded-lg">
+                        <CalendarIcon className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                      </div>
                       Create New Event
                     </DialogTitle>
-                    <DialogDescription>Add a new event to the school calendar</DialogDescription>
+                    <DialogDescription className="text-slate-500 dark:text-slate-400">
+                      Add a new event to the school calendar
+                    </DialogDescription>
                   </DialogHeader>
-                  <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto">
-                    <div className="space-y-2">
-                      <Label htmlFor="title">Event Title *</Label>
+                  <div className="space-y-6 py-4 max-h-[60vh] overflow-y-auto px-1">
+                    <div className="space-y-3">
+                      <Label htmlFor="title" className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                        Event Title <span className="text-red-500">*</span>
+                      </Label>
                       <Input
                         id="title"
                         value={newEvent.title}
                         onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
-                        placeholder="Enter event title"
-                        className="h-11"
+                        placeholder="e.g., Annual Science Fair"
+                        className="h-12 bg-slate-50 dark:bg-[#0a192f] border-slate-200 dark:border-white/10 focus:ring-purple-500"
                       />
                     </div>
                     
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="eventType">Event Type *</Label>
+                    <div className="grid grid-cols-2 gap-5">
+                      <div className="space-y-3">
+                        <Label htmlFor="eventType" className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                          Event Type <span className="text-red-500">*</span>
+                        </Label>
                         <Select 
                           value={newEvent.eventType} 
                           onValueChange={(v: any) => setNewEvent({ ...newEvent, eventType: v })}
                         >
-                          <SelectTrigger className="h-11">
+                          <SelectTrigger className="h-12 bg-slate-50 dark:bg-[#0a192f] border-slate-200 dark:border-white/10">
                             <SelectValue />
                           </SelectTrigger>
-                          <SelectContent>
+                          <SelectContent className="bg-white dark:bg-[#0a192f] border-slate-200 dark:border-white/10">
                             <SelectItem value="event">🎉 Event</SelectItem>
                             <SelectItem value="meeting">👥 Meeting</SelectItem>
                             <SelectItem value="class">📚 Class</SelectItem>
@@ -419,93 +429,117 @@ export default function AdminCalendar() {
                           </SelectContent>
                         </Select>
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="date">Date *</Label>
+                      <div className="space-y-3">
+                        <Label htmlFor="date" className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                          Date <span className="text-red-500">*</span>
+                        </Label>
                         <Input
                           id="date"
                           type="date"
                           value={newEvent.date}
                           onChange={(e) => setNewEvent({ ...newEvent, date: e.target.value })}
-                          className="h-11"
+                          className="h-12 bg-slate-50 dark:bg-[#0a192f] border-slate-200 dark:border-white/10"
                         />
                       </div>
                     </div>
                     
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="startTime">Start Time</Label>
+                    <div className="grid grid-cols-2 gap-5">
+                      <div className="space-y-3">
+                        <Label htmlFor="startTime" className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                          Start Time
+                        </Label>
                         <Input
                           id="startTime"
                           type="time"
                           value={newEvent.startTime}
                           onChange={(e) => setNewEvent({ ...newEvent, startTime: e.target.value })}
-                          className="h-11"
+                          className="h-12 bg-slate-50 dark:bg-[#0a192f] border-slate-200 dark:border-white/10"
                         />
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="endTime">End Time</Label>
+                      <div className="space-y-3">
+                        <Label htmlFor="endTime" className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                          End Time
+                        </Label>
                         <Input
                           id="endTime"
                           type="time"
                           value={newEvent.endTime}
                           onChange={(e) => setNewEvent({ ...newEvent, endTime: e.target.value })}
-                          className="h-11"
+                          className="h-12 bg-slate-50 dark:bg-[#0a192f] border-slate-200 dark:border-white/10"
                         />
                       </div>
                     </div>
                     
-                    <div className="space-y-2">
-                      <Label htmlFor="location">Location</Label>
-                      <Input
-                        id="location"
-                        value={newEvent.location}
-                        onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
-                        placeholder="e.g., Room 101, Main Hall"
-                        className="h-11"
-                      />
+                    <div className="space-y-3">
+                      <Label htmlFor="location" className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                        Location
+                      </Label>
+                      <div className="relative">
+                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                        <Input
+                          id="location"
+                          value={newEvent.location}
+                          onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
+                          placeholder="e.g., Room 101, Main Hall"
+                          className="h-12 pl-10 bg-slate-50 dark:bg-[#0a192f] border-slate-200 dark:border-white/10"
+                        />
+                      </div>
                     </div>
                     
-                    <div className="space-y-2">
-                      <Label htmlFor="meetingLink">Meeting Link (Optional)</Label>
-                      <Input
-                        id="meetingLink"
-                        value={newEvent.meetingLink}
-                        onChange={(e) => setNewEvent({ ...newEvent, meetingLink: e.target.value })}
-                        placeholder="https://meet.google.com/..."
-                        className="h-11"
-                      />
+                    <div className="space-y-3">
+                      <Label htmlFor="meetingLink" className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                        Meeting Link (Optional)
+                      </Label>
+                      <div className="relative">
+                        <Video className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                        <Input
+                          id="meetingLink"
+                          value={newEvent.meetingLink}
+                          onChange={(e) => setNewEvent({ ...newEvent, meetingLink: e.target.value })}
+                          placeholder="https://meet.google.com/..."
+                          className="h-12 pl-10 bg-slate-50 dark:bg-[#0a192f] border-slate-200 dark:border-white/10"
+                        />
+                      </div>
                     </div>
                     
-                    <div className="space-y-2">
-                      <Label htmlFor="description">Description</Label>
+                    <div className="space-y-3">
+                      <Label htmlFor="description" className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                        Description
+                      </Label>
                       <Textarea
                         id="description"
                         value={newEvent.description}
                         onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
-                        placeholder="Enter event description..."
+                        placeholder="Enter event details and agenda..."
                         rows={3}
+                        className="min-h-[100px] bg-slate-50 dark:bg-[#0a192f] border-slate-200 dark:border-white/10 resize-none"
                       />
                     </div>
                     
-                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div>
-                        <Label className="font-medium">Public Event</Label>
-                        <p className="text-xs text-gray-500">Visible to all users</p>
+                    <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-[#0a192f] border border-slate-200 dark:border-white/5 rounded-xl">
+                      <div className="space-y-0.5">
+                        <Label className="text-base font-semibold text-slate-900 dark:text-white">Public Event</Label>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">Visible to all students and staff</p>
                       </div>
                       <Switch
                         checked={newEvent.isPublic}
                         onCheckedChange={(checked) => setNewEvent({ ...newEvent, isPublic: checked })}
+                        className="data-[state=checked]:bg-purple-600"
                       />
                     </div>
                   </div>
-                  <DialogFooter>
-                    <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>
+                  <DialogFooter className="gap-3 pt-4 border-t border-slate-100 dark:border-white/5">
+                    <Button 
+                      variant="ghost" 
+                      onClick={() => setCreateDialogOpen(false)}
+                      className="text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5"
+                    >
                       Cancel
                     </Button>
                     <Button 
                       onClick={handleCreateEvent} 
                       disabled={saving}
-                      className="bg-purple-600 hover:bg-purple-700"
+                      className="bg-purple-600 hover:bg-purple-700 text-white shadow-lg shadow-purple-500/20"
                     >
                       {saving ? (
                         <>
@@ -513,7 +547,10 @@ export default function AdminCalendar() {
                           Creating...
                         </>
                       ) : (
-                        'Create Event'
+                        <>
+                          <Plus className="h-4 w-4 mr-2" />
+                          Create Event
+                        </>
                       )}
                     </Button>
                   </DialogFooter>
@@ -670,77 +707,92 @@ export default function AdminCalendar() {
 
       {/* View Event Dialog */}
       <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md bg-white dark:bg-[#112240] border-slate-200 dark:border-white/10 shadow-2xl">
           {selectedEvent && (
             <>
               <DialogHeader>
                 <div className="flex items-start justify-between">
-                  <div>
-                    <Badge className={`${getEventTypeConfig(selectedEvent.eventType).bgColor} ${getEventTypeConfig(selectedEvent.eventType).color} mb-2`}>
+                  <div className="space-y-2">
+                    <Badge className={`${getEventTypeConfig(selectedEvent.eventType).bgColor} ${getEventTypeConfig(selectedEvent.eventType).color} border mb-2`}>
                       {getEventTypeConfig(selectedEvent.eventType).label}
                     </Badge>
-                    <DialogTitle className="text-xl">{selectedEvent.title}</DialogTitle>
+                    <DialogTitle className="text-xl font-bold text-slate-900 dark:text-white leading-tight">
+                      {selectedEvent.title}
+                    </DialogTitle>
                   </div>
                 </div>
               </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="flex items-center gap-3 text-gray-600">
-                  <CalendarIcon className="h-5 w-5" />
-                  <span>{formatEventDate(selectedEvent.startTime)}</span>
-                </div>
-                <div className="flex items-center gap-3 text-gray-600">
-                  <Clock className="h-5 w-5" />
-                  <span>{formatEventTime(selectedEvent.startTime, selectedEvent.endTime)}</span>
-                </div>
-                {selectedEvent.location && (
-                  <div className="flex items-center gap-3 text-gray-600">
-                    <MapPin className="h-5 w-5" />
-                    <span>{selectedEvent.location}</span>
+              <div className="space-y-4 py-4 px-1">
+                <div className="grid gap-3">
+                  <div className="flex items-center gap-3 text-slate-600 dark:text-slate-300">
+                    <div className="p-2 rounded-lg bg-slate-100 dark:bg-white/5">
+                      <CalendarIcon className="h-4 w-4" />
+                    </div>
+                    <span className="font-medium">{formatEventDate(selectedEvent.startTime)}</span>
                   </div>
-                )}
-                {selectedEvent.meetingLink && (
-                  <div className="flex items-center gap-3">
-                    <Video className="h-5 w-5 text-blue-600" />
-                    <a 
-                      href={selectedEvent.meetingLink} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:underline"
-                    >
-                      Join Meeting
-                    </a>
+                  <div className="flex items-center gap-3 text-slate-600 dark:text-slate-300">
+                    <div className="p-2 rounded-lg bg-slate-100 dark:bg-white/5">
+                      <Clock className="h-4 w-4" />
+                    </div>
+                    <span className="font-medium">{formatEventTime(selectedEvent.startTime, selectedEvent.endTime)}</span>
                   </div>
-                )}
+                  {selectedEvent.location && (
+                    <div className="flex items-center gap-3 text-slate-600 dark:text-slate-300">
+                      <div className="p-2 rounded-lg bg-slate-100 dark:bg-white/5">
+                        <MapPin className="h-4 w-4" />
+                      </div>
+                      <span className="font-medium">{selectedEvent.location}</span>
+                    </div>
+                  )}
+                  {selectedEvent.meetingLink && (
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-500/10">
+                        <Video className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                      </div>
+                      <a 
+                        href={selectedEvent.meetingLink} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-blue-600 dark:text-blue-400 hover:underline font-medium break-all"
+                      >
+                        Join Meeting
+                      </a>
+                    </div>
+                  )}
+                </div>
+
                 {selectedEvent.description && (
-                  <div className="pt-4 border-t">
-                    <h4 className="font-medium text-gray-900 mb-2">Description</h4>
-                    <p className="text-gray-600 text-sm">{selectedEvent.description}</p>
+                  <div className="pt-4 border-t border-slate-100 dark:border-white/5 mt-2">
+                    <h4 className="font-semibold text-slate-900 dark:text-white mb-2 text-sm">Description</h4>
+                    <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">{selectedEvent.description}</p>
                   </div>
                 )}
+                
                 <div className="flex items-center gap-2 pt-2">
                   {selectedEvent.isPublic ? (
-                    <Badge variant="outline" className="text-green-600 border-green-200">
+                    <Badge variant="outline" className="bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-400 border-green-200 dark:border-green-500/20">
                       <CheckCircle className="h-3 w-3 mr-1" />
-                      Public
+                      Public Event
                     </Badge>
                   ) : (
-                    <Badge variant="outline" className="text-orange-600 border-orange-200">
+                    <Badge variant="outline" className="bg-orange-50 dark:bg-orange-500/10 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-500/20">
                       <AlertCircle className="h-3 w-3 mr-1" />
-                      Private
+                      Private Event
                     </Badge>
                   )}
                 </div>
               </div>
-              <DialogFooter className="gap-2">
+              <DialogFooter className="gap-2 sm:gap-0 pt-4 border-t border-slate-100 dark:border-white/5">
                 <Button
                   variant="outline"
-                  className="text-red-600 hover:bg-red-50"
+                  className="text-red-600 dark:text-red-400 border-red-200 dark:border-red-900/30 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-700 dark:hover:text-red-300"
                   onClick={() => handleDeleteEvent(selectedEvent.id)}
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
                   Delete
                 </Button>
                 <Button
+                  className="bg-purple-600 hover:bg-purple-700 text-white shadow-lg shadow-purple-500/20"
                   onClick={() => {
                     setViewDialogOpen(false);
                     setEditDialogOpen(true);
@@ -757,32 +809,45 @@ export default function AdminCalendar() {
 
       {/* Edit Event Dialog */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg bg-white dark:bg-[#112240] border-slate-200 dark:border-white/10 shadow-2xl">
           {selectedEvent && (
             <>
               <DialogHeader>
-                <DialogTitle>Edit Event</DialogTitle>
-                <DialogDescription>Update event details</DialogDescription>
+                <DialogTitle className="flex items-center gap-2 text-xl font-bold text-slate-900 dark:text-white">
+                  <div className="p-2 bg-purple-100 dark:bg-purple-500/20 rounded-lg">
+                    <Edit className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                  </div>
+                  Edit Event
+                </DialogTitle>
+                <DialogDescription className="text-slate-500 dark:text-slate-400">
+                  Update event details
+                </DialogDescription>
               </DialogHeader>
-              <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto">
-                <div className="space-y-2">
-                  <Label>Event Title</Label>
+              <div className="space-y-6 py-4 max-h-[60vh] overflow-y-auto px-1">
+                <div className="space-y-3">
+                  <Label htmlFor="edit-title" className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                    Event Title
+                  </Label>
                   <Input
+                    id="edit-title"
                     value={selectedEvent.title}
                     onChange={(e) => setSelectedEvent({ ...selectedEvent, title: e.target.value })}
-                    className="h-11"
+                    className="h-12 bg-slate-50 dark:bg-[#0a192f] border-slate-200 dark:border-white/10 focus:ring-purple-500"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label>Event Type</Label>
+
+                <div className="space-y-3">
+                  <Label htmlFor="edit-eventType" className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                    Event Type
+                  </Label>
                   <Select 
                     value={selectedEvent.eventType} 
                     onValueChange={(v: any) => setSelectedEvent({ ...selectedEvent, eventType: v })}
                   >
-                    <SelectTrigger className="h-11">
+                    <SelectTrigger id="edit-eventType" className="h-12 bg-slate-50 dark:bg-[#0a192f] border-slate-200 dark:border-white/10">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-white dark:bg-[#0a192f] border-slate-200 dark:border-white/10">
                       <SelectItem value="event">🎉 Event</SelectItem>
                       <SelectItem value="meeting">👥 Meeting</SelectItem>
                       <SelectItem value="class">📚 Class</SelectItem>
@@ -792,49 +857,77 @@ export default function AdminCalendar() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
-                  <Label>Location</Label>
-                  <Input
-                    value={selectedEvent.location || ''}
-                    onChange={(e) => setSelectedEvent({ ...selectedEvent, location: e.target.value })}
-                    className="h-11"
-                  />
+
+                <div className="space-y-3">
+                  <Label htmlFor="edit-location" className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                    Location
+                  </Label>
+                  <div className="relative">
+                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <Input
+                      id="edit-location"
+                      value={selectedEvent.location || ''}
+                      onChange={(e) => setSelectedEvent({ ...selectedEvent, location: e.target.value })}
+                      placeholder="e.g., Room 101"
+                      className="h-12 pl-10 bg-slate-50 dark:bg-[#0a192f] border-slate-200 dark:border-white/10"
+                    />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label>Meeting Link</Label>
-                  <Input
-                    value={selectedEvent.meetingLink || ''}
-                    onChange={(e) => setSelectedEvent({ ...selectedEvent, meetingLink: e.target.value })}
-                    className="h-11"
-                  />
+
+                <div className="space-y-3">
+                  <Label htmlFor="edit-meetingLink" className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                    Meeting Link
+                  </Label>
+                  <div className="relative">
+                    <Video className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <Input
+                      id="edit-meetingLink"
+                      value={selectedEvent.meetingLink || ''}
+                      onChange={(e) => setSelectedEvent({ ...selectedEvent, meetingLink: e.target.value })}
+                      placeholder="https://..."
+                      className="h-12 pl-10 bg-slate-50 dark:bg-[#0a192f] border-slate-200 dark:border-white/10"
+                    />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label>Description</Label>
+
+                <div className="space-y-3">
+                  <Label htmlFor="edit-description" className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                    Description
+                  </Label>
                   <Textarea
+                    id="edit-description"
                     value={selectedEvent.description || ''}
                     onChange={(e) => setSelectedEvent({ ...selectedEvent, description: e.target.value })}
                     rows={3}
+                    className="min-h-[100px] bg-slate-50 dark:bg-[#0a192f] border-slate-200 dark:border-white/10 resize-none"
                   />
                 </div>
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div>
-                    <Label className="font-medium">Public Event</Label>
-                    <p className="text-xs text-gray-500">Visible to all users</p>
+
+                <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-[#0a192f] border border-slate-200 dark:border-white/5 rounded-xl">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="edit-public" className="text-base font-semibold text-slate-900 dark:text-white cursor-pointer">Public Event</Label>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Visible to all users</p>
                   </div>
                   <Switch
+                    id="edit-public"
                     checked={selectedEvent.isPublic}
                     onCheckedChange={(checked) => setSelectedEvent({ ...selectedEvent, isPublic: checked })}
+                    className="data-[state=checked]:bg-purple-600"
                   />
                 </div>
               </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
+              <DialogFooter className="gap-3 pt-4 border-t border-slate-100 dark:border-white/5">
+                <Button 
+                  variant="ghost" 
+                  onClick={() => setEditDialogOpen(false)}
+                  className="text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5"
+                >
                   Cancel
                 </Button>
                 <Button 
                   onClick={handleUpdateEvent} 
                   disabled={saving}
-                  className="bg-purple-600 hover:bg-purple-700"
+                  className="bg-purple-600 hover:bg-purple-700 text-white shadow-lg shadow-purple-500/20"
                 >
                   {saving ? (
                     <>

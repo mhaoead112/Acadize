@@ -1,9 +1,11 @@
 import React, { useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Check, Zap, Building2, Rocket } from "lucide-react";
 import { Link } from "wouter";
 import { motion, useInView } from "framer-motion";
 
 export default function Pricing() {
+  const { t } = useTranslation('landing');
   const [isAnnual, setIsAnnual] = useState(false);
   const heroRef = useRef(null);
   const heroInView = useInView(heroRef, { once: true, amount: 0.2 });
@@ -13,7 +15,7 @@ export default function Pricing() {
       priceMonthly: 29,
       priceAnnual: 23, // 20% discount
       period: "/month",
-      description: "Perfect for small institutions and pilot programs",
+      description: t('pricing.starterDesc'),
       icon: Zap,
       features: [
         "Up to 100 students",
@@ -31,7 +33,7 @@ export default function Pricing() {
       priceMonthly: 99,
       priceAnnual: 79, // 20% discount
       period: "/month",
-      description: "Ideal for growing schools and training centers",
+      description: t('pricing.growthDesc'),
       icon: Building2,
       features: [
         "Up to 500 students",
@@ -51,7 +53,7 @@ export default function Pricing() {
       priceMonthly: null,
       priceAnnual: null,
       period: "",
-      description: "For large institutions with specific needs",
+      description: t('pricing.enterpriseDesc'),
       icon: Rocket,
       features: [
         "Unlimited students",
@@ -101,7 +103,7 @@ export default function Pricing() {
           >
             Simple, Transparent{" "}
             <span className="bg-gradient-to-r from-primary to-yellow-400 bg-clip-text text-transparent">
-              Pricing
+              {t('pricingTitle')}
             </span>
           </motion.h1>
           <motion.p 
@@ -260,7 +262,7 @@ export default function Pricing() {
             Ready to transform your learning experience?
           </h2>
           <p className="text-lg text-slate-600 dark:text-text-muted mb-8">
-            Join thousands of institutions already using EduVerse
+            Join thousands of institutions already using Acadize
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/register">
