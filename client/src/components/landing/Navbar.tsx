@@ -1,11 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from "wouter";
-import { School, Menu } from "lucide-react";
+import { useTranslation } from 'react-i18next';
+import { Menu } from "lucide-react";
+import { AcadizeLogo } from "@/components/AcadizeLogo";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/contexts/ThemeContext";
 import { motion, useScroll, useTransform } from "framer-motion";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 const Navbar: React.FC = () => {
+  const { t } = useTranslation('landing');
   const [location, setLocation] = useLocation();
   const { user } = useAuth();
   const { theme, toggleTheme } = useTheme();
@@ -75,14 +79,7 @@ const Navbar: React.FC = () => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <motion.div 
-                className="flex size-8 items-center justify-center rounded-lg bg-primary text-background-dark"
-                whileHover={{ rotate: 360 }}
-                transition={{ duration: 0.6 }}
-              >
-                <School className="h-5 w-5" />
-              </motion.div>
-              <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">EduVerse</span>
+              <AcadizeLogo variant="full" size="xl" />
             </motion.div>
           </Link>
 
@@ -95,7 +92,7 @@ const Navbar: React.FC = () => {
                 whileHover={{ y: -2 }}
                 whileTap={{ y: 0 }}
               >
-                Features
+                {t('features')}
               </motion.span>
             </Link>
             <Link href="/pricing">
@@ -104,7 +101,7 @@ const Navbar: React.FC = () => {
                 whileHover={{ y: -2 }}
                 whileTap={{ y: 0 }}
               >
-                Pricing
+                {t('pricingTitle')}
               </motion.span>
             </Link>
             <Link href="/docs">
@@ -113,7 +110,7 @@ const Navbar: React.FC = () => {
                 whileHover={{ y: -2 }}
                 whileTap={{ y: 0 }}
               >
-                Docs
+                {t('docs')}
               </motion.span>
             </Link>
             <Link href="/contact">
@@ -122,13 +119,14 @@ const Navbar: React.FC = () => {
                 whileHover={{ y: -2 }}
                 whileTap={{ y: 0 }}
               >
-                Contact
+                {t('contact')}
               </motion.span>
             </Link>
           </div>
 
           {/* Auth Buttons */}
           <div className="flex items-center gap-3">
+            <LanguageSwitcher />
             {/* Theme Toggle */}
             <motion.button
               onClick={toggleTheme}
@@ -150,7 +148,7 @@ const Navbar: React.FC = () => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  Dashboard
+                  {t('nav.dashboard', { ns: 'common' })}
                 </motion.button>
               </Link>
             ) : (
@@ -160,7 +158,7 @@ const Navbar: React.FC = () => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  Log In
+                  {t('login')}
                 </motion.button>
               </Link>
             )}
@@ -175,7 +173,7 @@ const Navbar: React.FC = () => {
                   whileTap={{ scale: 0.95 }}
                   transition={{ type: "spring", stiffness: 400, damping: 17 }}
                 >
-                  Get Started
+                  {t('getStarted')}
                 </motion.button>
               </Link>
             )}
@@ -210,7 +208,7 @@ const Navbar: React.FC = () => {
                   className="block px-3 py-2 text-base font-semibold text-slate-700 dark:text-slate-300 hover:text-primary dark:hover:text-primary hover:bg-slate-50 dark:hover:bg-white/5 rounded-md transition-colors cursor-pointer"
                   whileTap={{ scale: 0.98 }}
                 >
-                  Features
+                  {t('features')}
                 </motion.div>
               </Link>
               <Link href="/pricing">
@@ -219,7 +217,7 @@ const Navbar: React.FC = () => {
                   className={`block px-3 py-2 text-base font-semibold rounded-md transition-colors cursor-pointer ${location === '/pricing' ? 'text-primary bg-primary/10' : 'text-slate-700 dark:text-slate-300 hover:text-primary dark:hover:text-primary hover:bg-slate-50 dark:hover:bg-white/5'}`}
                   whileTap={{ scale: 0.98 }}
                 >
-                  Pricing
+                  {t('pricingTitle')}
                 </motion.div>
               </Link>
               <Link href="/docs">
@@ -228,7 +226,7 @@ const Navbar: React.FC = () => {
                   className={`block px-3 py-2 text-base font-semibold rounded-md transition-colors cursor-pointer ${location === '/docs' ? 'text-primary bg-primary/10' : 'text-slate-700 dark:text-slate-300 hover:text-primary dark:hover:text-primary hover:bg-slate-50 dark:hover:bg-white/5'}`}
                   whileTap={{ scale: 0.98 }}
                 >
-                  Docs
+                  {t('docs')}
                 </motion.div>
               </Link>
               <Link href="/contact">
@@ -237,7 +235,7 @@ const Navbar: React.FC = () => {
                   className={`block px-3 py-2 text-base font-semibold rounded-md transition-colors cursor-pointer ${location === '/contact' ? 'text-primary bg-primary/10' : 'text-slate-700 dark:text-slate-300 hover:text-primary dark:hover:text-primary hover:bg-slate-50 dark:hover:bg-white/5'}`}
                   whileTap={{ scale: 0.98 }}
                 >
-                  Contact
+                  {t('contact')}
                 </motion.div>
               </Link>
               
@@ -262,7 +260,7 @@ const Navbar: React.FC = () => {
                       className="w-full px-4 py-2.5 text-sm font-bold text-slate-900 dark:text-white border border-slate-200 dark:border-white/10 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5"
                       whileTap={{ scale: 0.98 }}
                     >
-                      Dashboard
+                      {t('nav.dashboard', { ns: 'common' })}
                     </motion.button>
                   </Link>
                 ) : (
@@ -273,7 +271,7 @@ const Navbar: React.FC = () => {
                         className="w-full px-4 py-2.5 text-sm font-bold text-slate-900 dark:text-white border border-slate-200 dark:border-white/10 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5"
                         whileTap={{ scale: 0.98 }}
                       >
-                        Log In
+                        {t('login')}
                       </motion.button>
                     </Link>
                     <Link href="/register">
@@ -282,7 +280,7 @@ const Navbar: React.FC = () => {
                         className="w-full px-4 py-2 text-sm font-bold bg-primary text-background-dark rounded-lg shadow-[0_0_15px_rgba(242,208,13,0.3)]"
                         whileTap={{ scale: 0.98 }}
                       >
-                        Get Started
+                        {t('getStarted')}
                       </motion.button>
                     </Link>
                   </>

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
@@ -22,6 +23,7 @@ import Footer from "@/components/landing/Footer";
 import { apiEndpoint } from "@/lib/config";
 
 export default function Contact() {
+  const { t } = useTranslation('landing');
   const { toast } = useToast();
   const [formData, setFormData] = useState<InsertContact>({
     name: "",
@@ -56,8 +58,8 @@ export default function Contact() {
     },
     onSuccess: () => {
       toast({
-        title: "Message Sent Successfully!",
-        description: "Thank you for contacting us. We will get back to you soon.",
+        title: t('contactForm.messageSentSuccess'),
+        description: t('contactForm.messageSentDescription'),
       });
       setFormData({
         name: "",
@@ -68,8 +70,8 @@ export default function Contact() {
     },
     onError: (error) => {
       toast({
-        title: "Failed to Send Message",
-        description: error instanceof Error ? error.message : "There was an error sending your message. Please try again.",
+        title: t('contactForm.failedToSendMessage'),
+        description: error instanceof Error ? error.message : t('contactForm.failedToSendDescription'),
         variant: "destructive",
       });
     },
@@ -101,8 +103,7 @@ export default function Contact() {
                   <span className="text-xs font-semibold text-primary uppercase tracking-wide">24/7 Support</span>
                 </div>
                 <h1 className="text-4xl lg:text-5xl font-black leading-[1.1] tracking-tight text-slate-900 dark:text-white mb-6">
-                  Let's start a <br/>
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-yellow-200">conversation</span>
+                  {t('contactTitle')}
                 </h1>
                 <p className="text-lg text-slate-600 dark:text-text-muted leading-relaxed max-w-lg">
                   Whether you're an administrator looking for a demo, a teacher needing support, or a student with login issues, our team is ready to help.
@@ -117,7 +118,7 @@ export default function Contact() {
                   <div>
                     <h3 className="text-lg font-bold text-slate-900 dark:text-white">Email Us</h3>
                     <p className="text-sm text-slate-600 dark:text-text-muted mb-1">For general inquiries and sales</p>
-                    <a className="text-primary font-medium hover:text-white transition-colors" href="mailto:eduverse.official.EG@gmail.com">eduverse.official.EG@gmail.com</a>
+                    <a className="text-primary font-medium hover:text-white transition-colors" href="mailto:support@acadize.com">support@acadize.com</a>
                   </div>
                 </motion.div>
                 
@@ -128,7 +129,7 @@ export default function Contact() {
                   <div>
                     <h3 className="text-lg font-bold text-slate-900 dark:text-white">Technical Support</h3>
                     <p className="text-sm text-slate-600 dark:text-text-muted mb-1">For existing customers needing help</p>
-                    <a className="text-primary font-medium hover:text-white transition-colors" href="mailto:eduverse.contact.edu@gmail.com">eduverse.contact.edu@gmail.com</a>
+                    <a className="text-primary font-medium hover:text-white transition-colors" href="mailto:contact@acadize.com">contact@acadize.com</a>
                   </div>
                 </motion.div>
                 
@@ -246,7 +247,7 @@ export default function Contact() {
                       id="newsletter" 
                       type="checkbox"
                     />
-                    <label className="text-xs text-slate-600 dark:text-text-muted" htmlFor="newsletter">I agree to receive communications from Eduverse.</label>
+                    <label className="text-xs text-slate-600 dark:text-text-muted" htmlFor="newsletter">I agree to receive communications from Acadize.</label>
                   </div>
                   
                   <button 

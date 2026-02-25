@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useRoute, Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
@@ -65,6 +66,7 @@ interface Announcement {
 }
 
 export default function StudentCourseDetailPage() {
+  const { t } = useTranslation(['courses', 'dashboard', 'common']);
   const [match, params] = useRoute("/student/courses/:courseId");
   const courseId = params?.courseId;
   const [, setLocation] = useLocation();
@@ -77,13 +79,13 @@ export default function StudentCourseDetailPage() {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [progress, setProgress] = useState(75);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('Overview');
+  const [activeTab, setActiveTab] = useState('overview');
 
   const tabs = [
-    { name: 'Overview', icon: 'grid_view' },
-    { name: 'Lessons', icon: 'book_2' },
-    { name: 'Assignments', icon: 'assignment' },
-    { name: 'Announcements', icon: 'campaign' },
+    { name: t('overview'), key: 'overview', icon: 'grid_view' },
+    { name: t('lessons'), key: 'lessons', icon: 'book_2' },
+    { name: t('assignments'), key: 'assignments', icon: 'assignment' },
+    { name: t('announcements'), key: 'announcements', icon: 'campaign' },
   ];
 
   const getAuthHeaders = (): Record<string, string> => {
@@ -182,8 +184,9 @@ export default function StudentCourseDetailPage() {
   if (isLoading) {
     return (
       <StudentLayout>
-        <div className="flex items-center justify-center min-h-screen bg-slate-50 dark:bg-transparent">
+        <div className="flex flex-col items-center justify-center gap-4 min-h-screen bg-slate-50 dark:bg-transparent">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          <p className="text-slate-600 dark:text-slate-400 text-sm">{t('common:common.loading')}</p>
         </div>
       </StudentLayout>
     );
@@ -194,11 +197,11 @@ export default function StudentCourseDetailPage() {
       <StudentLayout>
         <div className="flex items-center justify-center min-h-screen bg-transparent">
           <div className="text-center">
-            <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">Course Not Found</h2>
-            <p className="text-slate-600 dark:text-slate-400 mb-4">This course doesn't exist or you don't have access to it.</p>
+            <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">{t('courseNotFound')}</h2>
+            <p className="text-slate-600 dark:text-slate-400 mb-4">{t('courseNotFoundDesc')}</p>
             <Link href="/student/courses">
               <button className="px-4 py-2 bg-primary text-white dark:text-black rounded-lg font-bold hover:bg-primary/90 transition-colors">
-                Browse Courses
+                {t('browseCourses')}
               </button>
             </Link>
           </div>
@@ -217,8 +220,8 @@ export default function StudentCourseDetailPage() {
     const email = course?.teacher?.email;
     if (!email) {
       toast({
-        title: "Contact Information Unavailable",
-        description: "No email address is available for this instructor.",
+        title: t('contactInfoUnavailable'),
+        description: t('noInstructorEmail'),
         variant: "destructive"
       });
       return;
@@ -232,8 +235,8 @@ export default function StudentCourseDetailPage() {
   const handleDownloadSyllabus = async () => {
     if (!course?.syllabusUrl) {
       toast({
-        title: "Syllabus Unavailable",
-        description: "No syllabus has been uploaded for this course yet.",
+        title: t('syllabusUnavailable'),
+        description: t('noSyllabusYet'),
         variant: "destructive"
       });
       return;
@@ -257,14 +260,14 @@ export default function StudentCourseDetailPage() {
       document.body.removeChild(a);
       
       toast({
-        title: "Success",
-        description: "Syllabus downloaded successfully!"
+        title: t('syllabusDownloaded'),
+        description: t('syllabusDownloaded')
       });
     } catch (error) {
       console.error('Download error:', error);
       toast({
-        title: "Download Failed",
-        description: "Could not download syllabus. Please try again.",
+        title: t('downloadFailed'),
+        description: t('downloadFailedDesc'),
         variant: "destructive"
       });
     }
@@ -281,10 +284,10 @@ export default function StudentCourseDetailPage() {
           className="flex flex-wrap gap-2 pb-6"
         >
           <Link href="/student/dashboard" className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white text-sm font-medium flex items-center gap-1">
-            <span className="material-symbols-outlined text-[16px]">dashboard</span> Dashboard
+            <span className="material-symbols-outlined text-[16px]">dashboard</span> {t('dashboard')}
           </Link>
           <span className="text-slate-400 text-sm font-medium">/</span>
-          <Link href="/student/courses" className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white text-sm font-medium">My Courses</Link>
+          <Link href="/student/courses" className="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white text-sm font-medium">{t('myClasses')}</Link>
           <span className="text-slate-400 text-sm font-medium">/</span>
           <span className="text-slate-900 dark:text-white text-sm font-medium">{course.title}</span>
         </motion.div>
@@ -302,14 +305,14 @@ export default function StudentCourseDetailPage() {
           >
             <div className="flex flex-col gap-2">
               <span className="text-primary font-bold text-sm tracking-widest uppercase">
-                {course.id.slice(0, 8).toUpperCase()} • Active Course
+                {course.id.slice(0, 8).toUpperCase()} • {t('activeCourse')}
               </span>
               <h1 className="text-slate-900 dark:text-white text-3xl md:text-4xl font-black leading-tight tracking-[-0.033em]">
                 {course.title}
               </h1>
               <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 text-base font-normal">
                 <span className="material-symbols-outlined text-[20px]">person</span>
-                <span>{course.teacher?.fullName || course.teacher?.username || course.teacherName || 'Instructor'}</span>
+                <span>{course.teacher?.fullName || course.teacher?.username || course.teacherName || t('instructor')}</span>
               </div>
             </div>
             <div className="flex gap-4 mt-2">
@@ -322,7 +325,7 @@ export default function StudentCourseDetailPage() {
                 >
                   <span className="flex items-center gap-2">
                     <span className="material-symbols-outlined">play_circle</span>
-                    Continue Learning
+                    {t('continueLearning')}
                   </span>
                 </motion.button>
               </Link>
@@ -335,7 +338,7 @@ export default function StudentCourseDetailPage() {
               >
                 <span className="flex items-center gap-2">
                   <span className="material-symbols-outlined">download</span>
-                  Syllabus
+                  {t('syllabus')}
                 </span>
               </motion.button>
             </div>
@@ -396,12 +399,12 @@ export default function StudentCourseDetailPage() {
         >
           <div role="tablist" className="flex gap-8 overflow-x-auto no-scrollbar">
             {tabs.map((tab, index) => {
-              const isActive = activeTab === tab.name;
+              const isActive = activeTab === tab.key;
               return (
                 <motion.button
                   key={tab.name}
                   role="tab"
-                  onClick={() => setActiveTab(tab.name)}
+                  onClick={() => setActiveTab(tab.key)}
                   className={`flex items-center gap-2 border-b-[3px] pb-[13px] pt-2 px-1 transition-colors whitespace-nowrap ${
                     isActive 
                       ? 'border-b-primary text-primary' 
@@ -429,7 +432,7 @@ export default function StudentCourseDetailPage() {
 
         {/* Tab Content: Overview */}
         <AnimatePresence mode="wait">
-          {activeTab === 'Overview' && (
+          {activeTab === 'overview' && (
             <motion.div 
               className="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-10"
               key="overview"
@@ -597,11 +600,11 @@ export default function StudentCourseDetailPage() {
                         </div>
                       </div>
                     )) : (
-                      <p className="text-sm text-slate-600 dark:text-slate-400 text-center py-4">No announcements yet</p>
+                      <p className="text-sm text-slate-600 dark:text-slate-400 text-center py-4">{t('dashboard:noAnnouncementsYetShort')}</p>
                     )}
                   </div>
                   <motion.button variants={buttonVariants} whileHover="hover" whileTap="tap" 
-                    onClick={() => setActiveTab('Announcements')}
+                    onClick={() => setActiveTab('announcements')}
                     className="w-full mt-5 py-2 text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium border border-slate-200 dark:border-white/10 rounded-lg hover:bg-slate-50 dark:hover:bg-white/5 transition-colors"
                   >
                     View All Announcements
@@ -629,7 +632,7 @@ export default function StudentCourseDetailPage() {
                     ) : null}
                     <li>
                       <button 
-                        onClick={() => setActiveTab('Lessons')}
+                        onClick={() => setActiveTab('lessons')}
                         className="w-full flex items-center gap-3 group cursor-pointer"
                       >
                         <div className="bg-slate-100 dark:bg-white/5 p-2 rounded text-slate-600 dark:text-slate-400 group-hover:bg-primary group-hover:text-black transition-colors">
@@ -640,7 +643,7 @@ export default function StudentCourseDetailPage() {
                     </li>
                     <li>
                       <button 
-                        onClick={() => setActiveTab('Assignments')}
+                        onClick={() => setActiveTab('assignments')}
                         className="w-full flex items-center gap-3 group cursor-pointer"
                       >
                         <div className="bg-slate-100 dark:bg-white/5 p-2 rounded text-slate-600 dark:text-slate-400 group-hover:bg-primary group-hover:text-black transition-colors">
@@ -659,7 +662,7 @@ export default function StudentCourseDetailPage() {
 
         {/* Tab Content: Lessons */}
         <AnimatePresence mode="wait">
-        {activeTab === 'Lessons' && (
+        {activeTab === 'lessons' && (
           <motion.div 
             className="pb-10"
             key="lessons"
@@ -681,7 +684,7 @@ export default function StudentCourseDetailPage() {
               {lessons.length === 0 ? (
                 <div className="text-center py-16">
                   <span className="material-symbols-outlined text-slate-400 dark:text-slate-600 text-6xl mb-4 block">book_2</span>
-                  <p className="text-slate-600 dark:text-slate-400 text-lg">No lessons available yet</p>
+                  <p className="text-slate-600 dark:text-slate-400 text-lg">{t('dashboard:noLessonsAvailableYet')}</p>
                 </div>
               ) : (
                 <motion.div variants={staggerContainerFast} initial="initial" animate="animate" className="grid gap-3">
@@ -722,7 +725,7 @@ export default function StudentCourseDetailPage() {
 
         {/* Tab Content: Assignments */}
         <AnimatePresence mode="wait">
-        {activeTab === 'Assignments' && (
+        {activeTab === 'assignments' && (
           <motion.div 
             className="pb-10"
             key="assignments"
@@ -736,7 +739,7 @@ export default function StudentCourseDetailPage() {
               {assignments.length === 0 ? (
                 <div className="text-center py-16">
                   <span className="material-symbols-outlined text-slate-400 dark:text-slate-600 text-6xl mb-4 block">assignment</span>
-                  <p className="text-slate-600 dark:text-slate-400 text-lg">No assignments available yet</p>
+                  <p className="text-slate-600 dark:text-slate-400 text-lg">{t('dashboard:noAssignmentsAvailableYet')}</p>
                 </div>
               ) : (
                 <motion.div variants={staggerContainerFast} initial="initial" animate="animate" className="grid gap-4">
@@ -785,7 +788,7 @@ export default function StudentCourseDetailPage() {
 
         {/* Tab Content: Announcements */}
         <AnimatePresence mode="wait">
-        {activeTab === 'Announcements' && (
+        {activeTab === 'announcements' && (
           <motion.div 
             className="pb-10"
             key="announcements"
@@ -799,7 +802,7 @@ export default function StudentCourseDetailPage() {
               {announcements.length === 0 ? (
                 <div className="text-center py-16">
                   <span className="material-symbols-outlined text-slate-400 dark:text-slate-600 text-6xl mb-4 block">campaign</span>
-                  <p className="text-slate-600 dark:text-slate-400 text-lg">No announcements yet</p>
+                  <p className="text-slate-600 dark:text-slate-400 text-lg">{t('dashboard:noAnnouncementsYetShort')}</p>
                 </div>
               ) : (
                 <motion.div variants={staggerContainerFast} initial="initial" animate="animate" className="grid gap-4">

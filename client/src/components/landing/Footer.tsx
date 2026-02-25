@@ -1,9 +1,12 @@
 import React, { useRef } from 'react';
 import { Link } from "wouter";
-import { School, Globe, AtSign, Rss } from "lucide-react";
+import { useTranslation } from 'react-i18next';
+import { Globe, AtSign, Rss } from "lucide-react";
+import { AcadizeLogo } from "@/components/AcadizeLogo";
 import { motion, useInView } from "framer-motion";
 
 const Footer: React.FC = () => {
+  const { t } = useTranslation('landing');
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, amount: 0.2 });
 
@@ -28,16 +31,9 @@ const Footer: React.FC = () => {
               className="flex items-center gap-2 mb-4"
               whileHover={{ scale: 1.05 }}
             >
-              <motion.div 
-                className="flex size-6 items-center justify-center rounded bg-primary text-background-dark"
-                whileHover={{ rotate: 360 }}
-                transition={{ duration: 0.6 }}
-              >
-                <School className="h-4 w-4" />
-              </motion.div>
-              <span className="text-lg font-bold text-slate-900 dark:text-white">EduVerse</span>
+              <AcadizeLogo variant="full" size="xl" />
             </motion.div>
-            <p className="text-slate-600 dark:text-text-muted text-sm max-w-xs mb-6">Empowering the next generation of learners through innovative technology and seamless design.</p>
+            <p className="text-slate-600 dark:text-text-muted text-sm max-w-xs mb-6">{t('footerTagline')}</p>
             <div className="flex gap-4">
               <motion.a 
                 className="text-slate-600 dark:text-text-muted hover:text-slate-900 dark:hover:text-white transition-colors" 
@@ -72,12 +68,12 @@ const Footer: React.FC = () => {
             animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
             transition={{ delay: 0.2, duration: 0.6 }}
           >
-            <h4 className="text-slate-900 dark:text-white font-bold mb-4">Product</h4>
+            <h4 className="text-slate-900 dark:text-white font-bold mb-4">{t('product')}</h4>
             <ul className="space-y-2 text-sm text-slate-600 dark:text-text-muted">
-              <motion.li whileHover={{ x: 5 }}><a className="hover:text-primary transition-colors" href="/#features">Features</a></motion.li>
-              <motion.li whileHover={{ x: 5 }}><Link className="hover:text-primary transition-colors" href="/pricing">Pricing</Link></motion.li>
-              <motion.li whileHover={{ x: 5 }}><Link className="hover:text-primary transition-colors" href="/integrations">Integrations</Link></motion.li>
-              <motion.li whileHover={{ x: 5 }}><Link className="hover:text-primary transition-colors" href="/blog">Updates</Link></motion.li>
+              <motion.li whileHover={{ x: 5 }}><a className="hover:text-primary transition-colors" href="/#features">{t('features')}</a></motion.li>
+              <motion.li whileHover={{ x: 5 }}><Link className="hover:text-primary transition-colors" href="/pricing">{t('pricingTitle')}</Link></motion.li>
+              <motion.li whileHover={{ x: 5 }}><Link className="hover:text-primary transition-colors" href="/integrations">{t('integrations')}</Link></motion.li>
+              <motion.li whileHover={{ x: 5 }}><Link className="hover:text-primary transition-colors" href="/blog">{t('updates')}</Link></motion.li>
             </ul>
           </motion.div>
 
@@ -87,12 +83,12 @@ const Footer: React.FC = () => {
             animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
             transition={{ delay: 0.3, duration: 0.6 }}
           >
-            <h4 className="text-slate-900 dark:text-white font-bold mb-4">Resources</h4>
+            <h4 className="text-slate-900 dark:text-white font-bold mb-4">{t('resources')}</h4>
             <ul className="space-y-2 text-sm text-slate-600 dark:text-text-muted">
-              <motion.li whileHover={{ x: 5 }}><Link className="hover:text-primary transition-colors" href="/docs">Documentation</Link></motion.li>
+              <motion.li whileHover={{ x: 5 }}><Link className="hover:text-primary transition-colors" href="/docs">{t('docs')}</Link></motion.li>
               <motion.li whileHover={{ x: 5 }}><Link className="hover:text-primary transition-colors" href="/community">Community</Link></motion.li>
-              <motion.li whileHover={{ x: 5 }}><Link className="hover:text-primary transition-colors" href="/help-center">Help Center</Link></motion.li>
-              <motion.li whileHover={{ x: 5 }}><Link className="hover:text-primary transition-colors" href="/integrations">Integrations</Link></motion.li>
+              <motion.li whileHover={{ x: 5 }}><Link className="hover:text-primary transition-colors" href="/help-center">{t('help')}</Link></motion.li>
+              <motion.li whileHover={{ x: 5 }}><Link className="hover:text-primary transition-colors" href="/integrations">{t('integrations')}</Link></motion.li>
             </ul>
           </motion.div>
 
@@ -102,12 +98,12 @@ const Footer: React.FC = () => {
             animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
             transition={{ delay: 0.4, duration: 0.6 }}
           >
-            <h4 className="text-slate-900 dark:text-white font-bold mb-4">Company</h4>
+            <h4 className="text-slate-900 dark:text-white font-bold mb-4">{t('company')}</h4>
             <ul className="space-y-2 text-sm text-slate-600 dark:text-text-muted">
-              <motion.li whileHover={{ x: 5 }}><Link className="hover:text-primary transition-colors" href="/about">About Us</Link></motion.li>
-              <motion.li whileHover={{ x: 5 }}><Link className="hover:text-primary transition-colors" href="/blog">Blog</Link></motion.li>
-              <motion.li whileHover={{ x: 5 }}><Link className="hover:text-primary transition-colors" href="/contact">Contact</Link></motion.li>
-              <motion.li whileHover={{ x: 5 }}><Link className="hover:text-primary transition-colors" href="/pricing">Pricing</Link></motion.li>
+              <motion.li whileHover={{ x: 5 }}><Link className="hover:text-primary transition-colors" href="/about">{t('about')}</Link></motion.li>
+              <motion.li whileHover={{ x: 5 }}><Link className="hover:text-primary transition-colors" href="/blog">{t('blog')}</Link></motion.li>
+              <motion.li whileHover={{ x: 5 }}><Link className="hover:text-primary transition-colors" href="/contact">{t('contact')}</Link></motion.li>
+              <motion.li whileHover={{ x: 5 }}><Link className="hover:text-primary transition-colors" href="/pricing">{t('pricingTitle')}</Link></motion.li>
             </ul>
           </motion.div>
         </motion.div>
@@ -119,10 +115,10 @@ const Footer: React.FC = () => {
           animate={isInView ? { opacity: 1 } : { opacity: 0 }}
           transition={{ delay: 0.5, duration: 0.6 }}
         >
-          <p className="text-xs text-text-muted">© 2024 EduVerse Inc. All rights reserved.</p>
+          <p className="text-xs text-text-muted">© 2024 Acadize. {t('allRightsReserved')}</p>
           <div className="flex gap-6 text-xs text-text-muted">
-            <motion.div whileHover={{ y: -2 }}><Link className="hover:text-white" href="/privacy">Privacy Policy</Link></motion.div>
-            <motion.div whileHover={{ y: -2 }}><Link className="hover:text-white" href="/terms">Terms of Service</Link></motion.div>
+            <motion.div whileHover={{ y: -2 }}><Link className="hover:text-white" href="/privacy">{t('privacy')}</Link></motion.div>
+            <motion.div whileHover={{ y: -2 }}><Link className="hover:text-white" href="/terms">{t('terms')}</Link></motion.div>
             <motion.div whileHover={{ y: -2 }}><a className="hover:text-white" href="#">Cookie Settings</a></motion.div>
           </div>
         </motion.div>
