@@ -146,11 +146,15 @@ export function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+import { SubscriptionGuard } from "./SubscriptionGuard";
+
 // Role-based route helper components
 export function StudentRoute({ children }: { children: React.ReactNode }) {
   return (
     <ProtectedRoute allowedRoles={['student']}>
-      {children}
+      <SubscriptionGuard>
+        {children}
+      </SubscriptionGuard>
     </ProtectedRoute>
   );
 }
@@ -158,7 +162,9 @@ export function StudentRoute({ children }: { children: React.ReactNode }) {
 export function TeacherRoute({ children }: { children: React.ReactNode }) {
   return (
     <ProtectedRoute allowedRoles={['teacher']}>
-      {children}
+      <SubscriptionGuard>
+        {children}
+      </SubscriptionGuard>
     </ProtectedRoute>
   );
 }
@@ -174,10 +180,13 @@ export function AdminRoute({ children }: { children: React.ReactNode }) {
 export function ParentRoute({ children }: { children: React.ReactNode }) {
   return (
     <ProtectedRoute allowedRoles={['parent']}>
-      {children}
+      <SubscriptionGuard>
+        {children}
+      </SubscriptionGuard>
     </ProtectedRoute>
   );
 }
+
 
 // Multi-role route for pages accessible by multiple roles
 export function MultiRoleRoute({ 

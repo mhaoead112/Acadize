@@ -9,7 +9,7 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["Lexend", "sans-serif"],
+        sans: ["Outfit", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",

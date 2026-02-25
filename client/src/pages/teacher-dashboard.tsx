@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useLocation, Link, useRoute } from "wouter";
 import { 
   BookOpen, Clock, Users, FileText, Calendar,
@@ -40,6 +41,7 @@ interface ScheduleEvent {
 }
 
 export default function TeacherDashboard() {
+  const { t } = useTranslation('teacher');
   const { user, getAuthHeaders, token, isAuthenticated } = useAuth();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -166,8 +168,8 @@ export default function TeacherDashboard() {
     } catch (error) {
       console.error("Failed to fetch dashboard data:", error);
       toast({
-        title: "Error",
-        description: "Failed to load dashboard data",
+        title: t('error'),
+        description: t('failedToLoadDashboard'),
         variant: "destructive",
       });
     } finally {
@@ -209,10 +211,10 @@ export default function TeacherDashboard() {
           <div className="flex flex-wrap justify-between items-end gap-4">
             <div className="flex flex-col gap-1">
               <h1 className="text-navy dark:text-white text-3xl font-black leading-tight tracking-[-0.033em]">
-                Welcome back, {user?.fullName || "Teacher"}
+                {t('welcomeBack', { name: user?.fullName || 'Teacher' })}
               </h1>
               <p className="text-muted-foreground dark:text-slate-400 text-base font-normal leading-normal">
-                Here's what's happening in your classes today.
+                {t('heresWhatsHappening')}
               </p>
             </div>
             <div className="flex items-center gap-3">
@@ -221,7 +223,7 @@ export default function TeacherDashboard() {
                 className="flex items-center gap-2 bg-navy hover:bg-navy-light dark:bg-gold dark:hover:bg-gold-light text-white dark:text-navy px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm"
               >
                 <Plus className="h-5 w-5" />
-                Create Assignment
+                {t('createAssignment')}
               </Button>
             </div>
           </div>
@@ -231,7 +233,7 @@ export default function TeacherDashboard() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <div className="flex flex-col gap-2 rounded-xl p-5 border border-slate-200 dark:border-gray-800 bg-white dark:bg-slate-800 shadow-sm transition-colors duration-300">
             <div className="flex justify-between items-start">
-              <p className="text-slate-500 dark:text-gray-400 text-sm font-medium leading-normal">Active Classes</p>
+              <p className="text-slate-500 dark:text-gray-400 text-sm font-medium leading-normal">{t('activeClasses')}</p>
 <div className="p-2 rounded-lg bg-navy/10 dark:bg-gold/10">
   <BookOpen className="h-5 w-5 text-navy dark:text-gold" />
 </div>
@@ -243,7 +245,7 @@ export default function TeacherDashboard() {
 
           <div className="flex flex-col gap-2 rounded-xl p-5 border border-slate-200 dark:border-gray-800 bg-white dark:bg-slate-800 shadow-sm transition-colors duration-300">
             <div className="flex justify-between items-start">
-              <p className="text-slate-500 dark:text-gray-400 text-sm font-medium leading-normal">Total Students</p>
+              <p className="text-slate-500 dark:text-gray-400 text-sm font-medium leading-normal">{t('totalStudents')}</p>
               <Users className="h-5 w-5 text-navy dark:text-gold" />
             </div>
             <p className="text-navy dark:text-white tracking-tight text-3xl font-bold leading-tight">
@@ -256,20 +258,20 @@ export default function TeacherDashboard() {
               <Clock className="h-20 w-20" />
             </div>
             <div className="flex justify-between items-start">
-              <p className="text-slate-500 dark:text-gray-400 text-sm font-medium leading-normal">Pending Grading</p>
+              <p className="text-slate-500 dark:text-gray-400 text-sm font-medium leading-normal">{t('pendingGrading')}</p>
               <Clock className="h-5 w-5 text-gold" />
             </div>
             <p className="text-navy dark:text-white tracking-tight text-3xl font-bold leading-tight">
               {stats.pendingGrading}
             </p>
             {stats.pendingGrading > 0 && (
-              <p className="text-xs text-gold font-bold">Needs attention</p>
+              <p className="text-xs text-gold font-bold">{t('needsAttention')}</p>
             )}
           </div>
 
           <div className="flex flex-col gap-2 rounded-xl p-5 border border-slate-200 dark:border-gray-800 bg-white dark:bg-slate-800 shadow-sm transition-colors duration-300">
             <div className="flex justify-between items-start">
-              <p className="text-slate-500 dark:text-gray-400 text-sm font-medium leading-normal">Unread Messages</p>
+              <p className="text-slate-500 dark:text-gray-400 text-sm font-medium leading-normal">{t('unreadMessages')}</p>
               <Bell className="h-5 w-5 text-navy dark:text-gold" />
             </div>
             <p className="text-navy dark:text-white tracking-tight text-3xl font-bold leading-tight">5</p>
@@ -283,11 +285,11 @@ export default function TeacherDashboard() {
             <section>
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-navy dark:text-white text-[20px] font-bold leading-tight tracking-[-0.015em]">
-                  Active Classes
+                  {t('activeClasses')}
                 </h2>
                 <Link href="/teacher/courses">
                   <a className="text-navy dark:text-gold text-sm font-medium hover:underline">
-                    View all
+                    {t('viewAll')}
                   </a>
                 </Link>
               </div>
@@ -296,10 +298,10 @@ export default function TeacherDashboard() {
                 <div className="rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-slate-800 p-12 text-center transition-colors duration-300">
                   <BookOpen className="h-16 w-16 text-gray-400 mx-auto mb-4" />
                   <p className="text-gray-600 dark:text-gray-400 mb-4">
-                    No courses yet. Create your first course to get started!
+                    {t('noCoursesYet')}
                   </p>
                   <Button onClick={() => setLocation('/teacher/courses/create')}>
-                    Create Class
+                    {t('createClass')}
                   </Button>
                 </div>
               ) : (
@@ -320,12 +322,12 @@ export default function TeacherDashboard() {
                                   {course.title}
                                 </h3>
                                 <p className="text-sm text-slate-500 dark:text-gray-400">
-                                  {course.status === 'published' ? 'Published' : 'Draft'}
+                                  {course.status === 'published' ? t('published') : t('draft')}
                                 </p>
                               </div>
                             </div>
                             <p className="text-sm text-slate-600 dark:text-gray-400 line-clamp-2">
-                              {course.description || 'No description available'}
+                              {course.description || t('noDescriptionAvailable')}
                             </p>
                           </div>
                         </a>
@@ -340,11 +342,11 @@ export default function TeacherDashboard() {
             <section>
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-navy dark:text-white text-[20px] font-bold leading-tight tracking-[-0.015em]">
-                  Upcoming Assignments
+                  {t('upcomingAssignments')}
                 </h2>
                 <Link href="/teacher/assignments">
                   <a className="text-navy dark:text-gold text-sm font-medium hover:underline">
-                    View all
+                    {t('viewAll')}
                   </a>
                 </Link>
               </div>
@@ -413,7 +415,7 @@ export default function TeacherDashboard() {
             {/* Upcoming Schedule */}
             <div className="rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-slate-800 p-5 shadow-sm transition-colors duration-300">
               <h3 className="text-navy dark:text-white text-lg font-bold leading-tight mb-4">
-                Upcoming Schedule
+                {t('upcomingSchedule')}
               </h3>
               <div className="flex flex-col gap-4">
                 {scheduleEvents.map((event) => (

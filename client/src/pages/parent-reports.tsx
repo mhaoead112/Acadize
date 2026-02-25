@@ -1,4 +1,5 @@
-﻿import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
 import ParentLayout from "@/components/ParentLayout";
 import { useAuth } from "@/hooks/useAuth";
@@ -24,6 +25,7 @@ interface ReportCard {
 }
 
 export default function ParentReports() {
+  const { t } = useTranslation('parent');
   const { token } = useAuth();
   const [, setLocation] = useLocation();
   const [children, setChildren] = useState<Child[]>([]);
@@ -148,7 +150,7 @@ export default function ParentReports() {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="flex flex-col gap-2">
-            <h1 className="text-white text-4xl font-black tracking-tight font-display">Report Cards</h1>
+            <h1 className="text-white text-4xl font-black tracking-tight font-display">{t('reportCards')}</h1>
             <p className="text-slate-400 text-base">View and download official academic records for your children.</p>
           </div>
           <div className="flex gap-3">

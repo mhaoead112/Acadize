@@ -44,11 +44,11 @@ export default function Docs() {
     {
       id: "getting-started",
       title: "Getting Started",
-      content: "Welcome to Eduverse LMS! This guide will help you get started with the platform.",
+      content: "Welcome to Acadize LMS! This guide will help you get started with the platform.",
       subSections: [
         {
           title: "Platform Overview",
-          content: "Eduverse is a modern Learning Management System that brings students, teachers, and parents together in one platform. Access your courses, submit assignments, track progress, and collaborate with classmates - all in one place."
+          content: "Acadize is a modern Learning Management System that brings students, teachers, and parents together in one platform. Access your courses, submit assignments, track progress, and collaborate with classmates - all in one place."
         },
         {
           title: "Creating Your Account",
@@ -86,7 +86,7 @@ export default function Docs() {
     {
       id: "student-guide",
       title: "Student Guide",
-      content: "Everything you need to know as a student to make the most of Eduverse.",
+      content: "Everything you need to know as a student to make the most of Acadize.",
       subSections: [
         {
           title: "Your Student Dashboard",
@@ -378,7 +378,7 @@ export default function Docs() {
     {
       id: "features",
       title: "Platform Features",
-      content: "Discover all the powerful features available in Eduverse LMS.",
+      content: "Discover all the powerful features available in Acadize LMS.",
       subSections: [
         {
           title: "Real-Time Notifications",
@@ -415,7 +415,7 @@ export default function Docs() {
           title: "Mobile Access",
           content: "Learn on the go:",
           tips: [
-            "Access Eduverse from any device",
+            "Access Acadize from any device",
             "Responsive design works on phones and tablets",
             "Submit assignments from your mobile device",
             "Receive push notifications on your phone"
@@ -468,7 +468,7 @@ export default function Docs() {
             "Q: Can I edit a submitted assignment? A: No, but you can contact your teacher to unlock it",
             "Q: How do I drop a course? A: Contact your teacher or administrator",
             "Q: Are my files safe? A: Yes, all data is encrypted and backed up regularly",
-            "Q: Can I use Eduverse offline? A: You need internet to submit work, but you can download materials for offline viewing",
+            "Q: Can I use Acadize offline? A: You need internet to submit work, but you can download materials for offline viewing",
             "Q: Who can see my grades? A: Only you, your teachers, and your linked parent accounts"
           ]
         }
@@ -490,7 +490,7 @@ export default function Docs() {
             </span>
           </h1>
           <p className="text-lg sm:text-xl text-slate-600 dark:text-text-muted max-w-3xl mx-auto mb-8">
-            Complete guide to using Eduverse LMS - from getting started to advanced API integration
+            Complete guide to using Acadize LMS - from getting started to advanced API integration
           </p>
           
           <div className="max-w-2xl mx-auto">

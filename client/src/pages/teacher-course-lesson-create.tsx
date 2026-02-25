@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { useRoute, useLocation, Link } from "wouter";
 import { Loader2 } from "lucide-react";
 import { apiEndpoint } from "@/lib/config";
@@ -6,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 
 export default function TeacherCourseLessonCreate() {
+  const { t } = useTranslation('teacher');
   const [, params] = useRoute("/teacher/courses/:courseId/lessons/create");
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -159,7 +161,7 @@ export default function TeacherCourseLessonCreate() {
         {/* Page Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Add New Lesson</h1>
+            <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">{t('addNewLesson')}</h1>
             <p className="text-slate-500 dark:text-slate-400 mt-1">Creating content for your course</p>
           </div>
           <div className="flex items-center gap-3">

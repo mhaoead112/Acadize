@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { apiEndpoint } from "@/lib/config";
@@ -46,6 +47,7 @@ interface RecentActivity {
 }
 
 export default function ParentDashboard() {
+  const { t } = useTranslation('parent');
   const { user, token } = useAuth();
   const [, setLocation] = useLocation();
   const [children, setChildren] = useState<Child[]>([]);
@@ -165,7 +167,7 @@ export default function ParentDashboard() {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Parent Dashboard</h1>
+            <h1 className="text-2xl font-bold text-gray-900">{t('dashboard')}</h1>
             <p className="text-gray-600">Monitor your children's academic progress</p>
           </div>
           <div className="flex gap-3">
@@ -184,7 +186,7 @@ export default function ParentDashboard() {
         {children.length > 1 && (
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-lg">My Children</CardTitle>
+              <CardTitle className="text-lg">{t('myChildren')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex gap-4 overflow-x-auto pb-2">
@@ -237,7 +239,7 @@ export default function ParentDashboard() {
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-500">Attendance</p>
+                    <p className="text-sm text-gray-500">{t('attendance')}</p>
                     <h3 className="text-3xl font-bold text-gray-900">{selectedChildData.attendance}%</h3>
                   </div>
                   <div className="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center">

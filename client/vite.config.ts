@@ -27,7 +27,7 @@ export default defineConfig({
     host: true, // Allow connections from any hostname (for lvh.me subdomains)
     allowedHosts: true, // Allow all hosts including *.lvh.me
     proxy: {
-      "/api": "http://localhost:3001", // ✅ Added missing "//"
+      "/api": "http://localhost:3000",
     },
   },
 });

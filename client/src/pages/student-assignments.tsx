@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useMemo, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
@@ -70,6 +71,7 @@ const fetchAssignments = async (token: string): Promise<APIAssignment[]> => {
 };
 
 export default function StudentAssignments() {
+  const { t } = useTranslation('assignments');
   const { token, user } = useAuth();
   const { toast } = useToast();
   
@@ -117,8 +119,8 @@ export default function StudentAssignments() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['studentAssignments'] });
       toast({
-        title: "Assignment submitted successfully",
-        description: "Your work has been submitted for review.",
+        title: t('assignmentSubmitted'),
+        description: t('assignmentSubmittedDesc'),
       });
       setIsSubmitDialogOpen(false);
       setSubmissionContent("");
@@ -126,8 +128,8 @@ export default function StudentAssignments() {
     },
     onError: () => {
       toast({
-        title: "Submission failed",
-        description: "Please try again later.",
+        title: t('submissionFailed'),
+        description: t('submissionFailedDesc'),
         variant: "destructive",
       });
     },
@@ -194,18 +196,18 @@ export default function StudentAssignments() {
     const diffTime = due.getTime() - now.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     
-    if (diffDays === 0) return 'Today';
-    if (diffDays === 1) return 'Tomorrow';
-    if (diffDays < 7 && diffDays > 0) return `In ${diffDays} days`;
+    if (diffDays === 0) return t('today');
+    if (diffDays === 1) return t('tomorrow');
+    if (diffDays < 7 && diffDays > 0) return t('inDays', { count: diffDays });
     return due.toLocaleDateString();
-  }, []);
+  }, [t]);
 
   const getTimeRemaining = (dueDate: string): string => {
     const due = new Date(dueDate).getTime();
     const now = new Date().getTime();
     const diff = due - now;
     
-    if (diff < 0) return "Overdue";
+    if (diff < 0) return t('overdue');
     
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
@@ -282,22 +284,22 @@ export default function StudentAssignments() {
           <motion.div className="space-y-6" variants={fadeInUpVariants}>
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
               <motion.div variants={fadeInUpVariants}>
-                <h1 className="text-4xl md:text-5xl font-black tracking-tight text-secondary dark:text-white mb-2 font-display">My Assignments</h1>
-                <p className="text-slate-600 dark:text-slate-300 text-lg">Track your progress and stay on top of deadlines.</p>
+                <h1 className="text-4xl md:text-5xl font-black tracking-tight text-secondary dark:text-white mb-2 font-display">{t('myAssignments')}</h1>
+                <p className="text-slate-600 dark:text-slate-300 text-lg">{t('trackProgress')}</p>
               </motion.div>
               <motion.div 
                 className="flex gap-2"
                 variants={fadeInUpVariants}
               >
                 <motion.button 
-                  onClick={() => toast({ title: "Select an assignment", description: "Please select an assignment from the list below to submit your work." })}
+                  onClick={() => toast({ title: t('selectAssignment'), description: t('selectAssignmentDesc') })}
                   className="bg-secondary dark:bg-primary text-white dark:text-secondary font-bold px-6 py-2.5 rounded-full text-sm hover:brightness-110 transition-all shadow-lg shadow-secondary/20 dark:shadow-primary/20 flex items-center gap-2"
                   variants={buttonVariants}
                   whileHover="hover"
                   whileTap="tap"
                 >
                   <span className="material-symbols-outlined text-[20px]">add</span>
-                  Submit External Work
+                  {t('submitExternalWork')}
                 </motion.button>
               </motion.div>
             </div>
@@ -319,10 +321,10 @@ export default function StudentAssignments() {
                   variants={buttonVariants}
                   whileHover="hover"
                   whileTap="tap"
-                >
-                  All
+>
+                  {t('all')}
                 </motion.button>
-                <motion.button 
+                <motion.button
                   onClick={() => setFilterStatus("todo")}
                   className={`flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full px-5 transition-colors text-sm ${
                     filterStatus === "todo"
@@ -333,7 +335,7 @@ export default function StudentAssignments() {
                   whileHover="hover"
                   whileTap="tap"
                 >
-                  To Do
+                  {t('toDo')}
                   <span className="bg-slate-100 dark:bg-white/10 text-xs px-1.5 py-0.5 rounded-md ml-1 font-semibold">{stats.todo}</span>
                 </motion.button>
                 <motion.button 
@@ -347,7 +349,7 @@ export default function StudentAssignments() {
                   whileHover="hover"
                   whileTap="tap"
                 >
-                  In Progress
+                  {t('inProgress')}
                   <span className="bg-slate-100 dark:bg-white/10 text-xs px-1.5 py-0.5 rounded-md ml-1 font-semibold">{stats.inProgress}</span>
                 </motion.button>
                 <motion.button 
@@ -360,10 +362,10 @@ export default function StudentAssignments() {
                   variants={buttonVariants}
                   whileHover="hover"
                   whileTap="tap"
-                >
-                  Graded
+>
+                  {t('graded')}
                 </motion.button>
-                <motion.button 
+                <motion.button
                   onClick={() => setFilterStatus("overdue")}
                   className={`flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full px-5 transition-colors text-sm ${
                     filterStatus === "overdue"
@@ -374,7 +376,7 @@ export default function StudentAssignments() {
                   whileHover="hover"
                   whileTap="tap"
                 >
-                  Overdue
+                  {t('overdue')}
                   {stats.overdue > 0 && (
                     <span className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-xs px-1.5 py-0.5 rounded-md ml-1 font-semibold">{stats.overdue}</span>
                   )}
@@ -388,9 +390,9 @@ export default function StudentAssignments() {
                     onChange={(e) => setSortBy(e.target.value)}
                     className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-sm rounded-lg pl-10 pr-4 py-2.5 focus:ring-1 focus:ring-secondary dark:focus:ring-primary focus:border-secondary dark:focus:border-primary appearance-none cursor-pointer shadow-sm"
                   >
-                    <option value="dueDate">Sort by Due Date (Closest)</option>
-                    <option value="course">Sort by Course</option>
-                    <option value="status">Sort by Status</option>
+                    <option value="dueDate">{t('sortByDueDate')}</option>
+                    <option value="course">{t('sortByCourse')}</option>
+                    <option value="status">{t('sortByStatus')}</option>
                   </select>
                 </div>
               </motion.div>
@@ -405,7 +407,7 @@ export default function StudentAssignments() {
             >
               <h3 className="text-secondary dark:text-white font-bold text-lg mb-4 flex items-center gap-2">
                 <span className="material-symbols-outlined text-secondary dark:text-primary">priority_high</span>
-                Due Soon
+                {t('dueSoon')}
               </h3>
               <motion.div 
                 className="relative overflow-hidden rounded-xl bg-gradient-to-br from-[#001f3f] to-[#0a192f] dark:from-[#112240] dark:to-[#0a192f] border border-slate-200/20 dark:border-slate-700 p-6 md:p-8 flex flex-col md:flex-row justify-between gap-8 group shadow-2xl"
@@ -417,7 +419,7 @@ export default function StudentAssignments() {
                   <div>
                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-500/20 text-red-200 dark:text-red-300 text-xs font-bold uppercase tracking-wider mb-4 border border-red-500/30">
                       <span className="size-2 rounded-full bg-red-400 animate-pulse"></span>
-                      Due {formatDueDate(dueSoonAssignment.dueDate)}
+                      {t('due')} {formatDueDate(dueSoonAssignment.dueDate)}
                     </span>
                     <h2 className="text-3xl font-bold text-white mb-2">{dueSoonAssignment.title}</h2>
                     <p className="text-slate-300 text-sm md:text-base max-w-xl">{dueSoonAssignment.description}</p>
@@ -434,14 +436,14 @@ export default function StudentAssignments() {
                     </div>
                     <div className="h-8 w-px bg-white/20"></div>
                     <div className="flex flex-col">
-                      <span className="text-slate-400 text-xs">Points</span>
-                      <span className="text-white text-sm font-medium">{dueSoonAssignment.maxScore} pts</span>
+                      <span className="text-slate-400 text-xs">{t('points')}</span>
+                      <span className="text-white text-sm font-medium">{dueSoonAssignment.maxScore} {t('points')}</span>
                     </div>
                   </div>
                 </div>
                 <div className="flex flex-col justify-end items-end gap-4 min-w-[200px] relative z-10">
                   <div className="text-right">
-                    <p className="text-slate-400 text-xs mb-1">Time Remaining</p>
+                    <p className="text-slate-400 text-xs mb-1">{t('timeRemaining')}</p>
                     <p className="text-3xl font-mono text-white font-bold tracking-widest text-shadow-sm">{getTimeRemaining(dueSoonAssignment.dueDate)}</p>
                   </div>
                   <motion.button 
@@ -451,7 +453,7 @@ export default function StudentAssignments() {
                     whileHover="hover"
                     whileTap="tap"
                   >
-                    Start Now
+                    {t('startNow')}
                     <span className="material-symbols-outlined">arrow_forward</span>
                   </motion.button>
                 </div>
@@ -465,9 +467,9 @@ export default function StudentAssignments() {
             transition={{ ...springConfigs.gentle, delay: 0.2 }}
           >
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-secondary dark:text-white font-bold text-lg">Coming Up This Week</h3>
+              <h3 className="text-secondary dark:text-white font-bold text-lg">{t('comingUpThisWeek')}</h3>
               <Link href="/student/calendar" className="text-secondary dark:text-primary text-sm font-medium hover:underline flex items-center gap-1">
-                View Calendar
+                {t('viewCalendar')}
                 <span className="material-symbols-outlined text-[16px]">calendar_month</span>
               </Link>
             </div>
@@ -506,7 +508,7 @@ export default function StudentAssignments() {
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-1.5 text-orange-600 dark:text-orange-400 text-xs font-bold">
                         <span className="material-symbols-outlined text-[16px]">schedule</span>
-                        Due {formatDueDate(assignment.dueDate)}
+                        {t('due')} {formatDueDate(assignment.dueDate)}
                       </div>
                       <span className={`text-xs px-2 py-1 rounded-md font-bold ${
                         assignment.submission?.status === 'graded' 
@@ -515,13 +517,13 @@ export default function StudentAssignments() {
                           ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 border border-blue-200 dark:border-blue-800'
                           : 'bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
                       }`}>
-                        {assignment.submission?.status === 'graded' ? 'Done' : assignment.submission ? 'In Progress' : 'Not Started'}
+                        {assignment.submission?.status === 'graded' ? t('done') : assignment.submission ? t('inProgress') : t('notStarted')}
                       </span>
                     </div>
                     {assignment.submission?.status === 'graded' && assignment.submission.score !== null ? (
                       <div className="text-center py-2 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
                         <p className="text-sm font-bold text-green-700 dark:text-green-300">
-                          Score: {assignment.submission.score}/{assignment.maxScore}
+                          {t('score')}: {assignment.submission.score}/{assignment.maxScore}
                         </p>
                       </div>
                     ) : assignment.submission ? (
@@ -532,7 +534,7 @@ export default function StudentAssignments() {
                         whileHover="hover"
                         whileTap="tap"
                       >
-                        View Submission
+                        {t('viewSubmission')}
                       </motion.button>
                     ) : (
                       <motion.button 
@@ -542,7 +544,7 @@ export default function StudentAssignments() {
                         whileHover="hover"
                         whileTap="tap"
                       >
-                        Start Assignment
+                        {t('startAssignment')}
                       </motion.button>
                     )}
                   </div>
@@ -557,9 +559,9 @@ export default function StudentAssignments() {
       <Dialog open={isSubmitDialogOpen} onOpenChange={setIsSubmitDialogOpen}>
         <DialogContent className="sm:max-w-[600px] bg-white dark:bg-slate-800">
           <DialogHeader>
-            <DialogTitle className="text-2xl">Submit Assignment</DialogTitle>
+            <DialogTitle className="text-2xl">{t('submitAssignment')}</DialogTitle>
             <DialogDescription className="text-base">
-              Submit your work for "{selectedAssignment?.title}"
+              {t('submitFor', { title: selectedAssignment?.title ?? '' })}
             </DialogDescription>
           </DialogHeader>
           
@@ -571,24 +573,24 @@ export default function StudentAssignments() {
                   <p className="text-sm text-blue-700 dark:text-blue-300">{selectedAssignment?.courseTitle}</p>
                 </div>
                 <span className="bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-bold">
-                  {selectedAssignment?.maxScore} pts
+                  {selectedAssignment?.maxScore} {t('points')}
                 </span>
               </div>
               <div className="flex items-center gap-4 text-sm text-blue-700 dark:text-blue-300">
                 <span className="flex items-center gap-1">
                   <span className="material-symbols-outlined text-[16px]">calendar_today</span>
-                  Due: {selectedAssignment && formatDueDate(selectedAssignment.dueDate)}
+                  {t('due')}: {selectedAssignment && formatDueDate(selectedAssignment.dueDate)}
                 </span>
               </div>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="content" className="text-base font-medium">
-                Submission Content
+                {t('submissionContent')}
               </Label>
               <Textarea
                 id="content"
-                placeholder="Write your submission here... (optional if uploading a file)"
+                placeholder={t('writeSubmission')}
                 value={submissionContent}
                 onChange={(e) => setSubmissionContent(e.target.value)}
                 className="min-h-[150px] resize-none bg-white dark:bg-slate-700 border-slate-200 dark:border-slate-700"
@@ -597,7 +599,7 @@ export default function StudentAssignments() {
 
             <div className="space-y-2">
               <Label htmlFor="file" className="text-base font-medium">
-                Attach File (Optional)
+                {t('attachFile')}
               </Label>
               <div className="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg p-6 text-center hover:border-secondary dark:hover:border-primary transition-colors cursor-pointer bg-slate-50 dark:bg-slate-700/50">
                 <input
@@ -609,7 +611,7 @@ export default function StudentAssignments() {
                 <label htmlFor="file" className="cursor-pointer">
                   <span className="material-symbols-outlined text-4xl text-slate-400 dark:text-slate-500 mb-2 block">upload_file</span>
                   <p className="text-sm text-slate-600 dark:text-slate-300 font-medium">
-                    {submissionFile ? submissionFile.name : 'Click to upload or drag and drop'}
+                    {submissionFile ? submissionFile.name : t('clickToUpload')}
                   </p>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                     PDF, DOC, DOCX, ZIP (max 10MB)
@@ -625,7 +627,7 @@ export default function StudentAssignments() {
               onClick={() => setIsSubmitDialogOpen(false)}
               className="mr-2"
             >
-              Cancel
+              {t('cancel')}
             </Button>
             <Button
               onClick={handleSubmitForm}
@@ -635,12 +637,12 @@ export default function StudentAssignments() {
               {submitMutation.isPending ? (
                 <>
                   <span className="material-symbols-outlined animate-spin mr-2">progress_activity</span>
-                  Submitting...
+                  {t('submitting')}
                 </>
               ) : (
                 <>
                   <span className="material-symbols-outlined mr-2">send</span>
-                  Submit Assignment
+                  {t('submitAssignment')}
                 </>
               )}
             </Button>
@@ -652,26 +654,26 @@ export default function StudentAssignments() {
       <Dialog open={isViewSubmissionDialogOpen} onOpenChange={setIsViewSubmissionDialogOpen}>
         <DialogContent className="sm:max-w-[600px] bg-white dark:bg-slate-800">
           <DialogHeader>
-            <DialogTitle className="text-2xl">Submission Details</DialogTitle>
+            <DialogTitle className="text-2xl">{t('submissionDetails')}</DialogTitle>
             <DialogDescription className="text-base">
-              Review your submission for "{selectedAssignment?.title}"
+              {t('reviewSubmission', { title: selectedAssignment?.title ?? '' })}
             </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-6 py-4">
             <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-lg border border-slate-200 dark:border-slate-700">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-slate-500 dark:text-slate-400">Status</span>
+                <span className="text-sm font-medium text-slate-500 dark:text-slate-400">{t('status')}</span>
                 <span className={`px-2 py-1 rounded-full text-xs font-bold uppercase ${
                   selectedAssignment?.submission?.status === 'graded' 
                     ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
                     : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
                 }`}>
-                  {selectedAssignment?.submission?.status || 'Pending'}
+                  {selectedAssignment?.submission?.status || t('pending')}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-slate-500 dark:text-slate-400">Submitted on</span>
+                <span className="text-sm font-medium text-slate-500 dark:text-slate-400">{t('submittedOn')}</span>
                 <span className="text-sm font-medium text-slate-900 dark:text-white">
                   {selectedAssignment?.submission?.submittedAt ? new Date(selectedAssignment.submission.submittedAt).toLocaleString() : '-'}
                 </span>
@@ -680,7 +682,7 @@ export default function StudentAssignments() {
 
             {selectedAssignment?.submission?.content && (
               <div className="space-y-2">
-                <Label className="text-base font-medium">Submission Content</Label>
+                <Label className="text-base font-medium">{t('submissionContent')}</Label>
                 <div className="p-4 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-200 dark:border-slate-700 text-sm whitespace-pre-wrap">
                   {selectedAssignment.submission.content}
                 </div>
@@ -689,12 +691,12 @@ export default function StudentAssignments() {
 
             {selectedAssignment?.submission?.fileName && (
               <div className="space-y-2">
-                <Label className="text-base font-medium">Attached File</Label>
+                <Label className="text-base font-medium">{t('attachedFile')}</Label>
                 <div className="flex items-center gap-3 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-200 dark:border-slate-700">
                   <span className="material-symbols-outlined text-blue-500">description</span>
                   <span className="flex-1 text-sm font-medium truncate">{selectedAssignment.submission.fileName}</span>
                   <Button variant="ghost" size="sm" className="text-blue-500 hover:text-blue-600">
-                    Download
+                    {t('download')}
                   </Button>
                 </div>
               </div>
@@ -703,14 +705,14 @@ export default function StudentAssignments() {
             {selectedAssignment?.submission?.status === 'graded' && (
               <div className="space-y-4 pt-4 border-t border-slate-200 dark:border-slate-700">
                 <div className="flex items-center justify-between">
-                  <Label className="text-base font-medium">Grade</Label>
+                  <Label className="text-base font-medium">{t('grade')}</Label>
                   <span className="text-xl font-bold text-green-600 dark:text-green-400">
                     {selectedAssignment.submission.score} / {selectedAssignment.maxScore}
                   </span>
                 </div>
                 {selectedAssignment.submission.feedback && (
                   <div className="space-y-2">
-                    <Label className="text-base font-medium">Feedback</Label>
+                    <Label className="text-base font-medium">{t('feedback')}</Label>
                     <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800 text-sm text-green-800 dark:text-green-200">
                       {selectedAssignment.submission.feedback}
                     </div>
@@ -722,7 +724,7 @@ export default function StudentAssignments() {
 
           <DialogFooter>
             <Button onClick={() => setIsViewSubmissionDialogOpen(false)}>
-              Close
+              {t('close')}
             </Button>
           </DialogFooter>
         </DialogContent>

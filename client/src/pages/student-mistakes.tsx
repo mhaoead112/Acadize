@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useLocation } from 'wouter';
 import { useAuth } from '@/hooks/useAuth';
 import { apiEndpoint } from '@/lib/config';
@@ -57,6 +58,7 @@ interface MistakesData {
 // ============================================================================
 
 const StudentMistakes: React.FC = () => {
+  const { t } = useTranslation('dashboard');
   const [, setLocation] = useLocation();
   const { getAuthHeaders, isAuthenticated } = useAuth();
 
@@ -152,7 +154,7 @@ const StudentMistakes: React.FC = () => {
               <span className="material-symbols-outlined text-[16px]">psychology</span>
               Growth Mindset
             </div>
-            <h2 className="text-3xl md:text-4xl font-bold dark:text-white text-slate-900 mb-2 tracking-tight">My Learning Mistakes</h2>
+            <h2 className="text-3xl md:text-4xl font-bold dark:text-white text-slate-900 mb-2 tracking-tight">{t('mistakes')}</h2>
             <p className="dark:text-slate-400 text-slate-500 max-w-2xl text-lg">
               Turn your errors into expertise. {activeMistakes.length === 0 ? "You've resolved all recent mistakes! Great work." : "Reviewing incorrect answers is the fastest path to mastery."}
             </p>

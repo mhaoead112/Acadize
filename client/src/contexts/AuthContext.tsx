@@ -2,6 +2,14 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import type { User } from '@shared/schema';
 import { apiEndpoint, getSubdomain } from '@/lib/config';
 import { refreshTokenIfNeeded, isTokenExpired, clearAuthData } from '@/lib/api-client';
+import {
+  getStoredToken,
+  getStoredUser,
+  getStoredSubdomain,
+  setStoredAuth,
+  setStoredUser,
+  clearStoredAuth,
+} from '@/lib/auth-storage';
 
 interface AuthState {
   user: User | null;
@@ -41,18 +49,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Check for stored auth on component mount
     // Support both old and new token keys
     const checkInitialAuth = async () => {
-      const storedToken = localStorage.getItem('auth_token') || localStorage.getItem('eduverse_token');
-      const storedUser = localStorage.getItem('user') || localStorage.getItem('eduverse_user');
+      const storedToken = getStoredToken();
+      const storedUser = getStoredUser();
       
       if (storedToken && storedUser) {
         // Validate subdomain matches stored session
-        const storedSubdomain = localStorage.getItem('eduverse_subdomain');
+        const storedSubdomain = getStoredSubdomain();
         const currentSubdomain = getSubdomain();
         
         if (storedSubdomain && storedSubdomain !== currentSubdomain) {
           console.log('Subdomain mismatch (session from ' + storedSubdomain + '), clearing auth');
           clearAuthData();
-          localStorage.removeItem('eduverse_subdomain');
           setAuthState({ user: null, token: null, isAuthenticated: false });
           setIsLoading(false);
           return;
@@ -65,14 +72,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (!refreshed) {
             console.log('Initial refresh failed, clearing auth');
             clearAuthData();
-            localStorage.removeItem('eduverse_subdomain');
             setAuthState({ user: null, token: null, isAuthenticated: false });
             setIsLoading(false);
             return;
           }
-          // After successfull refresh, the new token/user will be in localStorage
-          const newToken = localStorage.getItem('eduverse_token') || localStorage.getItem('auth_token');
-          const newUserStr = localStorage.getItem('eduverse_user') || localStorage.getItem('user');
+          const newToken = getStoredToken();
+          const newUserStr = getStoredUser();
           if (newToken && newUserStr) {
             setAuthState({
               user: JSON.parse(newUserStr),
@@ -90,7 +95,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             });
           } catch (error) {
             clearAuthData();
-            localStorage.removeItem('eduverse_subdomain');
             setAuthState({ user: null, token: null, isAuthenticated: false });
           }
         }
@@ -102,7 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Listen for profile updates from other components
     const handleProfileUpdate = () => {
-      const updatedUser = localStorage.getItem('eduverse_user') || localStorage.getItem('user');
+      const updatedUser = getStoredUser();
       if (updatedUser) {
         try {
           const user = JSON.parse(updatedUser);
@@ -134,10 +138,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await refreshTokenIfNeeded();
       
       // Sync state with storage if token changed
-      const currentToken = localStorage.getItem('eduverse_token') || localStorage.getItem('auth_token');
+      const currentToken = getStoredToken();
       if (currentToken && currentToken !== authState.token) {
         try {
-          const userStr = localStorage.getItem('eduverse_user') || localStorage.getItem('user');
+          const userStr = getStoredUser();
           const user = userStr ? JSON.parse(userStr) : authState.user;
           setAuthState(prev => ({
             ...prev,
@@ -174,10 +178,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const { token, user } = await response.json();
       
-      // Store auth data
-      localStorage.setItem('eduverse_token', token);
-      localStorage.setItem('eduverse_user', JSON.stringify(user));
-      localStorage.setItem('eduverse_subdomain', getSubdomain());
+      // Store auth data (acadize_* keys)
+      setStoredAuth(token, user, getSubdomain());
       
       setAuthState({
         user,
@@ -195,12 +197,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = () => {
-    // Clear both old and new token keys
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('eduverse_token');
-    localStorage.removeItem('user');
-    localStorage.removeItem('eduverse_user');
-    localStorage.removeItem('eduverse_subdomain');
+    clearStoredAuth();
     setAuthState({
       user: null,
       token: null,
@@ -239,7 +236,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const updatedUser = { ...prev.user, ...userData };
       
       // Also update localStorage
-      localStorage.setItem('eduverse_user', JSON.stringify(updatedUser));
+      setStoredUser(updatedUser);
       
       return {
         ...prev,

@@ -1167,7 +1167,6 @@ export default function StudyGroupsChatPage() {
                           <Input
                             placeholder="Type a name or username..."
                             value={searchQuery}
-                            value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="pl-10 bg-slate-700 border-white/10 text-white placeholder:text-slate-500"
                           />

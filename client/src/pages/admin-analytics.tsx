@@ -1,4 +1,5 @@
-﻿import { useState } from "react";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import AdminLayout from "@/components/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -168,7 +169,7 @@ export default function AdminAnalytics() {
                   </Badge>
                 </div>
                 <h1 className="text-3xl font-bold mb-2">
-                  Analytics Dashboard 📊
+                  {t('analyticsDashboard')} 📊
                 </h1>
                 <p className="text-white/80 max-w-xl">
                   Comprehensive insights into platform performance, user behavior, and growth metrics.

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
 import ParentLayout from "@/components/ParentLayout";
 import { apiEndpoint } from "@/lib/config";
@@ -40,6 +41,7 @@ interface Course {
 }
 
 export default function ParentCourses() {
+  const { t } = useTranslation('parent');
   const { token } = useAuth();
   const [, setLocation] = useLocation();
   const [children, setChildren] = useState<Child[]>([]);
@@ -198,7 +200,7 @@ export default function ParentCourses() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
           <div className="flex flex-col gap-1">
-            <h1 className="text-white text-4xl font-black tracking-tight font-display">My Children's Classes</h1>
+            <h1 className="text-white text-4xl font-black tracking-tight font-display">{t('myChildrensClasses')}</h1>
             <p className="text-slate-400 text-base">Fall Semester 2023 • Overview of academic progress across all enrolled courses.</p>
           </div>
           <button className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-white/[0.05] hover:bg-white/[0.1] text-white text-sm font-black transition-all border border-white/5 shadow-2xl backdrop-blur-md">

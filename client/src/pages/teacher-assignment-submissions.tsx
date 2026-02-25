@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useRoute, useLocation } from "wouter";
 import { queryClient } from "@/lib/queryClient";
@@ -62,6 +63,7 @@ interface AssignmentSubmissionsData {
 }
 
 export default function TeacherAssignmentSubmissions() {
+  const { t } = useTranslation('teacher');
   const [, params] = useRoute("/teacher/assignments/:assignmentId/submissions");
   const [, setLocation] = useLocation();
   const { token, getAuthHeaders } = useAuth();
@@ -212,14 +214,14 @@ export default function TeacherAssignmentSubmissions() {
             className="mb-4"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Assignments
+            {t('backToAssignments')}
           </Button>
           
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             {data.assignment.title}
           </h1>
           <p className="text-gray-600">
-            Review and grade student submissions
+            {t('reviewAndGradeSubmissions')}
           </p>
         </div>
 

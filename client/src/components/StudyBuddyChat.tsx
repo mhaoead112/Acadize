@@ -127,7 +127,7 @@ export const StudyBuddyChat: React.FC<Props> = ({ lessonId, lessonTitle }) => {
     setIsLoading(true);
 
     try {
-      const token = localStorage.getItem("auth_token") || localStorage.getItem("eduverse_token");
+      const token = localStorage.getItem("acadize_token") || localStorage.getItem("auth_token") || localStorage.getItem("eduverse_token");
       const response = await fetch(apiEndpoint("/api/ai-chat/chat"), {
         method: "POST",
         headers: {

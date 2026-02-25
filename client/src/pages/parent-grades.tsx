@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useLocation, useSearch } from "wouter";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { apiEndpoint } from "@/lib/config";
@@ -38,6 +39,7 @@ interface CourseGrade {
 }
 
 export default function ParentGrades() {
+  const { t } = useTranslation('parent');
   const { user, token } = useAuth();
   const [, setLocation] = useLocation();
   const searchParams = new URLSearchParams(window.location.search);
@@ -268,7 +270,7 @@ export default function ParentGrades() {
               <div>
                 <h1 className="text-2xl font-bold flex items-center gap-3">
                   <Award className="h-7 w-7" />
-                  Grade Reports
+                  {t('gradeReports')}
                 </h1>
                 <p className="text-purple-100 mt-1">View {selectedChildName}'s detailed academic performance</p>
               </div>

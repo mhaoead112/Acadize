@@ -1,4 +1,5 @@
-﻿import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import StudentLayout from "@/components/StudentLayout";
 import NotificationBell from "@/components/NotificationBell";
 import { Card, CardContent } from "@/components/ui/card";
@@ -38,13 +39,12 @@ interface CalendarEvent {
   participants?: number;
 }
 
-const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-const MONTHS = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December'
-];
+const DAY_KEYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as const;
+const MONTH_KEYS = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'] as const;
+const FILTER_KEYS = ['assignmentsFilter', 'classesFilter', 'examsFilter', 'eventsFilter'] as const;
 
 export default function StudentCalendar() {
+  const { t } = useTranslation('dashboard');
   const { toast } = useToast();
   const { token, getAuthHeaders } = useAuth();
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -54,7 +54,9 @@ export default function StudentCalendar() {
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [showEventDialog, setShowEventDialog] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [activeFilters, setActiveFilters] = useState<string[]>(['Assignments', 'Classes', 'Exams', 'Events']);
+  const [activeFilters, setActiveFilters] = useState<string[]>([...FILTER_KEYS]);
+  const DAYS = useMemo(() => DAY_KEYS.map(k => t(k)), [t]);
+  const MONTHS = useMemo(() => MONTH_KEYS.map(k => t(k)), [t]);
 
   useEffect(() => {
     if (token) {
@@ -123,8 +125,8 @@ export default function StudentCalendar() {
     } catch (error) {
       console.error('Failed to fetch events:', error);
       toast({
-        title: 'Error',
-        description: 'Failed to load calendar events',
+        title: t('error'),
+        description: t('failedToLoadCalendarEvents'),
         variant: 'destructive',
       });
     } finally {
@@ -170,10 +172,10 @@ export default function StudentCalendar() {
       // Apply filters
       if (!dateMatches) return false;
       
-      if (activeFilters.includes('Assignments') && (event.type === 'assignment' || event.type === 'deadline')) return true;
-      if (activeFilters.includes('Classes') && event.type === 'class') return true;
-      if (activeFilters.includes('Exams') && event.type === 'exam') return true;
-      if (activeFilters.includes('Events') && event.type === 'event') return true;
+      if (activeFilters.includes('assignmentsFilter') && (event.type === 'assignment' || event.type === 'deadline')) return true;
+      if (activeFilters.includes('classesFilter') && event.type === 'class') return true;
+      if (activeFilters.includes('examsFilter') && event.type === 'exam') return true;
+      if (activeFilters.includes('eventsFilter') && event.type === 'event') return true;
       
       return false;
     });
@@ -221,7 +223,7 @@ export default function StudentCalendar() {
             {day}
             {isToday && (
               <span className="ml-2 px-2 py-0.5 text-xs bg-blue-600 text-white rounded-full">
-                Today
+                {t('today')}
               </span>
             )}
           </div>
@@ -246,7 +248,7 @@ export default function StudentCalendar() {
             ))}
             {dayEvents.length > 3 && (
               <div className="text-xs text-gray-600 font-medium pl-1">
-                +{dayEvents.length - 3} more
+                {t('moreEvents', { count: dayEvents.length - 3 })}
               </div>
             )}
           </div>
@@ -474,7 +476,7 @@ export default function StudentCalendar() {
       {/* Header */}
       <header className="w-full px-8 py-6 flex flex-wrap items-end justify-between gap-4 shrink-0 bg-white dark:bg-background border-b border-slate-200 dark:border-white/10">
         <div className="flex flex-col gap-1">
-          <h1 className="text-slate-900 dark:text-white text-4xl font-black tracking-tight">Schedule</h1>
+          <h1 className="text-slate-900 dark:text-white text-4xl font-black tracking-tight">{t('schedule')}</h1>
           <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
             <CalendarIcon className="w-5 h-5" />
             <p className="text-base font-normal">{MONTHS[currentDate.getMonth()]} {currentDate.getFullYear()}</p>
@@ -482,17 +484,17 @@ export default function StudentCalendar() {
         </div>
         <div className="flex items-center gap-4">
           <div className="flex h-10 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-700 p-1">
-            {['Month', 'Week', 'Day'].map((viewOption) => (
+            {(['month', 'week', 'day'] as const).map((viewKey) => (
               <button
-                key={viewOption}
-                onClick={() => setView(viewOption.toLowerCase() as 'month' | 'week' | 'day')}
+                key={viewKey}
+                onClick={() => setView(viewKey)}
                 className={`h-full px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                  view === viewOption.toLowerCase()
+                  view === viewKey
                     ? 'bg-white dark:bg-slate-800 shadow-sm text-slate-900 dark:text-white'
                     : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
-                {viewOption}
+                {t(viewKey === 'month' ? 'monthView' : viewKey === 'week' ? 'weekView' : 'dayView')}
               </button>
             ))}
           </div>
@@ -503,16 +505,16 @@ export default function StudentCalendar() {
         {/* Filters and Navigation */}
         <div className="px-8 py-4 flex items-center justify-between shrink-0 bg-white dark:bg-background border-b border-slate-200 dark:border-white/10">
           <div className="flex gap-3 overflow-x-auto pb-2">
-            {['Assignments', 'Classes', 'Exams'].map((filter, i) => (
+            {(['assignmentsFilter', 'classesFilter', 'examsFilter'] as const).map((filterKey) => (
               <button
-                key={filter}
+                key={filterKey}
                 className="flex h-8 items-center gap-2 rounded-full bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700/80 px-4 transition-colors text-slate-600 dark:text-slate-300"
               >
-                <span className="text-sm font-medium">{filter}</span>
+                <span className="text-sm font-medium">{t(filterKey)}</span>
               </button>
             ))}
             <button className="flex h-8 items-center gap-2 rounded-full border border-slate-200 dark:border-white/10 px-4 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:border-slate-900 dark:hover:border-white transition-colors">
-              <span className="text-sm font-medium">Clear All</span>
+              <span className="text-sm font-medium">{t('clearAll')}</span>
             </button>
           </div>
           <div className="flex items-center gap-4 bg-slate-100 dark:bg-slate-700 rounded-full px-2 py-1">
@@ -533,7 +535,7 @@ export default function StudentCalendar() {
               }}
               className="text-sm font-bold text-slate-800 dark:text-white min-w-[60px] text-center hover:text-slate-900 dark:hover:text-slate-200"
             >
-              Today
+              {t('today')}
             </button>
             <button
               onClick={() => {
@@ -625,7 +627,7 @@ export default function StudentCalendar() {
                         ))}
                         {dayEvents.length > 2 && (
                           <div className="text-xs text-slate-500 dark:text-slate-400 font-medium pl-1">
-                            +{dayEvents.length - 2}
+                            {t('moreEvents', { count: dayEvents.length - 2 })}
                           </div>
                         )}
                       </div>

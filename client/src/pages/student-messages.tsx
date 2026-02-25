@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -46,6 +47,7 @@ interface Conversation {
 }
 
 export default function StudentMessages() {
+  const { t } = useTranslation('dashboard');
   const { user, token } = useAuth();
   const { toast } = useToast();
   const [teachers, setTeachers] = useState<Teacher[]>([]);
@@ -301,7 +303,7 @@ export default function StudentMessages() {
             {/* Teachers List Sidebar */}
             <div className="w-80 border-r border-slate-200 dark:border-slate-800 flex flex-col bg-slate-50 dark:bg-navy-dark">
               <div className="p-4 border-b border-slate-200 dark:border-slate-800">
-                <h2 className="text-lg font-semibold mb-3 text-slate-900 dark:text-white">Messages</h2>
+                <h2 className="text-lg font-semibold mb-3 text-slate-900 dark:text-white">{t('messages')}</h2>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-slate-500" />
                   <Input

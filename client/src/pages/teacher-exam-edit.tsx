@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useRoute, useLocation } from 'wouter';
 import TeacherLayout from '../components/TeacherLayout';
 import { useAuth } from '../hooks/useAuth';
@@ -8,6 +9,7 @@ import { apiEndpoint } from '../lib/config';
 interface ValidationError { field: string; message: string }
 
 export default function TeacherExamEdit() {
+  const { t } = useTranslation('teacher');
   const [match, params] = useRoute('/teacher/exams/:id/edit');
   const examId = params?.id;
   const [, setLocation] = useLocation();
@@ -267,7 +269,7 @@ export default function TeacherExamEdit() {
               <span className="material-symbols-outlined">arrow_back</span>
             </button>
             <h1 className={`text-4xl font-black tracking-tight ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-              Edit Exam
+              {t('editExam')}
             </h1>
           </div>
           <p className={`${theme === 'dark' ? 'text-text-muted' : 'text-gray-600'} text-lg ml-14`}>

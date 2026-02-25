@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { apiEndpoint } from "@/lib/config";
@@ -41,6 +42,7 @@ interface CalendarDay {
 }
 
 export default function TeacherCalendar() {
+  const { t } = useTranslation('teacher');
   const { token } = useAuth();
   const { toast } = useToast();
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -129,7 +131,7 @@ export default function TeacherCalendar() {
         setEvents([]);
         toast({
           title: "Info",
-          description: "Calendar is empty. Add events to get started!",
+          description: t('calendarEmptyToast'),
         });
       }
     } catch (error) {
@@ -453,7 +455,7 @@ export default function TeacherCalendar() {
         {/* Filters */}
         <div className="p-6 flex flex-col gap-6">
           <div>
-            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-3">My Calendars</h3>
+            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-3">{t('myCalendars')}</h3>
             <div className="flex flex-col gap-2">
               {['Math 101 - Algebra', 'Homeroom 4B', 'Staff Meetings'].map((cal, idx) => (
                 <label key={idx} className="flex items-center gap-3 cursor-pointer group">

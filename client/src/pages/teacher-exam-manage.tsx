@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useLocation, useRoute } from 'wouter';
 import TeacherLayout from '../components/TeacherLayout';
 import { useAuth } from '../hooks/useAuth';
@@ -76,6 +77,7 @@ interface ExamAttempt {
 // ============================================================================
 
 export default function TeacherExamManage() {
+  const { t } = useTranslation('teacher');
   const [, navigate] = useLocation();
   const [match, params] = useRoute('/teacher/exams/:id');
   const examId = params?.id;
@@ -420,7 +422,7 @@ export default function TeacherExamManage() {
             onClick={() => navigate('/teacher/exams')}
             className={`${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'} border px-4 py-2 rounded-xl font-semibold hover:shadow`}
           >
-            Back to Exams
+            {t('backToExams')}
           </button>
         </div>
       </TeacherLayout>
@@ -451,7 +453,7 @@ export default function TeacherExamManage() {
           </a>
           <span className="material-symbols-outlined text-[18px]">chevron_right</span>
           <button onClick={() => navigate('/teacher/exams')} className={isDark ? 'text-gray-400 hover:text-primary' : 'text-gray-600 hover:text-primary'}>
-            Exams
+            {t('exams')}
           </button>
           <span className="material-symbols-outlined text-[18px]">chevron_right</span>
           <span className={isDark ? 'text-white font-semibold' : 'text-gray-900 font-semibold'}>{exam.title}</span>

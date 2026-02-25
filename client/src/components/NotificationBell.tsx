@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useStudentNotifications } from '@/contexts/StudentNotificationContext';
 import { useAuth } from '@/hooks/useAuth';
 import { apiEndpoint } from '@/lib/config';
@@ -39,6 +40,7 @@ const getColorClass = (type: string) => {
 };
 
 export default function NotificationBell() {
+  const { t } = useTranslation('common');
   const { notifications, unreadCount, markAsRead, markAllAsRead, clearNotifications, addNotification } = useStudentNotifications();
   const { token } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
@@ -93,7 +95,7 @@ export default function NotificationBell() {
     const diffHours = Math.floor(diffMins / 60);
     const diffDays = Math.floor(diffHours / 24);
 
-    if (diffMins < 1) return 'Just now';
+    if (diffMins < 1) return t('justNow');
     if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
     if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
     if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
@@ -119,7 +121,7 @@ export default function NotificationBell() {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="relative group p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-white/5 transition-all duration-200 hover:scale-105 active:scale-95"
-        aria-label="Notifications"
+        aria-label={t('notifications')}
       >
         <span className="material-symbols-outlined text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
           notifications
@@ -137,10 +139,10 @@ export default function NotificationBell() {
           <div className="sticky top-0 px-5 py-4 border-b border-slate-200 dark:border-white/10 bg-white/95 dark:bg-[#112240]/95 backdrop-blur-sm z-10">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-base font-bold text-slate-900 dark:text-white">Notifications</h3>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">{t('notifications')}</h3>
                 {unreadCount > 0 && (
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                    {unreadCount} unread notification{unreadCount > 1 ? 's' : ''}
+                    {unreadCount} {unreadCount > 1 ? t('unreadNotifications') : t('unreadNotification')}
                   </p>
                 )}
               </div>
@@ -149,7 +151,7 @@ export default function NotificationBell() {
                   onClick={clearNotifications}
                   className="text-xs font-semibold text-[#FFD700] hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors duration-150 px-3 py-1.5 rounded-lg hover:bg-[#FFD700]/10"
                 >
-                  Clear All
+                  {t('clearAll')}
                 </button>
               )}
             </div>
@@ -160,14 +162,14 @@ export default function NotificationBell() {
             {isLoading ? (
               <div className="p-8 text-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 dark:border-[#FFD700] mx-auto"></div>
-                <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">Loading notifications...</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">{t('loadingNotifications')}</p>
               </div>
             ) : notifications.length === 0 ? (
               <div className="p-8 text-center">
                 <div className="size-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto mb-3">
                   <span className="material-symbols-outlined text-slate-400 dark:text-slate-600 text-3xl">notifications_off</span>
                 </div>
-                <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">No notifications yet</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">{t('noNotificationsYet')}</p>
               </div>
             ) : (
               <div className="divide-y divide-slate-100 dark:divide-white/10">

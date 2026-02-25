@@ -1,7 +1,9 @@
+import { useTranslation } from "react-i18next";
 import { Shield, Eye, Lock, Database, UserCheck, Globe } from "lucide-react";
 import { Link } from "wouter";
 
 export default function Privacy() {
+  const { t } = useTranslation('landing');
   const sections = [
     {
       id: "information-collection",
@@ -13,7 +15,7 @@ export default function Privacy() {
       id: "how-we-use",
       title: "How We Use Your Information",
       icon: UserCheck,
-      content: `We use the information we collect to provide, maintain, and improve our services, to develop new features, to protect EduVerse and our users, and to communicate with you about our services. We also use this information to personalize your learning experience and provide relevant content recommendations.`
+      content: `We use the information we collect to provide, maintain, and improve our services, to develop new features, to protect Acadize and our users, and to communicate with you about our services. We also use this information to personalize your learning experience and provide relevant content recommendations.`
     },
     {
       id: "information-sharing",
@@ -53,13 +55,13 @@ export default function Privacy() {
             </div>
           </div>
           <h1 className="text-4xl sm:text-5xl font-bold tracking-tight mb-6">
-            Privacy Policy
+            {t('privacyTitle')}
           </h1>
           <p className="text-lg text-slate-600 dark:text-text-muted mb-4">
             Last updated: December 15, 2024
           </p>
           <p className="text-slate-600 dark:text-text-muted max-w-2xl mx-auto">
-            At EduVerse, we take your privacy seriously. This policy explains how we collect, use, and protect your personal information.
+            At Acadize, we take your privacy seriously. This policy explains how we collect, use, and protect your personal information.
           </p>
         </div>
       </section>

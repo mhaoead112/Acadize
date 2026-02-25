@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import TeacherLayout from "@/components/TeacherLayout";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
@@ -61,6 +62,7 @@ const getCourseStyle = (title: string) => {
 };
 
 export default function TeacherCoursesPage() {
+  const { t } = useTranslation('teacher');
   const { user, token, isAuthenticated, getAuthHeaders } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
@@ -231,7 +233,7 @@ export default function TeacherCoursesPage() {
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div className="flex flex-col gap-1">
               <h2 className="text-foreground text-3xl font-bold leading-tight tracking-[-0.033em]">
-                My Classes
+                {t('myClasses')}
               </h2>
               <p className="text-muted-foreground text-base font-normal leading-normal">
                 Manage your active courses for Fall 2023.

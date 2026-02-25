@@ -1,13 +1,15 @@
+import { useTranslation } from "react-i18next";
 import { FileText, AlertCircle, Users, Shield, CreditCard, Ban } from "lucide-react";
 import { Link } from "wouter";
 
 export default function Terms() {
+  const { t } = useTranslation('landing');
   const sections = [
     {
       id: "acceptance",
       title: "Acceptance of Terms",
       icon: FileText,
-      content: `By accessing or using EduVerse's services, you agree to be bound by these Terms of Service and all applicable laws and regulations. If you do not agree with any of these terms, you are prohibited from using or accessing this site.`
+      content: `By accessing or using Acadize's services, you agree to be bound by these Terms of Service and all applicable laws and regulations. If you do not agree with any of these terms, you are prohibited from using or accessing this site.`
     },
     {
       id: "account",
@@ -31,7 +33,7 @@ export default function Terms() {
       id: "intellectual-property",
       title: "Intellectual Property Rights",
       icon: Shield,
-      content: `All content on EduVerse, including text, graphics, logos, and software, is the property of EduVerse or its content suppliers and is protected by copyright and other intellectual property laws. Course materials created by instructors remain their intellectual property.`
+      content: `All content on Acadize, including text, graphics, logos, and software, is the property of Acadize or its content suppliers and is protected by copyright and other intellectual property laws. Course materials created by instructors remain their intellectual property.`
     },
     {
       id: "termination",
@@ -53,13 +55,13 @@ export default function Terms() {
             </div>
           </div>
           <h1 className="text-4xl sm:text-5xl font-bold tracking-tight mb-6">
-            Terms of Service
+            {t('termsTitle')}
           </h1>
           <p className="text-lg text-slate-600 dark:text-text-muted mb-4">
             Last updated: December 15, 2024
           </p>
           <p className="text-slate-600 dark:text-text-muted max-w-2xl mx-auto">
-            Please read these terms carefully before using our services. These terms govern your access to and use of EduVerse.
+            Please read these terms carefully before using our services. These terms govern your access to and use of Acadize.
           </p>
         </div>
       </section>
@@ -134,7 +136,7 @@ export default function Terms() {
               <div className="rounded-xl border border-secondary-dark bg-slate-800 p-6">
                 <h3 className="text-lg font-bold mb-2">Limitation of Liability</h3>
                 <p className="text-sm text-text-muted">
-                  EduVerse shall not be liable for any indirect, incidental, special, consequential, or punitive damages resulting from your use of or inability to use the service. Our total liability shall not exceed the amount paid by you in the twelve months prior to the event giving rise to liability.
+                  Acadize shall not be liable for any indirect, incidental, special, consequential, or punitive damages resulting from your use of or inability to use the service. Our total liability shall not exceed the amount paid by you in the twelve months prior to the event giving rise to liability.
                 </p>
               </div>
 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useRoute, useLocation } from 'wouter';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -100,6 +101,7 @@ interface ReviewData {
 // ============================================================================
 
 export default function TeacherAttemptReview() {
+  const { t } = useTranslation('teacher');
   const [, navigate] = useLocation();
   const [match, params] = useRoute('/teacher/attempts/:attemptId/review');
   const attemptId = params?.attemptId;
@@ -535,7 +537,7 @@ export default function TeacherAttemptReview() {
         </div>
         <div className="flex items-center gap-4">
           <div className="hidden lg:flex flex-col items-end mr-4">
-            <span className="text-xs text-slate-500 uppercase font-bold tracking-widest">Reviewing Session</span>
+            <span className="text-xs text-slate-500 uppercase font-bold tracking-widest">{t('reviewingSession')}</span>
             <span className="text-sm font-mono text-primary">ID: {attempt.id.slice(0, 12).toUpperCase()}</span>
           </div>
           <button 

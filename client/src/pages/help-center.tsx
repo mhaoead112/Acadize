@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Search, Book, MessageCircle, Video, FileText, HelpCircle, ChevronDown, ChevronUp, CheckCircle, AlertCircle } from "lucide-react";
 import { Link } from "wouter";
 import { useState } from "react";
@@ -13,6 +14,7 @@ interface Article {
 }
 
 export default function HelpCenter() {
+  const { t } = useTranslation('landing');
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -54,7 +56,7 @@ export default function HelpCenter() {
       id: "create-course",
       title: "How to create your first course",
       category: "getting-started",
-      content: "Creating your first course on Eduverse is simple and straightforward. Follow these steps to get started.",
+      content: "Creating your first course on Acadize is simple and straightforward. Follow these steps to get started.",
       steps: [
         "Log in to your teacher account",
         "Click 'Create New Course' from your dashboard",
@@ -254,8 +256,8 @@ export default function HelpCenter() {
       answer: "Browse available courses from your student dashboard, click on a course to view details, and click the 'Enroll' button. Once enrolled, you'll have instant access to all course materials."
     },
     {
-      question: "Can I access Eduverse on my mobile device?",
-      answer: "Yes! Eduverse is fully responsive and works on all devices. Simply visit the website from your mobile browser. We're also working on dedicated mobile apps for iOS and Android."
+      question: "Can I access Acadize on my mobile device?",
+      answer: "Yes! Acadize is fully responsive and works on all devices. Simply visit the website from your mobile browser. We're also working on dedicated mobile apps for iOS and Android."
     },
     {
       question: "How do I submit an assignment?",
@@ -298,10 +300,7 @@ export default function HelpCenter() {
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent"></div>
         <div className="relative mx-auto max-w-7xl text-center">
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6">
-            How can we{" "}
-            <span className="bg-gradient-to-r from-primary to-yellow-400 bg-clip-text text-transparent">
-              help you?
-            </span>
+            {t('helpCenterTitle')}
           </h1>
           <p className="text-lg sm:text-xl text-text-muted max-w-3xl mx-auto mb-8">
             Search our knowledge base or browse categories to find answers
@@ -524,7 +523,7 @@ export default function HelpCenter() {
                 <div className="rounded-xl border border-secondary-dark bg-slate-800 p-6">
                   <h3 className="text-lg font-bold mb-2">Video Tutorials</h3>
                   <p className="text-sm text-text-muted mb-4">
-                    Watch step-by-step guides to master Eduverse
+                    Watch step-by-step guides to master Acadize
                   </p>
                   <Link href="/docs">
                     <button className="w-full px-4 py-3 rounded-lg border border-secondary-dark text-white font-bold transition-all hover:bg-white/5">

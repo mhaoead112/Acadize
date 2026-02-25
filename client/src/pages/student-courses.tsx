@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { apiEndpoint } from "@/lib/config";
 import StudentLayout from "@/components/StudentLayout";
@@ -26,13 +27,14 @@ interface Enrollment {
 }
 
 export default function StudentCoursesPage() {
+  const { t } = useTranslation('courses');
   const { user, token } = useAuth();
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterStatus, setFilterStatus] = useState("Active Courses");
-  const [sortBy, setSortBy] = useState("Sort by: Name");
+  const [filterStatus, setFilterStatus] = useState("active");
+  const [sortBy, setSortBy] = useState("name");
 
   useEffect(() => {
     // Read search query from URL on component mount
@@ -56,11 +58,11 @@ export default function StudentCoursesPage() {
             'Content-Type': 'application/json'
           }
         });
-        if (!res.ok) throw new Error("Failed to load enrolled courses");
+        if (!res.ok) throw new Error(t('failedToLoadEnrolledCourses'));
         const data = await res.json();
         setEnrollments(Array.isArray(data) ? data : []);
       } catch (err: any) {
-        setError(err?.message || "Unknown error");
+        setError(err?.message || t('failedToLoadEnrolledCourses'));
       } finally {
         setIsLoading(false);
       }
@@ -89,14 +91,8 @@ export default function StudentCoursesPage() {
 
     // Apply sorting
     const sorted = [...filtered];
-    if (sortBy === "Sort by: Name") {
+    if (sortBy === "name") {
       sorted.sort((a, b) => a.course.title.localeCompare(b.course.title));
-    } else if (sortBy === "Sort by: Grade") {
-      // When grade data is available, sort by grade
-      // For now, no sorting change
-    } else if (sortBy === "Sort by: Progress") {
-      // When progress data is available, sort by progress
-      // For now, no sorting change
     }
 
     return sorted;
@@ -161,8 +157,8 @@ export default function StudentCoursesPage() {
         <div className="max-w-[1200px] mx-auto flex flex-col gap-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <h2 className="text-3xl font-bold text-slate-900 dark:text-white">My Classes</h2>
-              <p className="text-slate-600 dark:text-slate-400 mt-1">Manage your active courses and track your progress</p>
+              <h2 className="text-3xl font-bold text-slate-900 dark:text-white">{t('myClasses')}</h2>
+              <p className="text-slate-600 dark:text-slate-400 mt-1">{t('manageActiveCoursesDesc')}</p>
             </div>
           </div>
 
@@ -173,7 +169,7 @@ export default function StudentCoursesPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 dark:text-slate-500" />
               <input
                 type="text"
-                placeholder="Search courses..."
+                placeholder={t('searchCoursesPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-card border border-slate-300 dark:border-white/10 rounded-lg text-slate-900 dark:text-white text-sm placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
@@ -189,9 +185,9 @@ export default function StudentCoursesPage() {
                   onChange={(e) => setFilterStatus(e.target.value)}
                   className="pl-10 pr-8 py-2.5 bg-white dark:bg-card border border-slate-300 dark:border-white/10 rounded-lg text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none appearance-none cursor-pointer hover:bg-slate-50 dark:hover:bg-white/5 transition-colors shadow-sm"
                 >
-                  <option value="Active Courses">Active Courses</option>
-                  <option value="Completed">Completed</option>
-                  <option value="Archived">Archived</option>
+                  <option value="active">{t('activeCourses')}</option>
+                  <option value="completed">{t('completed')}</option>
+                  <option value="archived">{t('archived')}</option>
                 </select>
               </div>
               <div className="relative">
@@ -201,9 +197,9 @@ export default function StudentCoursesPage() {
                   onChange={(e) => setSortBy(e.target.value)}
                   className="pl-10 pr-8 py-2.5 bg-white dark:bg-card border border-slate-300 dark:border-white/10 rounded-lg text-slate-900 dark:text-white text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none appearance-none cursor-pointer hover:bg-slate-50 dark:hover:bg-white/5 transition-colors shadow-sm"
                 >
-                  <option>Sort by: Name</option>
-                  <option>Sort by: Grade</option>
-                  <option>Sort by: Progress</option>
+                  <option value="name">{t('sortByName')}</option>
+                  <option value="grade">{t('sortByGrade')}</option>
+                  <option value="progress">{t('sortByProgress')}</option>
                 </select>
               </div>
             </div>
@@ -244,7 +240,7 @@ export default function StudentCoursesPage() {
                       <div className="absolute top-0 left-0 right-0 h-44 pointer-events-none">
                         <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-md border border-white/10 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg pointer-events-auto">{enrollment.course.title.split(' ')[0]}</div>
                         <div className="absolute bottom-4 left-4 pointer-events-auto">
-                          <div className="size-10 rounded-full border-2 border-white bg-gray-700 overflow-hidden" title="Instructor">
+                          <div className="size-10 rounded-full border-2 border-white bg-gray-700 overflow-hidden" title={t('instructor')}>
                             <div className="w-full h-full bg-slate-400 dark:bg-slate-600"></div>
                           </div>
                         </div>
@@ -256,12 +252,12 @@ export default function StudentCoursesPage() {
                         <button className="text-slate-400 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"><span className="material-symbols-outlined">more_vert</span></button>
                       </div>
                       <p className="text-sm text-slate-600 dark:text-slate-400 mb-6">
-                        {enrollment.course.description || 'No description available'}
+                        {enrollment.course.description || t('noDescriptionAvailable')}
                       </p>
                       <div className="mt-auto space-y-5">
                         <div>
                           <div className="flex justify-between text-xs mb-2">
-                            <span className="text-slate-600 dark:text-slate-400 font-medium">Progress</span>
+                            <span className="text-slate-600 dark:text-slate-400 font-medium">{t('progress')}</span>
                             <span className="text-slate-900 dark:text-white font-bold">{progress}%</span>
                           </div>
                           <div className="w-full bg-slate-200 dark:bg-white/10 rounded-full h-2">
@@ -270,12 +266,12 @@ export default function StudentCoursesPage() {
                         </div>
                         <div className="pt-5 border-t border-slate-200 dark:border-white/10 flex items-center justify-between">
                           <div className="flex flex-col">
-                            <span className="text-[10px] text-slate-600 dark:text-slate-400 uppercase tracking-wider font-bold">Grade</span>
+                            <span className="text-[10px] text-slate-600 dark:text-slate-400 uppercase tracking-wider font-bold">{t('grade')}</span>
                             <span className="text-lg font-bold text-slate-900 dark:text-white">{grade} <span className="text-sm font-normal text-slate-600 dark:text-slate-400">/ {gradePercent > 0 ? `${gradePercent}%` : '--'}</span></span>
                           </div>
                           <Link href={`/student/courses/${enrollment.courseId}`}>
                             <button className="px-4 py-2 rounded-full bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white text-sm font-bold hover:bg-primary hover:text-black dark:hover:text-black transition-colors shadow-sm">
-                              View Class
+                              {t('viewClass')}
                             </button>
                           </Link>
                         </div>
@@ -289,8 +285,8 @@ export default function StudentCoursesPage() {
                 <div className="size-16 rounded-full bg-slate-100 dark:bg-white/10 text-slate-500 dark:text-slate-400 flex items-center justify-center mb-4 group-hover:bg-primary group-hover:text-black transition-colors">
                   <span className="material-symbols-outlined text-3xl">add</span>
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Enroll in a new Class</h3>
-                <p className="text-slate-600 dark:text-slate-400 text-sm max-w-[200px]">Browse the catalog to find your next course.</p>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{t('enrollInNewClass')}</h3>
+                <p className="text-slate-600 dark:text-slate-400 text-sm max-w-[200px]">{t('browseCatalogDesc')}</p>
               </button>
             </div>
           )}

@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, Link } from 'wouter';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/contexts/ThemeContext';
 import NotificationBell from './NotificationBell';
 import ParallaxBackground from './ParallaxBackground';
-import { 
+import {
   sidebarVariants, 
   navItemVariants, 
   buttonVariants,
@@ -14,6 +15,8 @@ import {
   pulseVariants,
   springConfigs
 } from '@/lib/animations';
+import { AcadizeLogo } from './AcadizeLogo';
+import { LanguageSwitcher } from './LanguageSwitcher';
 
 interface NavItem {
   label: string;
@@ -23,14 +26,15 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { label: 'Dashboard', icon: 'dashboard', path: '/student/dashboard' },
-  { label: 'Courses', icon: 'school', path: '/student/courses' },
-  { label: 'Assignments', icon: 'task', path: '/student/assignments' },
-  { label: 'Calendar', icon: 'calendar_month', path: '/student/calendar' },
-  { label: 'Report Cards', icon: 'assessment', path: '/student/report-cards' },
-  { label: 'Messages', icon: 'message', path: '/student/messages' },
-  { label: 'Exams', icon: 'quiz', path: '/student/exams' },
-  { label: 'Mistakes', icon: 'psychology', path: '/student/mistakes' },
+  { label: 'nav.dashboard', icon: 'dashboard', path: '/student/dashboard' },
+  { label: 'nav.courses', icon: 'school', path: '/student/courses' },
+  { label: 'nav.attendance', icon: 'how_to_reg', path: '/student/attendance' },
+  { label: 'nav.assignments', icon: 'task', path: '/student/assignments' },
+  { label: 'nav.calendar', icon: 'calendar_month', path: '/student/calendar' },
+  { label: 'nav.reports', icon: 'assessment', path: '/student/report-cards' },
+  { label: 'nav.messages', icon: 'message', path: '/student/messages' },
+  { label: 'nav.exams', icon: 'quiz', path: '/student/exams' },
+  { label: 'nav.mistakes', icon: 'psychology', path: '/student/mistakes' },
 ];
 
 interface StudentLayoutProps {
@@ -38,6 +42,7 @@ interface StudentLayoutProps {
 }
 
 export default function StudentLayout({ children }: StudentLayoutProps) {
+  const { t } = useTranslation('common');
   const [location, setLocation] = useLocation();
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
@@ -98,20 +103,11 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
             className="flex items-center gap-4 mb-8"
             variants={fadeInVariants}
           >
-            <motion.div 
-              className="size-8 text-[#001f3f] dark:text-[#FFD700]"
-              whileHover={{ rotate: 360, scale: 1.1 }}
-              transition={{ ...springConfigs.bouncy, duration: 0.6 }}
-            >
-              <svg fill="none" height="100%" viewBox="0 0 48 48" width="100%" xmlns="http://www.w3.org/2000/svg">
-                <path d="M39.1 18.4L24.3 4.69999C24.1 4.49999 23.9 4.49999 23.7 4.69999L8.89999 18.4C8.69999 18.6 8.69999 18.8 8.89999 19L23.7 32.7C23.9 32.9 24.1 32.9 24.3 32.7L39.1 19C39.3 18.8 39.3 18.6 39.1 18.4Z" fill="currentColor" />
-                <path d="M24 43.2L39.1 29.5C39.3 29.3 39.3 29.1 39.1 28.9L35.2 25C35 24.8 34.8 24.8 34.6 25L24 35.6L13.4 25C13.2 24.8 13 24.8 12.8 25L8.89999 28.9C8.69999 29.1 8.69999 29.3 8.89999 29.5L24 43.2Z" fill="currentColor" />
-              </svg>
-            </motion.div>
+            <AcadizeLogo variant="icon" size="md" />
             <div className="flex flex-col">
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white">Eduverse</h2>
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white">Acadize</h2>
               <div className="flex items-center gap-2">
-                <p className="text-xs text-slate-500 dark:text-slate-400">Student Portal</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">{t('studentPortal')}</p>
                 <motion.div 
                   className="w-2 h-2 rounded-full bg-green-500"
                   variants={pulseVariants}
@@ -159,7 +155,7 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
               )}
               <div className="flex-1 min-w-0 relative z-10">
                 <div className="text-sm font-semibold text-slate-900 dark:text-white truncate">{user?.fullName || 'Student'}</div>
-                <div className="text-xs text-slate-500 dark:text-slate-400 group-hover:text-[#FFD700] transition-colors">View Profile</div>
+                <div className="text-xs text-slate-500 dark:text-slate-400 group-hover:text-[#FFD700] transition-colors">{t('viewProfile')}</div>
               </div>
             </motion.div>
           </Link>
@@ -203,7 +199,7 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
                   >
                     {item.icon}
                   </motion.span>
-                  <span className="font-medium text-sm flex-1 relative z-10">{item.label}</span>
+                  <span className="font-medium text-sm flex-1 relative z-10">{t(item.label)}</span>
                   {item.badge && (
                     <motion.span 
                       className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full relative z-10"
@@ -241,7 +237,7 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
             >
               logout
             </motion.span>
-            <span className="font-medium relative z-10">Logout</span>
+            <span className="font-medium relative z-10">{t('nav.logout')}</span>
           </motion.button>
         </div>
       </motion.aside>
@@ -274,15 +270,10 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
         <div className="p-6 pb-2">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-4">
-              <div className="size-8 text-[#001f3f] dark:text-[#FFD700]">
-                <svg fill="none" height="100%" viewBox="0 0 48 48" width="100%" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M39.1 18.4L24.3 4.69999C24.1 4.49999 23.9 4.49999 23.7 4.69999L8.89999 18.4C8.69999 18.6 8.69999 18.8 8.89999 19L23.7 32.7C23.9 32.9 24.1 32.9 24.3 32.7L39.1 19C39.3 18.8 39.3 18.6 39.1 18.4Z" fill="currentColor" />
-                  <path d="M24 43.2L39.1 29.5C39.3 29.3 39.3 29.1 39.1 28.9L35.2 25C35 24.8 34.8 24.8 34.6 25L24 35.6L13.4 25C13.2 24.8 13 24.8 12.8 25L8.89999 28.9C8.69999 29.1 8.69999 29.3 8.89999 29.5L24 43.2Z" fill="currentColor" />
-                </svg>
-              </div>
+              <AcadizeLogo variant="icon" size="md" />
               <div className="flex flex-col">
-                <h2 className="text-lg font-bold text-slate-900 dark:text-white">Eduverse</h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Student Portal</p>
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white">Acadize</h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400">{t('studentPortal')}</p>
               </div>
             </div>
             <motion.button 
@@ -310,7 +301,7 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
               )}
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-semibold text-slate-900 dark:text-white truncate">{user?.fullName || 'Student'}</div>
-                <div className="text-xs text-slate-500 dark:text-slate-400">View Profile</div>
+                <div className="text-xs text-slate-500 dark:text-slate-400">{t('viewProfile')}</div>
               </div>
             </div>
           </Link>
@@ -339,7 +330,7 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
                     />
                   )}
                   <span className="material-symbols-outlined text-xl relative z-10">{item.icon}</span>
-                  <span className="font-medium text-sm flex-1 relative z-10">{item.label}</span>
+                  <span className="font-medium text-sm flex-1 relative z-10">{t(item.label)}</span>
                   {item.badge && (
                     <motion.span 
                       className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full relative z-10"
@@ -364,7 +355,7 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
             whileTap={{ scale: 0.98 }}
           >
             <span className="material-symbols-outlined">logout</span>
-            <span className="font-medium">Logout</span>
+            <span className="font-medium">{t('nav.logout')}</span>
           </motion.button>
         </div>
       </motion.aside>
@@ -455,7 +446,7 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
               </div>
               <motion.input 
                 className="block w-full pl-12 pr-4 py-3 bg-slate-50/80 dark:bg-[#112240]/80 backdrop-blur-md border-none rounded-full text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-[#FFD700] focus:bg-white/90 dark:focus:bg-[#112240]/90 transition-all shadow-inner" 
-                placeholder="Search for classes, assignments, or teachers..." 
+                placeholder={t('searchPlaceholderStudent')} 
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -494,6 +485,7 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
                 </motion.span>
               )}
             </motion.button>
+            <LanguageSwitcher />
             <NotificationBell />
             <motion.div 
               className="flex items-center gap-3 pl-6 border-l border-slate-200 dark:border-slate-700"

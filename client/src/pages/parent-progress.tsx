@@ -1,4 +1,5 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -47,6 +48,7 @@ interface ProgressReport {
 }
 
 export default function ParentProgress() {
+  const { t } = useTranslation('parent');
   const { token } = useAuth();
   const [, setLocation] = useLocation();
   const [children, setChildren] = useState<Child[]>([]);
@@ -149,7 +151,7 @@ export default function ParentProgress() {
               <div>
                 <h1 className="text-2xl font-bold flex items-center gap-3">
                   <TrendingUp className="h-7 w-7" />
-                  Progress Report
+                  {t('progressReport')}
                 </h1>
                 <p className="text-purple-100 mt-1">Comprehensive academic performance overview</p>
               </div>

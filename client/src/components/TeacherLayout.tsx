@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, Link } from 'wouter';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import NotificationBell from './NotificationBell';
 import { useTheme } from '@/contexts/ThemeContext';
+import { AcadizeLogo } from './AcadizeLogo';
+import { LanguageSwitcher } from './LanguageSwitcher';
 
 interface NavItem {
   label: string;
@@ -12,15 +15,16 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { label: 'Dashboard', icon: 'dashboard', path: '/teacher/dashboard' },
-  { label: 'Classes', icon: 'school', path: '/teacher/courses' },
-  { label: 'Assignments', icon: 'task', path: '/teacher/assignments' },
-  { label: 'Exams', icon: 'quiz', path: '/teacher/exams' },
-  { label: 'Students', icon: 'groups', path: '/teacher/students' },
-  { label: 'Calendar', icon: 'calendar_month', path: '/teacher/calendar' },
-  { label: 'Report Cards', icon: 'assessment', path: '/teacher/report-cards' },
-  { label: 'Messages', icon: 'message', path: '/teacher/messages' },
-  { label: 'Analytics', icon: 'analytics', path: '/teacher/analytics' },
+  { label: 'nav.dashboard', icon: 'dashboard', path: '/teacher/dashboard' },
+  { label: 'nav.classes', icon: 'school', path: '/teacher/courses' },
+  { label: 'nav.assignments', icon: 'task', path: '/teacher/assignments' },
+  { label: 'nav.exams', icon: 'quiz', path: '/teacher/exams' },
+  { label: 'nav.sessions', icon: 'event', path: '/teacher/sessions' },
+  { label: 'nav.students', icon: 'groups', path: '/teacher/students' },
+  { label: 'nav.calendar', icon: 'calendar_month', path: '/teacher/calendar' },
+  { label: 'nav.reportCards', icon: 'assessment', path: '/teacher/report-cards' },
+  { label: 'nav.messages', icon: 'message', path: '/teacher/messages' },
+  { label: 'nav.analytics', icon: 'analytics', path: '/teacher/analytics' },
 ];
 
 interface TeacherLayoutProps {
@@ -28,6 +32,7 @@ interface TeacherLayoutProps {
 }
 
 export default function TeacherLayout({ children }: TeacherLayoutProps) {
+  const { t } = useTranslation('common');
   const [location, setLocation] = useLocation();
   const { user, logout } = useAuth();
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
@@ -68,15 +73,10 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
         <div className="p-6 pb-2">
           {/* Logo */}
           <div className="flex items-center gap-4 mb-8">
-            <div className="size-8 text-[#001f3f] dark:text-[#FFD700]">
-              <svg fill="none" height="100%" viewBox="0 0 48 48" width="100%" xmlns="http://www.w3.org/2000/svg">
-                <path d="M39.1 18.4L24.3 4.69999C24.1 4.49999 23.9 4.49999 23.7 4.69999L8.89999 18.4C8.69999 18.6 8.69999 18.8 8.89999 19L23.7 32.7C23.9 32.9 24.1 32.9 24.3 32.7L39.1 19C39.3 18.8 39.3 18.6 39.1 18.4Z" fill="currentColor" />
-                <path d="M24 43.2L39.1 29.5C39.3 29.3 39.3 29.1 39.1 28.9L35.2 25C35 24.8 34.8 24.8 34.6 25L24 35.6L13.4 25C13.2 24.8 13 24.8 12.8 25L8.89999 28.9C8.69999 29.1 8.69999 29.3 8.89999 29.5L24 43.2Z" fill="currentColor" />
-              </svg>
-            </div>
+            <AcadizeLogo variant="icon" size="md" />
             <div className="flex flex-col">
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white">Eduverse</h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Teacher Portal</p>
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white">Acadize</h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">{t('teacherPortal')}</p>
             </div>
           </div>
 
@@ -97,7 +97,7 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
               )}
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-semibold text-slate-900 dark:text-white truncate">{user?.fullName || 'Teacher'}</div>
-                <div className="text-xs text-slate-500 dark:text-slate-400">View Profile</div>
+                <div className="text-xs text-slate-500 dark:text-slate-400">{t('viewProfile')}</div>
               </div>
             </div>
         </div>
@@ -116,7 +116,7 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
                   }`}
                 >
                   <span className="material-symbols-outlined text-xl">{item.icon}</span>
-                  <span className="font-medium text-sm flex-1">{item.label}</span>
+                  <span className="font-medium text-sm flex-1">{t(item.label)}</span>
                   {item.badge && (
                     <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
                       {item.badge}
@@ -135,7 +135,7 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
             className="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-white/5 transition-colors w-full group"
           >
             <span className="material-symbols-outlined">logout</span>
-            <span className="font-medium">Logout</span>
+            <span className="font-medium">{t('nav.logout')}</span>
           </button>
         </div>
       </aside>
@@ -162,8 +162,8 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
                 </svg>
               </div>
               <div className="flex flex-col">
-                <h2 className="text-lg font-bold text-slate-900 dark:text-white">Eduverse</h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Teacher Portal</p>
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white">Acadize</h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400">{t('teacherPortal')}</p>
               </div>
             </div>
             <button 
@@ -193,7 +193,7 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
               )}
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-semibold text-slate-900 dark:text-white truncate">{user?.fullName || 'Teacher'}</div>
-                <div className="text-xs text-slate-500 dark:text-slate-400">View Profile</div>
+                <div className="text-xs text-slate-500 dark:text-slate-400">{t('viewProfile')}</div>
               </div>
             </div>
         </div>
@@ -212,7 +212,7 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
                   }`}
                 >
                   <span className="material-symbols-outlined text-xl">{item.icon}</span>
-                  <span className="font-medium text-sm flex-1">{item.label}</span>
+                  <span className="font-medium text-sm flex-1">{t(item.label)}</span>
                   {item.badge && (
                     <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
                       {item.badge}
@@ -230,7 +230,7 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
             className="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-white/5 transition-colors w-full group"
           >
             <span className="material-symbols-outlined">logout</span>
-            <span className="font-medium">Logout</span>
+            <span className="font-medium">{t('nav.logout')}</span>
           </button>
         </div>
       </aside>
@@ -259,7 +259,7 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
             <span className="material-symbols-outlined text-slate-400 text-[20px]">search</span>
             <input
               type="text"
-              placeholder="Search classes, students, assignments..."
+              placeholder={t('searchPlaceholderTeacher')}
               className="h-10 w-full px-3 bg-slate-100 dark:bg-[#112240] border border-slate-200 dark:border-white/10 rounded-lg text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#001f3f]/20 dark:focus:ring-[#FFD700]/30"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -273,6 +273,7 @@ export default function TeacherLayout({ children }: TeacherLayoutProps) {
             >
               <span className="material-symbols-outlined">{theme === 'dark' ? 'light_mode' : 'dark_mode'}</span>
             </button>
+            <LanguageSwitcher />
             <NotificationBell />
             {user?.profilePicture ? (
               <div

@@ -1,4 +1,7 @@
+import React from "react";
 import { Switch, Route, useLocation } from "wouter";
+import { useTranslation } from "react-i18next";
+import { HreflangLinks } from "@/components/HreflangLinks";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -53,6 +56,7 @@ import StudentCalendar from "@/pages/student-calendar";
 import TeacherDashboardEnhanced from "@/pages/teacher-dashboard-enhanced";
 import AdminDashboard from "@/pages/admin-dashboard";
 import AdminAnalytics from "@/pages/admin-analytics";
+import AdminAttendance from "@/pages/admin-attendance";
 import AdminReports from "@/pages/admin-reports";
 import AdminSettings from "@/pages/admin-settings";
 import AdminOrganizations from "@/pages/admin-organizations";
@@ -85,6 +89,8 @@ import Register from "@/pages/register";
 import ChangePassword from "@/pages/change-password";
 import StudyGroupsChatPage from "@/pages/study-groups-chat-enhanced";
 import ProfilePage from "@/pages/student-profile";
+import StudentAttendanceScan from "@/pages/student-attendance-scan";
+import StudentAttendance from "@/pages/student-attendance";
 import Settings from "@/pages/settings";
 import TeacherAssignmentDetail from "@/pages/teacher-assignment-detail";
 import TeacherLessonView from "@/pages/teacher-lesson-view";
@@ -108,6 +114,7 @@ import ParentDashboardModern from "@/pages/parent-dashboard-modern";
 import ParentChildren from "@/pages/parent-children";
 import ParentGrades from "@/pages/parent-grades";
 import ParentAttendance from "@/pages/parent-attendance";
+import ParentAttendanceHistory from "@/pages/parent-attendance-history";
 import ParentMessages from "@/pages/parent-messages";
 import ParentCalendar from "@/pages/parent-calendar";
 import ParentAssignments from "@/pages/parent-assignments";
@@ -119,6 +126,7 @@ import ParentReports from "@/pages/parent-reports";
 import TeacherSearchResultsPage from "@/pages/teacher-search-results";
 import AdminSearchResultsPage from "@/pages/admin-search-results";
 import ParentSearchResultsPage from "@/pages/parent-search-results";
+import TeacherSessionDetail from "@/pages/teacher-session-live";
 // New landing pages
 import Pricing from "@/pages/pricing";
 import Integrations from "@/pages/integrations";
@@ -150,6 +158,16 @@ function ParentRoute({ children }: { children: React.ReactNode }) {
 import { useAuth, AuthProvider } from "@/hooks/useAuth";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { StudentNotificationProvider } from "@/contexts/StudentNotificationContext";
+import TeacherSessions from "./pages/teacher-sessions";
+import TeacherSessionLive from "@/pages/teacher-session-live";
+
+function SyncLocaleFromPath({ locale, children }: { locale: string; children: React.ReactNode }) {
+  const { i18n } = useTranslation();
+  React.useEffect(() => {
+    if (locale && locale !== i18n.language) i18n.changeLanguage(locale);
+  }, [locale, i18n]);
+  return <>{children}</>;
+}
 
 function Router() {
   const [location] = useLocation();
@@ -164,6 +182,7 @@ function Router() {
   
   return (
     <div className="min-h-screen flex flex-col">
+      <HreflangLinks />
       {!isDashboardRoute && <Navbar />}
       <main className="flex-1">
         <Switch>
@@ -195,6 +214,26 @@ function Router() {
             </ProtectedRoute>
           </Route>
           
+          {/* Locale-prefixed public pages (SEO) */}
+          <Route path="/en/home">
+            <SyncLocaleFromPath locale="en"><Home /></SyncLocaleFromPath>
+          </Route>
+          <Route path="/ar/home">
+            <SyncLocaleFromPath locale="ar"><Home /></SyncLocaleFromPath>
+          </Route>
+          <Route path="/en/about">
+            <SyncLocaleFromPath locale="en"><About /></SyncLocaleFromPath>
+          </Route>
+          <Route path="/ar/about">
+            <SyncLocaleFromPath locale="ar"><About /></SyncLocaleFromPath>
+          </Route>
+          <Route path="/en/contact">
+            <SyncLocaleFromPath locale="en"><Contact /></SyncLocaleFromPath>
+          </Route>
+          <Route path="/ar/contact">
+            <SyncLocaleFromPath locale="ar"><Contact /></SyncLocaleFromPath>
+          </Route>
+
           {/* Public home page */}
           <Route path="/home">
             <Home />
@@ -214,6 +253,18 @@ function Router() {
           <Route path="/student/dashboard">
             <StudentRoute>
               <StudentDashboard />
+            </StudentRoute>
+          </Route>
+
+          <Route path="/student/attendance/scan">
+            <StudentRoute>
+              <StudentAttendanceScan />
+            </StudentRoute>
+          </Route>
+
+          <Route path="/student/attendance">
+            <StudentRoute>
+              <StudentAttendance />
             </StudentRoute>
           </Route>
 
@@ -407,6 +458,13 @@ function Router() {
             </AdminRoute>
           </Route>
 
+          {/* Admin Attendance Analytics - Admin only */}
+          <Route path="/admin/attendance">
+            <AdminRoute>
+              <AdminAttendance />
+            </AdminRoute>
+          </Route>
+
           {/* Admin Reports - Admin only */}
           <Route path="/admin/reports">
             <AdminRoute>
@@ -500,6 +558,11 @@ function Router() {
             </ParentRoute>
           </Route>
 
+          <Route path="/parent/attendance/history">
+            <ParentRoute>
+              <ParentAttendanceHistory />
+            </ParentRoute>
+          </Route>
           <Route path="/parent/attendance">
             <ParentRoute>
               <ParentAttendance />
@@ -717,6 +780,17 @@ function Router() {
               <LessonManagement />
             </TeacherRoute>
           </Route>
+          <Route path="/teacher/sessions">
+            <TeacherRoute>
+              <TeacherSessions />
+            </TeacherRoute>
+          </Route>
+          <Route path="/teacher/sessions/:sessionId/live">
+            <TeacherRoute>
+              <TeacherSessionDetail />
+            </TeacherRoute>
+          </Route>
+
 
           {/* Teacher Announcements - Teacher/Admin only */}
           <Route path="/courses/:courseId/announcements">

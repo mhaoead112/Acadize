@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -66,6 +67,7 @@ interface Course {
 }
 
 export default function TeacherAssignmentsPage() {
+  const { t } = useTranslation('teacher');
   const { user, token, isAuthenticated, getAuthHeaders } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
@@ -350,7 +352,7 @@ export default function TeacherAssignmentsPage() {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h2 className="text-3xl font-black tracking-tight text-navy dark:text-white mb-1">Assignments</h2>
+            <h2 className="text-3xl font-black tracking-tight text-navy dark:text-white mb-1">{t('assignments')}</h2>
             <p className="text-slate-500 dark:text-slate-400">Manage coursework, track submissions, and grade papers.</p>
           </div>
           <Button 

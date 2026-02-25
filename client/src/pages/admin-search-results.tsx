@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { apiEndpoint } from "@/lib/config";
 import AdminLayout from "@/components/AdminLayout";
@@ -35,6 +36,7 @@ interface SearchResults {
 }
 
 export default function AdminSearchResultsPage() {
+  const { t } = useTranslation('admin');
   const { token } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [results, setResults] = useState<SearchResults>({
@@ -162,7 +164,7 @@ export default function AdminSearchResultsPage() {
             animate={{ opacity: 1, y: 0 }}
             className="mb-8"
           >
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">Search Results</h1>
+            <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">{t('searchResults')}</h1>
             <p className="text-slate-600 dark:text-slate-400">
               {totalResults > 0 ? `Found ${totalResults} result${totalResults !== 1 ? 's' : ''}` : 'No results found'}
               {searchQuery && ` for "${searchQuery}"`}

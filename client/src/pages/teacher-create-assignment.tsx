@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -10,6 +11,7 @@ interface Course {
 }
 
 export default function TeacherCreateAssignment() {
+  const { t } = useTranslation('teacher');
   const [, setLocation] = useLocation();
   const { getAuthHeaders, token, isAuthenticated } = useAuth();
   const { toast } = useToast();
@@ -192,7 +194,7 @@ export default function TeacherCreateAssignment() {
           >
             <span className="material-symbols-outlined">close</span>
           </button>
-          <h1 className="text-lg font-bold text-slate-900 dark:text-white">Create Assignment</h1>
+          <h1 className="text-lg font-bold text-slate-900 dark:text-white">{t('createAssignment')}</h1>
         </div>
         <div className="flex items-center gap-3">
           <button 

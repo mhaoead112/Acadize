@@ -1,5 +1,6 @@
 // API Configuration
-// Uses environment variables with production fallback for Vercel deployments
+// Production URLs MUST come from environment variables (VITE_API_URL, VITE_WS_URL).
+// No hardcoded fallback URLs — prevents silent misconfiguration in deployments.
 
 // More robust production detection - check at runtime
 const getIsProduction = () => {
@@ -11,11 +12,27 @@ const getIsProduction = () => {
 };
 
 const isProduction = getIsProduction();
-const productionAPI = 'https://eduverse-initial.onrender.com';
-const productionWS = 'wss://eduverse-initial.onrender.com';
 
-export const API_URL = import.meta.env.VITE_API_URL || (isProduction ? productionAPI : 'http://localhost:3001');
-export const WS_URL = import.meta.env.VITE_WS_URL || (isProduction ? productionWS : 'ws://localhost:3001');
+// In production, URLs MUST be set via env vars. In dev, fall back to localhost.
+if (isProduction && !import.meta.env.VITE_API_URL) {
+  console.error('❌ FATAL: VITE_API_URL environment variable is required in production builds.');
+}
+
+let apiUrl = import.meta.env.VITE_API_URL || (isProduction ? '' : 'http://localhost:3001');
+let wsUrl = import.meta.env.VITE_WS_URL || (isProduction ? '' : 'ws://localhost:3001');
+
+// Development helper: If accessed via LAN IP on a phone (e.g. 192.168.x.x), 
+// automatically swap 'localhost' in the env var to the actual device IP.
+if (!isProduction && typeof window !== 'undefined') {
+  const host = window.location.hostname;
+  if (host !== 'localhost' && host !== '127.0.0.1') {
+    apiUrl = apiUrl.replace('localhost', host).replace('127.0.0.1', host);
+    wsUrl = wsUrl.replace('localhost', host).replace('127.0.0.1', host);
+  }
+}
+
+export const API_URL = apiUrl;
+export const WS_URL = wsUrl;
 
 // Debug log to verify production detection
 if (typeof window !== 'undefined') {
@@ -50,7 +67,7 @@ export const assetUrl = (path: string): string => {
  * Supports:
  *   - subdomain.lvh.me:port → subdomain
  *   - subdomain.localhost:port → subdomain
- *   - subdomain.eduverse.io → subdomain
+ *   - subdomain.acadize.com → subdomain
  *   - localhost:port → 'default'
  */
 export const getSubdomain = (): string => {
@@ -75,7 +92,7 @@ export const getSubdomain = (): string => {
     return subdomain || 'default';
   }
 
-  // Handle production domains (e.g., acme.eduverse.io)
+  // Handle production domains (e.g., acme.acadize.com)
   const parts = hostname.split('.');
   if (parts.length >= 3) {
     // First part is the subdomain
@@ -147,9 +164,14 @@ if (typeof window !== 'undefined') {
       const subdomain = getSubdomain();
       const headers = new Headers(init?.headers);
 
-      // Don't overwrite if already explicitly set
       if (!headers.has('X-Tenant-Subdomain')) {
         headers.set('X-Tenant-Subdomain', subdomain);
+      }
+
+      // i18n: send current locale so backend returns translated content
+      if (!headers.has('X-Locale')) {
+        const locale = typeof localStorage !== 'undefined' ? localStorage.getItem('acadize_locale') : null;
+        if (locale) headers.set('X-Locale', locale);
       }
 
       return originalFetch(input, {

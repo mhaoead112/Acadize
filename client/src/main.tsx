@@ -1,5 +1,7 @@
+import React, { Suspense } from "react";
 import { createRoot } from "react-dom/client";
 import "./lib/config"; // Initialize tenant config & global fetch interceptor early
+import "./i18n/config"; // i18n: init and RTL
 import App from "./App";
 import "./index.css";
 
@@ -18,5 +20,7 @@ if ('serviceWorker' in navigator) {
 }
 
 createRoot(document.getElementById("root")!).render(
-  <App />
+  <Suspense fallback={<div className="flex min-h-screen items-center justify-center">Loading...</div>}>
+    <App />
+  </Suspense>
 );

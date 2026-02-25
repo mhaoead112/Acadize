@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { apiEndpoint } from "@/lib/config";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -101,6 +102,7 @@ function EventCard({ event }: { event: SchoolEvent }) {
 }
 
 export default function ParentCalendar() {
+  const { t } = useTranslation('parent');
   const { user, token } = useAuth();
   const [, setLocation] = useLocation();
   const [events, setEvents] = useState<SchoolEvent[]>([]);
@@ -256,13 +258,13 @@ export default function ParentCalendar() {
               <div>
                 <h1 className="text-2xl font-bold flex items-center gap-3">
                   <CalendarIcon className="h-7 w-7" />
-                  School Calendar
+                  {t('schoolCalendar')}
                 </h1>
                 <p className="text-purple-100 mt-1">View your children's schedule and school events</p>
               </div>
               <Button variant="secondary" className="bg-white/20 hover:bg-white/30 border-white/30 text-white" onClick={() => setLocation('/parent')}>
                 <ChevronLeft className="h-4 w-4 mr-2" />
-                Back to Dashboard
+                {t('backToDashboard')}
               </Button>
             </div>
           </div>

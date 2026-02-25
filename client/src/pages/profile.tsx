@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { useLocale } from "@/hooks/useLocale";
 import { Camera, User, Mail, Calendar, Loader2, X, Upload } from "lucide-react";
 import { apiEndpoint, assetUrl } from '@/lib/config';
 
@@ -18,6 +19,7 @@ interface UserProfile {
   role: string;
   profilePicture: string | null;
   grade: string | null;
+  preferredLocale: string | null;
   createdAt: string;
 }
 
@@ -31,7 +33,9 @@ export default function ProfilePage() {
   const [uploading, setUploading] = useState(false);
   const [fullName, setFullName] = useState("");
   const [grade, setGrade] = useState("");
+  const [preferredLocale, setPreferredLocale] = useState<string>("");
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const { enabledLocales, setLocale } = useLocale();
 
   useEffect(() => {
     fetchProfile();
@@ -54,6 +58,7 @@ export default function ProfilePage() {
         setProfile(data);
         setFullName(data.fullName);
         setGrade(data.grade || "");
+        setPreferredLocale(data.preferredLocale || "en");
         if (data.profilePicture) {
           setPreviewImage(assetUrl(data.profilePicture));
         }
@@ -96,7 +101,11 @@ export default function ProfilePage() {
           ...getAuthHeaders(),
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ fullName, grade: profile?.role === 'student' ? grade : undefined }),
+        body: JSON.stringify({
+          fullName,
+          grade: profile?.role === 'student' ? grade : undefined,
+          preferredLocale: preferredLocale || undefined,
+        }),
       });
 
       if (response.ok) {
@@ -417,7 +426,29 @@ export default function ProfilePage() {
                 </div>
               )}
 
-              {(fullName !== profile.fullName || (profile.role === 'student' && grade !== (profile.grade || ''))) && (
+              {enabledLocales.length > 1 && (
+                <div className="space-y-2">
+                  <Label htmlFor="preferredLocale">Preferred language</Label>
+                  <select
+                    id="preferredLocale"
+                    value={preferredLocale}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setPreferredLocale(v);
+                      setLocale(v);
+                    }}
+                    className="flex h-10 w-full max-w-md rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  >
+                    {enabledLocales.map((code) => (
+                      <option key={code} value={code}>
+                        {code === "en" ? "English" : code === "ar" ? "العربية (Arabic)" : code}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {(fullName !== profile.fullName || (profile.role === 'student' && grade !== (profile.grade || '')) || (profile.preferredLocale || 'en') !== preferredLocale) && (
                 <div className="flex gap-3">
                   <Button type="submit" disabled={updating}>
                     {updating ? (

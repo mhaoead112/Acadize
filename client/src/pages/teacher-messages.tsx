@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import TeacherLayout from "@/components/TeacherLayout";
 import { useAuth } from "@/hooks/useAuth";
 import { useWebSocket } from "@/hooks/useWebSocket";
@@ -290,6 +291,7 @@ interface TypingUser {
 }
 
 export default function StudyGroupsChatPage() {
+  const { t } = useTranslation('teacher');
   const { user, token, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   
@@ -1057,7 +1059,7 @@ export default function StudyGroupsChatPage() {
           {/* Header & Search */}
           <div className="p-6 pb-2 flex flex-col gap-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white transition-colors duration-300">Messages</h2>
+              <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white transition-colors duration-300">{t('messages')}</h2>
               <div className="flex gap-2">
                 <Dialog open={showCreateGroupDialog} onOpenChange={setShowCreateGroupDialog}>
                   <DialogTrigger asChild>

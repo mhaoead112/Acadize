@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
@@ -22,7 +23,6 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { UserGrowthChart } from "@/components/Charts";
-import AddUserModal from "@/components/modals/AddUserModal";
 
 interface SystemStats {
   totalUsers: number;
@@ -113,10 +113,10 @@ async function fetchWithAuth(url: string, token: string, options?: RequestInit) 
 }
 
 export default function AdminDashboard() {
+  const { t } = useTranslation('admin');
   const { user, token } = useAuth();
   const { toast } = useToast();
   const [selectedTab, setSelectedTab] = useState('overview');
-  const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
 
   // Fetch system stats
   const { data: systemStats, isLoading: statsLoading } = useQuery<SystemStats>({
@@ -171,19 +171,12 @@ export default function AdminDashboard() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
           <div>
             <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter leading-none">
-              Dashboard Overview
+              {t('dashboardOverview')}
             </h1>
             <p className="text-slate-600 dark:text-slate-300 mt-2 font-medium">
               Welcome back, {user?.fullName?.split(' ')[0] || 'Admin'}! Monitor your platform metrics.
             </p>
           </div>
-          <button
-            onClick={() => setIsAddUserModalOpen(true)}
-            className="flex items-center gap-3 bg-[#FFD700] text-[#0a192f] h-12 md:h-14 px-6 md:px-8 rounded-2xl font-black shadow-[0_10px_30px_rgba(242,208,13,0.3)] hover:scale-105 transition-all active:scale-95 group"
-          >
-            <span className="material-symbols-outlined">person_add</span>
-            Add New User
-          </button>
         </div>
 
         {/* KPI Cards */}
@@ -524,12 +517,6 @@ export default function AdminDashboard() {
           </TabsContent>
         </Tabs>
       </div>
-
-      {/* Add User Modal */}
-      <AddUserModal
-        isOpen={isAddUserModalOpen}
-        onClose={() => setIsAddUserModalOpen(false)}
-      />
     </AdminLayout>
   );
 }

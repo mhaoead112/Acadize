@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Calendar, User, Tag, TrendingUp, Clock } from "lucide-react";
 import { Link } from "wouter";
 import { useState, useMemo } from "react";
@@ -5,6 +6,7 @@ import { blogPosts, blogCategories } from "@/content/blog/posts";
 import { motion, useScroll, useTransform } from "framer-motion";
 
 export default function Blog() {
+  const { t } = useTranslation('landing');
   const [selectedCategory, setSelectedCategory] = useState("All Posts");
   const [currentPage, setCurrentPage] = useState(1);
   const postsPerPage = 6;
@@ -34,7 +36,7 @@ export default function Blog() {
             <h1 className="text-4xl sm:text-5xl font-bold tracking-tight mb-4">
               EduVerse{" "}
               <span className="bg-gradient-to-r from-primary to-yellow-400 bg-clip-text text-transparent">
-                Blog
+                {t('blogTitle')}
               </span>
             </h1>
             <p className="text-lg text-slate-600 dark:text-text-muted max-w-2xl mx-auto">

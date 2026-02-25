@@ -1,7 +1,9 @@
+import { useTranslation } from "react-i18next";
 import { Lightbulb, Globe, Rocket, Shield, Users, TrendingUp } from "lucide-react";
 import { Link } from "wouter";
 
 export default function About() {
+  const { t } = useTranslation('landing');
   const values = [
     { icon: Rocket, title: 'Innovation', desc: 'Constantly pushing boundaries to create better learning experiences.' },
     { icon: Shield, title: 'Integrity', desc: 'Building trust through transparency and honest relationships.' },
@@ -55,9 +57,9 @@ export default function About() {
               transition={{ duration: 0.8 }}
             >
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight">
-                Empowering Knowledge,{" "}
+                {t('aboutHeroTitle')}{" "}
                 <span className="bg-gradient-to-r from-primary to-yellow-400 bg-clip-text text-transparent">
-                  Everywhere
+                  {t('aboutHeroHighlight')}
                 </span>
               </h1>
               <p className="text-lg text-slate-600 dark:text-text-muted leading-relaxed">

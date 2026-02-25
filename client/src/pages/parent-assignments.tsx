@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useLocation, useParams } from "wouter";
 import ParentLayout from "@/components/ParentLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -41,6 +42,7 @@ interface AssignmentData {
 }
 
 export default function ParentAssignments() {
+  const { t } = useTranslation('parent');
   const { token } = useAuth();
   const [, setLocation] = useLocation();
   const params = useParams();
@@ -141,7 +143,7 @@ export default function ParentAssignments() {
             Back
           </Button>
           <div className="flex-1">
-            <h1 className="text-3xl font-bold text-gray-900">Assignment Tracking</h1>
+            <h1 className="text-3xl font-bold text-gray-900">{t('assignmentTracking')}</h1>
             <p className="text-gray-600 mt-1">Monitor upcoming and past assignments</p>
           </div>
         </div>

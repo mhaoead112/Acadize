@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useRoute, useLocation } from "wouter";
 import { 
   ArrowLeft, Calendar, Clock, FileText, Users, 
@@ -36,6 +37,7 @@ interface Assignment {
 }
 
 export default function TeacherAssignmentDetail() {
+  const { t } = useTranslation('teacher');
   const [, params] = useRoute("/teacher/assignments/:id");
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -272,7 +274,7 @@ export default function TeacherAssignmentDetail() {
                 <div className="flex items-center gap-3 mb-2">
                   <h1 className="text-3xl font-bold text-gray-900">{assignment.title}</h1>
                   <Badge variant={assignment.isPublished ? "default" : "secondary"}>
-                    {assignment.isPublished ? "Published" : "Draft"}
+                    {assignment.isPublished ? t('published') : t('draft')}
                   </Badge>
                   {isPastDue && (
                     <Badge variant="destructive">Past Due</Badge>

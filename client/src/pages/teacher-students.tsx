@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -41,6 +42,7 @@ interface Student {
 }
 
 export default function TeacherStudents() {
+  const { t } = useTranslation('teacher');
   const { toast } = useToast();
   const { getAuthHeaders, isAuthenticated, token } = useAuth();
   const [, setLocation] = useLocation();
@@ -142,12 +144,12 @@ export default function TeacherStudents() {
       <header className="sticky top-0 z-10 py-6 bg-slate-50 dark:bg-navy-dark transition-colors duration-300">
         <div className="flex flex-wrap justify-between items-end gap-4">
           <div className="flex flex-col gap-1">
-            <h1 className="text-navy dark:text-white text-3xl font-black leading-tight tracking-tight">Student Roster</h1>
-            <p className="text-slate-500 dark:text-gray-400 text-base font-normal">Manage profiles, track progress, and communicate with your students.</p>
+            <h1 className="text-navy dark:text-white text-3xl font-black leading-tight tracking-tight">{t('studentRoster')}</h1>
+            <p className="text-slate-500 dark:text-gray-400 text-base font-normal">{t('studentRosterDesc')}</p>
           </div>
           <button className="flex items-center gap-2 bg-gold hover:bg-yellow-500 text-navy px-5 py-2.5 rounded-lg font-bold shadow-md shadow-gold/20 transition-all hover:scale-105 active:scale-95">
             <span className="material-symbols-outlined text-[20px]">person_add</span>
-            <span>Add New Student</span>
+            <span>{t('addNewStudent')}</span>
           </button>
         </div>
       </header>
@@ -156,7 +158,7 @@ export default function TeacherStudents() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <div className="bg-white dark:bg-slate-800 rounded-xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-1">
           <div className="flex justify-between items-start">
-            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Total Students</p>
+            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{t('totalStudents')}</p>
             <span className="material-symbols-outlined text-gold opacity-50">groups</span>
           </div>
           <div className="flex items-end gap-2">

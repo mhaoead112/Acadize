@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import  TeacherLayout  from "@/components/TeacherLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -58,6 +59,7 @@ const ACADEMIC_YEARS = [
 ];
 
 export default function TeacherReportCards() {
+  const { t } = useTranslation('teacher');
   const { token, user, getAuthHeaders } = useAuth();
   const { toast } = useToast();
   const [students, setStudents] = useState<User[]>([]);
@@ -288,10 +290,10 @@ export default function TeacherReportCards() {
           <div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
               <GraduationCap className="h-8 w-8 text-green-600" />
-              Manage Report Cards
+              {t('manageReportCards')}
             </h1>
             <p className="text-gray-600 dark:text-gray-400 mt-1">
-              Upload and manage student report cards
+              {t('manageReportCardsDesc')}
             </p>
           </div>
           
@@ -299,7 +301,7 @@ export default function TeacherReportCards() {
             <DialogTrigger asChild>
               <Button className="gap-2">
                 <Upload className="h-4 w-4" />
-                Upload Report Card
+                {t('uploadReportCard')}
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[500px]">
@@ -472,7 +474,7 @@ export default function TeacherReportCards() {
             <CardContent className="flex flex-col items-center justify-center py-12">
               <FileText className="h-16 w-16 text-gray-300 mb-4" />
               <h3 className="text-lg font-semibold text-gray-700 mb-2">
-                No Report Cards Found
+                {t('noReportCardsFound')}
               </h3>
               <p className="text-gray-500 text-center max-w-md">
                 {searchTerm 
@@ -486,7 +488,7 @@ export default function TeacherReportCards() {
             <Card>
               <CardHeader>
                 <CardTitle>
-                  All Report Cards ({filteredReports.length})
+                  {t('allReportCards')} ({filteredReports.length})
                 </CardTitle>
               </CardHeader>
               <CardContent>

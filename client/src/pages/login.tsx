@@ -1,9 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
+import { useTranslation } from 'react-i18next';
 import { useToast } from '@/hooks/use-toast';
-import { School, Eye } from 'lucide-react';
-import { apiEndpoint } from '@/lib/config';
+import { School, Eye, EyeOff, Lock, ArrowRight, Loader2 } from 'lucide-react';
+import { AcadizeLogo } from '@/components/AcadizeLogo';
 import { useAuth } from '@/hooks/useAuth';
+import { getStoredUser } from '@/lib/api-client';
+import { motion } from 'framer-motion';
+import { Button } from '@/components/ui/button';
 
 interface LoginCredentials {
   email: string;
@@ -11,6 +15,7 @@ interface LoginCredentials {
 }
 
 export default function Login() {
+  const { t } = useTranslation('auth');
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const { login, isAuthenticated, user } = useAuth();
@@ -37,20 +42,10 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validation
     if (!formData.email || !formData.password) {
       toast({
-        title: 'Validation Error',
-        description: 'Please fill in all fields',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      toast({
-        title: 'Validation Error',
-        description: 'Please enter a valid email address',
+        title: t('missingCredentials'),
+        description: t('pleaseEnterEmailPassword'),
         variant: 'destructive',
       });
       return;
@@ -59,58 +54,20 @@ export default function Login() {
     setIsLoading(true);
     
     try {
-      // Use AuthContext login to properly set state
       const result = await login({
-        username: formData.email, // API accepts username or email
+        username: formData.email,
         email: formData.email,
         password: formData.password
       });
 
       if (result.success) {
-        // Get user from localStorage (set by login function)
-        const storedUser = localStorage.getItem('eduverse_user');
-        const userData = storedUser ? JSON.parse(storedUser) : null;
-
-        // Check if user has a temporary password that needs to be changed
-        // User needs to change password if:
-        // 1. They have a passwordResetExpires date (temporary password)
-        // 2. The password hasn't expired yet
-        // 3. Email is not verified (first login)
-        const hasTemporaryPassword = userData?.passwordResetExpires && 
-          new Date(userData.passwordResetExpires) > new Date();
-        
-        if (hasTemporaryPassword && !userData?.emailVerified) {
-          toast({
-            title: 'Password Change Required',
-            description: 'You must change your temporary password to continue',
-          });
-          
-          setTimeout(() => {
-            setLocation('/change-password');
-          }, 300);
-          return;
-        }
-
-        // Track login streak for students
-        if (userData?.role === 'student') {
-          const storedToken = localStorage.getItem('eduverse_token');
-          if (storedToken) {
-            fetch(apiEndpoint('/api/streaks/login'), {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${storedToken}`,
-                'Content-Type': 'application/json'
-              },
-            }).catch(err => console.error('Failed to track login:', err));
-          }
-        }
+        const userData = getStoredUser();
 
         toast({
-          title: 'Login Successful',
-          description: `Welcome back, ${userData?.fullName || 'User'}!`,
+          title: t('welcomeBackToast'),
+          description: t('successfullySignedIn', { name: userData?.fullName || 'User' }),
         });
 
-        // Redirect based on role
         const roleRoutes: Record<string, string> = {
           student: '/student/dashboard',
           teacher: '/teacher/dashboard',
@@ -123,15 +80,15 @@ export default function Login() {
         }, 300);
       } else {
         toast({
-          title: 'Login Failed',
-          description: result.error || 'Invalid email or password',
+          title: t('loginFailed'),
+          description: result.error || t('invalidEmailPassword'),
           variant: 'destructive',
         });
       }
     } catch (error) {
       toast({
-        title: 'Login Failed',
-        description: error instanceof Error ? error.message : 'An error occurred',
+        title: t('connectionError'),
+        description: t('unableToReachServer'),
         variant: 'destructive',
       });
     } finally {
@@ -147,108 +104,145 @@ export default function Login() {
   };
 
   return (
-    <div className="bg-slate-50 dark:bg-slate-950 font-display min-h-screen flex flex-col transition-colors duration-300">
-      {/* Main Content Area */}
-      <main className="flex-grow flex items-center justify-center p-4 relative overflow-hidden">
-        {/* Abstract Background Pattern */}
-        <div className="absolute inset-0 z-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'radial-gradient(#f2d00d 1px, transparent 1px)', backgroundSize: '32px 32px' }}></div>
-        <div className="absolute -right-20 -bottom-20 w-96 h-96 bg-primary/5 rounded-full blur-3xl pointer-events-none"></div>
-        <div className="absolute -left-20 top-20 w-72 h-72 bg-blue-900/10 rounded-full blur-3xl pointer-events-none"></div>
+    <div className="min-h-screen bg-slate-50 dark:bg-[#0B1120] text-slate-900 dark:text-white flex flex-col font-sans relative overflow-hidden transition-colors duration-300">
+      {/* Dynamic Background Elements */}
+      <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-100/40 dark:bg-blue-900/10 blur-[120px] rounded-full" />
+      <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-amber-100/30 dark:bg-amber-900/10 blur-[120px] rounded-full" />
 
-        {/* Login Card Container */}
-        <div className="w-full max-w-6xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl flex overflow-hidden z-10 border border-slate-200 dark:border-slate-700 min-h-[600px] transition-colors duration-300">
-          {/* Left Side: Login Form */}
-          <div className="w-full lg:w-1/2 p-8 md:p-12 lg:p-16 flex flex-col justify-center">
+      <main className="flex-1 flex items-center justify-center p-6 relative z-10">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+          className="w-full max-w-[1100px] flex flex-col lg:flex-row bg-white dark:bg-white/5 backdrop-blur-2xl rounded-[2.5rem] shadow-2xl border border-slate-200 dark:border-white/10 overflow-hidden"
+        >
+          {/* Left Side: Form Section */}
+          <div className="w-full lg:w-1/2 p-8 md:p-16 flex flex-col justify-center">
             <div className="max-w-[400px] mx-auto w-full">
-              {/* Header Text */}
-              <div className="mb-10 text-center lg:text-left">
-                <h1 className="text-slate-900 dark:text-white tracking-tight text-3xl md:text-4xl font-bold leading-tight mb-3 transition-colors duration-300">Student Portal</h1>
-                <p className="text-slate-600 dark:text-gray-400 text-base font-normal leading-normal transition-colors duration-300">Welcome back! Please enter your credentials to access your courses.</p>
+              {/* Logo & Brand */}
+              <div className="flex items-center gap-3 mb-10">
+                <AcadizeLogo variant="full" size="xl" />
               </div>
 
-              {/* Form */}
-              <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
-                {/* Student ID / Email Field */}
-                <label className="flex flex-col gap-2">
-                  <span className="text-slate-900 dark:text-white text-sm font-medium leading-normal transition-colors duration-300">Student ID / Email</span>
-                  <div className="relative">
-                    <School className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400 h-5 w-5 transition-colors duration-300" />
+              <div className="mb-10">
+                <h1 className="text-3xl md:text-4xl font-bold mb-3 tracking-tight leading-tight">
+                  {t('welcomeBack')}
+                </h1>
+                <p className="text-slate-500 dark:text-gray-400 font-medium">
+                  {t('enterCredentials')}
+                </p>
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Email Field */}
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-400 dark:text-gray-500 uppercase tracking-widest ml-1">
+                    {t('studentIdEmail')}
+                  </label>
+                  <div className="relative group">
+                    <School className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" size={20} />
                     <input 
-                      className="form-input w-full rounded-lg text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-slate-400 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-primary focus:ring-1 focus:ring-primary h-12 pl-12 pr-4 text-base transition-colors duration-300" 
-                      placeholder="e.g. student@university.edu" 
                       type="text"
                       name="email"
                       value={formData.email}
                       onChange={handleInputChange}
+                      placeholder={t('emailPlaceholder')}
+                      className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl h-14 pl-12 pr-4 outline-none focus:ring-2 focus:ring-primary/50 transition-all font-medium"
                       disabled={isLoading}
                     />
                   </div>
-                </label>
+                </div>
 
                 {/* Password Field */}
-                <label className="flex flex-col gap-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-900 dark:text-white text-sm font-medium leading-normal transition-colors duration-300">Password</span>
-                    <a className="text-sm font-medium text-primary hover:text-yellow-400 transition-colors cursor-pointer" onClick={() => setLocation('/forgot-password')}>Forgot Password?</a>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center ml-1">
+                    <label className="text-sm font-bold text-slate-400 dark:text-gray-500 uppercase tracking-widest">
+                      {t('password')}
+                    </label>
+                    <button 
+                      type="button"
+                      onClick={() => setLocation('/forgot-password')}
+                      className="text-xs font-bold text-primary hover:underline"
+                    >
+                      {t('forgot')}
+                    </button>
                   </div>
-                  <div className="relative">
-                    <svg className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400 h-5 w-5 transition-colors duration-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
+                  <div className="relative group">
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" size={20} />
                     <input 
-                      className="form-input w-full rounded-lg text-slate-900 dark:text-white placeholder:text-slate-500 dark:placeholder:text-slate-400 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-primary focus:ring-1 focus:ring-primary h-12 pl-12 pr-12 text-base transition-colors duration-300" 
-                      placeholder="Enter your password" 
                       type={showPassword ? "text" : "password"}
                       name="password"
                       value={formData.password}
                       onChange={handleInputChange}
+                      placeholder={t('passwordPlaceholder')}
+                      className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl h-14 pl-12 pr-12 outline-none focus:ring-2 focus:ring-primary/50 transition-all font-medium"
                       disabled={isLoading}
                     />
                     <button 
-                      className="absolute right-0 top-0 h-full px-4 flex items-center text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors duration-300" 
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-white"
                     >
-                      <Eye className="h-5 w-5" />
+                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                     </button>
                   </div>
-                </label>
+                </div>
 
-                {/* Login Button */}
-                <button 
-                  className="flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-4 bg-primary hover:bg-[#d9bb0c] active:bg-[#bfa50b] text-[#232010] text-base font-bold leading-normal tracking-[0.015em] transition-all transform active:scale-[0.99] mt-2 shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                <Button 
                   type="submit"
                   disabled={isLoading}
+                  className="w-full h-14 bg-primary hover:bg-primary-hover text-navy-950 font-bold rounded-2xl shadow-xl shadow-primary/20 text-lg group"
                 >
-                  {isLoading ? 'Logging in...' : 'Log In'}
-                </button>
+                  {isLoading ? (
+                    <Loader2 className="animate-spin" size={24} />
+                  ) : (
+                    <>
+                      {t('signIn')} 
+                      <ArrowRight size={20} className="ml-2 group-hover:translate-x-1 transition-transform" />
+                    </>
+                  )}
+                </Button>
               </form>
+
+              <div className="mt-10 text-center">
+                <p className="text-sm text-slate-500 dark:text-gray-400">
+                  {t('noAccount')} <button onClick={() => setLocation('/register')} className="text-primary font-bold hover:underline">{t('createAccount')}</button>
+                </p>
+              </div>
             </div>
           </div>
 
-          {/* Right Side: Decorative Image */}
-          <div className="hidden lg:block lg:w-1/2 relative bg-slate-100 dark:bg-[#1a180c] transition-colors duration-300">
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-200 dark:from-[#221f10] via-transparent to-transparent z-10 opacity-90 transition-colors duration-300"></div>
-            <div className="absolute inset-0 bg-primary/10 z-10 mix-blend-overlay"></div>
-            <img alt="Students collaborating on laptops in a modern library setting" className="w-full h-full object-cover opacity-80" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAFe4ZCH4jZcZf-h8lhDDzBHAmP3Lid79fErhtboMOdlku0tVl_G2OFGyq3Djt63mimRgNWt7YzOXmWffX2J-KrIcWcFz2uHKQcxlozKaT7LC_ci6GoOoIZQGOwsZOWM5wO2K2ERWMIPfMdmCl-nFKtEzi9Y-hhPo8l3Rm-rqX6-FX_h8z8W3qfS5thGQ3h05eyInwl6QfzELrur5FdXK-1AhvsfRWC4poJoVI2ZMpOu5-NZST0q5-MudHSnl7U2-46NwPTN4vI7kg"/>
-            <div className="absolute bottom-12 left-12 z-20 max-w-md">
-              <div className="w-12 h-1 bg-primary mb-6"></div>
-              <blockquote className="text-slate-900 dark:text-white text-2xl font-medium leading-relaxed mb-4 transition-colors duration-300">
-                "Education is the passport to the future, for tomorrow belongs to those who prepare for it today."
+          {/* Right Side: Visual Section */}
+          <div className="hidden lg:flex lg:w-1/2 relative bg-slate-100 dark:bg-navy-950/40 p-12 flex-col justify-end overflow-hidden border-l border-slate-200 dark:border-white/10">
+             {/* Decorative Image/Pattern */}
+            <div className="absolute inset-0 opacity-40 dark:opacity-20 pointer-events-none" style={{ backgroundImage: 'radial-gradient(#F2D00D 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
+            
+            <div className="relative z-10 space-y-6">
+              <div className="w-16 h-1.5 bg-primary rounded-full shadow-lg shadow-primary/50" />
+              <blockquote className="text-3xl font-bold leading-tight tracking-tight">
+                "{t('quote')}"
               </blockquote>
-              <p className="text-slate-700 dark:text-gray-400 text-sm font-light transition-colors duration-300">— Malcolm X</p>
+              <div>
+                <p className="text-lg font-bold text-primary">{t('quoteAuthor')}</p>
+                <p className="text-sm text-slate-500 font-medium tracking-wide">{t('premiumExperience')}</p>
+              </div>
             </div>
+
+            {/* Floating Visual Elements */}
+            <div className="absolute top-20 right-20 w-32 h-32 bg-primary/20 rounded-[2rem] blur-2xl animate-float" />
+            <div className="absolute bottom-40 right-40 w-24 h-24 bg-blue-500/10 rounded-[1.5rem] blur-xl animate-float-delayed" />
           </div>
-        </div>
+        </motion.div>
       </main>
 
-      {/* Simple Footer */}
-      <footer className="py-6 text-center text-slate-600 dark:text-gray-600 text-xs transition-colors duration-300">
-        <p>© 2024 LMS Portal Inc. All rights reserved.</p>
-        <div className="flex justify-center gap-4 mt-2">
-          <a className="hover:text-slate-400 dark:hover:text-gray-400 cursor-pointer transition-colors" onClick={() => setLocation('/terms')}>Privacy Policy</a>
-          <span className="w-[1px] h-3 bg-slate-300 dark:bg-gray-700 inline-block my-auto transition-colors duration-300"></span>
-          <a className="hover:text-slate-400 dark:hover:text-gray-400 cursor-pointer transition-colors" onClick={() => setLocation('/terms')}>Terms of Service</a>
+      <footer className="py-8 text-center text-xs text-slate-400 dark:text-gray-500 relative z-10 transition-opacity hover:opacity-100">
+        <p>{t('copyright')}</p>
+        <div className="flex justify-center gap-6 mt-3 font-bold uppercase tracking-widest text-[10px]">
+          <button onClick={() => setLocation('/privacy')} className="hover:text-primary transition-colors">{t('privacy')}</button>
+          <span className="opacity-20">/</span>
+          <button onClick={() => setLocation('/terms')} className="hover:text-primary transition-colors">{t('terms')}</button>
+          <span className="opacity-20">/</span>
+          <button onClick={() => setLocation('/support')} className="hover:text-primary transition-colors">{t('contact')}</button>
         </div>
       </footer>
     </div>

@@ -1,9 +1,11 @@
 import React, { useRef } from 'react';
 import { Link } from "wouter";
+import { useTranslation } from 'react-i18next';
 import { ArrowDown, Calendar, CheckCircle } from "lucide-react";
 import { motion, useScroll, useTransform, useSpring } from "framer-motion";
 
 const Hero: React.FC = () => {
+  const { t } = useTranslation('landing');
   const ref = useRef(null);
   const { scrollYProgress } = useScroll({
     target: ref,
@@ -41,7 +43,7 @@ const Hero: React.FC = () => {
               transition={{ delay: 0.2, duration: 0.5 }}
             >
               <span className="flex size-2 rounded-full bg-primary animate-pulse"></span>
-              <span className="text-xs font-semibold text-primary uppercase tracking-wide">Feature Tour 2024</span>
+              <span className="text-xs font-semibold text-primary uppercase tracking-wide">{t('featureTour')}</span>
             </motion.div>
             
             <motion.h1 
@@ -50,8 +52,8 @@ const Hero: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3, duration: 0.8 }}
             >
-              Everything you need to <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-yellow-200">manage education</span>
+              {t('heroTitle')} <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-yellow-200">{t('heroTitleHighlight')}</span>
             </motion.h1>
             
             <motion.p 
@@ -60,7 +62,7 @@ const Hero: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4, duration: 0.8 }}
             >
-              Explore the powerful features that make EduVerse the preferred choice for institutions worldwide. From curriculum planning to advanced analytics.
+              {t('heroSubtitle')}
             </motion.p>
             
             <motion.div 
@@ -75,7 +77,7 @@ const Hero: React.FC = () => {
                 whileHover={{ scale: 1.05, boxShadow: "0 20px 40px rgba(255, 215, 0, 0.3)" }}
                 whileTap={{ scale: 0.98 }}
               >
-                Explore Features
+                {t('exploreFeatures')}
                 <ArrowDown className="h-5 w-5" />
               </motion.button>
               <Link href="/contact">
@@ -85,7 +87,7 @@ const Hero: React.FC = () => {
                   whileTap={{ scale: 0.98 }}
                 >
                   <Calendar className="h-5 w-5" />
-                  Book a Demo
+                  {t('bookDemo')}
                 </motion.button>
               </Link>
             </motion.div>
@@ -108,8 +110,6 @@ const Hero: React.FC = () => {
             <motion.div 
               className="relative rounded-xl border border-white/10 bg-slate-900 shadow-2xl overflow-hidden aspect-[4/3] group"
               whileHover={{ 
-                rotateY: 5, 
-                rotateX: -5,
                 scale: 1.02,
                 boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)"
               }}
@@ -128,7 +128,7 @@ const Hero: React.FC = () => {
 
               {/* Dashboard Image */}
               <div 
-                className="h-full w-full bg-cover bg-center transform transition-transform duration-700 group-hover:scale-105" 
+                className="h-full w-full bg-cover bg-center " 
                 style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuB8oBVzm-Moy4WIoOg-DjxVynnmB8aTJDd8wjMYjKfRPcYmZqg_iTqjsxUjblNxKTdVFl2lCnikIT6fzERWWicj5pOtCM2Rvj7sOAKn_je42kiA5LYuIbApV0HLkktP44UlbsR7focfIcOQSp32gDGqEqVASHIx5SszzwXnSUnrdNHgZ5abhNGiwSowNN12po2cfuX2p_bbMOG6k_ykbpjVYjoeLQqueo6qNPI0bvZ-8Ah4EUpdbrJqUUK6jkaLVH9UYsaXwAerKMo')" }}
                 aria-label="LMS Dashboard Interface showing charts and course lists"
               >

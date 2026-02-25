@@ -4,23 +4,29 @@
  */
 
 import { apiEndpoint } from '@/lib/config';
+import {
+  getStoredToken,
+  getStoredUser as getStoredUserRaw,
+  setStoredAuth,
+  clearStoredAuth,
+} from '@/lib/auth-storage';
 
 interface RequestOptions extends RequestInit {
   requiresAuth?: boolean;
 }
 
 /**
- * Get the stored JWT token
+ * Get the stored JWT token (reads acadize_token then legacy keys)
  */
 export function getAuthToken(): string | null {
-  return localStorage.getItem('auth_token') || localStorage.getItem('eduverse_token');
+  return getStoredToken();
 }
 
 /**
- * Get the stored user data
+ * Get the stored user data (reads acadize_user then legacy keys)
  */
 export function getStoredUser() {
-  const userStr = localStorage.getItem('user') || localStorage.getItem('eduverse_user');
+  const userStr = getStoredUserRaw();
   if (!userStr) return null;
 
   try {
@@ -31,25 +37,20 @@ export function getStoredUser() {
 }
 
 /**
- * Store authentication data
+ * Store authentication data (writes acadize_* keys)
  */
 export function setAuthData(token: string, user: any, refreshToken?: string) {
-  localStorage.setItem('auth_token', token);
-  localStorage.setItem('user', JSON.stringify(user));
+  setStoredAuth(token, user);
   if (refreshToken) {
     localStorage.setItem('refresh_token', refreshToken);
   }
 }
 
 /**
- * Clear authentication data
+ * Clear authentication data (removes acadize_* and legacy keys)
  */
 export function clearAuthData() {
-  localStorage.removeItem('auth_token');
-  localStorage.removeItem('eduverse_token');
-  localStorage.removeItem('refresh_token');
-  localStorage.removeItem('user');
-  localStorage.removeItem('eduverse_user');
+  clearStoredAuth();
 }
 
 /**
@@ -90,6 +91,10 @@ export async function apiRequest<T = any>(
     'Content-Type': 'application/json',
     ...headers,
   };
+
+  // i18n: send current locale so backend returns translated content (matches global fetch interceptor)
+  const locale = typeof localStorage !== 'undefined' ? localStorage.getItem('acadize_locale') : null;
+  if (locale) requestHeaders['X-Locale'] = locale;
 
   // Add JWT token if required and available
   if (requiresAuth) {

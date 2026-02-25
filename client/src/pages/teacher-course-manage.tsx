@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useRoute, useLocation } from "wouter";
 import { 
   BookOpen, Users, FileText, Settings, Trash2, Plus,
@@ -78,6 +79,7 @@ interface Announcement {
 }
 
 export default function TeacherCourseManage() {
+  const { t } = useTranslation('teacher');
   const [, params] = useRoute("/teacher/courses/:id");
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -904,7 +906,7 @@ export default function TeacherCourseManage() {
               <div className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-widest">
                 <button onClick={() => setLocation('/teacher/courses')} className="hover:text-gold transition-colors flex items-center gap-1">
                   <ArrowLeft className="h-4 w-4" />
-                  Courses
+                  {t('courses')}
                 </button>
                 <ChevronRight className="h-4 w-4" />
                 <span className="text-gold">{courseId}</span>
@@ -924,7 +926,7 @@ export default function TeacherCourseManage() {
             <div className="flex items-center gap-3">
               <Button className="flex items-center justify-center gap-2 h-10 px-4 rounded-lg bg-slate-50 dark:bg-navy-dark border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-white text-sm font-bold hover:bg-slate-100 transition-colors" onClick={() => setIsEditDialogOpen(true)}>
                 <Settings className="h-4 w-4" />
-                Course Settings
+                {t('courseSettings')}
               </Button>
               <Button 
                 onClick={() => setLocation(`/teacher/courses/${courseId}/lessons/create`)}

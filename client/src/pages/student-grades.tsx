@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import StudentLayout from "@/components/StudentLayout";
 import NotificationBell from "@/components/NotificationBell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -257,6 +258,7 @@ function CourseGradeCard({ course, expanded, onToggle }: {
 }
 
 export default function StudentGrades() {
+  const { t } = useTranslation('dashboard');
   const [expandedCourse, setExpandedCourse] = useState<string | null>(null);
 
   const overallStats = {
@@ -272,7 +274,7 @@ export default function StudentGrades() {
       {/* Header */}
       <header className="flex items-center justify-between px-8 py-5 border-b border-slate-200 dark:border-white/10 bg-white/95 dark:bg-slate-950/95 backdrop-blur-sm z-20">
         <div className="flex-1">
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">My Grades</h1>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{t('myGrades')}</h1>
           <p className="mt-1 text-sm text-slate-600 dark:text-text-secondary">
             Track your academic performance across all courses
           </p>

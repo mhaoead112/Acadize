@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { apiEndpoint, assetUrl } from "@/lib/config";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -56,6 +57,7 @@ interface SubmissionStatus {
 }
 
 export default function TeacherAnalytics() {
+  const { t } = useTranslation('teacher');
   const { toast } = useToast();
   const { token, isLoading: authLoading, getAuthHeaders } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -125,7 +127,7 @@ export default function TeacherAnalytics() {
 
       toast({
         title: "Success",
-        description: "Analytics report exported successfully",
+        description: t('analyticsExported'),
       });
     } catch (error) {
       console.error('Export error:', error);
@@ -221,7 +223,7 @@ export default function TeacherAnalytics() {
       console.error("Failed to fetch analytics:", error);
       toast({
         title: "Error",
-        description: "Failed to load analytics data",
+        description: t('failedToLoadAnalytics'),
         variant: "destructive",
       });
     } finally {
@@ -280,7 +282,7 @@ export default function TeacherAnalytics() {
       <div className="flex-1 flex flex-col h-full relative overflow-y-auto bg-[#f8f9fc] dark:bg-navy-dark">
         <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
           <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
-          <p className="text-slate-600 dark:text-slate-300 font-medium">Loading analytics data...</p>
+          <p className="text-slate-600 dark:text-slate-300 font-medium">{t('loadingAnalytics')}</p>
         </div>
       </div>
       </TeacherLayout>
@@ -297,7 +299,7 @@ export default function TeacherAnalytics() {
             <span className="material-symbols-outlined">menu</span>
           </button>
           <div className="flex flex-col">
-            <h2 className="text-slate-900 dark:text-white text-lg font-bold leading-tight">Analytics Dashboard</h2>
+            <h2 className="text-slate-900 dark:text-white text-lg font-bold leading-tight">{t('analyticsDashboard')}</h2>
             <p className="text-slate-500 dark:text-slate-400 text-xs">Overview for Spring Semester 2024</p>
           </div>
         </div>

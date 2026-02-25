@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
 import AdminLayout from "@/components/AdminLayout";
 import { apiEndpoint, getSubdomain } from "@/lib/config";
@@ -58,6 +59,7 @@ interface User {
 }
 
 export default function AdminUsers() {
+  const { t } = useTranslation('admin');
   const { user, token } = useAuth();
   const { toast } = useToast();
   const [users, setUsers] = useState<User[]>([]);
@@ -120,7 +122,7 @@ export default function AdminUsers() {
           { id: 3, username: "mwilliams", email: "michael.williams@school.edu", fullName: "Michael Williams", role: "student", status: "inactive", createdAt: "2024-09-01" },
           { id: 4, username: "sanderson", email: "sarah.anderson@school.edu", fullName: "Sarah Anderson", role: "teacher", status: "active", createdAt: "2024-08-15", lastLogin: "2024-12-03" },
           { id: 5, username: "droberts", email: "david.roberts@school.edu", fullName: "David Roberts", role: "teacher", status: "active", createdAt: "2024-08-15", lastLogin: "2024-12-02" },
-          { id: 6, username: "admin1", email: "admin@eduverse.com", fullName: "System Admin", role: "admin", status: "active", createdAt: "2024-01-01", lastLogin: "2024-12-03" },
+          { id: 6, username: "admin1", email: "admin@acadize.com", fullName: "System Admin", role: "admin", status: "active", createdAt: "2024-01-01", lastLogin: "2024-12-03" },
           { id: 7, username: "pjohnson", email: "parent.johnson@email.com", fullName: "Patricia Johnson", role: "parent", status: "active", createdAt: "2024-09-05", lastLogin: "2024-12-01" },
           { id: 8, username: "rthomas", email: "robert.thomas@school.edu", fullName: "Robert Thomas", role: "student", status: "pending", createdAt: "2024-12-01" },
         ]);
@@ -267,7 +269,7 @@ export default function AdminUsers() {
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
     link.setAttribute("href", url);
-    link.setAttribute("download", `eduverse_users_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute("download", `acadize_users_${new Date().toISOString().split('T')[0]}.csv`);
     link.style.visibility = "hidden";
     document.body.appendChild(link);
     link.click();
@@ -357,7 +359,7 @@ export default function AdminUsers() {
         {/* Header Section */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
           <div>
-            <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter leading-none">User Management</h1>
+            <h1 className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter leading-none">{t('userManagement')}</h1>
             <p className="text-slate-600 dark:text-slate-300 mt-2 font-medium">Control platform access, roles, and security permissions.</p>
           </div>
           <button 
