@@ -7,6 +7,10 @@ import { db } from '../db/index.js';
 import { users } from '../db/schema.js';
 import { eq, and } from 'drizzle-orm';
 import { isAuthenticated } from '../middleware/auth.middleware.js';
+import { requireSubscription } from '../middleware/subscription.middleware.js';
+
+// Combined auth + subscription middleware
+const requireAuth = [isAuthenticated, requireSubscription];
 import bcrypt from 'bcryptjs';
 
 const router = Router();
@@ -45,7 +49,7 @@ const avatarUpload = multer({
 });
 
 // Get all users (for adding to groups)
-router.get('/', isAuthenticated, async (req, res) => {
+router.get('/', ...requireAuth, async (req, res) => {
   try {
     const allUsers = await db
       .select({
@@ -69,7 +73,7 @@ router.get('/', isAuthenticated, async (req, res) => {
 });
 
 // Get all students (for teachers/admins)
-router.get('/students', isAuthenticated, async (req, res) => {
+router.get('/students', ...requireAuth, async (req, res) => {
   try {
     const user = req.user;
 
@@ -104,7 +108,7 @@ router.get('/students', isAuthenticated, async (req, res) => {
  * GET /api/users/:id
  * Get specific user by ID (for teacher viewing student profiles)
  */
-router.get('/:id', isAuthenticated, async (req, res) => {
+router.get('/:id', ...requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
     const requestingUser = req.user;
@@ -158,7 +162,7 @@ router.get('/:id', isAuthenticated, async (req, res) => {
  * GET /api/users/me
  * Get current user profile
  */
-router.get('/me', isAuthenticated, async (req, res) => {
+router.get('/me', ...requireAuth, async (req, res) => {
   try {
     const user = req.user;
 
@@ -200,7 +204,7 @@ router.get('/me', isAuthenticated, async (req, res) => {
  * PUT /api/users/me
  * Update current user profile
  */
-router.put('/me', isAuthenticated, async (req, res) => {
+router.put('/me', ...requireAuth, async (req, res) => {
   try {
     const user = req.user;
 
@@ -247,7 +251,7 @@ router.put('/me', isAuthenticated, async (req, res) => {
  * POST /api/users/upload-avatar
  * Upload user avatar
  */
-router.post('/upload-avatar', isAuthenticated, avatarUpload.single('avatar'), async (req, res) => {
+router.post('/upload-avatar', ...requireAuth, avatarUpload.single('avatar'), async (req, res) => {
   try {
     const user = req.user;
 
@@ -297,7 +301,7 @@ router.post('/upload-avatar', isAuthenticated, avatarUpload.single('avatar'), as
  * PUT /api/users/change-password
  * Change user password
  */
-router.put('/change-password', isAuthenticated, async (req, res) => {
+router.put('/change-password', ...requireAuth, async (req, res) => {
   try {
     const user = req.user;
 
@@ -356,7 +360,7 @@ router.put('/change-password', isAuthenticated, async (req, res) => {
  * POST /api/users/enable-2fa
  * Enable two-factor authentication (placeholder)
  */
-router.post('/enable-2fa', isAuthenticated, async (req, res) => {
+router.post('/enable-2fa', ...requireAuth, async (req, res) => {
   try {
     const user = req.user;
 
@@ -386,7 +390,7 @@ router.post('/enable-2fa', isAuthenticated, async (req, res) => {
  * PUT /api/users/notifications
  * Update notification preferences
  */
-router.put('/notifications', isAuthenticated, async (req, res) => {
+router.put('/notifications', ...requireAuth, async (req, res) => {
   try {
     const user = req.user;
 

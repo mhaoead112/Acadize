@@ -1,9 +1,13 @@
 import express, { Request, Response, Router } from 'express';
 import { isAuthenticated, isStudent } from '../middleware/auth.middleware.js';
+import { requireSubscription } from '../middleware/subscription.middleware.js';
 import { antiCheatRateLimit } from '../middleware/rate-limit.js';
 import AntiCheatMonitorService, { AntiCheatEventPayload } from '../services/anti-cheat-monitor.service.js';
 
 const router: Router = express.Router();
+
+// Combined auth + subscription middleware
+const requireAuth = [isAuthenticated, requireSubscription];
 
 // ============================================================================
 // VALIDATION SCHEMAS
@@ -84,7 +88,7 @@ function validateEventPayload(body: any): { valid: boolean; errors: string[] } {
  */
 router.post(
   '/events',
-  isAuthenticated,
+  ...requireAuth,
   isStudent,
   antiCheatRateLimit(),
   async (req: Request, res: Response) => {
@@ -164,7 +168,7 @@ router.post(
  */
 router.post(
   '/events/batch',
-  isAuthenticated,
+  ...requireAuth,
   isStudent,
   antiCheatRateLimit(),
   async (req: Request, res: Response) => {
@@ -245,7 +249,7 @@ router.post(
  */
 router.get(
   '/events/:attemptId',
-  isAuthenticated,
+  ...requireAuth,
   async (req: Request, res: Response) => {
     try {
       const { attemptId } = req.params;
@@ -287,7 +291,7 @@ router.get(
  */
 router.get(
   '/statistics/:attemptId',
-  isAuthenticated,
+  ...requireAuth,
   async (req: Request, res: Response) => {
     try {
       const { attemptId } = req.params;
@@ -326,7 +330,7 @@ router.get(
  */
 router.get(
   '/integrity/:attemptId',
-  isAuthenticated,
+  ...requireAuth,
   async (req: Request, res: Response) => {
     try {
       const { attemptId } = req.params;
@@ -366,7 +370,7 @@ router.get(
  */
 router.get(
   '/hmac-secret',
-  isAuthenticated,
+  ...requireAuth,
   async (req: Request, res: Response) => {
     try {
       if (process.env.NODE_ENV === 'production') {

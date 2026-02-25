@@ -1,5 +1,6 @@
 import express from "express";
 import { isAuthenticated } from "../middleware/auth.middleware.js";
+import { requireAuth } from "../middleware/protected.middleware.js";
 import { getStudentProgress } from "../services/assignment.service.js";
 import { db } from "../db/index.js";
 import { exams, enrollments } from "../db/schema.js";
@@ -17,7 +18,7 @@ const isStudent = (req: express.Request, res: express.Response, next: express.Ne
 };
 
 // GET /api/student/my-progress
-router.get("/my-progress", isAuthenticated, isStudent, async (req, res) => {
+router.get("/my-progress", ...requireAuth, isStudent, async (req, res) => {
   try {
     const user = (req as any).user;
     const progress = await getStudentProgress(user.id);
@@ -29,7 +30,7 @@ router.get("/my-progress", isAuthenticated, isStudent, async (req, res) => {
 });
 
 // GET /api/student/exams - Get all available exams for student
-router.get("/exams", isAuthenticated, isStudent, async (req, res) => {
+router.get("/exams", ...requireAuth, isStudent, async (req, res) => {
   try {
     const studentId = (req as any).user.id;
 
@@ -64,7 +65,7 @@ router.get("/exams", isAuthenticated, isStudent, async (req, res) => {
 });
 
 // GET /api/student/attempts/active - Get student's exam attempts
-router.get("/attempts/active", isAuthenticated, isStudent, async (req, res) => {
+router.get("/attempts/active", ...requireAuth, isStudent, async (req, res) => {
   try {
     const studentId = (req as any).user.id;
 
@@ -115,7 +116,7 @@ router.get("/attempts/active", isAuthenticated, isStudent, async (req, res) => {
 });
 
 // GET /api/student/retakes - Get retake eligibility (placeholder)
-router.get("/retakes", isAuthenticated, isStudent, async (req, res) => {
+router.get("/retakes", ...requireAuth, isStudent, async (req, res) => {
   try {
     // For now, return empty array - full implementation would check mistake pool
     res.status(200).json([]);
@@ -126,7 +127,7 @@ router.get("/retakes", isAuthenticated, isStudent, async (req, res) => {
 });
 
 // GET /api/student/mistakes - Get student's mistake pool
-router.get("/mistakes", isAuthenticated, isStudent, async (req, res) => {
+router.get("/mistakes", ...requireAuth, isStudent, async (req, res) => {
   try {
     const studentId = (req as any).user.id;
     const { mistakePool, examQuestions, exams, examAttempts } = await import('../db/schema.js');

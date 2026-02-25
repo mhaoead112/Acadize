@@ -138,17 +138,24 @@ export class EmailService {
   }
 
   /**
-   * Send welcome email to new user
+   * Send welcome email to new user (locale: recipient's preferred or org default)
    */
-  static async sendWelcomeEmail(user: { email: string; fullName: string; role: string }): Promise<boolean> {
+  static async sendWelcomeEmail(
+    user: { email: string; fullName: string; role: string },
+    options?: { locale?: string }
+  ): Promise<boolean> {
     const dashboardUrl = `${process.env.CLIENT_URL || 'http://localhost:5173'}/dashboard`;
+    const locale = options?.locale;
 
     const html = replacePlaceholders(
-      welcomeEmailTemplate({
-        fullName: user.fullName,
-        role: user.role,
-        dashboardUrl,
-      }),
+      welcomeEmailTemplate(
+        {
+          fullName: user.fullName,
+          role: user.role,
+          dashboardUrl,
+        },
+        locale
+      ),
       {
         unsubscribeUrl: `${process.env.CLIENT_URL}/unsubscribe`,
         preferencesUrl: `${process.env.CLIENT_URL}/settings/notifications`,
@@ -156,9 +163,13 @@ export class EmailService {
       }
     );
 
+    const { getEmailStrings } = await import('../i18n/emails/index.js');
+    const strings = locale ? getEmailStrings(locale).welcome : null;
+    const subject = strings?.subject ?? 'Welcome to Eduverse! 🎓';
+
     return this.sendEmail({
       to: user.email,
-      subject: 'Welcome to Eduverse! 🎓',
+      subject,
       html,
       text: `Hi ${user.fullName},\n\nWelcome to Eduverse as a ${user.role}!\n\nGet started: ${dashboardUrl}\n\nBest regards,\nThe Eduverse Team`,
     });

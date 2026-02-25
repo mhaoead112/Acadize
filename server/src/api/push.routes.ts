@@ -1,6 +1,10 @@
 // Push Notification Routes for EduVerse
 import { Router } from 'express';
 import { isAuthenticated } from '../middleware/auth.middleware.js';
+import { requireSubscription } from '../middleware/subscription.middleware.js';
+
+// Combined auth + subscription middleware
+const requireAuth = [isAuthenticated, requireSubscription];
 import pushNotificationService from '../services/push-notification.service.js';
 
 const router = Router();
@@ -17,7 +21,7 @@ router.get('/vapid-key', (req, res) => {
 });
 
 // POST /api/push/subscribe - Subscribe to push notifications
-router.post('/subscribe', isAuthenticated, async (req, res) => {
+router.post('/subscribe', ...requireAuth, async (req, res) => {
   try {
     const userId = req.user!.id;
     const { subscription } = req.body;
@@ -34,9 +38,9 @@ router.post('/subscribe', isAuthenticated, async (req, res) => {
     );
 
     if (result.success) {
-      res.json({ 
+      res.json({
         message: 'Successfully subscribed to push notifications',
-        subscriptionId: result.subscriptionId 
+        subscriptionId: result.subscriptionId
       });
     } else {
       res.status(500).json({ error: result.error });
@@ -48,7 +52,7 @@ router.post('/subscribe', isAuthenticated, async (req, res) => {
 });
 
 // POST /api/push/unsubscribe - Unsubscribe from push notifications
-router.post('/unsubscribe', isAuthenticated, async (req, res) => {
+router.post('/unsubscribe', ...requireAuth, async (req, res) => {
   try {
     const userId = req.user!.id;
     const { endpoint } = req.body;
@@ -67,7 +71,7 @@ router.post('/unsubscribe', isAuthenticated, async (req, res) => {
 });
 
 // POST /api/push/test - Send a test notification (for development)
-router.post('/test', isAuthenticated, async (req, res) => {
+router.post('/test', ...requireAuth, async (req, res) => {
   try {
     const userId = req.user!.id;
     const { title = 'Test Notification', body = 'This is a test notification from EduVerse!' } = req.body;
@@ -92,7 +96,7 @@ router.post('/test', isAuthenticated, async (req, res) => {
 });
 
 // Admin only: Send notification to specific user
-router.post('/send/:userId', isAuthenticated, async (req, res) => {
+router.post('/send/:userId', ...requireAuth, async (req, res) => {
   try {
     // Check if user is admin
     if (req.user!.role !== 'admin') {
@@ -125,7 +129,7 @@ router.post('/send/:userId', isAuthenticated, async (req, res) => {
 });
 
 // Admin only: Broadcast notification to all users
-router.post('/broadcast', isAuthenticated, async (req, res) => {
+router.post('/broadcast', ...requireAuth, async (req, res) => {
   try {
     // Check if user is admin
     if (req.user!.role !== 'admin') {

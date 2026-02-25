@@ -1,7 +1,12 @@
+// server/src/services/events.service.ts
+
 import { db } from '../db/index.js';
 import { events, eventParticipants, users, courses } from '../db/schema.js';
-import { eq, and, or, sql, desc, asc, gte, lte } from 'drizzle-orm';
+import { eq, and, or, sql, desc, asc, gte, lte, inArray, isNull } from 'drizzle-orm';
 import { createId } from '@paralleldrive/cuid2';
+import { requireTenantId } from '../utils/tenant-query.js';
+
+// ==================== TYPE DEFINITIONS ====================
 
 export interface CreateEventInput {
   title: string;
@@ -10,163 +15,247 @@ export interface CreateEventInput {
   startTime: Date;
   endTime: Date;
   location?: string;
+  meetingLink?: string;
   courseId?: string;
-  isAllDay?: boolean;
-  recurrence?: string;
-  color?: string;
-  participantIds?: string[];
+  isPublic?: boolean;
+  maxParticipants?: number;
+  createdBy: string;
+  organizationId: string; // Required for tenant isolation
+}
+
+export interface UpdateEventInput {
+  title?: string;
+  description?: string;
+  eventType?: 'class' | 'meeting' | 'holiday' | 'exam' | 'announcement';
+  startTime?: Date;
+  endTime?: Date;
+  location?: string;
+  meetingLink?: string;
+  courseId?: string;
+  isPublic?: boolean;
+  maxParticipants?: number;
+}
+
+export interface EventFilters {
+  startDate?: string;
+  endDate?: string;
+  type?: string;
+  courseId?: string;
+  organizationId: string;
+  userRole?: string;
+}
+
+// ==================== SERVICE FUNCTIONS ====================
+
+/**
+ * Get all events with filters and participant counts
+ * Enforces tenant isolation via organizationId
+ */
+export async function getEvents(filters: EventFilters) {
+  const orgId = requireTenantId(filters.organizationId);
+
+  let query = db.select({
+    id: events.id,
+    title: events.title,
+    description: events.description,
+    eventType: events.eventType,
+    startTime: events.startTime,
+    endTime: events.endTime,
+    location: events.location,
+    meetingLink: events.meetingLink,
+    courseId: events.courseId,
+    courseName: courses.title,
+    isPublic: events.isPublic,
+    maxParticipants: events.maxParticipants,
+    createdAt: events.createdAt,
+  })
+    .from(events)
+    .leftJoin(courses, eq(events.courseId, courses.id));
+
+  // Build filter conditions
+  const conditions: any[] = [];
+
+  // TENANT ISOLATION: Filter by organization
+  // Events linked to courses in this org, or events with no course
+  conditions.push(
+    or(
+      eq(courses.organizationId, orgId),
+      isNull(events.courseId)
+    )!
+  );
+
+  // Filter by date range
+  if (filters.startDate) {
+    conditions.push(gte(events.startTime, new Date(filters.startDate)));
+  }
+  if (filters.endDate) {
+    conditions.push(lte(events.endTime, new Date(filters.endDate)));
+  }
+
+  // Filter by event type
+  if (filters.type) {
+    conditions.push(eq(events.eventType, filters.type as any));
+  }
+
+  // Filter by course
+  if (filters.courseId) {
+    conditions.push(eq(events.courseId, filters.courseId));
+  }
+
+  // Apply visibility filter based on user role
+  // Unauthenticated users and students only see public events
+  if (!filters.userRole || filters.userRole === 'student') {
+    conditions.push(eq(events.isPublic, true));
+  }
+
+  const allEvents = await query.where(conditions.length > 0 ? and(...conditions) : undefined);
+
+  // Get participant counts
+  const eventIds = allEvents.map(e => e.id);
+  const participantCounts = eventIds.length > 0
+    ? await db.select({
+      eventId: eventParticipants.eventId,
+      count: sql<number>`cast(count(${eventParticipants.id}) as integer)`,
+    })
+      .from(eventParticipants)
+      .where(inArray(eventParticipants.eventId, eventIds))
+      .groupBy(eventParticipants.eventId)
+    : [];
+
+  const participantMap = new Map(
+    participantCounts.map(p => [p.eventId, p.count])
+  );
+
+  return allEvents.map(event => ({
+    ...event,
+    participants: participantMap.get(event.id) || 0,
+  }));
+}
+
+/**
+ * Get a single event by ID with participants
+ * Enforces tenant isolation
+ */
+export async function getEventById(eventId: string, userId: string, organizationId: string) {
+  const orgId = requireTenantId(organizationId);
+
+  const [event] = await db.select({
+    id: events.id,
+    title: events.title,
+    description: events.description,
+    eventType: events.eventType,
+    startTime: events.startTime,
+    endTime: events.endTime,
+    location: events.location,
+    meetingLink: events.meetingLink,
+    courseId: events.courseId,
+    courseName: courses.title,
+    isPublic: events.isPublic,
+    maxParticipants: events.maxParticipants,
+    createdAt: events.createdAt,
+    courseOrgId: courses.organizationId,
+  })
+    .from(events)
+    .leftJoin(courses, eq(events.courseId, courses.id))
+    .where(eq(events.id, eventId));
+
+  if (!event) {
+    return null;
+  }
+
+  // TENANT ISOLATION: Verify event belongs to organization
+  if (event.courseId && event.courseOrgId !== orgId) {
+    return null; // Event belongs to different organization
+  }
+
+  // Get participants
+  const participants = await db.select({
+    userId: eventParticipants.userId,
+    userName: users.fullName,
+    status: eventParticipants.status,
+    registeredAt: eventParticipants.registeredAt,
+  })
+    .from(eventParticipants)
+    .innerJoin(users, eq(eventParticipants.userId, users.id))
+    .where(eq(eventParticipants.eventId, eventId));
+
+  // Check if current user is registered
+  const isRegistered = participants.some(p => p.userId === userId);
+
+  return {
+    ...event,
+    participants,
+    participantCount: participants.length,
+    isRegistered,
+  };
 }
 
 /**
  * Create a new event
+ * Enforces tenant isolation
  */
-export async function createEvent(userId: string, input: CreateEventInput) {
-  const [event] = await db
-    .insert(events)
-    .values({
-      id: createId(),
-      title: input.title,
-      description: input.description,
-      eventType: input.eventType,
-      startTime: input.startTime,
-      endTime: input.endTime,
-      location: input.location,
-      courseId: input.courseId,
-      createdBy: userId,
-      isAllDay: input.isAllDay || false,
-      recurrence: input.recurrence || 'none',
-      color: input.color
-    })
-    .returning();
+export async function createEvent(input: CreateEventInput) {
+  const orgId = requireTenantId(input.organizationId);
 
-  // Add participants if provided
-  if (input.participantIds && input.participantIds.length > 0) {
-    await db.insert(eventParticipants).values(
-      input.participantIds.map(userId => ({
-        id: createId(),
-        eventId: event.id,
-        userId,
-        status: 'pending'
-      }))
-    );
+  // Validate dates
+  if (input.startTime >= input.endTime) {
+    throw new Error('End time must be after start time');
   }
 
-  return event;
-}
+  // If courseId is provided, verify it belongs to the organization
+  if (input.courseId) {
+    const [course] = await db
+      .select()
+      .from(courses)
+      .where(and(
+        eq(courses.id, input.courseId),
+        eq(courses.organizationId, orgId)
+      ))
+      .limit(1);
 
-/**
- * Get events for a user within a date range
- */
-export async function getUserEvents(userId: string, startDate?: Date, endDate?: Date) {
-  let query = db
-    .select({
-      event: events,
-      creator: users,
-      course: courses
-    })
-    .from(events)
-    .leftJoin(users, eq(events.createdBy, users.id))
-    .leftJoin(courses, eq(events.courseId, courses.id))
-    .where(
-      or(
-        eq(events.createdBy, userId),
-        sql`${events.id} IN (SELECT event_id FROM event_participants WHERE user_id = ${userId})`
-      )!
-    );
-
-  // Apply date filters
-  const conditions = [];
-  if (startDate) {
-    conditions.push(gte(events.startTime, startDate));
-  }
-  if (endDate) {
-    conditions.push(lte(events.endTime, endDate));
-  }
-
-  if (conditions.length > 0) {
-    const whereCondition = and(...conditions);
-    if (whereCondition) {
-      query = query.where(whereCondition) as any;
+    if (!course) {
+      throw new Error('Course not found or does not belong to this organization');
     }
   }
 
-  const result = await query.orderBy(asc(events.startTime));
+  const [newEvent] = await db.insert(events).values({
+    title: input.title,
+    description: input.description,
+    eventType: input.eventType,
+    startTime: input.startTime,
+    endTime: input.endTime,
+    location: input.location,
+    meetingLink: input.meetingLink,
+    courseId: input.courseId,
+    createdBy: input.createdBy,
+    isPublic: input.isPublic !== undefined ? input.isPublic : true,
+    maxParticipants: input.maxParticipants,
+  }).returning();
 
-  return result.map(row => ({
-    ...row.event,
-    creator: row.creator ? {
-      id: row.creator.id,
-      fullName: row.creator.fullName
-    } : null,
-    course: row.course ? {
-      id: row.course.id,
-      title: row.course.title
-    } : null
-  }));
-}
-
-/**
- * Get all events (admin only)
- */
-export async function getAllEvents(filters?: {
-  eventType?: string;
-  courseId?: string;
-  startDate?: Date;
-  endDate?: Date;
-}) {
-  const conditions = [];
-
-  if (filters?.eventType) {
-    conditions.push(eq(events.eventType, filters.eventType as any));
-  }
-
-  if (filters?.courseId) {
-    conditions.push(eq(events.courseId, filters.courseId));
-  }
-
-  if (filters?.startDate) {
-    conditions.push(gte(events.startTime, filters.startDate));
-  }
-
-  if (filters?.endDate) {
-    conditions.push(lte(events.endTime, filters.endDate));
-  }
-
-  const query = db
-    .select({
-      event: events,
-      creator: users,
-      course: courses
-    })
-    .from(events)
-    .leftJoin(users, eq(events.createdBy, users.id))
-    .leftJoin(courses, eq(events.courseId, courses.id));
-
-  const result = conditions.length > 0
-    ? await (query.where(and(...conditions)!) as any).orderBy(asc(events.startTime))
-    : await query.orderBy(asc(events.startTime));
-
-  return result.map(row => ({
-    ...row.event,
-    creator: row.creator ? {
-      id: row.creator.id,
-      fullName: row.creator.fullName
-    } : null,
-    course: row.course ? {
-      id: row.course.id,
-      title: row.course.title
-    } : null
-  }));
+  return newEvent;
 }
 
 /**
  * Update an event
+ * Enforces ownership and tenant isolation
  */
-export async function updateEvent(eventId: string, userId: string, updates: Partial<CreateEventInput>) {
-  // Check if user is creator or admin
+export async function updateEvent(
+  eventId: string,
+  userId: string,
+  userRole: string,
+  updates: UpdateEventInput,
+  organizationId: string
+) {
+  const orgId = requireTenantId(organizationId);
+
+  // Get the event with course info for tenant verification
   const [event] = await db
-    .select()
+    .select({
+      event: events,
+      courseOrgId: courses.organizationId,
+    })
     .from(events)
+    .leftJoin(courses, eq(events.courseId, courses.id))
     .where(eq(events.id, eventId))
     .limit(1);
 
@@ -174,23 +263,23 @@ export async function updateEvent(eventId: string, userId: string, updates: Part
     throw new Error('Event not found');
   }
 
-  // Get user role
-  const [user] = await db
-    .select()
-    .from(users)
-    .where(eq(users.id, userId))
-    .limit(1);
-
-  if (event.createdBy !== userId && user?.role !== 'admin') {
-    throw new Error('Unauthorized to update this event');
+  // TENANT ISOLATION: Verify event belongs to organization
+  if (event.event.courseId && event.courseOrgId !== orgId) {
+    throw new Error('Event not found'); // Don't reveal it exists in another org
   }
 
-  const [updatedEvent] = await db
-    .update(events)
-    .set({
-      ...updates,
-      updatedAt: new Date()
-    })
+  // Check permissions
+  if (userRole !== 'admin' && event.event.createdBy !== userId) {
+    throw new Error('You can only edit your own events');
+  }
+
+  // Validate dates if both are provided
+  if (updates.startTime && updates.endTime && updates.startTime >= updates.endTime) {
+    throw new Error('End time must be after start time');
+  }
+
+  const [updatedEvent] = await db.update(events)
+    .set(updates)
     .where(eq(events.id, eventId))
     .returning();
 
@@ -199,11 +288,24 @@ export async function updateEvent(eventId: string, userId: string, updates: Part
 
 /**
  * Delete an event
+ * Enforces ownership and tenant isolation
  */
-export async function deleteEvent(eventId: string, userId: string) {
+export async function deleteEvent(
+  eventId: string,
+  userId: string,
+  userRole: string,
+  organizationId: string
+) {
+  const orgId = requireTenantId(organizationId);
+
+  // Get the event with course info for tenant verification
   const [event] = await db
-    .select()
+    .select({
+      event: events,
+      courseOrgId: courses.organizationId,
+    })
     .from(events)
+    .leftJoin(courses, eq(events.courseId, courses.id))
     .where(eq(events.id, eventId))
     .limit(1);
 
@@ -211,41 +313,127 @@ export async function deleteEvent(eventId: string, userId: string) {
     throw new Error('Event not found');
   }
 
-  const [user] = await db
-    .select()
-    .from(users)
-    .where(eq(users.id, userId))
-    .limit(1);
-
-  if (event.createdBy !== userId && user?.role !== 'admin') {
-    throw new Error('Unauthorized to delete this event');
+  // TENANT ISOLATION: Verify event belongs to organization
+  if (event.event.courseId && event.courseOrgId !== orgId) {
+    throw new Error('Event not found');
   }
 
-  await db
-    .delete(events)
-    .where(eq(events.id, eventId));
+  // Check permissions
+  if (userRole !== 'admin' && event.event.createdBy !== userId) {
+    throw new Error('You can only delete your own events');
+  }
+
+  await db.delete(events).where(eq(events.id, eventId));
 
   return { success: true };
 }
 
 /**
- * Respond to event invitation
+ * Register for an event
+ * Enforces tenant isolation
  */
-export async function respondToEvent(eventId: string, userId: string, status: 'accepted' | 'declined') {
-  const [updated] = await db
-    .update(eventParticipants)
-    .set({ status })
+export async function registerForEvent(
+  eventId: string,
+  userId: string,
+  organizationId: string
+) {
+  const orgId = requireTenantId(organizationId);
+
+  // Check if event exists and belongs to organization
+  const [event] = await db
+    .select({
+      event: events,
+      courseOrgId: courses.organizationId,
+    })
+    .from(events)
+    .leftJoin(courses, eq(events.courseId, courses.id))
+    .where(eq(events.id, eventId))
+    .limit(1);
+
+  if (!event) {
+    throw new Error('Event not found');
+  }
+
+  // TENANT ISOLATION
+  if (event.event.courseId && event.courseOrgId !== orgId) {
+    throw new Error('Event not found');
+  }
+
+  // Check if already registered
+  const [existing] = await db.select()
+    .from(eventParticipants)
     .where(
       and(
         eq(eventParticipants.eventId, eventId),
         eq(eventParticipants.userId, userId)
-      )!
+      )
+    );
+
+  if (existing) {
+    throw new Error('Already registered for this event');
+  }
+
+  // Check max participants
+  if (event.event.maxParticipants) {
+    const countResult = await db.select({ count: sql<number>`cast(count(*) as integer)` })
+      .from(eventParticipants)
+      .where(eq(eventParticipants.eventId, eventId));
+
+    if (countResult[0].count >= parseInt(event.event.maxParticipants)) {
+      throw new Error('Event is full');
+    }
+  }
+
+  const [registration] = await db.insert(eventParticipants).values({
+    eventId,
+    userId,
+    status: 'registered',
+  }).returning();
+
+  return registration;
+}
+
+/**
+ * Unregister from an event
+ */
+export async function unregisterFromEvent(
+  eventId: string,
+  userId: string,
+  organizationId: string
+) {
+  const orgId = requireTenantId(organizationId);
+
+  // Verify event belongs to organization
+  const [event] = await db
+    .select({
+      event: events,
+      courseOrgId: courses.organizationId,
+    })
+    .from(events)
+    .leftJoin(courses, eq(events.courseId, courses.id))
+    .where(eq(events.id, eventId))
+    .limit(1);
+
+  if (!event) {
+    throw new Error('Event not found');
+  }
+
+  if (event.event.courseId && event.courseOrgId !== orgId) {
+    throw new Error('Event not found');
+  }
+
+  const result = await db.delete(eventParticipants)
+    .where(
+      and(
+        eq(eventParticipants.eventId, eventId),
+        eq(eventParticipants.userId, userId)
+      )
     )
     .returning();
 
-  if (!updated) {
-    throw new Error('Event invitation not found');
+  if (result.length === 0) {
+    throw new Error('Registration not found');
   }
 
-  return updated;
+  return { success: true };
 }

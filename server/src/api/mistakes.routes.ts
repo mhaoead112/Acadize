@@ -1,8 +1,12 @@
 import express, { Request, Response, Router } from 'express';
 import { isAuthenticated, isStudent, isTeacher } from '../middleware/auth.middleware.js';
+import { requireSubscription } from '../middleware/subscription.middleware.js';
 import AnswerEvaluationService from '../services/answer-evaluation.service.js';
 
 const router: Router = express.Router();
+
+// Combined auth + subscription middleware
+const requireAuth = [isAuthenticated, requireSubscription];
 
 // ============================================================================
 // STUDENT ENDPOINTS (No correct answers exposed)
@@ -16,7 +20,7 @@ const router: Router = express.Router();
  */
 router.get(
   '/my-summary',
-  isAuthenticated,
+  ...requireAuth,
   isStudent,
   async (req: Request, res: Response) => {
     try {
@@ -47,7 +51,7 @@ router.get(
  */
 router.get(
   '/by-topic/:topic',
-  isAuthenticated,
+  ...requireAuth,
   isStudent,
   async (req: Request, res: Response) => {
     try {
@@ -82,7 +86,7 @@ router.get(
  */
 router.get(
   '/persistent',
-  isAuthenticated,
+  ...requireAuth,
   isStudent,
   async (req: Request, res: Response) => {
     try {
@@ -93,7 +97,7 @@ router.get(
       res.json({
         persistentMistakes,
         total: persistentMistakes.length,
-        recommendation: persistentMistakes.length > 0 
+        recommendation: persistentMistakes.length > 0
           ? 'Consider taking a retake exam to address these recurring mistakes.'
           : 'No persistent mistakes found. Keep up the good work!',
       });
@@ -121,7 +125,7 @@ router.get(
  */
 router.post(
   '/grade-attempt/:attemptId',
-  isAuthenticated,
+  ...requireAuth,
   isTeacher,
   async (req: Request, res: Response) => {
     try {
@@ -178,7 +182,7 @@ router.post(
  */
 router.post(
   '/mark-for-retake',
-  isAuthenticated,
+  ...requireAuth,
   isStudent,
   async (req: Request, res: Response) => {
     try {
@@ -221,7 +225,7 @@ router.post(
  */
 router.post(
   '/mark-remediated',
-  isAuthenticated,
+  ...requireAuth,
   isStudent,
   async (req: Request, res: Response) => {
     try {

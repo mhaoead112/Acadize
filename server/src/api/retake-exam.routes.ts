@@ -1,7 +1,11 @@
 import { Router } from 'express';
 import { RetakeExamGeneratorService } from '../services/retake-exam-generator.service.js';
 import { AnswerEvaluationService } from '../services/answer-evaluation.service.js';
-import { isAuthenticated, isStudent, isTeacher } from '../middleware/auth.middleware.js';
+import { isAuthenticated, isTeacher } from '../middleware/auth.middleware.js';
+import { requireSubscription } from '../middleware/subscription.middleware.js';
+
+// Combined auth + subscription middleware
+const requireAuth = [isAuthenticated, requireSubscription];
 
 const router = Router();
 
@@ -10,7 +14,7 @@ const router = Router();
  * Generate a mistake-based retake exam for a student
  * Student can request for themselves, or teacher can generate for student
  */
-router.post('/generate', isAuthenticated, async (req, res) => {
+router.post('/generate', ...requireAuth, async (req, res) => {
   try {
     const {
       studentId,
@@ -73,7 +77,7 @@ router.post('/generate', isAuthenticated, async (req, res) => {
  * Preview retake eligibility and mistake statistics
  * Does not create an exam instance
  */
-router.get('/preview', isAuthenticated, async (req, res) => {
+router.get('/preview', ...requireAuth, async (req, res) => {
   try {
     const { studentId, examId, topic } = req.query;
 
@@ -119,7 +123,7 @@ router.get('/preview', isAuthenticated, async (req, res) => {
  * GET /api/retake-exams/eligibility
  * Check if student is eligible for retake
  */
-router.get('/eligibility', isAuthenticated, async (req, res) => {
+router.get('/eligibility', ...requireAuth, async (req, res) => {
   try {
     const { studentId, examId } = req.query;
 
@@ -165,7 +169,7 @@ router.get('/eligibility', isAuthenticated, async (req, res) => {
  * Track mistake resolution after retake attempt is graded
  * Teacher/System use only
  */
-router.post('/track-resolution', isAuthenticated, isTeacher, async (req, res) => {
+router.post('/track-resolution', ...requireAuth, isTeacher, async (req, res) => {
   try {
     const { studentId, retakeAttemptId, gradedAnswers } = req.body;
 
@@ -207,7 +211,7 @@ router.post('/track-resolution', isAuthenticated, isTeacher, async (req, res) =>
  * Combined endpoint: Grade retake attempt and track mistake resolution
  * Teacher/System use only
  */
-router.post('/grade-and-track/:attemptId', isAuthenticated, isTeacher, async (req, res) => {
+router.post('/grade-and-track/:attemptId', ...requireAuth, isTeacher, async (req, res) => {
   try {
     const { attemptId } = req.params;
 
@@ -218,7 +222,7 @@ router.post('/grade-and-track/:attemptId', isAuthenticated, isTeacher, async (re
     const { db } = await import('../db/index.js');
     const { examAttempts } = await import('../db/schema.js');
     const { eq } = await import('drizzle-orm');
-    
+
     const attempt = await db.query.examAttempts.findFirst({
       where: eq(examAttempts.id, attemptId),
     });
@@ -271,7 +275,7 @@ router.post('/grade-and-track/:attemptId', isAuthenticated, isTeacher, async (re
  * Get retake attempt history for a student
  * Teacher or student (self) only
  */
-router.get('/student/:studentId/history', isAuthenticated, async (req, res) => {
+router.get('/student/:studentId/history', ...requireAuth, async (req, res) => {
   try {
     const { studentId } = req.params;
 

@@ -6,6 +6,10 @@ import { db } from '../db/index.js';
 import { users } from '../db/schema.js';
 import { eq } from 'drizzle-orm';
 import { isAuthenticated } from '../middleware/auth.middleware.js';
+import { requireSubscription } from '../middleware/subscription.middleware.js';
+
+// Combined auth + subscription middleware
+const requireAuth = [isAuthenticated, requireSubscription];
 import { uploadFile, deleteFile, isCloudStorageConfigured } from '../services/cloud-storage.service.js';
 
 const router = express.Router();
@@ -44,7 +48,7 @@ const upload = multer({
 });
 
 // Get current user profile
-router.get('/me', isAuthenticated, async (req, res) => {
+router.get('/me', ...requireAuth, async (req, res) => {
   try {
     const userId = req.user!.id;
 
@@ -57,6 +61,7 @@ router.get('/me', isAuthenticated, async (req, res) => {
         role: users.role,
         profilePicture: users.profilePicture,
         grade: users.grade,
+        preferredLocale: users.preferredLocale,
         createdAt: users.createdAt,
       })
       .from(users)
@@ -73,11 +78,13 @@ router.get('/me', isAuthenticated, async (req, res) => {
   }
 });
 
-// Update user profile (name and grade)
-router.put('/me', isAuthenticated, async (req, res) => {
+// Update user profile (name, grade, preferredLocale)
+router.put('/me', ...requireAuth, async (req, res) => {
   try {
     const userId = req.user!.id;
-    const { fullName, grade } = req.body;
+    const { fullName, grade, preferredLocale } = req.body;
+    const tenant = (req as any).tenant;
+    const enabledLocales = tenant?.enabledLocales ?? ['en'];
 
     if (!fullName || fullName.trim().length === 0) {
       return res.status(400).json({ error: 'Full name is required' });
@@ -92,9 +99,16 @@ router.put('/me', isAuthenticated, async (req, res) => {
       updatedAt: new Date(),
     };
 
-    // Only update grade if provided
     if (grade !== undefined) {
       updateData.grade = grade.trim() || null;
+    }
+
+    if (preferredLocale !== undefined) {
+      const locale = String(preferredLocale).trim().toLowerCase();
+      if (locale && !enabledLocales.includes(locale)) {
+        return res.status(400).json({ error: `Language must be one of: ${enabledLocales.join(', ')}` });
+      }
+      updateData.preferredLocale = locale || null;
     }
 
     const [updatedUser] = await db
@@ -109,6 +123,7 @@ router.put('/me', isAuthenticated, async (req, res) => {
         role: users.role,
         profilePicture: users.profilePicture,
         grade: users.grade,
+        preferredLocale: users.preferredLocale,
       });
 
     res.json(updatedUser);
@@ -118,8 +133,47 @@ router.put('/me', isAuthenticated, async (req, res) => {
   }
 });
 
+// Update only preferred locale (for language switcher)
+router.patch('/me', ...requireAuth, async (req, res) => {
+  try {
+    const userId = req.user!.id;
+    const { preferredLocale } = req.body;
+    const tenant = (req as any).tenant;
+    const enabledLocales = tenant?.enabledLocales ?? ['en'];
+
+    if (preferredLocale === undefined) {
+      return res.status(400).json({ error: 'preferredLocale is required' });
+    }
+
+    const locale = String(preferredLocale).trim().toLowerCase();
+    if (locale && !enabledLocales.includes(locale)) {
+      return res.status(400).json({ error: `Language must be one of: ${enabledLocales.join(', ')}` });
+    }
+
+    const [updatedUser] = await db
+      .update(users)
+      .set({ preferredLocale: locale || null, updatedAt: new Date() })
+      .where(eq(users.id, userId))
+      .returning({
+        id: users.id,
+        username: users.username,
+        fullName: users.fullName,
+        email: users.email,
+        role: users.role,
+        profilePicture: users.profilePicture,
+        grade: users.grade,
+        preferredLocale: users.preferredLocale,
+      });
+
+    res.json(updatedUser);
+  } catch (error) {
+    console.error('Error updating preferred locale:', error);
+    res.status(500).json({ error: 'Failed to update preferred locale' });
+  }
+});
+
 // Upload profile picture
-router.post('/me/picture', isAuthenticated, (req, res, next) => {
+router.post('/me/picture', ...requireAuth, (req, res, next) => {
   // Handle multer upload with explicit error handling
   upload.single('profilePicture')(req, res, async (err) => {
     if (err instanceof multer.MulterError) {
@@ -178,7 +232,7 @@ router.post('/me/picture', isAuthenticated, (req, res, next) => {
         });
 
       console.log(`Profile picture uploaded to ${uploadResult.isCloudinary ? 'Cloudinary' : 'local storage'}: ${uploadResult.url}`);
-      
+
       res.json(updatedUser);
     } catch (error) {
       console.error('Error uploading profile picture:', error);
@@ -188,7 +242,7 @@ router.post('/me/picture', isAuthenticated, (req, res, next) => {
 });
 
 // Delete profile picture
-router.delete('/me/picture', isAuthenticated, async (req, res) => {
+router.delete('/me/picture', ...requireAuth, async (req, res) => {
   try {
     const userId = req.user!.id;
 

@@ -1,0 +1,32 @@
+{
+  "welcome": {
+    "subject": "مرحباً بك في Eduverse!",
+    "heading": "مرحباً بك في Eduverse!",
+    "hi": "مرحباً",
+    "thankYou": "شكراً لانضمامك إلى Eduverse كـ",
+    "intro": "يسعدنا انضمامك!",
+    "gettingStarted": "البدء:",
+    "goToDashboard": "الذهاب إلى لوحة التحكم",
+    "bestRegards": "مع أطيب التحيات،",
+    "team": "فريق Eduverse",
+    "support": "إن كان لديك أي سؤال، فريق الدعم جاهز لمساعدتك!"
+  },
+  "registrationSuccess": {
+    "subject": "مرحباً بك في Acadize! حسابك مفعّل الآن.",
+    "heading": "مرحباً بك في Acadize!",
+    "paymentSuccess": "تم الدفع بنجاح",
+    "accountDetails": "تفاصيل الحساب:",
+    "nextBillingDate": "تاريخ الفاتورة القادمة:",
+    "whatsNext": "ما التالي؟",
+    "goToDashboard": "الذهاب إلى لوحة التحكم",
+    "bestRegards": "مع أطيب التحيات،",
+    "team": "فريق Acadize"
+  },
+  "trialActivation": {
+    "subject": "فترة التجربة المجانية مفعّلة!",
+    "heading": "فترة التجربة المجانية مفعّلة!",
+    "trialStarted": "بدأت التجربة",
+    "bestRegards": "مع أطيب التحيات،",
+    "team": "فريق Acadize"
+  }
+}

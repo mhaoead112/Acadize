@@ -1,12 +1,16 @@
 import express from 'express';
 import { getRagResponse } from '../services/ai.service.js';
 import { isAuthenticated } from '../middleware/auth.middleware.js';
+import { requireSubscription } from '../middleware/subscription.middleware.js';
 
 const router = express.Router();
 
+// Combined auth + subscription middleware
+const requireAuth = [isAuthenticated, requireSubscription];
+
 // This route will be accessible at POST /api/ai/ask
 // A user must be logged in to use the AI Buddy.
-router.post('/ask', isAuthenticated, async (req, res) => {
+router.post('/ask', ...requireAuth, async (req, res) => {
     const { question } = req.body;
 
     if (!question || typeof question !== 'string') {

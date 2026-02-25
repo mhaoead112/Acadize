@@ -17,6 +17,7 @@ export interface TokenPayload {
     role: string;
     fullName: string;
     organizationId: string; // Multi-tenant organization ID
+    preferredLocale?: string | null; // i18n: user's preferred language
 }
 
 export interface TokenPair {

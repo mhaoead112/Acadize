@@ -1,9 +1,13 @@
 import express from 'express';
 import { db } from '../db/index.js';
+import { organizations } from '../db/schema.js';
 import { isAuthenticated, isAdmin } from '../middleware/auth.middleware.js';
+import { eq } from 'drizzle-orm';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+
+const SUPPORTED_LOCALES = ['en', 'ar'];
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -122,6 +126,63 @@ router.get('/', isAuthenticated, isAdmin, async (req, res) => {
       error: 'Failed to fetch settings',
       details: error instanceof Error ? error.message : 'Unknown error'
     });
+  }
+});
+
+/**
+ * GET /api/admin/settings/locale
+ * Get current org's i18n settings (defaultLocale, enabledLocales)
+ */
+router.get('/locale', isAuthenticated, isAdmin, async (req, res) => {
+  try {
+    const orgId = (req as any).tenant?.organizationId;
+    if (!orgId) return res.status(400).json({ error: 'Organization context required' });
+    const [org] = await db.select({ defaultLocale: organizations.defaultLocale, enabledLocales: organizations.enabledLocales }).from(organizations).where(eq(organizations.id, orgId)).limit(1);
+    if (!org) return res.status(404).json({ error: 'Organization not found' });
+    res.json({
+      defaultLocale: org.defaultLocale ?? 'en',
+      enabledLocales: Array.isArray(org.enabledLocales) ? org.enabledLocales : ['en'],
+    });
+  } catch (error) {
+    console.error('Error fetching locale settings:', error);
+    res.status(500).json({ error: 'Failed to fetch locale settings' });
+  }
+});
+
+/**
+ * PATCH /api/admin/settings/locale
+ * Update current org's defaultLocale and enabledLocales (admin only)
+ */
+router.patch('/locale', isAuthenticated, isAdmin, async (req, res) => {
+  try {
+    const orgId = (req as any).tenant?.organizationId;
+    if (!orgId) return res.status(400).json({ error: 'Organization context required' });
+    const { defaultLocale, enabledLocales } = req.body;
+    const updates: { defaultLocale?: string; enabledLocales?: string[] } = {};
+    if (defaultLocale !== undefined) {
+      const loc = String(defaultLocale).trim().toLowerCase();
+      if (!SUPPORTED_LOCALES.includes(loc)) return res.status(400).json({ error: `defaultLocale must be one of: ${SUPPORTED_LOCALES.join(', ')}` });
+      updates.defaultLocale = loc;
+    }
+    if (enabledLocales !== undefined) {
+      if (!Array.isArray(enabledLocales)) return res.status(400).json({ error: 'enabledLocales must be an array' });
+      const list = enabledLocales.map((l: string) => String(l).trim().toLowerCase()).filter((l: string) => SUPPORTED_LOCALES.includes(l));
+      if (list.length === 0) return res.status(400).json({ error: 'At least one enabled locale required' });
+      updates.enabledLocales = list;
+    }
+    if (Object.keys(updates).length === 0) return res.status(400).json({ error: 'Provide defaultLocale and/or enabledLocales' });
+    const [updated] = await db.update(organizations).set(updates).where(eq(organizations.id, orgId)).returning({ defaultLocale: organizations.defaultLocale, enabledLocales: organizations.enabledLocales });
+    if (!updated) return res.status(404).json({ error: 'Organization not found' });
+    const { clearTenantCache } = await import('../middleware/tenant.middleware.js');
+    clearTenantCache((req as any).tenant?.subdomain);
+    res.json({
+      message: 'Locale settings updated',
+      defaultLocale: updated.defaultLocale ?? 'en',
+      enabledLocales: Array.isArray(updated.enabledLocales) ? updated.enabledLocales : ['en'],
+    });
+  } catch (error) {
+    console.error('Error updating locale settings:', error);
+    res.status(500).json({ error: 'Failed to update locale settings' });
   }
 });
 

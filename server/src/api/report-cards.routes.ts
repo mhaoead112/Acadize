@@ -6,6 +6,10 @@ import { db } from '../db/index.js';
 import { reportCards, users } from '../db/schema.js';
 import { eq, and, desc } from 'drizzle-orm';
 import { isAuthenticated } from '../middleware/auth.middleware.js';
+import { requireSubscription } from '../middleware/subscription.middleware.js';
+
+// Combined auth + subscription middleware
+const requireAuth = [isAuthenticated, requireSubscription];
 
 const router = Router();
 
@@ -39,10 +43,10 @@ const upload = multer({
 });
 
 // Upload a report card (teachers only)
-router.post('/upload', isAuthenticated, upload.single('file'), async (req, res) => {
+router.post('/upload', ...requireAuth, upload.single('file'), async (req, res) => {
   try {
     const user = req.user;
-    
+
     if (user?.role !== 'teacher' && user?.role !== 'admin') {
       return res.status(403).json({ message: 'Only teachers can upload report cards' });
     }
@@ -85,8 +89,8 @@ router.post('/upload', isAuthenticated, upload.single('file'), async (req, res) 
 
     if (existing) {
       fs.unlinkSync(req.file.path);
-      return res.status(400).json({ 
-        message: `A report card for ${period} - ${academicYear} already exists for this student` 
+      return res.status(400).json({
+        message: `A report card for ${period} - ${academicYear} already exists for this student`
       });
     }
 
@@ -104,13 +108,13 @@ router.post('/upload', isAuthenticated, upload.single('file'), async (req, res) 
       })
       .returning();
 
-    res.json({ 
+    res.json({
       message: 'Report card uploaded successfully',
-      reportCard 
+      reportCard
     });
   } catch (error) {
     console.error('Upload error:', error);
-    
+
     // Clean up file if there was an error
     if (req.file) {
       try {
@@ -119,16 +123,16 @@ router.post('/upload', isAuthenticated, upload.single('file'), async (req, res) 
         console.error('Error cleaning up file:', cleanupError);
       }
     }
-    
+
     res.status(500).json({ message: 'Failed to upload report card' });
   }
 });
 
 // Get all report cards (teachers only)
-router.get('/all', isAuthenticated, async (req, res) => {
+router.get('/all', ...requireAuth, async (req, res) => {
   try {
     const user = req.user;
-    
+
     if (user?.role !== 'teacher' && user?.role !== 'admin') {
       return res.status(403).json({ message: 'Access denied' });
     }
@@ -160,7 +164,7 @@ router.get('/all', isAuthenticated, async (req, res) => {
 });
 
 // Get report cards for current student
-router.get('/student', isAuthenticated, async (req, res) => {
+router.get('/student', ...requireAuth, async (req, res) => {
   try {
     const user = req.user;
     const { academicYear, period } = req.query;
@@ -189,11 +193,11 @@ router.get('/student', isAuthenticated, async (req, res) => {
 
     // Apply filters if provided
     const conditions = [eq(reportCards.studentId, user.id)];
-    
+
     if (academicYear) {
       conditions.push(eq(reportCards.academicYear, academicYear as string));
     }
-    
+
     if (period) {
       conditions.push(eq(reportCards.period, period as any));
     }
@@ -225,7 +229,7 @@ router.get('/student', isAuthenticated, async (req, res) => {
 });
 
 // View a report card
-router.get('/:id/view', isAuthenticated, async (req, res) => {
+router.get('/:id/view', ...requireAuth, async (req, res) => {
   try {
     const user = req.user;
     const { id } = req.params;
@@ -254,7 +258,7 @@ router.get('/:id/view', isAuthenticated, async (req, res) => {
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `inline; filename="${report.fileName}"`);
-    
+
     const fileStream = fs.createReadStream(report.filePath);
     fileStream.pipe(res);
   } catch (error) {
@@ -264,7 +268,7 @@ router.get('/:id/view', isAuthenticated, async (req, res) => {
 });
 
 // Download a report card
-router.get('/:id/download', isAuthenticated, async (req, res) => {
+router.get('/:id/download', ...requireAuth, async (req, res) => {
   try {
     const user = req.user;
     const { id } = req.params;
@@ -293,7 +297,7 @@ router.get('/:id/download', isAuthenticated, async (req, res) => {
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="${report.fileName}"`);
-    
+
     const fileStream = fs.createReadStream(report.filePath);
     fileStream.pipe(res);
   } catch (error) {
@@ -303,7 +307,7 @@ router.get('/:id/download', isAuthenticated, async (req, res) => {
 });
 
 // Delete a report card (teachers only)
-router.delete('/:id', isAuthenticated, async (req, res) => {
+router.delete('/:id', ...requireAuth, async (req, res) => {
   try {
     const user = req.user;
     const { id } = req.params;

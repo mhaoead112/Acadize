@@ -15,6 +15,7 @@ const JWT_SECRET = process.env.JWT_SECRET;
 interface AuthenticatedWebSocket extends WebSocket {
   userId?: string;
   username?: string;
+  organizationId?: string;
 }
 
 interface WSMessage {
@@ -106,20 +107,28 @@ async function handleAuth(ws: AuthenticatedWebSocket, message: WSMessage) {
 
     const decoded = jwt.verify(message.token, JWT_SECRET) as any;
     ws.userId = decoded.id; // JWT uses 'id' not 'userId'
-    
-    // Fetch username from database
-    const [user] = await db
-      .select({ username: users.username, fullName: users.fullName })
-      .from(users)
-      .where(eq(users.id, decoded.id))
-      .limit(1);
-    
-    if (!user) {
-      ws.send(JSON.stringify({ type: 'error', message: 'User not found' }));
+    ws.organizationId = decoded.organizationId;
+
+    // Tenant validation: JWT must include organizationId
+    if (!ws.organizationId) {
+      ws.send(JSON.stringify({ type: 'error', message: 'No organization context in token' }));
       ws.close();
       return;
     }
-    
+
+    // Fetch username from database and verify org membership
+    const [user] = await db
+      .select({ username: users.username, fullName: users.fullName, organizationId: users.organizationId })
+      .from(users)
+      .where(and(eq(users.id, decoded.id), eq(users.organizationId, ws.organizationId)))
+      .limit(1);
+
+    if (!user) {
+      ws.send(JSON.stringify({ type: 'error', message: 'User not found or organization mismatch' }));
+      ws.close();
+      return;
+    }
+
     ws.username = user.username;
 
     // Store client connection
@@ -135,13 +144,13 @@ async function handleAuth(ws: AuthenticatedWebSocket, message: WSMessage) {
       await updateUserPresence(ws.userId, 'online');
     }
 
-    ws.send(JSON.stringify({ 
-      type: 'auth_success', 
+    ws.send(JSON.stringify({
+      type: 'auth_success',
       userId: ws.userId,
-      username: ws.username 
+      username: ws.username
     }));
 
-    console.log(`✅ User ${ws.username} (${ws.userId}) authenticated`);
+    console.log(`✅ User ${ws.username} (${ws.userId}) authenticated [org: ${ws.organizationId}]`);
   } catch (error) {
     console.error('WebSocket auth error:', error);
     ws.send(JSON.stringify({ type: 'error', message: 'Authentication failed' }));
@@ -150,22 +159,24 @@ async function handleAuth(ws: AuthenticatedWebSocket, message: WSMessage) {
 }
 
 async function handleJoinConversation(ws: AuthenticatedWebSocket, message: WSMessage) {
-  if (!ws.userId || !message.conversationId) return;
+  if (!ws.userId || !ws.organizationId || !message.conversationId) return;
 
-  // Verify user is participant
+  // Verify user is participant AND conversation belongs to same organization
   const participant = await db
-    .select()
+    .select({ userId: conversationParticipants.userId, convOrgId: conversations.organizationId })
     .from(conversationParticipants)
+    .innerJoin(conversations, eq(conversations.id, conversationParticipants.conversationId))
     .where(
       and(
         eq(conversationParticipants.conversationId, message.conversationId),
-        eq(conversationParticipants.userId, ws.userId)
+        eq(conversationParticipants.userId, ws.userId),
+        eq(conversations.organizationId, ws.organizationId)
       )
     )
     .limit(1);
 
   if (participant.length === 0) {
-    ws.send(JSON.stringify({ type: 'error', message: 'Not authorized' }));
+    ws.send(JSON.stringify({ type: 'error', message: 'Not authorized or wrong organization' }));
     return;
   }
 
@@ -175,9 +186,9 @@ async function handleJoinConversation(ws: AuthenticatedWebSocket, message: WSMes
   }
   conversationClients.get(message.conversationId)!.add(ws.userId);
 
-  ws.send(JSON.stringify({ 
-    type: 'joined', 
-    conversationId: message.conversationId 
+  ws.send(JSON.stringify({
+    type: 'joined',
+    conversationId: message.conversationId
   }));
 
   // Broadcast user joined
@@ -247,10 +258,11 @@ async function handleMessage(ws: AuthenticatedWebSocket, message: WSMessage) {
     const mentionedUsernames = mentions.map(m => m.substring(1));
 
     if (mentionedUsernames.length > 0) {
+      // Scope @mention lookups to the same organization to prevent cross-tenant user discovery
       const mentionedUsers = await db
         .select({ id: users.id, username: users.username })
         .from(users)
-        .where(inArray(users.username, mentionedUsernames));
+        .where(and(inArray(users.username, mentionedUsernames), eq(users.organizationId, ws.organizationId!)));
 
       // Create notifications for mentioned users
       for (const mentionedUser of mentionedUsers) {
@@ -412,7 +424,7 @@ function handleDisconnect(ws: AuthenticatedWebSocket) {
       userClients.delete(ws);
       if (userClients.size === 0) {
         clients.delete(ws.userId);
-        
+
         // Update user presence to offline
         updateUserPresence(ws.userId, 'offline').catch(console.error);
       }
@@ -524,8 +536,8 @@ async function updateUserPresence(userId: string, status: string) {
     if (existing.length > 0) {
       await db
         .update(userPresence)
-        .set({ 
-          status, 
+        .set({
+          status,
           lastSeen: new Date(),
         })
         .where(eq(userPresence.userId, userId));

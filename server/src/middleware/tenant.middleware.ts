@@ -20,6 +20,10 @@ export interface TenantContext {
         primaryColor: string;
         secondaryColor: string;
     };
+    /** i18n: default locale for this org (e.g. 'en') */
+    defaultLocale: string;
+    /** i18n: list of enabled locale codes (e.g. ['en', 'ar']) */
+    enabledLocales: string[];
 }
 
 // Extend Express Request to include tenant context
@@ -38,7 +42,7 @@ const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 /**
  * Extract subdomain from hostname
  * Examples:
- *   "school1.eduverse.com" -> "school1"
+ *   "school1.acadize.com" -> "school1"
  *   "school1.localhost:3000" -> "school1"
  *   "localhost:3000" -> "default"
  */
@@ -55,7 +59,7 @@ function extractSubdomain(hostname: string): string {
     // Split hostname and get first part as subdomain
     const parts = host.split('.');
 
-    // If only 2 parts (e.g., eduverse.com), it's the main domain
+    // If only 2 parts (e.g., acadize.com), it's the main domain
     if (parts.length <= 2) {
         return 'default';
     }
@@ -92,6 +96,7 @@ async function lookupOrganization(subdomain: string, hostname: string): Promise<
             return null;
         }
 
+        const enabledLocales = Array.isArray(org.enabledLocales) ? org.enabledLocales : ['en'];
         const tenant: TenantContext = {
             organizationId: org.id,
             subdomain: org.subdomain,
@@ -103,6 +108,8 @@ async function lookupOrganization(subdomain: string, hostname: string): Promise<
                 primaryColor: org.primaryColor || '#6366f1',
                 secondaryColor: org.secondaryColor || '#8b5cf6',
             },
+            defaultLocale: org.defaultLocale ?? 'en',
+            enabledLocales,
         };
 
         // Cache the result
@@ -153,8 +160,11 @@ export const tenantMiddleware = async (
 
     console.log('[TenantMiddleware] Resolved subdomain:', subdomain, { devSubdomain, originSubdomain, hostname });
 
-    // Skip tenant resolution for certain paths (health checks, etc.)
-    if (req.path === '/health' || req.path === '/api/health') {
+    // Skip tenant resolution for certain paths (health checks, registration, etc.)
+    // Note: req.path doesn't include /api when middleware is mounted at /api
+    if (req.path === '/health' ||
+        req.path === '/api/health' ||
+        req.path.startsWith('/registration/')) {
         return next();
     }
 

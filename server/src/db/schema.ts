@@ -29,6 +29,15 @@ export const mistakeTypeEnum = pgEnum('mistake_type', ['wrong_answer', 'partial_
 export const remediationStatusEnum = pgEnum('remediation_status', ['not_started', 'in_progress', 'completed', 'skipped']);
 export const retakeStatusEnum = pgEnum('retake_status', ['pending', 'available', 'in_progress', 'completed', 'expired', 'cancelled']);
 
+// Smart Attendance Enums
+export const sessionTypeEnum = pgEnum('session_type', ['physical', 'online']);
+export const sessionStatusEnum = pgEnum('session_status', ['scheduled', 'active', 'completed', 'cancelled']);
+export const attendanceRecordStatusEnum = pgEnum('attendance_record_status', ['present', 'absent', 'late', 'excused']);
+export const checkInMethodEnum = pgEnum('check_in_method', ['qr', 'zoom', 'manual']);
+export const attendanceNotificationTypeEnum = pgEnum('attendance_notification_type', ['attendance_marked', 'low_attendance', 'session_starting', 'absent_alert']);
+export const attendanceNotificationChannelEnum = pgEnum('attendance_notification_channel', ['in_app', 'sms', 'whatsapp', 'email']);
+export const attendanceNotificationStatusEnum = pgEnum('attendance_notification_status', ['pending', 'sent', 'failed']);
+
 // =====================================================
 // ORGANIZATIONS (Multi-Tenant Core)
 // =====================================================
@@ -49,8 +58,22 @@ export const organizations = pgTable("organizations", {
   maxUsers: integer("max_users").default(50),
   maxStorageGb: integer("max_storage_gb").default(5),
 
+  // Paymob Billing (org-level B2B)
+  paymobCustomerId: text("paymob_customer_id"),
+  paymobSubscriptionId: text("paymob_subscription_id"),
+
+  // Per-user subscription settings (B2C)
+  userSubscriptionEnabled: boolean("user_subscription_enabled").default(false).notNull(),
+  userMonthlyPricePiasters: integer("user_monthly_price_piasters"), // amount in piasters (e.g. 10000 = 100 EGP)
+  userAnnualPricePiasters: integer("user_annual_price_piasters"),   // per month in piasters
+  userCurrency: varchar("user_currency", { length: 3 }).default("EGP"),
+
   // Feature Configuration
   config: jsonb("config").default({}), // { features: {}, limits: {}, settings: {} }
+
+  // i18n: default and enabled languages for this tenant
+  defaultLocale: varchar("default_locale", { length: 5 }).default("en").notNull(),
+  enabledLocales: jsonb("enabled_locales").default(["en"]).$type<string[]>().notNull(), // e.g. ["en", "ar"]
 
   // Contact
   contactEmail: varchar("contact_email", { length: 255 }),
@@ -109,6 +132,7 @@ export const users = pgTable("users", {
   bio: text("bio"),
   profilePicture: text("profile_picture"),
   grade: varchar("grade", { length: 50 }),
+  preferredLocale: varchar("preferred_locale", { length: 5 }), // null = use org default
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
   isTemporaryPassword: boolean("is_temporary_password").default(false).notNull(),
@@ -132,6 +156,15 @@ export const refreshTokens = pgTable("refresh_tokens", {
   expiresAtIdx: index("idx_refresh_tokens_expires_at").on(table.expiresAt),
 }));
 
+// Reference table for supported locales (seed data; used by admin UI and validation)
+export const locales = pgTable("locales", {
+  code: varchar("code", { length: 5 }).primaryKey(), // e.g. en, ar
+  name: varchar("name", { length: 100 }).notNull(),   // e.g. English
+  nativeName: varchar("native_name", { length: 100 }).notNull(),
+  dir: varchar("dir", { length: 3 }).default("ltr").notNull(), // ltr | rtl
+  isDefault: boolean("is_default").default(false).notNull(),
+});
+
 export const courses = pgTable("courses", {
   id: text("id").primaryKey().$defaultFn(() => createId()),
   organizationId: text("organization_id").notNull().references(() => organizations.id, { onDelete: 'cascade' }),
@@ -145,6 +178,17 @@ export const courses = pgTable("courses", {
 }, (table) => ({
   orgIdx: index("courses_org_idx").on(table.organizationId),
   teacherIdx: index("courses_teacher_idx").on(table.teacherId),
+}));
+
+export const courseTranslations = pgTable("course_translations", {
+  id: text("id").primaryKey().$defaultFn(() => createId()),
+  courseId: text("course_id").notNull().references(() => courses.id, { onDelete: "cascade" }),
+  locale: varchar("locale", { length: 5 }).notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
+}, (table) => ({
+  courseLocaleIdx: uniqueIndex("course_translations_course_locale_idx").on(table.courseId, table.locale),
 }));
 
 export const enrollments = pgTable("enrollments", {
@@ -166,6 +210,17 @@ export const lessons = pgTable("lessons", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
 });
+
+export const lessonTranslations = pgTable("lesson_translations", {
+  id: text("id").primaryKey().$defaultFn(() => createId()),
+  lessonId: text("lesson_id").notNull().references(() => lessons.id, { onDelete: "cascade" }),
+  locale: varchar("locale", { length: 5 }).notNull(),
+  title: text("title").notNull(),
+  content: text("content"), // optional rich text / description per locale
+  updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
+}, (table) => ({
+  lessonLocaleIdx: uniqueIndex("lesson_translations_lesson_locale_idx").on(table.lessonId, table.locale),
+}));
 
 export const assignments = pgTable("assignments", {
   id: text("id").primaryKey().$defaultFn(() => createId()),
@@ -216,6 +271,17 @@ export const announcements = pgTable("announcements", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
 });
+
+export const announcementTranslations = pgTable("announcement_translations", {
+  id: text("id").primaryKey().$defaultFn(() => createId()),
+  announcementId: text("announcement_id").notNull().references(() => announcements.id, { onDelete: "cascade" }),
+  locale: varchar("locale", { length: 5 }).notNull(),
+  title: text("title").notNull(),
+  body: text("body").notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
+}, (table) => ({
+  announcementLocaleIdx: uniqueIndex("announcement_translations_announcement_locale_idx").on(table.announcementId, table.locale),
+}));
 
 export const reportCards = pgTable("report_cards", {
   id: text("id").primaryKey().$defaultFn(() => createId()),
@@ -604,6 +670,17 @@ export const exams = pgTable("exams", {
   scheduleIdx: index("exam_schedule_idx").on(table.scheduledStartAt, table.scheduledEndAt),
 }));
 
+export const examTranslations = pgTable("exam_translations", {
+  id: text("id").primaryKey().$defaultFn(() => createId()),
+  examId: text("exam_id").notNull().references(() => exams.id, { onDelete: "cascade" }),
+  locale: varchar("locale", { length: 5 }).notNull(),
+  title: varchar("title", { length: 500 }).notNull(),
+  instructions: text("instructions"),
+  updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
+}, (table) => ({
+  examLocaleIdx: uniqueIndex("exam_translations_exam_locale_idx").on(table.examId, table.locale),
+}));
+
 // --- EXAM QUESTIONS ---
 export const examQuestions = pgTable("exam_questions", {
   id: text("id").primaryKey().$defaultFn(() => createId()),
@@ -954,3 +1031,226 @@ export const mistakeRetakeExams = pgTable("mistake_retake_exams", {
   availabilityIdx: index("mistake_retake_exam_availability_idx").on(table.availableFrom, table.expiresAt),
   notificationIdx: index("mistake_retake_exam_notification_idx").on(table.studentNotified, table.status),
 }));
+
+// =====================================================
+// SUBSCRIPTION & BILLING TABLES
+// =====================================================
+
+// Subscription status enum
+export const subscriptionStatusEnum = pgEnum('subscription_status', ['trialing', 'active', 'past_due', 'canceled', 'expired']);
+export const paymentStatusEnum = pgEnum('payment_status', ['pending', 'succeeded', 'failed', 'refunded']);
+
+// Promo Codes
+export const promoCodes = pgTable("promo_codes", {
+  id: text("id").primaryKey().$defaultFn(() => createId()),
+  code: text("code").notNull().unique(), // e.g. "TRIAL30"
+  description: text("description"),
+  discountPercent: integer("discount_percent"), // 0-100
+  trialDays: integer("trial_days"), // Override trial days
+  maxUses: integer("max_uses"),
+  usedCount: integer("used_count").default(0).notNull(),
+  expiresAt: timestamp("expires_at"),
+  isActive: boolean("is_active").default(true).notNull(),
+  organizationId: text("organization_id").references(() => organizations.id, { onDelete: 'cascade' }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  codeOrgIdx: uniqueIndex("promo_code_org_idx").on(table.code, table.organizationId),
+  orgIdx: index("promo_code_org_lookup_idx").on(table.organizationId),
+  activeIdx: index("promo_code_active_idx").on(table.isActive),
+}));
+
+// User Subscriptions (B2C — per-user billing within an org)
+export const userSubscriptions = pgTable("user_subscriptions", {
+  id: text("id").primaryKey().$defaultFn(() => createId()),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  organizationId: text("organization_id").notNull().references(() => organizations.id, { onDelete: 'cascade' }),
+
+  // Paymob references
+  paymobOrderId: text("paymob_order_id"),
+  paymobTransactionId: text("paymob_transaction_id"),
+
+  // Promo code used
+  promoCodeId: text("promo_code_id").references(() => promoCodes.id, { onDelete: 'set null' }),
+
+  // Status & billing
+  status: subscriptionStatusEnum("status").default("trialing").notNull(),
+  billingCycle: varchar("billing_cycle", { length: 10 }), // 'monthly' | 'annual'
+  amountPiasters: integer("amount_piasters"), // price locked at subscription time
+  currency: varchar("currency", { length: 3 }).default("EGP"),
+
+  // Trial tracking
+  trialStart: timestamp("trial_start"),
+  trialEnd: timestamp("trial_end"),
+
+  // Billing period
+  currentPeriodStart: timestamp("current_period_start"),
+  currentPeriodEnd: timestamp("current_period_end"),
+
+  // Metadata
+  canceledAt: timestamp("canceled_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
+}, (table) => ({
+  userOrgIdx: uniqueIndex("user_sub_user_org_idx").on(table.userId, table.organizationId),
+  orgIdx: index("user_sub_org_idx").on(table.organizationId),
+  statusIdx: index("user_sub_status_idx").on(table.status),
+  trialEndIdx: index("user_sub_trial_end_idx").on(table.trialEnd),
+}));
+
+// Payment History (both org and user payments)
+export const payments = pgTable("payments", {
+  id: text("id").primaryKey().$defaultFn(() => createId()),
+  organizationId: text("organization_id").references(() => organizations.id, { onDelete: 'cascade' }),
+  userId: text("user_id").references(() => users.id, { onDelete: 'set null' }), // null = org-level payment
+  userSubscriptionId: text("user_subscription_id").references(() => userSubscriptions.id, { onDelete: 'set null' }),
+
+  // Paymob details
+  paymobOrderId: text("paymob_order_id"),
+  paymobTransactionId: text("paymob_transaction_id"),
+
+  // Payment info
+  amountPiasters: integer("amount_piasters").notNull(), // amount in piasters
+  currency: varchar("currency", { length: 3 }).default("EGP"),
+  status: paymentStatusEnum("status").default("pending").notNull(),
+  paymentMethod: varchar("payment_method", { length: 50 }), // 'card', 'wallet', 'fawry'
+  description: text("description"),
+  metadata: jsonb("metadata"), // Registration data for retry functionality
+
+  // Timestamps
+  paidAt: timestamp("paid_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  orgIdx: index("payment_org_idx").on(table.organizationId),
+  userIdx: index("payment_user_idx").on(table.userId),
+  statusIdx: index("payment_status_idx").on(table.status),
+  paymobOrderIdx: index("payment_paymob_order_idx").on(table.paymobOrderId),
+}));
+
+
+// =====================================================
+// SMART ATTENDANCE SYSTEM
+// =====================================================
+
+export const sessions = pgTable("sessions", {
+  id: text("id").primaryKey().$defaultFn(() => createId()),
+  organizationId: text("organization_id").notNull().references(() => organizations.id, { onDelete: 'cascade' }),
+  courseId: text("course_id").notNull().references(() => courses.id, { onDelete: 'cascade' }),
+  createdBy: text("created_by").notNull().references(() => users.id, { onDelete: 'cascade' }),
+
+  // Session identity
+  sessionType: sessionTypeEnum("session_type").notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  status: sessionStatusEnum("status").default("scheduled").notNull(),
+
+  // Zoom (online sessions)
+  zoomMeetingId: varchar("zoom_meeting_id", { length: 100 }),
+
+  // QR (physical sessions)
+  qrToken: varchar("qr_token", { length: 255 }),
+  qrExpiresAt: timestamp("qr_expires_at"),
+  qrExpiryMinutes: integer("qr_expiry_minutes").default(10).notNull(),
+  qrRotationEnabled: boolean("qr_rotation_enabled").default(false).notNull(),
+  qrRotationIntervalSeconds: integer("qr_rotation_interval_seconds").default(30).notNull(),
+
+  // GPS (physical sessions)
+  gpsRequired: boolean("gps_required").default(false).notNull(),
+  gpsLat: real("gps_lat"),          // academy latitude
+  gpsLng: real("gps_lng"),          // academy longitude
+  gpsRadius: integer("gps_radius").default(100).notNull(), // meters
+
+  // Attendance configuration
+  minAttendancePercent: integer("min_attendance_percent").default(75).notNull(),
+
+  // Scheduling
+  startTime: timestamp("start_time").notNull(),
+  endTime: timestamp("end_time").notNull(),
+
+  // Metadata
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
+}, (table) => ({
+  orgIdx: index("sessions_org_idx").on(table.organizationId),
+  courseIdx: index("sessions_course_idx").on(table.courseId),
+  createdByIdx: index("sessions_created_by_idx").on(table.createdBy),
+  statusIdx: index("sessions_status_idx").on(table.status),
+  startTimeIdx: index("sessions_start_time_idx").on(table.startTime),
+}));
+
+export const attendanceRecords = pgTable("attendance_records", {
+  id: text("id").primaryKey().$defaultFn(() => createId()),
+  sessionId: text("session_id").notNull().references(() => sessions.id, { onDelete: 'cascade' }),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+
+  // Timing
+  joinTime: timestamp("join_time").notNull(),
+  leaveTime: timestamp("leave_time"),
+  durationMinutes: integer("duration_minutes"),
+  attendancePercent: real("attendance_percent"),
+
+  // Status
+  status: attendanceRecordStatusEnum("status").default("present").notNull(),
+  checkInMethod: checkInMethodEnum("check_in_method").notNull(),
+
+  // GPS validation
+  gpsLat: real("gps_lat"),
+  gpsLng: real("gps_lng"),
+  gpsValid: boolean("gps_valid"),
+
+  // Metadata
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  sessionUserIdx: uniqueIndex("attendance_session_user_idx").on(table.sessionId, table.userId),
+  sessionIdx: index("attendance_session_idx").on(table.sessionId),
+  userIdx: index("attendance_user_idx").on(table.userId),
+  statusIdx: index("attendance_status_idx").on(table.status),
+}));
+
+export const qrTokens = pgTable("qr_tokens", {
+  id: text("id").primaryKey().$defaultFn(() => createId()),
+  sessionId: text("session_id").notNull().references(() => sessions.id, { onDelete: 'cascade' }),
+  usedBy: text("used_by").references(() => users.id, { onDelete: 'set null' }),
+
+  // Token data
+  token: varchar("token", { length: 128 }).notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  used: boolean("used").default(false).notNull(),
+
+  // Metadata
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  sessionIdx: index("qr_tokens_session_idx").on(table.sessionId),
+  tokenIdx: uniqueIndex("qr_tokens_token_idx").on(table.token),
+  expiresAtIdx: index("qr_tokens_expires_at_idx").on(table.expiresAt),
+}));
+
+export const attendanceNotifications = pgTable("attendance_notifications", {
+  id: text("id").primaryKey().$defaultFn(() => createId()),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  parentId: text("parent_id").references(() => users.id, { onDelete: 'set null' }),
+  sessionId: text("session_id").notNull().references(() => sessions.id, { onDelete: 'cascade' }),
+
+  // Notification details
+  type: attendanceNotificationTypeEnum("type").notNull(),
+  channel: attendanceNotificationChannelEnum("channel").notNull(),
+  status: attendanceNotificationStatusEnum("status").default("pending").notNull(),
+
+  // Content
+  message: text("message"),
+
+  // Delivery tracking
+  sentAt: timestamp("sent_at"),
+  failureReason: text("failure_reason"),
+  retryCount: integer("retry_count").default(0).notNull(),
+
+  // Metadata
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  userIdx: index("att_notif_user_idx").on(table.userId),
+  parentIdx: index("att_notif_parent_idx").on(table.parentId),
+  sessionIdx: index("att_notif_session_idx").on(table.sessionId),
+  statusIdx: index("att_notif_status_idx").on(table.status),
+  typeIdx: index("att_notif_type_idx").on(table.type),
+}));
+
+
+

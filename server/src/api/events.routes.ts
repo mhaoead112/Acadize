@@ -1,166 +1,87 @@
+// server/src/api/events.routes.ts
+
 import express from 'express';
-import { db } from '../db/index.js';
-import { events, eventParticipants, users, courses } from '../db/schema.js';
-import { eq, and, gte, lte, or, inArray, sql, isNull } from 'drizzle-orm';
 import { isAuthenticated, optionalAuth } from '../middleware/auth.middleware.js';
+import { requireSubscription } from '../middleware/subscription.middleware.js';
+
+const requireAuth = [isAuthenticated, requireSubscription];
+import * as EventsService from '../services/events.service.js';
 
 const router = express.Router();
 
-// Get all events (with filters) - PUBLIC endpoint, no auth required
+/**
+ * PUBLIC/AUTHENTICATED
+ * GET /api/events
+ * Returns all events with filters
+ */
 router.get('/events', optionalAuth, async (req, res) => {
   try {
-    const userId = req.user?.id;
     const userRole = req.user?.role;
     const { startDate, endDate, type, courseId } = req.query;
     const orgId = (req as any).tenant?.organizationId;
 
-    let query = db.select({
-      id: events.id,
-      title: events.title,
-      description: events.description,
-      eventType: events.eventType,
-      startTime: events.startTime,
-      endTime: events.endTime,
-      location: events.location,
-      meetingLink: events.meetingLink,
-      courseId: events.courseId,
-      courseName: courses.title,
-      isPublic: events.isPublic,
-      maxParticipants: events.maxParticipants,
-      createdAt: events.createdAt,
-    })
-      .from(events)
-      .leftJoin(courses, eq(events.courseId, courses.id));
-
-    // Build filter conditions
-    const conditions: any[] = [];
-
-    // Filter by tenant organization (events linked to courses in this org,
-    // or events with no course that were created by users in this org)
-    if (orgId) {
-      conditions.push(
-        or(
-          eq(courses.organizationId, orgId),
-          isNull(events.courseId)
-        )!
-      );
+    if (!orgId) {
+      return res.status(400).json({ error: 'Organization context required' });
     }
 
-    // Filter by date range
-    if (startDate) {
-      conditions.push(gte(events.startTime, new Date(startDate as string)));
-    }
-    if (endDate) {
-      conditions.push(lte(events.endTime, new Date(endDate as string)));
-    }
+    const events = await EventsService.getEvents({
+      startDate: startDate as string,
+      endDate: endDate as string,
+      type: type as string,
+      courseId: courseId as string,
+      organizationId: orgId,
+      userRole,
+    });
 
-    // Filter by event type
-    if (type) {
-      conditions.push(eq(events.eventType, type as any));
-    }
-
-    // Filter by course
-    if (courseId) {
-      conditions.push(eq(events.courseId, courseId as string));
-    }
-
-    // Apply visibility filter based on user role
-    // Unauthenticated users and students only see public events
-    if (!userRole || userRole === 'student') {
-      conditions.push(eq(events.isPublic, true));
-    }
-    // Admins and teachers can see all events
-
-    const allEvents = await query.where(conditions.length > 0 ? and(...conditions) : undefined);
-
-    // Get participant counts
-    const eventIds = allEvents.map(e => e.id);
-    const participantCounts = eventIds.length > 0
-      ? await db.select({
-        eventId: eventParticipants.eventId,
-        count: sql<number>`cast(count(${eventParticipants.id}) as integer)`,
-      })
-        .from(eventParticipants)
-        .where(inArray(eventParticipants.eventId, eventIds))
-        .groupBy(eventParticipants.eventId)
-      : [];
-
-    const participantMap = new Map(
-      participantCounts.map(p => [p.eventId, p.count])
-    );
-
-    const eventsWithParticipants = allEvents.map(event => ({
-      ...event,
-      participants: participantMap.get(event.id) || 0,
-    }));
-
-    res.json(eventsWithParticipants);
+    res.json(events);
   } catch (error) {
     console.error('Error fetching events:', error);
     res.status(500).json({ error: 'Failed to fetch events' });
   }
 });
 
-// Get a single event by ID
-router.get('/events/:id', isAuthenticated, async (req, res) => {
+/**
+ * AUTHENTICATED
+ * GET /api/events/:id
+ * Get a single event by ID
+ */
+router.get('/events/:id', ...requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user!.id;
+    const orgId = (req as any).tenant?.organizationId;
 
-    const [event] = await db.select({
-      id: events.id,
-      title: events.title,
-      description: events.description,
-      eventType: events.eventType,
-      startTime: events.startTime,
-      endTime: events.endTime,
-      location: events.location,
-      meetingLink: events.meetingLink,
-      courseId: events.courseId,
-      courseName: courses.title,
-      isPublic: events.isPublic,
-      maxParticipants: events.maxParticipants,
-      createdAt: events.createdAt,
-    })
-      .from(events)
-      .leftJoin(courses, eq(events.courseId, courses.id))
-      .where(eq(events.id, id));
+    if (!orgId) {
+      return res.status(400).json({ error: 'Organization context required' });
+    }
+
+    const event = await EventsService.getEventById(id, userId, orgId);
 
     if (!event) {
       return res.status(404).json({ error: 'Event not found' });
     }
 
-    // Get participants
-    const participants = await db.select({
-      userId: eventParticipants.userId,
-      userName: users.fullName,
-      status: eventParticipants.status,
-      registeredAt: eventParticipants.registeredAt,
-    })
-      .from(eventParticipants)
-      .innerJoin(users, eq(eventParticipants.userId, users.id))
-      .where(eq(eventParticipants.eventId, id));
-
-    // Check if current user is registered
-    const isRegistered = participants.some(p => p.userId === userId);
-
-    res.json({
-      ...event,
-      participants,
-      participantCount: participants.length,
-      isRegistered,
-    });
+    res.json(event);
   } catch (error) {
     console.error('Error fetching event:', error);
     res.status(500).json({ error: 'Failed to fetch event' });
   }
 });
 
-// Create a new event (admin/teacher only)
-router.post('/events', isAuthenticated, async (req, res) => {
+/**
+ * AUTHENTICATED (ADMIN/TEACHER)
+ * POST /api/events
+ * Create a new event
+ */
+router.post('/events', ...requireAuth, async (req, res) => {
   try {
     const userId = req.user!.id;
     const userRole = req.user!.role;
+    const orgId = (req as any).tenant?.organizationId;
+
+    if (!orgId) {
+      return res.status(400).json({ error: 'Organization context required' });
+    }
 
     if (userRole !== 'admin' && userRole !== 'teacher') {
       return res.status(403).json({ error: 'Only admins and teachers can create events' });
@@ -184,52 +105,42 @@ router.post('/events', isAuthenticated, async (req, res) => {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    // Validate dates
-    const start = new Date(startTime);
-    const end = new Date(endTime);
-
-    if (start >= end) {
-      return res.status(400).json({ error: 'End time must be after start time' });
-    }
-
-    const [newEvent] = await db.insert(events).values({
+    const newEvent = await EventsService.createEvent({
       title,
       description,
       eventType,
-      startTime: start,
-      endTime: end,
+      startTime: new Date(startTime),
+      endTime: new Date(endTime),
       location,
       meetingLink,
       courseId,
-      createdBy: userId,
-      isPublic: isPublic !== undefined ? isPublic : true,
+      isPublic,
       maxParticipants,
-    }).returning();
+      createdBy: userId,
+      organizationId: orgId,
+    });
 
     res.status(201).json(newEvent);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error creating event:', error);
-    res.status(500).json({ error: 'Failed to create event' });
+    res.status(400).json({ error: error.message || 'Failed to create event' });
   }
 });
 
-// Update an event (admin/teacher who created it)
-router.put('/events/:id', isAuthenticated, async (req, res) => {
+/**
+ * AUTHENTICATED (ADMIN/CREATOR)
+ * PUT /api/events/:id
+ * Update an event
+ */
+router.put('/events/:id', ...requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user!.id;
     const userRole = req.user!.role;
+    const orgId = (req as any).tenant?.organizationId;
 
-    // Get the event
-    const [event] = await db.select().from(events).where(eq(events.id, id));
-
-    if (!event) {
-      return res.status(404).json({ error: 'Event not found' });
-    }
-
-    // Check permissions
-    if (userRole !== 'admin' && event.createdBy !== userId) {
-      return res.status(403).json({ error: 'You can only edit your own events' });
+    if (!orgId) {
+      return res.status(400).json({ error: 'Organization context required' });
     }
 
     const {
@@ -262,125 +173,98 @@ router.put('/events/:id', isAuthenticated, async (req, res) => {
       updateData.endTime = new Date(endTime);
     }
 
-    // Validate dates if both are provided
-    if (updateData.startTime && updateData.endTime && updateData.startTime >= updateData.endTime) {
-      return res.status(400).json({ error: 'End time must be after start time' });
-    }
-
-    const [updatedEvent] = await db.update(events)
-      .set(updateData)
-      .where(eq(events.id, id))
-      .returning();
+    const updatedEvent = await EventsService.updateEvent(
+      id,
+      userId,
+      userRole,
+      updateData,
+      orgId
+    );
 
     res.json(updatedEvent);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error updating event:', error);
-    res.status(500).json({ error: 'Failed to update event' });
+    const statusCode = error.message.includes('not found') ? 404 :
+      error.message.includes('permission') || error.message.includes('own events') ? 403 : 400;
+    res.status(statusCode).json({ error: error.message || 'Failed to update event' });
   }
 });
 
-// Delete an event (admin/teacher who created it)
-router.delete('/events/:id', isAuthenticated, async (req, res) => {
+/**
+ * AUTHENTICATED (ADMIN/CREATOR)
+ * DELETE /api/events/:id
+ * Delete an event
+ */
+router.delete('/events/:id', ...requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user!.id;
     const userRole = req.user!.role;
+    const orgId = (req as any).tenant?.organizationId;
 
-    // Get the event
-    const [event] = await db.select().from(events).where(eq(events.id, id));
-
-    if (!event) {
-      return res.status(404).json({ error: 'Event not found' });
+    if (!orgId) {
+      return res.status(400).json({ error: 'Organization context required' });
     }
 
-    // Check permissions
-    if (userRole !== 'admin' && event.createdBy !== userId) {
-      return res.status(403).json({ error: 'You can only delete your own events' });
-    }
-
-    await db.delete(events).where(eq(events.id, id));
+    await EventsService.deleteEvent(id, userId, userRole, orgId);
 
     res.json({ message: 'Event deleted successfully' });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error deleting event:', error);
-    res.status(500).json({ error: 'Failed to delete event' });
+    const statusCode = error.message.includes('not found') ? 404 :
+      error.message.includes('permission') || error.message.includes('own events') ? 403 : 500;
+    res.status(statusCode).json({ error: error.message || 'Failed to delete event' });
   }
 });
 
-// Register for an event
-router.post('/events/:id/register', isAuthenticated, async (req, res) => {
+/**
+ * AUTHENTICATED
+ * POST /api/events/:id/register
+ * Register for an event
+ */
+router.post('/events/:id/register', ...requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user!.id;
+    const orgId = (req as any).tenant?.organizationId;
 
-    // Check if event exists
-    const [event] = await db.select().from(events).where(eq(events.id, id));
-
-    if (!event) {
-      return res.status(404).json({ error: 'Event not found' });
+    if (!orgId) {
+      return res.status(400).json({ error: 'Organization context required' });
     }
 
-    // Check if already registered
-    const [existing] = await db.select()
-      .from(eventParticipants)
-      .where(
-        and(
-          eq(eventParticipants.eventId, id),
-          eq(eventParticipants.userId, userId)
-        )
-      );
-
-    if (existing) {
-      return res.status(400).json({ error: 'Already registered for this event' });
-    }
-
-    // Check max participants
-    if (event.maxParticipants) {
-      const countResult = await db.select({ count: sql<number>`cast(count(*) as integer)` })
-        .from(eventParticipants)
-        .where(eq(eventParticipants.eventId, id));
-
-      if (countResult[0].count >= parseInt(event.maxParticipants)) {
-        return res.status(400).json({ error: 'Event is full' });
-      }
-    }
-
-    const [registration] = await db.insert(eventParticipants).values({
-      eventId: id,
-      userId,
-      status: 'registered',
-    }).returning();
+    const registration = await EventsService.registerForEvent(id, userId, orgId);
 
     res.status(201).json(registration);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error registering for event:', error);
-    res.status(500).json({ error: 'Failed to register for event' });
+    const statusCode = error.message.includes('not found') ? 404 :
+      error.message.includes('Already registered') || error.message.includes('full') ? 400 : 500;
+    res.status(statusCode).json({ error: error.message || 'Failed to register for event' });
   }
 });
 
-// Unregister from an event
-router.delete('/events/:id/register', isAuthenticated, async (req, res) => {
+/**
+ * AUTHENTICATED
+ * DELETE /api/events/:id/register
+ * Unregister from an event
+ */
+router.delete('/events/:id/register', ...requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user!.id;
+    const orgId = (req as any).tenant?.organizationId;
 
-    const result = await db.delete(eventParticipants)
-      .where(
-        and(
-          eq(eventParticipants.eventId, id),
-          eq(eventParticipants.userId, userId)
-        )
-      )
-      .returning();
-
-    if (result.length === 0) {
-      return res.status(404).json({ error: 'Registration not found' });
+    if (!orgId) {
+      return res.status(400).json({ error: 'Organization context required' });
     }
 
+    await EventsService.unregisterFromEvent(id, userId, orgId);
+
     res.json({ message: 'Unregistered successfully' });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error unregistering from event:', error);
-    res.status(500).json({ error: 'Failed to unregister' });
+    const statusCode = error.message.includes('not found') ? 404 : 500;
+    res.status(statusCode).json({ error: error.message || 'Failed to unregister' });
   }
 });
 

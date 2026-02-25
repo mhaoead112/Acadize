@@ -16,11 +16,12 @@ if (!process.env.DATABASE_URL) {
   throw new Error("FATAL ERROR: DATABASE_URL is not set in your .env file.");
 }
 
-// Create a pool using local PostgreSQL
+// Create a pool — enable SSL for cloud providers (Neon, Supabase, etc.)
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  // Handle empty password
-  ssl: false,
+  ssl: process.env.NODE_ENV === 'production'
+    ? { rejectUnauthorized: false }
+    : false,
 });
 
 // Initialize Drizzle with our schema

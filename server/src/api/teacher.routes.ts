@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { isAuthenticated } from '../middleware/auth.middleware.js';
+import { requireAuth } from '../middleware/protected.middleware.js';
 import { addTeacherNote, getNotesForStudent } from '../services/teacher-notes.service.js';
 import { db } from '../db/index.js';
 import { exams, examAttempts, antiCheatRiskScores, courses, users, examQuestions, examAnswers } from '../db/schema.js';
@@ -8,7 +9,7 @@ import { eq, and, desc, gte } from 'drizzle-orm';
 const router = Router();
 
 // POST /api/teacher/notes -> { studentId, content } => { id }
-router.post('/notes', isAuthenticated, async (req, res) => {
+router.post('/notes', ...requireAuth, async (req, res) => {
   try {
     const teacherId = req.user?.id;
     const { studentId, content } = req.body || {};
@@ -30,7 +31,7 @@ router.post('/notes', isAuthenticated, async (req, res) => {
 });
 
 // GET /api/teacher/students/:studentId/notes -> notes array
-router.get('/students/:studentId/notes', isAuthenticated, async (req, res) => {
+router.get('/students/:studentId/notes', ...requireAuth, async (req, res) => {
   try {
     const { studentId } = req.params;
     if (!studentId) return res.status(400).json({ message: 'studentId is required' });
@@ -44,7 +45,7 @@ router.get('/students/:studentId/notes', isAuthenticated, async (req, res) => {
 });
 
 // GET /api/teacher/exams -> Get all exams created by the teacher
-router.get('/exams', isAuthenticated, async (req, res) => {
+router.get('/exams', ...requireAuth, async (req, res) => {
   try {
     const teacherId = req.user?.id;
 
@@ -123,7 +124,7 @@ router.get('/exams', isAuthenticated, async (req, res) => {
 });
 
 // GET /api/teacher/attempts/flagged -> Get all flagged exam attempts for review
-router.get('/attempts/flagged', isAuthenticated, async (req, res) => {
+router.get('/attempts/flagged', ...requireAuth, async (req, res) => {
   try {
     const teacherId = req.user?.id;
 
@@ -200,7 +201,7 @@ router.get('/attempts/flagged', isAuthenticated, async (req, res) => {
 });
 
 // GET /api/teacher/mistakes/analytics -> Get mistake analytics for teacher's exams
-router.get('/mistakes/analytics', isAuthenticated, async (req, res) => {
+router.get('/mistakes/analytics', ...requireAuth, async (req, res) => {
   try {
     const teacherId = req.user?.id;
     const { examId } = req.query;

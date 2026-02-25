@@ -1,11 +1,15 @@
 import { Router } from 'express';
 import { isAuthenticated } from '../middleware/auth.middleware.js';
+import { requireSubscription } from '../middleware/subscription.middleware.js';
+
+// Combined auth + subscription middleware
+const requireAuth = [isAuthenticated, requireSubscription];
 import { recordLoginStreak, getStreakInfo, updateWeeklyGoal } from '../services/streak.service.js';
 
 const router = Router();
 
 // GET /api/streaks/me - Get current user's streak info
-router.get('/me', isAuthenticated, async (req, res) => {
+router.get('/me', ...requireAuth, async (req, res) => {
   try {
     const userId = req.user!.id;
     const streakInfo = await getStreakInfo(userId);
@@ -17,12 +21,12 @@ router.get('/me', isAuthenticated, async (req, res) => {
 });
 
 // POST /api/streaks/login - Record a login (called automatically on login)
-router.post('/login', isAuthenticated, async (req, res) => {
+router.post('/login', ...requireAuth, async (req, res) => {
   try {
     const userId = req.user!.id;
     await recordLoginStreak(userId);
     const updatedStreak = await getStreakInfo(userId);
-    
+
     res.json({
       message: 'Login streak recorded successfully',
       streak: updatedStreak,
@@ -34,7 +38,7 @@ router.post('/login', isAuthenticated, async (req, res) => {
 });
 
 // PUT /api/streaks/weekly-goal - Update weekly study goal
-router.put('/weekly-goal', isAuthenticated, async (req, res) => {
+router.put('/weekly-goal', ...requireAuth, async (req, res) => {
   try {
     const userId = req.user!.id;
     const { goalHours } = req.body;
@@ -45,7 +49,7 @@ router.put('/weekly-goal', isAuthenticated, async (req, res) => {
 
     await updateWeeklyGoal(userId, goalHours);
     const updatedStreak = await getStreakInfo(userId);
-    
+
     res.json({
       message: 'Weekly goal updated successfully',
       streak: updatedStreak,

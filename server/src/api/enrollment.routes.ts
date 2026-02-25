@@ -2,6 +2,10 @@
 
 import express from 'express';
 import { isAuthenticated } from '../middleware/auth.middleware.js';
+import { requireSubscription } from '../middleware/subscription.middleware.js';
+
+// Combined auth + subscription middleware
+const requireAuth = [isAuthenticated, requireSubscription];
 import { db } from '../db/index.js';
 import { enrollments, courses, users, assignments, submissions, grades } from '../db/schema.js';
 import { eq, and, sql, inArray } from 'drizzle-orm';
@@ -13,7 +17,7 @@ const router = express.Router();
  * GET /api/enrollments/my-courses
  * Get all courses the authenticated student is enrolled in (simplified)
  */
-router.get('/my-courses', isAuthenticated, async (req, res) => {
+router.get('/my-courses', ...requireAuth, async (req, res) => {
     try {
         const user = (req as any).user;
         if (!user) {
@@ -46,7 +50,7 @@ router.get('/my-courses', isAuthenticated, async (req, res) => {
  * GET /api/enrollments/student
  * Get all enrollments for the authenticated student
  */
-router.get('/student', isAuthenticated, async (req, res) => {
+router.get('/student', ...requireAuth, async (req, res) => {
     try {
         const user = (req as any).user;
         if (!user) {
@@ -86,7 +90,7 @@ router.get('/student', isAuthenticated, async (req, res) => {
  * GET /api/enrollments/student/:studentId
  * Get all enrollments for a specific student (for teachers to view student progress)
  */
-router.get('/student/:studentId', isAuthenticated, async (req, res) => {
+router.get('/student/:studentId', ...requireAuth, async (req, res) => {
     try {
         const user = (req as any).user;
         if (!user || user.role !== 'teacher') {
@@ -129,7 +133,7 @@ router.get('/student/:studentId', isAuthenticated, async (req, res) => {
  * GET /api/enrollments/course/:courseId
  * Get all students enrolled in a specific course with their progress
  */
-router.get('/course/:courseId', isAuthenticated, async (req, res) => {
+router.get('/course/:courseId', ...requireAuth, async (req, res) => {
     try {
         const user = (req as any).user;
         if (!user || user.role !== 'teacher') {
@@ -241,7 +245,7 @@ router.get('/course/:courseId', isAuthenticated, async (req, res) => {
  * GET /api/enrollments/students/available/:courseId
  * Get all students NOT enrolled in a specific course
  */
-router.get('/students/available/:courseId', isAuthenticated, async (req, res) => {
+router.get('/students/available/:courseId', ...requireAuth, async (req, res) => {
     try {
         const user = (req as any).user;
         if (!user || user.role !== 'teacher') {
@@ -303,7 +307,7 @@ router.get('/students/available/:courseId', isAuthenticated, async (req, res) =>
  * GET /api/enrollments/students/all
  * Get all students with their enrollment status for teacher's courses
  */
-router.get('/students/all', isAuthenticated, async (req, res) => {
+router.get('/students/all', ...requireAuth, async (req, res) => {
     try {
         const user = (req as any).user;
         if (!user || user.role !== 'teacher') {
@@ -331,10 +335,14 @@ router.get('/students/all', isAuthenticated, async (req, res) => {
 
         // Get all enrollments for these courses
         const courseIds = teacherCourses.map(c => c.id);
-        const allEnrollments = await db
-            .select()
-            .from(enrollments)
-            .where(sql`${enrollments.courseId} IN (${sql.raw(courseIds.map(id => `'${id}'`).join(','))})`);
+
+        // Only query enrollments if teacher has courses
+        const allEnrollments = courseIds.length > 0
+            ? await db
+                .select()
+                .from(enrollments)
+                .where(sql`${enrollments.courseId} IN (${sql.raw(courseIds.map(id => `'${id}'`).join(','))})`)
+            : [];
 
         // Map students with their enrollment counts
         const studentsWithEnrollments = allStudents.map(student => {
@@ -371,7 +379,7 @@ router.get('/students/all', isAuthenticated, async (req, res) => {
  * POST /api/enrollments/enroll
  * Enroll a student in a course
  */
-router.post('/enroll', isAuthenticated, async (req, res) => {
+router.post('/enroll', ...requireAuth, async (req, res) => {
     try {
         const user = (req as any).user;
         if (!user || user.role !== 'teacher') {
@@ -447,7 +455,7 @@ router.post('/enroll', isAuthenticated, async (req, res) => {
  * DELETE /api/enrollments/:enrollmentId
  * Remove a student from a course
  */
-router.delete('/:enrollmentId', isAuthenticated, async (req, res) => {
+router.delete('/:enrollmentId', ...requireAuth, async (req, res) => {
     try {
         const user = (req as any).user;
         if (!user || user.role !== 'teacher') {

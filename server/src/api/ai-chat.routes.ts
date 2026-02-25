@@ -2,6 +2,10 @@ import { Router } from 'express';
 import { Pool } from 'pg';
 import OpenAI from 'openai';
 import { isAuthenticated } from '../middleware/auth.middleware.js';
+import { requireSubscription } from '../middleware/subscription.middleware.js';
+
+// Combined auth + subscription middleware
+const requireAuth = [isAuthenticated, requireSubscription];
 
 const router = Router();
 
@@ -243,7 +247,7 @@ Answer as ${personaConfig.name}:
 }
 
 // POST /api/ai/chat - Ask the AI Study Buddy
-router.post('/chat', isAuthenticated, async (req, res) => {
+router.post('/chat', ...requireAuth, async (req, res) => {
   try {
     const { question, persona = 'alex' } = req.body;
 
@@ -395,7 +399,7 @@ router.get('/status', async (req, res) => {
 });
 
 // POST /api/ai/digest-lesson - Process a single lesson for AI context
-router.post('/digest-lesson', isAuthenticated, async (req, res) => {
+router.post('/digest-lesson', ...requireAuth, async (req, res) => {
   try {
     const user = (req as any).user;
     if (!user || (user.role !== 'teacher' && user.role !== 'admin')) {
@@ -418,7 +422,7 @@ router.post('/digest-lesson', isAuthenticated, async (req, res) => {
 });
 
 // POST /api/ai/digest-all - Process all lessons in the uploads folder
-router.post('/digest-all', isAuthenticated, async (req, res) => {
+router.post('/digest-all', ...requireAuth, async (req, res) => {
   try {
     const user = (req as any).user;
     if (!user || user.role !== 'admin') {

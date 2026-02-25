@@ -1,7 +1,11 @@
 // server/src/api/exam-attempt.routes.ts
 
 import express, { Request, Response } from 'express';
-import { isAuthenticated } from '../middleware/auth.middleware.js';
+import { isAuthenticated, isStudent } from '../middleware/auth.middleware.js';
+import { requireSubscription } from '../middleware/subscription.middleware.js';
+
+// Combined auth + subscription middleware
+const requireAuth = [isAuthenticated, requireSubscription];
 import { ExamAttemptService } from '../services/exam-attempt.service.js';
 import { eq } from 'drizzle-orm';
 
@@ -39,7 +43,7 @@ const isStudent = (req: Request, res: Response, next: express.NextFunction) => {
  *   { id, examId, status, startedAt, submittedAt, score, ... }
  * ]
  */
-router.get('/my-attempts', isAuthenticated, isStudent, async (req: Request, res: Response) => {
+router.get('/my-attempts', ...requireAuth, isStudent, async (req: Request, res: Response) => {
   try {
     const studentId = req.user!.id;
     const { desc } = await import('drizzle-orm');
@@ -99,7 +103,7 @@ router.get('/my-attempts', isAuthenticated, isStudent, async (req: Request, res:
  *   expiresAt: string
  * }
  */
-router.post('/start', isAuthenticated, isStudent, async (req: Request, res: Response) => {
+router.post('/start', ...requireAuth, isStudent, async (req: Request, res: Response) => {
   try {
     const { examId, consent, deviceInfo } = req.body;
 
@@ -130,7 +134,9 @@ router.post('/start', isAuthenticated, isStudent, async (req: Request, res: Resp
         version: deviceInfo.browserVersion || 'unknown',
         os: deviceInfo.os || 'unknown',
         screenResolution: deviceInfo.screenResolution || 'unknown',
-      } : undefined
+        screenResolution: deviceInfo.screenResolution || 'unknown',
+      } : undefined,
+      organizationId: req.tenant?.organizationId || req.user?.organizationId
     });
 
     res.status(201).json({
@@ -172,7 +178,7 @@ router.post('/start', isAuthenticated, isStudent, async (req: Request, res: Resp
  *   savedAt: string
  * }
  */
-router.post('/:attemptId/save-answer', isAuthenticated, isStudent, async (req: Request, res: Response) => {
+router.post('/:attemptId/save-answer', ...requireAuth, isStudent, async (req: Request, res: Response) => {
   try {
     const { attemptId } = req.params;
     const { questionId, answer, timeSpent } = req.body;
@@ -186,6 +192,7 @@ router.post('/:attemptId/save-answer', isAuthenticated, isStudent, async (req: R
       questionId,
       answer,
       timeSpent,
+      studentId: req.user!.id
     });
 
     res.status(200).json(result);
@@ -216,7 +223,7 @@ router.post('/:attemptId/save-answer', isAuthenticated, isStudent, async (req: R
  *   message: string
  * }
  */
-router.post('/:attemptId/submit', isAuthenticated, isStudent, async (req: Request, res: Response) => {
+router.post('/:attemptId/submit', ...requireAuth, isStudent, async (req: Request, res: Response) => {
   try {
     const { attemptId } = req.params;
     const { timeRemaining, finalAnswers } = req.body;
@@ -253,7 +260,7 @@ router.post('/:attemptId/submit', isAuthenticated, isStudent, async (req: Reques
  *   expiresAt: string
  * }
  */
-router.get('/:attemptId/reconnect', isAuthenticated, isStudent, async (req: Request, res: Response) => {
+router.get('/:attemptId/reconnect', ...requireAuth, isStudent, async (req: Request, res: Response) => {
   try {
     const { attemptId } = req.params;
 
@@ -289,7 +296,7 @@ router.get('/:attemptId/reconnect', isAuthenticated, isStudent, async (req: Requ
  *   flaggedForReview: boolean
  * }
  */
-router.get('/:attemptId', isAuthenticated, async (req: Request, res: Response) => {
+router.get('/:attemptId', ...requireAuth, async (req: Request, res: Response) => {
   try {
     const { attemptId } = req.params;
     const studentId = req.user?.id;
@@ -371,7 +378,7 @@ router.get('/:attemptId', isAuthenticated, async (req: Request, res: Response) =
  * PATCH /api/exam-attempts/:attemptId/answers
  * Alias for save-answer (PATCH instead of POST)
  */
-router.patch('/:attemptId/answers', isAuthenticated, isStudent, async (req: Request, res: Response) => {
+router.patch('/:attemptId/answers', ...requireAuth, isStudent, async (req: Request, res: Response) => {
   try {
     const { attemptId } = req.params;
     const { answers } = req.body;
@@ -411,7 +418,7 @@ router.patch('/:attemptId/answers', isAuthenticated, isStudent, async (req: Requ
  * POST /api/exam-attempts/:attemptId/events
  * Log anti-cheat events during exam
  */
-router.post('/:attemptId/events', isAuthenticated, isStudent, async (req: Request, res: Response) => {
+router.post('/:attemptId/events', ...requireAuth, isStudent, async (req: Request, res: Response) => {
   try {
     const { attemptId } = req.params;
     const { eventType, severity, description, metadata } = req.body;
@@ -455,7 +462,7 @@ router.post('/:attemptId/events', isAuthenticated, isStudent, async (req: Reques
  *   statistics: { focusLossCount, tabSwitchCount, totalEvents, ... }
  * }
  */
-router.get('/:attemptId/review', isAuthenticated, async (req: Request, res: Response) => {
+router.get('/:attemptId/review', ...requireAuth, async (req: Request, res: Response) => {
   try {
     const attemptId = req.params.attemptId;
     const userId = req.user!.id;
@@ -640,7 +647,7 @@ router.get('/:attemptId/review', isAuthenticated, async (req: Request, res: Resp
  *   attempt: { ...updated attempt }
  * }
  */
-router.post('/:attemptId/decision', isAuthenticated, async (req: Request, res: Response) => {
+router.post('/:attemptId/decision', ...requireAuth, async (req: Request, res: Response) => {
   try {
     const attemptId = req.params.attemptId;
     const userId = req.user!.id;
@@ -743,7 +750,7 @@ router.post('/:attemptId/decision', isAuthenticated, async (req: Request, res: R
  *   answer: { ...updated answer }
  * }
  */
-router.patch('/:attemptId/adjust-score', isAuthenticated, async (req: Request, res: Response) => {
+router.patch('/:attemptId/adjust-score', ...requireAuth, async (req: Request, res: Response) => {
   try {
     const attemptId = req.params.attemptId;
     const userId = req.user!.id;
@@ -858,7 +865,7 @@ router.patch('/:attemptId/adjust-score', isAuthenticated, async (req: Request, r
  *   attempt: { ...updated attempt }
  * }
  */
-router.post('/:attemptId/feedback', isAuthenticated, async (req: Request, res: Response) => {
+router.post('/:attemptId/feedback', ...requireAuth, async (req: Request, res: Response) => {
   try {
     const attemptId = req.params.attemptId;
     const userId = req.user!.id;

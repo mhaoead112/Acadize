@@ -1,10 +1,41 @@
 // server/src/services/course.service.ts
 
 import { db } from '../db/index.js';
-// We use the relative path. It's more robust than an alias.
-// Path from server/src/services/ -> server/ -> / -> shared/
-import { courses, users } from '../db/schema.js';
-import { and, eq } from 'drizzle-orm';
+import { courses, courseTranslations, users } from '../db/schema.js';
+import { and, eq, inArray } from 'drizzle-orm';
+import { requireTenantId } from '../utils/tenant-query.js';
+
+async function resolveCourseTranslations<T extends { id: string; title: string; description?: string | null }>(
+  items: T[],
+  locale: string
+): Promise<T[]> {
+  if (items.length === 0 || locale === 'en') return items;
+  const ids = items.map((c) => c.id);
+  const rows = await db
+    .select()
+    .from(courseTranslations)
+    .where(and(inArray(courseTranslations.courseId, ids), inArray(courseTranslations.locale, [locale, 'en'])));
+  const byCourse: Record<string, { locale: string; title: string; description?: string | null }[]> = {};
+  for (const r of rows) {
+    if (!byCourse[r.courseId]) byCourse[r.courseId] = [];
+    byCourse[r.courseId].push({
+      locale: r.locale,
+      title: r.title,
+      description: r.description ?? undefined,
+    });
+  }
+  return items.map((c) => {
+    const tr = byCourse[c.id];
+    if (!tr) return c;
+    const forLocale = tr.find((t) => t.locale === locale);
+    const forEn = tr.find((t) => t.locale === 'en');
+    return {
+      ...c,
+      title: forLocale?.title ?? forEn?.title ?? c.title,
+      description: forLocale?.description ?? forEn?.description ?? c.description,
+    };
+  });
+}
 
 export interface CreateCourseDto {
     title: string;
@@ -12,25 +43,24 @@ export interface CreateCourseDto {
     imageUrl?: string | null;
     isPublished?: boolean;
     teacherId: string;
-    organizationId?: string;
+    organizationId: string; // REQUIRED — no longer optional
 }
 
 export const createCourse = async (courseData: CreateCourseDto) => {
-    const { title, description, imageUrl, isPublished, teacherId, organizationId } = courseData;
+    const orgId = requireTenantId(courseData.organizationId);
+    const { title, description, imageUrl, teacherId } = courseData;
 
     const teacher = await db
         .select()
         .from(users)
-        .where(and(eq(users.id, teacherId), eq(users.role, 'teacher')));
+        .where(and(
+            eq(users.id, teacherId),
+            eq(users.role, 'teacher'),
+            eq(users.organizationId, orgId) // Verify teacher belongs to same org
+        ));
 
     if (teacher.length === 0) {
-        throw new Error("User does not exist or is not a teacher.");
-    }
-
-    // Use the teacher's organizationId if not explicitly provided
-    const orgId = organizationId || teacher[0].organizationId;
-    if (!orgId) {
-        throw new Error("Organization ID is required to create a course.");
+        throw new Error("User does not exist, is not a teacher, or does not belong to this organization.");
     }
 
     const newCourse = await db.insert(courses).values({
@@ -46,43 +76,74 @@ export const createCourse = async (courseData: CreateCourseDto) => {
         throw new Error("Failed to create the course.");
     }
 
+    await db.insert(courseTranslations).values({
+        courseId: newCourse[0].id,
+        locale: 'en',
+        title,
+        description: description ?? null,
+    });
     return newCourse[0];
 };
 
-export const getCoursesByTeacher = async (teacherId: string) => {
+export const getCoursesByTeacher = async (
+    teacherId: string,
+    organizationId: string,
+    locale?: string
+) => {
+    const orgId = requireTenantId(organizationId);
     const teacherCourses = await db
         .select()
         .from(courses)
-        .where(eq(courses.teacherId, teacherId));
+        .where(and(
+            eq(courses.teacherId, teacherId),
+            eq(courses.organizationId, orgId)
+        ));
+    if (locale) return resolveCourseTranslations(teacherCourses, locale);
     return teacherCourses;
 };
 
-export const getPublishedCourses = async (organizationId?: string) => {
-    const conditions: any[] = [eq(courses.isPublished, true)];
-    if (organizationId) {
-        conditions.push(eq(courses.organizationId, organizationId));
-    }
+export const getPublishedCourses = async (organizationId: string, locale?: string) => {
+    const orgId = requireTenantId(organizationId);
     const publishedCourses = await db
         .select()
         .from(courses)
-        .where(and(...conditions)!);
+        .where(and(
+            eq(courses.isPublished, true),
+            eq(courses.organizationId, orgId)
+        ));
+    if (locale) return resolveCourseTranslations(publishedCourses, locale);
     return publishedCourses;
 };
 
-export const getCourseById = async (courseId: string) => {
+export const getCourseById = async (
+    courseId: string,
+    organizationId: string,
+    locale?: string
+) => {
+    const orgId = requireTenantId(organizationId);
     const course = await db
         .select()
         .from(courses)
-        .where(eq(courses.id, courseId))
+        .where(and(
+            eq(courses.id, courseId),
+            eq(courses.organizationId, orgId)
+        ))
         .limit(1);
-    return course[0] || null;
+    const row = course[0] || null;
+    if (!row || !locale || locale === 'en') return row;
+    const [resolved] = await resolveCourseTranslations([row], locale);
+    return resolved ?? row;
 };
 
-export const updateCoursePublishStatus = async (courseId: string, isPublished: boolean) => {
+export const updateCoursePublishStatus = async (courseId: string, isPublished: boolean, organizationId: string) => {
+    const orgId = requireTenantId(organizationId);
     const updatedCourse = await db
         .update(courses)
         .set({ isPublished })
-        .where(eq(courses.id, courseId))
+        .where(and(
+            eq(courses.id, courseId),
+            eq(courses.organizationId, orgId)
+        ))
         .returning();
 
     if (!updatedCourse[0]) {
@@ -92,10 +153,14 @@ export const updateCoursePublishStatus = async (courseId: string, isPublished: b
     return updatedCourse[0];
 };
 
-export const deleteCourse = async (courseId: string) => {
+export const deleteCourse = async (courseId: string, organizationId: string) => {
+    const orgId = requireTenantId(organizationId);
     const deletedCourse = await db
         .delete(courses)
-        .where(eq(courses.id, courseId))
+        .where(and(
+            eq(courses.id, courseId),
+            eq(courses.organizationId, orgId)
+        ))
         .returning();
 
     if (!deletedCourse[0]) {

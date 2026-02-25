@@ -70,6 +70,7 @@ import gradesRoutes from './api/grades.routes.js';
 import streakRoutes from './api/streak.routes.js';
 import eventsRoutes from './api/events.routes.js';
 import profileRoutes from './api/profile.routes.js';
+import localeRoutes from './api/locale.routes.js';
 import analyticsRoutes from './api/analytics.routes.js';
 import adminRoutes from './api/admin.routes.js';
 import parentRoutes from './api/parent.routes.js';
@@ -87,12 +88,22 @@ import riskScoringRoutes from './api/risk-scoring.routes.js';
 import retakeExamRoutes from './api/retake-exam.routes.js';
 import retakeSubmissionRoutes from './api/retake-submission.routes.js';
 import retakeRoutes from './api/retake.routes.js';
+import sessionRoutes from './api/session.routes.js';
+import { attendanceRouter, sessionQrRouter } from './api/attendance.routes.js';
 import teacherRoutes from './api/teacher.routes.js';
 import recordingUploadRoutes from './api/recording-upload.routes.js';
 import adminUsersRoutes from './api/admin-users.routes.js';
 import passwordResetRoutes from './api/password-reset.routes.js';
 import emailTestRoutes from './api/email-test.routes.js';
+import subscriptionRoutes from './api/subscription.routes.js';
+import webhookRoutes from './api/webhook.routes.js';
+import zoomWebhookRoutes from './api/zoom-webhook.routes.js';
+import registrationRoutes from './api/registration.routes.js';
 import { tenantMiddleware, validateUserTenant } from './middleware/tenant.middleware.js';
+import { localeMiddleware } from './middleware/locale.middleware.js';
+import { requireSubscription } from './middleware/subscription.middleware.js';
+import { isAuthenticated, isAdmin } from './middleware/auth.middleware.js';
+
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -151,14 +162,15 @@ if (isProduction) {
 
 // CORS configuration - MUST be before Helmet and other middleware
 // Updated to include all Vercel deployment URLs (Dec 10, 2025)
+// In production, CORS_ORIGINS env var is REQUIRED.
+// Fallback only includes local dev URLs.
 const allowedOrigins = process.env.CORS_ORIGINS
   ? process.env.CORS_ORIGINS.split(',')
-  : [
-    'http://localhost:5173',
-    'http://localhost:5174',
-    'https://eduverse-initial.vercel.app',
-    'https://eduverse-initial-k9ot2z2u6-mhaoead112s-projects.vercel.app'
-  ];
+  : ['http://localhost:5173', 'http://localhost:5174'];
+
+if (isProduction && !process.env.CORS_ORIGINS) {
+  logger.warn('⚠️  CORS_ORIGINS not set in production — only localhost origins are allowed. Set CORS_ORIGINS env var.');
+}
 
 logger.info(`🔐 CORS enabled for origins: ${JSON.stringify(allowedOrigins)}`);
 
@@ -177,6 +189,9 @@ const corsConfig = cors({
       if (origin.includes('eduverse-initial') && origin.includes('.vercel.app')) return true;
       // Allow all lvh.me subdomains for local multi-tenant testing
       if (origin.endsWith('lvh.me:5173') || origin.endsWith('.lvh.me:5174')) return true;
+      // Allow LAN IPs for local mobile testing (192.168.*, 10.*, 172.*)
+      if (origin.startsWith('http://192.168.') || origin.startsWith('http://10.') || origin.startsWith('http://172.')) return true;
+      if (origin.startsWith('http://127.0.0.1')) return true;
       return false;
     });
 
@@ -191,7 +206,7 @@ const corsConfig = cors({
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-Tenant-Subdomain'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-Tenant-Subdomain', 'X-Organization-Subdomain', 'X-Locale'],
   exposedHeaders: ['Content-Range', 'X-Content-Range'],
   maxAge: 600, // Cache preflight for 10 minutes
   optionsSuccessStatus: 204 // Some legacy browsers choke on 204
@@ -267,14 +282,25 @@ app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
 
 // JSON and URL-encoded body parsers
-// Skip JSON parsing for multipart form data (file uploads)
+// Skip JSON parsing for multipart form data (file uploads).
+// For the Zoom webhook, we also save the raw body so the HMAC-SHA256
+// signature can be verified against the original bytes (not re-serialised JSON).
 app.use((req, res, next) => {
   const contentType = req.headers['content-type'] || '';
   if (contentType.includes('multipart/form-data')) {
     // Skip JSON parsing for file uploads - multer will handle these
     return next();
   }
-  express.json({ limit: '50mb' })(req, res, next);
+  express.json({
+    limit: '50mb',
+    verify: (req: any, _res, buf) => {
+      // Preserve raw body for the Zoom webhook so HMAC-SHA256 verification
+      // runs against the original bytes (not re-serialised JSON).
+      if (req.originalUrl?.includes('/api/webhooks/zoom') || req.url?.includes('/api/webhooks/zoom')) {
+        req.rawBody = buf.toString('utf8');
+      }
+    },
+  })(req, res, next);
 });
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
@@ -325,13 +351,14 @@ const uploadLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-logger.info('🚀 Starting Eduverse API server...');
+logger.info('🚀 Starting Acadize API server...');
 
 // --- Multi-tenant middleware ---
 // Resolve organization from subdomain/custom domain
 // For development, use X-Tenant-Subdomain header or defaults to 'default'
 app.use('/api', tenantMiddleware);
 app.use('/api', validateUserTenant);
+app.use('/api', localeMiddleware);
 
 // --- Scoped Query Middleware ---
 // Sets RLS tenant context for database queries
@@ -344,37 +371,76 @@ logger.info('🏢 Multi-tenant middleware enabled');
 
 // --- API Route Definitions ---
 app.use('/api/auth', authRoutes);
+app.use('/api/registration', apiLimiter, registrationRoutes);
+// AI routes - these routes handle auth internally, just add subscription check
 app.use('/api/ai', aiLimiter, aiRoutes);
 app.use('/api/ai-chat', aiLimiter, aiChatRoutes);
+
+// Course routes - these routes handle auth internally, just add subscription check
 app.use('/api/courses', apiLimiter, courseRoutes);
 app.use('/api/lessons', uploadLimiter, lessonRoutes);
 app.use('/api/announcements', apiLimiter, announcementRoutes);
 app.use('/api/enrollments', apiLimiter, enrollmentRoutes);
 app.use('/api/assignments', uploadLimiter, assignmentRoutes);
 app.use('/api/report-cards', apiLimiter, reportCardRoutes);
+
+// User routes - these routes handle auth internally
 app.use('/api/users', apiLimiter, usersRoutes);
 app.use('/api/study-groups', apiLimiter, studyGroupRoutes);
 app.use('/api/conversations', apiLimiter, conversationsRoutes);
 app.use('/api/notifications', apiLimiter, notificationsRoutes);
+
+// Progress & grades - these routes handle auth internally
 app.use('/api/progress', apiLimiter, progressRoutes);
 app.use('/api/grades', apiLimiter, gradesRoutes);
 app.use('/api/streaks', apiLimiter, streakRoutes);
 app.use('/api', apiLimiter, eventsRoutes);
 app.use('/api/profile', uploadLimiter, profileRoutes);
+app.use('/api/locale', localeRoutes);
 app.use('/api/analytics', apiLimiter, analyticsRoutes);
-app.use('/api/admin/users', apiLimiter, adminUsersRoutes);
+// Admin routes - NO subscription check (admins bypass)
+app.use('/api/admin-users', adminUsersRoutes);
+
+// Subscription routes - NO subscription check (needed to activate)
+app.use('/api/subscription', apiLimiter, subscriptionRoutes);
+
+// Webhook routes - NO auth/subscription (external callbacks)
+// Zoom webhook has its own dedicated router mounted first for specificity
+app.use('/api/webhooks/zoom', zoomWebhookRoutes);
+app.use('/api/webhooks', webhookRoutes);
+
+// Admin routes - NO subscription check (admins bypass)
 app.use('/api/admin', apiLimiter, adminRoutes);
-app.use('/api/password-reset', authLimiter, passwordResetRoutes);
-app.use('/api/email-test', apiLimiter, emailTestRoutes);
-app.use('/api/parent', apiLimiter, parentRoutes);
-app.use('/api/schedule', apiLimiter, scheduleRoutes);
 app.use('/api/admin/settings', apiLimiter, adminSettingsRoutes);
+
+// Password reset - NO subscription check (public)
+app.use('/api/password-reset', authLimiter, passwordResetRoutes);
+
+// Email test - admin only
+app.use('/api/email-test', apiLimiter, emailTestRoutes);
+
+// Parent routes - handle auth internally
+app.use('/api/parent', apiLimiter, parentRoutes);
+
+// Schedule - handle auth internally
+app.use('/api/schedule', apiLimiter, scheduleRoutes);
+// Admin organization routes - admin only
 import adminOrganizationsRoutes from './api/admin-organizations.routes.js';
 app.use('/api/admin/organizations', apiLimiter, adminOrganizationsRoutes);
+
+// Push notifications - handle auth internally
 app.use('/api/push', apiLimiter, pushRoutes);
+
+// Upload routes - handle auth internally
 app.use('/api/upload', uploadLimiter, uploadRoutes);
+
+// Contacts - handle auth internally
 app.use('/api/contacts', apiLimiter, contactsRoutes);
+
+// Student routes - handle auth internally
 app.use('/api/student', apiLimiter, studentRoutes);
+
+// Exam routes - handle auth internally
 app.use('/api/exams', apiLimiter, examRoutes);
 app.use('/api/exam-attempts', apiLimiter, examAttemptRoutes);
 app.use('/api/anti-cheat', apiLimiter, antiCheatRoutes);
@@ -383,8 +449,36 @@ app.use('/api/risk-scoring', apiLimiter, riskScoringRoutes);
 app.use('/api/retake-exams', apiLimiter, retakeExamRoutes);
 app.use('/api/retake-submissions', apiLimiter, retakeSubmissionRoutes);
 app.use('/api/retakes', apiLimiter, retakeRoutes);
-app.use('/api/teacher', apiLimiter, teacherRoutes); // Temporary alias for teacher routes
-app.use('/api/recordings', uploadLimiter, recordingUploadRoutes); // Screen recording uploads
+
+// Session / Smart Attendance routes - handle auth internally
+app.use('/api/sessions', apiLimiter, sessionRoutes);
+
+// Attendance routes (QR scan, session list, manual override, reports)
+app.use('/api/attendance', apiLimiter, attendanceRouter);
+
+// Session QR sub-router (get & rotate QR tokens) — uses mergeParams to get :id
+app.use('/api/sessions/:id/qr', apiLimiter, sessionQrRouter);
+
+// Teacher routes - handle auth internally
+app.use('/api/teacher', apiLimiter, teacherRoutes);
+
+// Recording uploads - handle auth internally
+app.use('/api/recordings', uploadLimiter, recordingUploadRoutes);
+
+
+// --- Tenant Info Endpoint ---
+app.get('/api/tenant/info', (req, res) => {
+  const tenant = (req as any).tenant;
+  if (!tenant) {
+    return res.status(400).json({ message: 'Organization context required.' });
+  }
+  res.json({
+    organizationId: tenant.organizationId,
+    name: tenant.name,
+    subdomain: tenant.subdomain,
+    plan: tenant.plan,
+  });
+});
 
 app.get('/api/health', (req, res) => {
   res.status(200).json({
@@ -415,16 +509,21 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   });
 });
 
-// Initialize WebSocket service for real-time notifications
+// Initialize WebSocket service for real-time notifications (chat, presence)
 import { WebSocketService } from './services/websocket.service.js';
 WebSocketService.initialize(server);
+
+// Initialize Socket.IO real-time attendance tracking
+import { initializeSocket } from './services/realtime.service.js';
+initializeSocket(server).catch(err => logger.error('Socket.IO init failed:', err));
 
 // Initialize AI Lesson Digestion Service
 import { initLessonDigestion } from './services/lesson-digestion.service.js';
 
 server.listen(PORT, () => {
-  logger.info(`✅ Eduverse backend server is running on http://localhost:${PORT}`);
-  logger.info(`🔌 WebSocket server is running on ws://localhost:${PORT}/ws`);
+  logger.info(`✅ Acadize backend server is running on http://localhost:${PORT}`);
+  logger.info(`🔌 WebSocket (chat) running on ws://localhost:${PORT}/ws`);
+  logger.info(`⚡ Socket.IO (attendance) running on ws://localhost:${PORT}/attendance`);
   logger.info(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
   logger.info(`🔒 Security: Helmet enabled, CORS configured`);
   logger.info(`⏱️  Rate limiting: ${isProduction ? 'STRICT' : 'RELAXED'} mode`);

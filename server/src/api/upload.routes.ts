@@ -2,6 +2,10 @@ import express from 'express';
 import multer from 'multer';
 import { v2 as cloudinary } from 'cloudinary';
 import { isAuthenticated } from '../middleware/auth.middleware.js';
+import { requireSubscription } from '../middleware/subscription.middleware.js';
+
+// Combined auth + subscription middleware
+const requireAuth = [isAuthenticated, requireSubscription];
 
 const router = express.Router();
 
@@ -36,7 +40,7 @@ const upload = multer({
  * POST /api/upload
  * Upload an image file to Cloudinary (for course covers, etc.)
  */
-router.post('/', isAuthenticated, upload.single('file'), async (req, res) => {
+router.post('/', ...requireAuth, upload.single('file'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: 'No file uploaded' });
@@ -60,7 +64,7 @@ router.post('/', isAuthenticated, upload.single('file'), async (req, res) => {
     });
 
     const uploadResult = result as any;
-    
+
     res.status(200).json({
       message: 'File uploaded successfully',
       filePath: uploadResult.secure_url,

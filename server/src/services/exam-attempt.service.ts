@@ -9,7 +9,8 @@ import {
   enrollments,
   antiCheatEvents,
   antiCheatRiskScores,
-  mistakePool
+  mistakePool,
+  courses
 } from '../db/schema.js';
 import { eq, and, desc, count } from 'drizzle-orm';
 import { createId } from '@paralleldrive/cuid2';
@@ -30,6 +31,7 @@ export interface StartExamAttemptDto {
     os: string;
     screenResolution: string;
   };
+  organizationId: string;
 }
 
 export interface SaveAnswerDto {
@@ -38,6 +40,7 @@ export interface SaveAnswerDto {
   answer: any;
   timeSpent?: number;
   answeredAt?: Date;
+  studentId: string; // Add studentId for security verification
 }
 
 export interface SubmitExamDto {
@@ -107,10 +110,15 @@ export class ExamAttemptService {
     attempt: any;
     examSnapshot: ExamSnapshot;
     expiresAt: Date;
+    expiresAt: Date;
   }> {
-    const { examId, studentId, ipAddress, userAgent, deviceFingerprint, browserInfo } = dto;
+    const { examId, studentId, ipAddress, userAgent, deviceFingerprint, browserInfo, organizationId } = dto;
 
-    // 1. Get exam and verify it exists
+    if (!organizationId) {
+      throw new Error("Organization ID is required to start an exam attempt.");
+    }
+
+    // 1. Get exam and verify it exists AND belongs to the organization
     const [exam] = await db
       .select({
         id: exams.id,
@@ -133,7 +141,11 @@ export class ExamAttemptService {
         rightClickAllowed: exams.rightClickAllowed,
       })
       .from(exams)
-      .where(eq(exams.id, examId))
+      .innerJoin(courses, eq(exams.courseId, courses.id))
+      .where(and(
+        eq(exams.id, examId),
+        eq(courses.organizationId, organizationId)
+      ))
       .limit(1);
 
     if (!exam) {
@@ -407,7 +419,7 @@ export class ExamAttemptService {
    * 5. Return success immediately (async processing)
    */
   static async saveAnswer(dto: SaveAnswerDto): Promise<{ success: boolean; savedAt: Date }> {
-    const { attemptId, questionId, answer, timeSpent } = dto;
+    const { attemptId, questionId, answer, timeSpent, studentId } = dto;
 
     // 1. Verify attempt exists and is in progress
     const [attempt] = await db
@@ -422,6 +434,11 @@ export class ExamAttemptService {
 
     if (attempt.status !== 'in_progress') {
       throw new Error('Cannot save answer. Attempt is not in progress.');
+    }
+
+    // Verify student ownership
+    if (attempt.studentId !== studentId) {
+      throw new Error('Unauthorized: Attempt belongs to different student.');
     }
 
     // 2. Verify question belongs to exam

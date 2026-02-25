@@ -2,6 +2,10 @@
 
 import express, { Request, Response } from 'express';
 import { isAuthenticated } from '../middleware/auth.middleware.js';
+import { requireSubscription } from '../middleware/subscription.middleware.js';
+
+// Combined auth + subscription middleware
+const requireAuth = [isAuthenticated, requireSubscription];
 import multer from 'multer';
 import { v2 as cloudinary } from 'cloudinary';
 import { db } from '../db/index.js';
@@ -65,7 +69,7 @@ cloudinary.config({
  */
 router.post(
     '/upload-chunk',
-    isAuthenticated,
+    ...requireAuth,
     upload.single('chunk'),
     async (req: Request, res: Response) => {
         try {
@@ -152,7 +156,7 @@ router.post(
  */
 router.post(
     '/finalize',
-    isAuthenticated,
+    ...requireAuth,
     upload.single('recording'),
     async (req: Request, res: Response) => {
         try {

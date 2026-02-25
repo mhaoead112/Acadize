@@ -1,6 +1,10 @@
 import { Router } from 'express';
 import { RiskScoringService } from '../services/risk-scoring.service.js';
-import { isAuthenticated, isTeacher, isAdmin } from '../middleware/auth.middleware.js';
+import { isAuthenticated, isTeacher } from '../middleware/auth.middleware.js';
+import { requireSubscription } from '../middleware/subscription.middleware.js';
+
+// Combined auth + subscription middleware
+const requireAuth = [isAuthenticated, requireSubscription];
 
 const router = Router();
 
@@ -9,7 +13,7 @@ const router = Router();
  * Calculate risk score for a specific exam attempt
  * Teacher/Admin only - for review purposes
  */
-router.post('/calculate/:attemptId', isAuthenticated, isTeacher, async (req, res) => {
+router.post('/calculate/:attemptId', ...requireAuth, isTeacher, async (req, res) => {
   try {
     const { attemptId } = req.params;
     const { weights, thresholds } = req.body;
@@ -38,7 +42,7 @@ router.post('/calculate/:attemptId', isAuthenticated, isTeacher, async (req, res
  * Get risk score for a specific exam attempt
  * Teacher/Admin only - for review purposes
  */
-router.get('/attempt/:attemptId', isAuthenticated, isTeacher, async (req, res) => {
+router.get('/attempt/:attemptId', ...requireAuth, isTeacher, async (req, res) => {
   try {
     const { attemptId } = req.params;
 
@@ -63,7 +67,7 @@ router.get('/attempt/:attemptId', isAuthenticated, isTeacher, async (req, res) =
  * Get all flagged attempts (high risk)
  * Teacher/Admin only
  */
-router.get('/flagged', isAuthenticated, isTeacher, async (req, res) => {
+router.get('/flagged', ...requireAuth, isTeacher, async (req, res) => {
   try {
     const { examId, minRiskLevel, limit } = req.query;
 
@@ -97,7 +101,7 @@ router.get('/flagged', isAuthenticated, isTeacher, async (req, res) => {
  * Get flagged attempts for a specific exam
  * Teacher/Admin only
  */
-router.get('/exam/:examId/flagged', isAuthenticated, isTeacher, async (req, res) => {
+router.get('/exam/:examId/flagged', ...requireAuth, isTeacher, async (req, res) => {
   try {
     const { examId } = req.params;
     const { minRiskLevel, limit } = req.query;
@@ -133,7 +137,7 @@ router.get('/exam/:examId/flagged', isAuthenticated, isTeacher, async (req, res)
  * Get detailed risk explanation for teachers
  * Teacher/Admin only - provides breakdown of risk factors
  */
-router.get('/explanation/:attemptId', isAuthenticated, isTeacher, async (req, res) => {
+router.get('/explanation/:attemptId', ...requireAuth, isTeacher, async (req, res) => {
   try {
     const { attemptId } = req.params;
 
@@ -182,7 +186,7 @@ router.get('/explanation/:attemptId', isAuthenticated, isTeacher, async (req, re
  * Get current risk scoring configuration (weights and thresholds)
  * Teacher/Admin only
  */
-router.get('/config', isAuthenticated, isTeacher, async (req, res) => {
+router.get('/config', ...requireAuth, isTeacher, async (req, res) => {
   try {
     // Return default configuration
     const config = {

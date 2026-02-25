@@ -1,5 +1,9 @@
 import { Router, Request, Response } from 'express';
 import { isAuthenticated } from '../middleware/auth.middleware.js';
+import { requireSubscription } from '../middleware/subscription.middleware.js';
+
+// Combined auth + subscription middleware
+const requireAuth = [isAuthenticated, requireSubscription];
 import {
   generateRetakeExam,
   getRetakeExam,
@@ -12,7 +16,7 @@ const router = Router();
  * POST /api/retakes
  * Generate a new retake exam from student's mistake pool
  */
-router.post('/retakes', isAuthenticated, async (req: Request, res: Response) => {
+router.post('/retakes', ...requireAuth, async (req: Request, res: Response) => {
   try {
     const { topicNames, questionCount, difficulty } = req.body;
     const studentId = (req as any).user?.id;
@@ -51,7 +55,7 @@ router.post('/retakes', isAuthenticated, async (req: Request, res: Response) => 
  * GET /api/retakes/:retakeId
  * Fetch a specific retake exam with its questions
  */
-router.get('/retakes/:retakeId', isAuthenticated, async (req: Request, res: Response) => {
+router.get('/retakes/:retakeId', ...requireAuth, async (req: Request, res: Response) => {
   try {
     const { retakeId } = req.params;
     const studentId = (req as any).user?.id;
@@ -80,7 +84,7 @@ router.get('/retakes/:retakeId', isAuthenticated, async (req: Request, res: Resp
  */
 router.post(
   '/retakes/:retakeId/submit',
-  isAuthenticated,
+  ...requireAuth,
   async (req: Request, res: Response) => {
     try {
       const { retakeId } = req.params;

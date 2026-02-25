@@ -5,6 +5,8 @@
  * All templates are mobile-responsive and follow modern email design best practices
  */
 
+import { getEmailStrings } from '../i18n/emails/index.js';
+
 export interface EmailTemplateData {
     [key: string]: any;
 }
@@ -12,9 +14,9 @@ export interface EmailTemplateData {
 /**
  * Base HTML template with header, footer, and consistent styling
  */
-export const baseTemplate = (content: string, preheader?: string): string => `
+export const baseTemplate = (content: string, preheader?: string, lang: string = 'en'): string => `
 <!DOCTYPE html>
-<html lang="en">
+<html lang="${lang}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -287,22 +289,43 @@ export const baseTemplate = (content: string, preheader?: string): string => `
 </html>
 `;
 
+const EN_WELCOME: Record<string, string> = {
+    heading: "Welcome to Eduverse! 🎉",
+    hi: "Hi",
+    thankYou: "Thank you for joining Eduverse as a",
+    intro: "We're excited to have you on board! Eduverse is your all-in-one learning platform designed to make education engaging, interactive, and effective.",
+    gettingStarted: "🚀 Getting Started:",
+    goToDashboard: "Go to Dashboard",
+    support: "If you have any questions, our support team is here to help!",
+    bestRegards: "Best regards,",
+    team: "The Eduverse Team",
+    subject: "Welcome to Eduverse! Start your learning journey today.",
+};
+
 /**
- * Welcome Email Template
+ * Welcome Email Template (locale-aware when locale is provided)
  */
 export const welcomeEmailTemplate = (data: {
     fullName: string;
     role: string;
     dashboardUrl: string;
-}): string => {
+}, locale?: string): string => {
+    let s: Record<string, string> | null = null;
+    if (locale) {
+        try {
+            s = getEmailStrings(locale).welcome ?? null;
+        } catch (_) {}
+    }
+    const t = (key: string) => (s && s[key]) ?? EN_WELCOME[key];
+
     const content = `
-    <h1>Welcome to Eduverse! 🎉</h1>
-    <p>Hi <strong>${data.fullName}</strong>,</p>
-    <p>Thank you for joining Eduverse as a <span class="badge badge-info">${data.role}</span>.</p>
-    <p>We're excited to have you on board! Eduverse is your all-in-one learning platform designed to make education engaging, interactive, and effective.</p>
+    <h1>${t('heading')}</h1>
+    <p>${t('hi')} <strong>${data.fullName}</strong>,</p>
+    <p>${t('thankYou')} <span class="badge badge-info">${data.role}</span>.</p>
+    <p>${t('intro')}</p>
     
     <div class="info-box">
-      <p><strong>🚀 Getting Started:</strong></p>
+      <p><strong>${t('gettingStarted')}</strong></p>
       <p>• Explore your personalized dashboard</p>
       <p>• ${data.role === 'student' ? 'Browse available courses and enroll' : 'Create your first course'}</p>
       <p>• ${data.role === 'student' ? 'Track your progress and achievements' : 'Manage your students and assignments'}</p>
@@ -312,16 +335,17 @@ export const welcomeEmailTemplate = (data: {
     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
       <tr>
         <td align="center">
-          <a href="${data.dashboardUrl}" class="button">Go to Dashboard</a>
+          <a href="${data.dashboardUrl}" class="button">${t('goToDashboard')}</a>
         </td>
       </tr>
     </table>
     
-    <p style="margin-top: 30px;">If you have any questions, our support team is here to help!</p>
-    <p>Best regards,<br><strong>The Eduverse Team</strong></p>
+    <p style="margin-top: 30px;">${t('support')}</p>
+    <p>${t('bestRegards')}<br><strong>${t('team')}</strong></p>
   `;
 
-    return baseTemplate(content, `Welcome to Eduverse! Start your learning journey today.`);
+    const preheader = t('subject');
+    return baseTemplate(content, preheader, locale?.startsWith('ar') ? 'ar' : 'en');
 };
 
 /**

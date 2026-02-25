@@ -3,13 +3,17 @@ import { db } from '../db/index.js';
 import { assignments, submissions, grades, enrollments, courses } from '../db/schema.js';
 import { eq, and, sql, desc, inArray } from 'drizzle-orm';
 import { isAuthenticated } from '../middleware/auth.middleware.js';
+import { requireSubscription } from '../middleware/subscription.middleware.js';
+
+// Combined auth + subscription middleware
+const requireAuth = [isAuthenticated, requireSubscription];
 
 const router = Router();
 
 // Helper function to calculate bonus points
 function calculateBonusPoints(dueDate: Date, submittedAt: Date, maxScore: number): number {
   const hoursBeforeDue = (dueDate.getTime() - submittedAt.getTime()) / (1000 * 60 * 60);
-  
+
   // Early submission bonus tiers
   if (hoursBeforeDue >= 72) { // 3+ days early
     return maxScore * 0.10; // 10% bonus
@@ -20,12 +24,12 @@ function calculateBonusPoints(dueDate: Date, submittedAt: Date, maxScore: number
   } else if (hoursBeforeDue >= 12) { // 12+ hours early
     return maxScore * 0.03; // 3% bonus
   }
-  
+
   return 0; // No bonus for submissions within 12 hours of deadline
 }
 
 // GET /api/progress/overall - Get overall student progress
-router.get('/overall', isAuthenticated, async (req, res) => {
+router.get('/overall', ...requireAuth, async (req, res) => {
   try {
     const userId = req.user!.id;
 
@@ -87,7 +91,7 @@ router.get('/overall', isAuthenticated, async (req, res) => {
         if (assignment.dueDate && submission.submittedAt) {
           const dueDate = new Date(assignment.dueDate);
           const submittedAt = new Date(submission.submittedAt);
-          
+
           if (submittedAt < dueDate) {
             const bonus = calculateBonusPoints(dueDate, submittedAt, maxScore);
             totalBonusPoints += bonus;
@@ -97,8 +101,8 @@ router.get('/overall', isAuthenticated, async (req, res) => {
       }
     }
 
-    const progressPercentage = totalMaxScore > 0 
-      ? Math.round((totalScore / totalMaxScore) * 100) 
+    const progressPercentage = totalMaxScore > 0
+      ? Math.round((totalScore / totalMaxScore) * 100)
       : 0;
 
     res.json({
@@ -116,7 +120,7 @@ router.get('/overall', isAuthenticated, async (req, res) => {
 });
 
 // GET /api/progress/courses - Get progress for all enrolled courses
-router.get('/courses', isAuthenticated, async (req, res) => {
+router.get('/courses', ...requireAuth, async (req, res) => {
   try {
     const userId = req.user!.id;
 
@@ -141,7 +145,7 @@ router.get('/courses', isAuthenticated, async (req, res) => {
 
         // Get assignment IDs for this course
         const assignmentIds = courseAssignments.map(a => a.id);
-        
+
         // Get submissions for this course
         const courseSubmissions = assignmentIds.length > 0 ? await db
           .select({
@@ -179,7 +183,7 @@ router.get('/courses', isAuthenticated, async (req, res) => {
             if (assignment.dueDate && submission.submittedAt) {
               const dueDate = new Date(assignment.dueDate);
               const submittedAt = new Date(submission.submittedAt);
-              
+
               if (submittedAt < dueDate) {
                 const bonus = calculateBonusPoints(dueDate, submittedAt, maxScore);
                 totalBonusPoints += bonus;
@@ -189,8 +193,8 @@ router.get('/courses', isAuthenticated, async (req, res) => {
           }
         }
 
-        const progressPercentage = totalMaxScore > 0 
-          ? Math.round((totalScore / totalMaxScore) * 100) 
+        const progressPercentage = totalMaxScore > 0
+          ? Math.round((totalScore / totalMaxScore) * 100)
           : 0;
 
         return {
@@ -215,7 +219,7 @@ router.get('/courses', isAuthenticated, async (req, res) => {
 });
 
 // GET /api/progress/course/:courseId - Get progress for a specific course
-router.get('/course/:courseId', isAuthenticated, async (req, res) => {
+router.get('/course/:courseId', ...requireAuth, async (req, res) => {
   try {
     const userId = req.user!.id;
     const { courseId } = req.params;
@@ -278,7 +282,7 @@ router.get('/course/:courseId', isAuthenticated, async (req, res) => {
         if (submission && assignment.dueDate && submission.submittedAt) {
           const dueDate = new Date(assignment.dueDate);
           const submittedAt = new Date(submission.submittedAt);
-          
+
           if (submittedAt < dueDate) {
             const maxScore = parseFloat(assignment.maxScore || '100');
             bonusPoints = calculateBonusPoints(dueDate, submittedAt, maxScore);
@@ -318,8 +322,8 @@ router.get('/course/:courseId', isAuthenticated, async (req, res) => {
       }
     });
 
-    const progressPercentage = totalMaxScore > 0 
-      ? Math.round(((totalScore + totalBonusPoints) / totalMaxScore) * 100) 
+    const progressPercentage = totalMaxScore > 0
+      ? Math.round(((totalScore + totalBonusPoints) / totalMaxScore) * 100)
       : 0;
 
     res.json({
@@ -345,7 +349,7 @@ router.get('/course/:courseId', isAuthenticated, async (req, res) => {
 });
 
 // GET /api/progress/bonus-info - Get bonus system information
-router.get('/bonus-info', isAuthenticated, async (req, res) => {
+router.get('/bonus-info', ...requireAuth, async (req, res) => {
   res.json({
     bonusTiers: [
       { hoursEarly: 72, percentage: 10, label: '3+ days early' },

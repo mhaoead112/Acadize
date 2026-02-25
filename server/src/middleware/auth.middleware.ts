@@ -15,6 +15,7 @@ interface AuthenticatedUser {
   phone?: string | null;
   bio?: string | null;
   profilePicture?: string | null;
+  preferredLocale?: string | null; // i18n
 }
 
 declare global {

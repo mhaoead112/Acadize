@@ -44,6 +44,7 @@ export interface AuthResponse {
         role: string;
         profilePicture?: string | null;
         grade?: string | null;
+        preferredLocale?: string | null;
         passwordResetExpires?: Date | null;
         emailVerified?: boolean | null;
         isTemporaryPassword?: boolean;
@@ -101,14 +102,19 @@ export const registerUser = async (userData: RegisterUserDto) => {
         throw new Error("Failed to create the user account.");
     }
 
-    // 4. Send welcome email (non-blocking)
+    // 4. Send welcome email (non-blocking, localized by org default)
     try {
         const { EmailService } = await import('./email.service.js');
-        await EmailService.sendWelcomeEmail({
-            email: newUser[0].email,
-            fullName: newUser[0].fullName,
-            role: newUser[0].role,
-        });
+        const { organizations } = await import('../db/schema.js');
+        const [org] = await db.select({ defaultLocale: organizations.defaultLocale }).from(organizations).where(eq(organizations.id, orgId)).limit(1);
+        await EmailService.sendWelcomeEmail(
+            {
+                email: newUser[0].email,
+                fullName: newUser[0].fullName,
+                role: newUser[0].role,
+            },
+            { locale: org?.defaultLocale ?? 'en' }
+        );
         console.log(`✅ Welcome email sent to ${newUser[0].email}`);
     } catch (emailError) {
         // Log error but don't fail registration
@@ -150,6 +156,7 @@ export const loginUser = async (credentials: LoginUserDto): Promise<AuthResponse
         email: user.email,
         role: user.role,
         fullName: user.fullName,
+        preferredLocale: user.preferredLocale ?? undefined,
     });
 
     // 4. Return the tokens and public user data
@@ -168,6 +175,7 @@ export const loginUser = async (credentials: LoginUserDto): Promise<AuthResponse
             role: user.role,
             profilePicture: user.profilePicture,
             grade: user.grade,
+            preferredLocale: user.preferredLocale ?? undefined,
             passwordResetExpires: user.passwordResetExpires,
             emailVerified: user.emailVerified,
             isTemporaryPassword: user.isTemporaryPassword,

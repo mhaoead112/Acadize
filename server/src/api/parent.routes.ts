@@ -18,11 +18,12 @@ import {
   getChildCalendarEvents
 } from '../services/parent.service.js';
 import { isAuthenticated } from '../middleware/auth.middleware.js';
+import { requireSubscription } from '../middleware/subscription.middleware.js';
 
 const router = express.Router();
 
-// All parent routes require authentication
-router.use(isAuthenticated);
+// All parent routes require authentication and subscription
+router.use(isAuthenticated, requireSubscription);
 
 /**
  * GET /api/parent/dashboard/overview
@@ -158,13 +159,13 @@ router.get('/children/:childId/attendance', async (req, res) => {
 router.get('/teachers', async (req, res) => {
   try {
     const parentId = req.user!.id;
-    
+
     // Get all children
     const children = await getParentChildren(parentId);
-    
+
     // Get teachers for all children
     const teachersMap = new Map();
-    
+
     for (const child of children) {
       const teachers = await getStudentTeachers(child.id);
       teachers.forEach(teacher => {

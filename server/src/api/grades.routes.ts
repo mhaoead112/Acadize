@@ -5,15 +5,19 @@ import { db } from '../db/index.js';
 import { assignments, submissions, grades, courses, users } from '../db/schema.js';
 import { eq, and, inArray, desc } from 'drizzle-orm';
 import { isAuthenticated } from '../middleware/auth.middleware.js';
+import { requireSubscription } from '../middleware/subscription.middleware.js';
 
 const router = Router();
+
+// Combined auth + subscription middleware
+const requireAuth = [isAuthenticated, requireSubscription];
 
 /**
  * PROTECTED (TEACHER)
  * GET /api/grades/student/:studentId
  * Get all grades for a specific student (for teachers to view student progress)
  */
-router.get('/student/:studentId', isAuthenticated, async (req, res) => {
+router.get('/student/:studentId', ...requireAuth, async (req, res) => {
   try {
     const user = (req as any).user;
     if (!user || user.role !== 'teacher') {
@@ -87,7 +91,7 @@ router.get('/student/:studentId', isAuthenticated, async (req, res) => {
  * GET /api/grades/course/:courseId
  * Get all grades for a specific course
  */
-router.get('/course/:courseId', isAuthenticated, async (req, res) => {
+router.get('/course/:courseId', ...requireAuth, async (req, res) => {
   try {
     const user = (req as any).user;
     if (!user || user.role !== 'teacher') {
@@ -160,12 +164,12 @@ router.get('/course/:courseId', isAuthenticated, async (req, res) => {
       submittedAt: s.submittedAt,
     }));
 
-    res.json({ 
+    res.json({
       course: {
         id: course.id,
         title: course.title,
       },
-      grades: gradesData 
+      grades: gradesData
     });
   } catch (error) {
     console.error('Error fetching course grades:', error);

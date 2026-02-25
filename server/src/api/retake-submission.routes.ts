@@ -1,6 +1,10 @@
 import { Router } from 'express';
 import { RetakeSubmissionService } from '../services/retake-submission.service.js';
 import { isAuthenticated, isStudent, isTeacher } from '../middleware/auth.middleware.js';
+import { requireSubscription } from '../middleware/subscription.middleware.js';
+
+// Combined auth + subscription middleware
+const requireAuth = [isAuthenticated, requireSubscription];
 
 const router = Router();
 
@@ -9,7 +13,7 @@ const router = Router();
  * Submit a retake exam (practice or graded mode)
  * Student or Teacher can submit
  */
-router.post('/submit', isAuthenticated, async (req, res) => {
+router.post('/submit', ...requireAuth, async (req, res) => {
   try {
     const {
       attemptId,
@@ -93,7 +97,7 @@ router.post('/submit', isAuthenticated, async (req, res) => {
  * POST /api/retake-submissions/submit-practice
  * Quick endpoint for practice mode submission
  */
-router.post('/submit-practice', isAuthenticated, isStudent, async (req, res) => {
+router.post('/submit-practice', ...requireAuth, isStudent, async (req, res) => {
   try {
     const { attemptId, examId } = req.body;
     const studentId = (req as any).user.id;
@@ -132,7 +136,7 @@ router.post('/submit-practice', isAuthenticated, isStudent, async (req, res) => 
  * POST /api/retake-submissions/submit-graded
  * Quick endpoint for graded mode submission (teacher controlled)
  */
-router.post('/submit-graded', isAuthenticated, async (req, res) => {
+router.post('/submit-graded', ...requireAuth, async (req, res) => {
   try {
     const { attemptId, studentId, examId } = req.body;
     const requesterId = (req as any).user.id;
@@ -180,7 +184,7 @@ router.post('/submit-graded', isAuthenticated, async (req, res) => {
  * GET /api/retake-submissions/history/:studentId
  * Get retake submission history for a student
  */
-router.get('/history/:studentId', isAuthenticated, async (req, res) => {
+router.get('/history/:studentId', ...requireAuth, async (req, res) => {
   try {
     const { studentId } = req.params;
     const { examId } = req.query;
@@ -219,7 +223,7 @@ router.get('/history/:studentId', isAuthenticated, async (req, res) => {
  * GET /api/retake-submissions/mastery/:studentId
  * Get mastery progress for a student
  */
-router.get('/mastery/:studentId', isAuthenticated, async (req, res) => {
+router.get('/mastery/:studentId', ...requireAuth, async (req, res) => {
   try {
     const { studentId } = req.params;
 
@@ -254,7 +258,7 @@ router.get('/mastery/:studentId', isAuthenticated, async (req, res) => {
  * GET /api/retake-submissions/check-loop-protection/:studentId/:examId
  * Check if student can take another retake (infinite loop protection)
  */
-router.get('/check-loop-protection/:studentId/:examId', isAuthenticated, async (req, res) => {
+router.get('/check-loop-protection/:studentId/:examId', ...requireAuth, async (req, res) => {
   try {
     const { studentId, examId } = req.params;
 

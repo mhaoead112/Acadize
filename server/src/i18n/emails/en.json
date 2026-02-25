@@ -1,0 +1,32 @@
+{
+  "welcome": {
+    "subject": "Welcome to Eduverse!",
+    "heading": "Welcome to Eduverse!",
+    "hi": "Hi",
+    "thankYou": "Thank you for joining Eduverse as a",
+    "intro": "We're excited to have you on board!",
+    "gettingStarted": "Getting Started:",
+    "goToDashboard": "Go to Dashboard",
+    "bestRegards": "Best regards,",
+    "team": "The Eduverse Team",
+    "support": "If you have any questions, our support team is here to help!"
+  },
+  "registrationSuccess": {
+    "subject": "Welcome to Acadize! Your account is now active.",
+    "heading": "Welcome to Acadize!",
+    "paymentSuccess": "Payment Successful",
+    "accountDetails": "Account Details:",
+    "nextBillingDate": "Next Billing Date:",
+    "whatsNext": "What's Next?",
+    "goToDashboard": "Go to Dashboard",
+    "bestRegards": "Best regards,",
+    "team": "The Acadize Team"
+  },
+  "trialActivation": {
+    "subject": "Your Free Trial is Active!",
+    "heading": "Your Free Trial is Active!",
+    "trialStarted": "Trial Started",
+    "bestRegards": "Best regards,",
+    "team": "The Acadize Team"
+  }
+}

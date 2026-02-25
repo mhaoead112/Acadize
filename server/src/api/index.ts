@@ -17,6 +17,9 @@ import riskScoringRoutes from './risk-scoring.routes.js';
 import retakeRoutes from './retake.routes.js';
 import retakeExamRoutes from './retake-exam.routes.js';
 import retakeSubmissionRoutes from './retake-submission.routes.js';
+import attendanceRoutes, { sessionQrRouter } from './attendance.routes.js';
+import sessionRoutes from './session.routes.js';
+import zoomWebhookRoutes from './zoom-webhook.routes.js';
 
 export function registerRoutes(app: express.Application) {
   // API routes
@@ -38,6 +41,16 @@ export function registerRoutes(app: express.Application) {
   app.use('/api', retakeRoutes); // Retake routes already have /api/retakes prefix
   app.use('/api/retake-exams', retakeExamRoutes);
   app.use('/api/retake-submissions', retakeSubmissionRoutes);
+
+  // Smart Attendance routes
+  app.use('/api/attendance', attendanceRoutes);
+  // Session routes (CRUD + start/end)
+  app.use('/api/sessions', sessionRoutes);
+  // QR token routes — mergeParams ensures :id is visible inside the sub-router
+  app.use('/api/sessions/:id/qr', sessionQrRouter);
+
+  // Zoom webhook (must be before the 404 catch-all)
+  app.use('/api/webhooks/zoom', zoomWebhookRoutes);
 
   // 404 handler for API routes
   app.use('/api/*', (req, res) => {

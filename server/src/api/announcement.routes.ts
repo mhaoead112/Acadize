@@ -2,12 +2,15 @@
 
 import express from 'express';
 import { isAuthenticated } from '../middleware/auth.middleware.js';
-import { 
-    createAnnouncement, 
-    getAnnouncementsByCourse, 
-    getAnnouncementById, 
+import { requireSubscription } from '../middleware/subscription.middleware.js';
+
+const requireAuth = [isAuthenticated, requireSubscription];
+import {
+    createAnnouncement,
+    getAnnouncementsByCourse,
+    getAnnouncementById,
     updateAnnouncement,
-    deleteAnnouncement 
+    deleteAnnouncement
 } from '../services/announcement.service.js';
 import { getCourseById } from '../services/course.service.js';
 import pushNotificationService from '../services/push-notification.service.js';
@@ -19,18 +22,22 @@ const router = express.Router();
  * GET /api/announcements
  * Get all announcements for admin management
  */
-router.get('/', isAuthenticated, async (req, res) => {
+router.get('/', ...requireAuth, async (req, res) => {
     try {
         const user = (req as any).user;
         if (!user || user.role !== 'admin') {
             return res.status(403).json({ message: 'Forbidden: Admins only.' });
         }
 
+        const orgId = (req as any).tenant?.organizationId;
+        if (!orgId) return res.status(400).json({ message: "Organization context required" });
+
         const { db } = await import('../db/index.js');
         const { announcements, courses, users } = await import('../db/schema.js');
-        const { desc, eq } = await import('drizzle-orm');
+        const { desc, eq, and } = await import('drizzle-orm');
 
         // Get all announcements with course and teacher info
+        // Filter by organizationId via course
         const allAnnouncements = await db
             .select({
                 id: announcements.id,
@@ -47,6 +54,7 @@ router.get('/', isAuthenticated, async (req, res) => {
             .from(announcements)
             .leftJoin(courses, eq(announcements.courseId, courses.id))
             .leftJoin(users, eq(announcements.teacherId, users.id))
+            .where(eq(courses.organizationId, orgId)) // Enforce tenant isolation
             .orderBy(desc(announcements.createdAt));
 
         // Transform to match frontend expectations
@@ -75,8 +83,11 @@ router.get('/', isAuthenticated, async (req, res) => {
 router.get('/course/:courseId', async (req, res) => {
     try {
         const { courseId } = req.params;
+        const orgId = (req as any).tenant?.organizationId;
+        if (!orgId) return res.status(400).json({ message: "Organization context required" });
 
-        const courseAnnouncements = await getAnnouncementsByCourse(courseId);
+        const locale = (req as any).locale;
+        const courseAnnouncements = await getAnnouncementsByCourse(courseId, orgId, locale);
 
         res.status(200).json({
             announcements: courseAnnouncements
@@ -95,17 +106,24 @@ router.get('/course/:courseId', async (req, res) => {
  * GET /api/announcements/student
  * Get all announcements for student's enrolled courses
  */
-router.get('/student', isAuthenticated, async (req, res) => {
+router.get('/student', ...requireAuth, async (req, res) => {
     try {
         const user = (req as any).user;
         if (!user) {
             return res.status(401).json({ message: 'Unauthorized' });
         }
 
+        const orgId = (req as any).tenant?.organizationId;
+        if (!orgId) return res.status(400).json({ message: "Organization context required" });
+
         // Get student's enrolled courses
         const { db } = await import('../db/index.js');
         const { enrollments, courses } = await import('../db/schema.js');
-        const { eq } = await import('drizzle-orm');
+        const { eq, and } = await import('drizzle-orm');
+
+        // Verify student belongs to org (implicit in auth usually, but good to be safe)
+        // Actually, we should filter enrollments by course->org interaction.
+        // But simpler: just get enrollments, then filter announcements by getAnnouncementsByCourse(..., orgId)
 
         const studentEnrollments = await db
             .select({ courseId: enrollments.courseId })
@@ -114,20 +132,24 @@ router.get('/student', isAuthenticated, async (req, res) => {
 
         const courseIds = studentEnrollments.map(e => e.courseId);
 
+        const locale = (req as any).locale;
         // Fetch all announcements for these courses
         const allAnnouncements: any[] = [];
         for (const courseId of courseIds) {
-            const courseAnns = await getAnnouncementsByCourse(courseId);
-            
-            // Get course name
-            const courseData = await getCourseById(courseId);
-            
-            courseAnns.forEach((ann: any) => {
-                allAnnouncements.push({
-                    ...ann,
-                    courseName: courseData?.title || 'Unknown Course'
+            // This function enforces orgId
+            const courseAnns = await getAnnouncementsByCourse(courseId, orgId, locale);
+
+            // Get course name (also enforce orgId)
+            const courseData = await getCourseById(courseId, orgId, locale);
+
+            if (courseData) {
+                courseAnns.forEach((ann: any) => {
+                    allAnnouncements.push({
+                        ...ann,
+                        courseName: courseData.title
+                    });
                 });
-            });
+            }
         }
 
         // Sort by pinned first, then by date
@@ -154,7 +176,7 @@ router.get('/student', isAuthenticated, async (req, res) => {
  * PATCH /api/announcements/:id/read
  * Mark announcement as read
  */
-router.patch('/:id/read', isAuthenticated, async (req, res) => {
+router.patch('/:id/read', ...requireAuth, async (req, res) => {
     try {
         const user = (req as any).user;
         if (!user) {
@@ -183,12 +205,15 @@ router.patch('/:id/read', isAuthenticated, async (req, res) => {
  * POST /api/announcements
  * Create a new announcement
  */
-router.post('/', isAuthenticated, async (req, res) => {
+router.post('/', ...requireAuth, async (req, res) => {
     try {
         const user = (req as any).user;
         if (!user || (user.role !== 'teacher' && user.role !== 'admin')) {
             return res.status(403).json({ message: 'Forbidden: Teachers or Admins only.' });
         }
+
+        const orgId = (req as any).tenant?.organizationId;
+        if (!orgId) return res.status(400).json({ message: "Organization context required" });
 
         const { courseId, title, content, isPinned, isGlobal } = req.body;
 
@@ -203,12 +228,17 @@ router.post('/', isAuthenticated, async (req, res) => {
             const { db } = await import('../db/index.js');
             const { announcements, courses } = await import('../db/schema.js');
             const { createId } = await import('@paralleldrive/cuid2');
-            
-            // Get any course to use as placeholder (in real app, create a system course)
-            const [firstCourse] = await db.select({ id: courses.id }).from(courses).limit(1);
-            
+            const { eq } = await import('drizzle-orm');
+
+            // Get any course to use as placeholder belonging to THIS ORG
+            const [firstCourse] = await db
+                .select({ id: courses.id })
+                .from(courses)
+                .where(eq(courses.organizationId, orgId))
+                .limit(1);
+
             if (!firstCourse) {
-                return res.status(400).json({ message: 'No courses available. Please create a course first.' });
+                return res.status(400).json({ message: 'No courses available in this organization. Please create a course first.' });
             }
 
             const [newAnn] = await db.insert(announcements).values({
@@ -230,8 +260,8 @@ router.post('/', isAuthenticated, async (req, res) => {
             return res.status(400).json({ message: 'Course ID is required for non-global announcements.' });
         }
 
-        // Verify course exists and user owns it
-        const course = await getCourseById(courseId);
+        // Verify course exists and user owns it (enforces orgId)
+        const course = await getCourseById(courseId, orgId);
         if (!course) {
             return res.status(404).json({ message: 'Course not found.' });
         }
@@ -245,7 +275,8 @@ router.post('/', isAuthenticated, async (req, res) => {
             teacherId: user.id,
             title,
             content,
-            isPinned: isPinned || false
+            isPinned: isPinned || false,
+            organizationId: orgId
         });
 
         // Send push notification to all enrolled students
@@ -253,7 +284,7 @@ router.post('/', isAuthenticated, async (req, res) => {
             const { db } = await import('../db/index.js');
             const { enrollments } = await import('../db/schema.js');
             const { eq } = await import('drizzle-orm');
-            
+
             const enrolledStudents = await db
                 .select({ studentId: enrollments.studentId })
                 .from(enrollments)
@@ -291,7 +322,7 @@ router.post('/', isAuthenticated, async (req, res) => {
  * PATCH /api/announcements/:id
  * Update an announcement
  */
-router.patch('/:id', isAuthenticated, async (req, res) => {
+router.patch('/:id', ...requireAuth, async (req, res) => {
     try {
         const user = (req as any).user;
         if (!user || (user.role !== 'teacher' && user.role !== 'admin')) {
@@ -299,10 +330,13 @@ router.patch('/:id', isAuthenticated, async (req, res) => {
         }
 
         const announcementId = req.params.id;
+        const orgId = (req as any).tenant?.organizationId;
+        if (!orgId) return res.status(400).json({ message: "Organization context required" });
+
         const { title, content, isPinned } = req.body;
 
-        // Get announcement to verify ownership
-        const announcement = await getAnnouncementById(announcementId);
+        // Get announcement to verify ownership (enforces orgId)
+        const announcement = await getAnnouncementById(announcementId, orgId);
         if (!announcement) {
             return res.status(404).json({ message: 'Announcement not found.' });
         }
@@ -315,7 +349,7 @@ router.patch('/:id', isAuthenticated, async (req, res) => {
             title,
             content,
             isPinned
-        });
+        }, orgId);
 
         res.status(200).json({
             message: 'Announcement updated successfully',
@@ -335,7 +369,7 @@ router.patch('/:id', isAuthenticated, async (req, res) => {
  * DELETE /api/announcements/:id
  * Delete an announcement
  */
-router.delete('/:id', isAuthenticated, async (req, res) => {
+router.delete('/:id', ...requireAuth, async (req, res) => {
     try {
         const user = (req as any).user;
         if (!user || (user.role !== 'teacher' && user.role !== 'admin')) {
@@ -343,9 +377,11 @@ router.delete('/:id', isAuthenticated, async (req, res) => {
         }
 
         const announcementId = req.params.id;
+        const orgId = (req as any).tenant?.organizationId;
+        if (!orgId) return res.status(400).json({ message: "Organization context required" });
 
         // Get announcement to verify ownership
-        const announcement = await getAnnouncementById(announcementId);
+        const announcement = await getAnnouncementById(announcementId, orgId);
         if (!announcement) {
             return res.status(404).json({ message: 'Announcement not found.' });
         }
@@ -354,7 +390,7 @@ router.delete('/:id', isAuthenticated, async (req, res) => {
             return res.status(403).json({ message: "You don't have permission to delete this announcement." });
         }
 
-        await deleteAnnouncement(announcementId);
+        await deleteAnnouncement(announcementId, orgId);
 
         res.status(200).json({
             message: 'Announcement deleted successfully'

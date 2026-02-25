@@ -1,5 +1,5 @@
 import { db } from '../db/index.js';
-import { users, enrollments, courses, grades, submissions, assignments, parentChildren, attendance, lessons, announcements, events, reportCards, eventParticipants, parentTeacherMessages, parentTeacherConversations } from '../db/schema.js';
+import { users, enrollments, courses, grades, submissions, assignments, parentChildren, attendance, attendanceRecords, sessions, lessons, announcements, events, reportCards, eventParticipants, parentTeacherMessages, parentTeacherConversations } from '../db/schema.js';
 import { studyStreaks } from '../db/schema.js';
 import { eq, and, sql, desc, gte, lte, gt, lt, asc } from 'drizzle-orm';
 import { createId } from '@paralleldrive/cuid2';
@@ -287,7 +287,8 @@ export async function getChildGrades(
 }
 
 /**
- * Get child's attendance
+ * Get child's attendance (session-based from attendance_records + legacy attendance table fallback)
+ * Primary source: attendance_records (QR/session check-ins). Fallback: legacy attendance table.
  */
 export async function getChildAttendance(parentId: string, childId: string) {
   // Verify parent has access to this child
@@ -306,7 +307,54 @@ export async function getChildAttendance(parentId: string, childId: string) {
     throw new Error('Unauthorized access to child data');
   }
 
-  // Get attendance records
+  // 1) Session-based attendance (attendance_records — QR check-ins)
+  const sessionRecords = await db
+    .select({
+      id: attendanceRecords.id,
+      joinTime: attendanceRecords.joinTime,
+      leaveTime: attendanceRecords.leaveTime,
+      status: attendanceRecords.status,
+      sessionTitle: sessions.title,
+      sessionStart: sessions.startTime,
+      courseId: sessions.courseId,
+      courseTitle: courses.title,
+    })
+    .from(attendanceRecords)
+    .innerJoin(sessions, eq(attendanceRecords.sessionId, sessions.id))
+    .innerJoin(courses, eq(sessions.courseId, courses.id))
+    .where(eq(attendanceRecords.userId, childId))
+    .orderBy(desc(sessions.startTime));
+
+  if (sessionRecords.length > 0) {
+    const totalSessions = sessionRecords.length;
+    const presentDays = sessionRecords.filter(r => r.status === 'present').length;
+    const lateDays = sessionRecords.filter(r => r.status === 'late').length;
+    const absentDays = sessionRecords.filter(r => r.status === 'absent').length;
+    const excusedDays = sessionRecords.filter(r => r.status === 'excused').length;
+    const attended = presentDays + lateDays;
+    const attendanceRate = totalSessions > 0 ? (attended / totalSessions) * 100 : 0;
+
+    return {
+      totalDays: totalSessions,
+      presentDays,
+      absentDays,
+      tardyDays: lateDays,
+      excusedDays,
+      attendanceRate: Math.round(attendanceRate * 100) / 100,
+      records: sessionRecords.map(r => ({
+        id: r.id,
+        date: r.sessionStart instanceof Date ? r.sessionStart.toISOString().slice(0, 10) : String(r.sessionStart).slice(0, 10),
+        status: r.status,
+        courseName: r.courseTitle || 'Unknown',
+        notes: null,
+        joinTime: r.joinTime,
+        leaveTime: r.leaveTime ?? undefined,
+        sessionTitle: r.sessionTitle,
+      }))
+    };
+  }
+
+  // 2) Fallback: legacy attendance table (daily)
   const records = await db
     .select({
       attendance: attendance,
@@ -317,13 +365,11 @@ export async function getChildAttendance(parentId: string, childId: string) {
     .where(eq(attendance.studentId, childId))
     .orderBy(desc(attendance.date));
 
-  // Calculate summary statistics
   const totalDays = records.length;
   const presentDays = records.filter(r => r.attendance.status === 'present').length;
   const absentDays = records.filter(r => r.attendance.status === 'absent').length;
   const tardyDays = records.filter(r => r.attendance.status === 'tardy').length;
   const excusedDays = records.filter(r => r.attendance.status === 'excused').length;
-
   const attendanceRate = totalDays > 0 ? (presentDays / totalDays) * 100 : 0;
 
   return {
@@ -335,7 +381,7 @@ export async function getChildAttendance(parentId: string, childId: string) {
     attendanceRate: Math.round(attendanceRate * 100) / 100,
     records: records.map(r => ({
       id: r.attendance.id,
-      date: r.attendance.date,
+      date: typeof r.attendance.date === 'string' ? r.attendance.date : (r.attendance.date as Date).toISOString().slice(0, 10),
       status: r.attendance.status,
       courseName: r.course?.title || 'Unknown',
       notes: r.attendance.notes

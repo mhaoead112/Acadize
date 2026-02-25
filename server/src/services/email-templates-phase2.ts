@@ -21,7 +21,7 @@ export const adminCreatedAccountTemplate = (data: {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Eduverse - Account Ready</title>
+  <title>Acadize - Account Ready</title>
   <style>
     body {
       margin: 0;
@@ -262,7 +262,7 @@ export const adminCreatedAccountTemplate = (data: {
     <div class="header">
       <a href="#" class="logo-container">
         <span style="font-size: 24px;">🎓</span>
-        <span>Eduverse</span>
+        <span>Acadize</span>
       </a>
     </div>
 
@@ -270,10 +270,10 @@ export const adminCreatedAccountTemplate = (data: {
     <div class="card">
       <!-- Abstract Gold Waves Background Image Placeholder -->
       <!-- In production, replace src with actual hosted image URL -->
-      <img src="https://images.unsplash.com/photo-1634128221889-b4933a876a39?q=80&w=1200&auto=format&fit=crop" alt="Eduverse Abstract" class="hero-image" style="height: 160px; object-fit: cover;">
+      <img src="https://images.unsplash.com/photo-1634128221889-b4933a876a39?q=80&w=1200&auto=format&fit=crop" alt="Acadize Abstract" class="hero-image" style="height: 160px; object-fit: cover;">
       
       <div class="card-content">
-        <h1 class="title">Your Eduverse Account is Ready!</h1>
+        <h1 class="title">Your Acadize Account is Ready!</h1>
         
         <div class="role-badge">
           <span>👤 ${data.role.toUpperCase()}</span>
@@ -312,7 +312,7 @@ export const adminCreatedAccountTemplate = (data: {
 
         <!-- Login Button -->
         <a href="${data.loginUrl}" class="login-btn">
-          Login to Eduverse ➔
+          Login to Acadize ➔
         </a>
 
         <!-- Next Steps -->
@@ -323,7 +323,7 @@ export const adminCreatedAccountTemplate = (data: {
             <div class="step-number">1</div>
             <div class="step-content">
               <h3 class="step-title">Access the Platform</h3>
-              <p class="step-desc">Click the button above to go to the Eduverse login page.</p>
+              <p class="step-desc">Click the button above to go to the Acadize login page.</p>
             </div>
           </div>
 
@@ -354,7 +354,7 @@ export const adminCreatedAccountTemplate = (data: {
         <a href="#" class="social-icon">💬</a>
         <a href="#" class="social-icon">🔗</a>
       </div>
-      <p class="copyright">© 2024 Eduverse LMS. All rights reserved.</p>
+      <p class="copyright">© 2024 Acadize LMS. All rights reserved.</p>
       <div class="footer-links">
         <a href="#" class="footer-link">Unsubscribe</a>
         <a href="#" class="footer-link">Privacy Policy</a>
@@ -381,7 +381,7 @@ export const passwordChangeReminderTemplate = (data: {
   const content = `
     <h1>⚠️ Password Change Required</h1>
     <p>Hi <strong>${data.fullName}</strong>,</p>
-    <p>You haven't changed your temporary password yet. For security reasons, you must change it to continue using Eduverse.</p>
+    <p>You haven't changed your temporary password yet. For security reasons, you must change it to continue using Acadize.</p>
     
     <div class="alert-box">
       <p><strong>⏰ Your temporary password will expire in <span style="color: #ef4444; font-size: 18px;">${data.expiresIn}</span></strong></p>

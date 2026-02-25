@@ -1,16 +1,20 @@
 import express from 'express';
 import { isAuthenticated } from '../middleware/auth.middleware.js';
+import { requireSubscription } from '../middleware/subscription.middleware.js';
 import { db } from '../db/index.js';
 import { users, enrollments, assignments, submissions, courses, grades } from '../db/schema.js';
 import { eq, and, sql, avg, count, inArray, gte } from 'drizzle-orm';
 
 const router = express.Router();
 
+// Combined auth + subscription middleware
+const requireAuth = [isAuthenticated, requireSubscription];
+
 /**
  * GET /api/analytics/overview
  * Get overview statistics for all students or filtered by course
  */
-router.get('/overview', isAuthenticated, async (req, res) => {
+router.get('/overview', ...requireAuth, async (req, res) => {
     try {
         const user = (req as any).user;
         if (!user || user.role !== 'teacher') {
@@ -18,7 +22,7 @@ router.get('/overview', isAuthenticated, async (req, res) => {
         }
 
         const { courseId } = req.query;
-        
+
         // Get teacher's courses
         const teacherCourses = await db
             .select({ id: courses.id })
@@ -39,8 +43,8 @@ router.get('/overview', isAuthenticated, async (req, res) => {
         }
 
         // Filter by specific course if provided
-        const targetCourseIds = courseId && typeof courseId === 'string' 
-            ? [courseId] 
+        const targetCourseIds = courseId && typeof courseId === 'string'
+            ? [courseId]
             : courseIds;
 
         // Get total students enrolled in teacher's courses
@@ -78,8 +82,8 @@ router.get('/overview', isAuthenticated, async (req, res) => {
 
             averageScore = Number(submissionStats[0]?.avgScore || 0);
             const totalSubmissions = submissionStats[0]?.totalSubmissions || 0;
-            completionRate = totalAssignments > 0 
-                ? Math.round((totalSubmissions / (totalAssignments * totalStudents)) * 100) 
+            completionRate = totalAssignments > 0
+                ? Math.round((totalSubmissions / (totalAssignments * totalStudents)) * 100)
                 : 0;
         }
 
@@ -104,7 +108,7 @@ router.get('/overview', isAuthenticated, async (req, res) => {
                 const validGrades = studentSubmissions
                     .map(s => s.score ? Number(s.score) : null)
                     .filter((g): g is number => g !== null && !isNaN(g));
-                
+
                 if (validGrades.length > 0) {
                     const studentAvg = validGrades.reduce((a, b) => a + b, 0) / validGrades.length;
                     if (studentAvg < 60) studentsAtRisk++;
@@ -131,7 +135,7 @@ router.get('/overview', isAuthenticated, async (req, res) => {
  * GET /api/analytics/students
  * Get detailed analytics for each student
  */
-router.get('/students', isAuthenticated, async (req, res) => {
+router.get('/students', ...requireAuth, async (req, res) => {
     try {
         const user = (req as any).user;
         if (!user || user.role !== 'teacher') {
@@ -152,8 +156,8 @@ router.get('/students', isAuthenticated, async (req, res) => {
             return res.status(200).json([]);
         }
 
-        const targetCourseIds = courseId && typeof courseId === 'string' 
-            ? [courseId] 
+        const targetCourseIds = courseId && typeof courseId === 'string'
+            ? [courseId]
             : courseIds;
 
         // Get students enrolled in these courses
@@ -185,7 +189,7 @@ router.get('/students', isAuthenticated, async (req, res) => {
                 // Get student's submissions with grades
                 const studentSubmissions = assignmentIds.length > 0
                     ? await db
-                        .select({ 
+                        .select({
                             score: grades.score,
                             submittedAt: submissions.submittedAt
                         })
@@ -220,7 +224,7 @@ router.get('/students', isAuthenticated, async (req, res) => {
                 }
 
                 // Get last activity
-                const lastSubmission = studentSubmissions.sort((a, b) => 
+                const lastSubmission = studentSubmissions.sort((a, b) =>
                     new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
                 )[0];
 
@@ -273,7 +277,7 @@ router.get('/students', isAuthenticated, async (req, res) => {
  * GET /api/analytics/courses
  * Get analytics for each course
  */
-router.get('/courses', isAuthenticated, async (req, res) => {
+router.get('/courses', ...requireAuth, async (req, res) => {
     try {
         const user = (req as any).user;
         if (!user || user.role !== 'teacher') {
@@ -357,7 +361,7 @@ router.get('/courses', isAuthenticated, async (req, res) => {
  * GET /api/analytics/performance-trend
  * Returns weekly average grades for the selected timeframe (defaults to last 60 days)
  */
-router.get('/performance-trend', isAuthenticated, async (req, res) => {
+router.get('/performance-trend', ...requireAuth, async (req, res) => {
     try {
         const user = (req as any).user;
         if (!user || user.role !== 'teacher') {
@@ -449,7 +453,7 @@ router.get('/performance-trend', isAuthenticated, async (req, res) => {
  * GET /api/analytics/submission-status
  * Returns on-time, late, pending, and missing submission counts for the teacher's courses
  */
-router.get('/submission-status', isAuthenticated, async (req, res) => {
+router.get('/submission-status', ...requireAuth, async (req, res) => {
     try {
         const user = (req as any).user;
         if (!user || user.role !== 'teacher') {

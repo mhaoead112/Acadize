@@ -54,20 +54,20 @@ router.post('/send', isAuthenticated, async (req: Request, res: Response) => {
 
         const result = await EmailService.sendEmail({
             to,
-            subject: '🧪 Eduverse Email Test',
+            subject: '🧪 Acadize Email Test',
             html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <h1 style="color: #f9d406;">✅ Email Test Successful!</h1>
-          <p>This is a test email from Eduverse.</p>
+          <p>This is a test email from Acadize.</p>
           <p>If you're seeing this, your email configuration is working correctly!</p>
           <hr style="margin: 20px 0;">
           <p style="color: #64748b; font-size: 12px;">
             Sent at: ${new Date().toLocaleString()}<br>
-            From: ${process.env.EMAIL_FROM || 'Eduverse'}
+            From: ${process.env.EMAIL_FROM || 'Acadize'}
           </p>
         </div>
       `,
-            text: `Email Test Successful!\n\nThis is a test email from Eduverse.\nIf you're seeing this, your email configuration is working correctly!\n\nSent at: ${new Date().toLocaleString()}`,
+            text: `Email Test Successful!\n\nThis is a test email from Acadize.\nIf you're seeing this, your email configuration is working correctly!\n\nSent at: ${new Date().toLocaleString()}`,
         });
 
         if (result) {

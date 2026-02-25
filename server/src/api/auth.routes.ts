@@ -95,6 +95,7 @@ router.post('/refresh', async (req, res) => {
                 email: users.email,
                 role: users.role,
                 fullName: users.fullName,
+                preferredLocale: users.preferredLocale,
             })
             .from(users)
             .where(eq(users.id, userId))
@@ -111,13 +112,14 @@ router.post('/refresh', async (req, res) => {
             return res.status(403).json({ message: 'Access denied: wrong organization.' });
         }
 
-        // Generate new access token
+        // Generate new access token (include preferredLocale for locale middleware)
         const accessToken = TokenService.generateAccessToken({
             id: user.id,
             organizationId: user.organizationId,
             email: user.email,
             role: user.role,
             fullName: user.fullName,
+            preferredLocale: user.preferredLocale ?? undefined,
         });
 
         res.status(200).json({

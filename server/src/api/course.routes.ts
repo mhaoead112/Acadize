@@ -3,6 +3,10 @@
 import express from 'express';
 // We need to add the .js extension for NodeNext module resolution
 import { isAuthenticated } from '../middleware/auth.middleware.js';
+import { requireSubscription } from '../middleware/subscription.middleware.js';
+
+// Combined auth + subscription middleware
+const requireAuth = [isAuthenticated, requireSubscription];
 import { createCourse, getCoursesByTeacher, getPublishedCourses, getCourseById, updateCoursePublishStatus, deleteCourse } from '../services/course.service.js';
 import { getLessonById, updateLesson, deleteLesson } from '../services/lesson.service.js';
 import { db } from '../db/index.js';
@@ -19,7 +23,9 @@ const router = express.Router();
 router.get('/', async (req, res) => {
     try {
         const orgId = (req as any).tenant?.organizationId;
-        const courses = await getPublishedCourses(orgId);
+        if (!orgId) return res.status(400).json({ message: "Organization context required" });
+        const locale = (req as any).locale;
+        const courses = await getPublishedCourses(orgId, locale);
         res.status(200).json(courses);
     } catch (error) {
         console.error("Error fetching published courses:", error);
@@ -32,14 +38,18 @@ router.get('/', async (req, res) => {
  * GET /api/courses/user
  * Returns all courses for the authenticated user (teacher's courses or student's enrolled courses)
  */
-router.get('/user', isAuthenticated, async (req, res) => {
+router.get('/user', ...requireAuth, async (req, res) => {
     try {
         const user = (req as any).user; // Cast to access the user property
         if (!user || user.role !== 'teacher') {
             return res.status(403).json({ message: 'Forbidden: Teachers only.' });
         }
 
-        const courses = await getCoursesByTeacher(user.id);
+        const orgId = (req as any).tenant?.organizationId;
+        if (!orgId) return res.status(400).json({ message: "Organization context required" });
+
+        const locale = (req as any).locale;
+        const courses = await getCoursesByTeacher(user.id, orgId, locale);
         res.status(200).json(courses);
     } catch (error) {
         console.error('Error fetching teacher courses:', error);
@@ -52,18 +62,21 @@ router.get('/user', isAuthenticated, async (req, res) => {
  * GET /api/courses/:id
  * Returns a single course by ID
  */
-router.get('/:id', isAuthenticated, async (req, res) => {
+router.get('/:id', ...requireAuth, async (req, res) => {
     try {
         const courseId = req.params.id;
-        const course = await getCourseById(courseId);
+        const orgId = (req as any).tenant?.organizationId;
+        if (!orgId) return res.status(400).json({ message: "Organization context required" });
+
+        const locale = (req as any).locale;
+        const course = await getCourseById(courseId, orgId, locale);
 
         if (!course) {
             return res.status(404).json({ message: 'Course not found.' });
         }
 
         // Verify course belongs to current tenant
-        const orgId = (req as any).tenant?.organizationId;
-        if (orgId && course.organizationId !== orgId) {
+        if (course.organizationId !== orgId) {
             return res.status(404).json({ message: 'Course not found.' });
         }
 
@@ -79,7 +92,7 @@ router.get('/:id', isAuthenticated, async (req, res) => {
  * POST /api/courses
  * Creates a new course for the authenticated teacher
  */
-router.post('/', isAuthenticated, async (req, res) => {
+router.post('/', ...requireAuth, async (req, res) => {
     try {
         const user = (req as any).user;
         if (!user || user.role !== 'teacher') {
@@ -99,6 +112,7 @@ router.post('/', isAuthenticated, async (req, res) => {
             imageUrl,
             isPublished,
             teacherId: user.id,
+            organizationId: (req as any).tenant.organizationId
         });
 
         console.log('Course created:', newCourse);
@@ -115,7 +129,7 @@ router.post('/', isAuthenticated, async (req, res) => {
  * PATCH /api/courses/:id/publish
  * Toggle publish status of a course
  */
-router.patch('/:id/publish', isAuthenticated, async (req, res) => {
+router.patch('/:id/publish', ...requireAuth, async (req, res) => {
     try {
         const user = (req as any).user;
         if (!user || (user.role !== 'teacher' && user.role !== 'admin')) {
@@ -130,7 +144,10 @@ router.patch('/:id/publish', isAuthenticated, async (req, res) => {
         }
 
         // Check if course exists
-        const existingCourse = await getCourseById(courseId);
+        const orgId = (req as any).tenant?.organizationId;
+        if (!orgId) return res.status(400).json({ message: "Organization context required" });
+
+        const existingCourse = await getCourseById(courseId, orgId);
         if (!existingCourse) {
             return res.status(404).json({ message: 'Course not found.' });
         }
@@ -141,7 +158,7 @@ router.patch('/:id/publish', isAuthenticated, async (req, res) => {
         }
 
         // Update publication status
-        const updatedCourse = await updateCoursePublishStatus(courseId, isPublished);
+        const updatedCourse = await updateCoursePublishStatus(courseId, isPublished, orgId);
 
         res.status(200).json({
             message: `Course ${isPublished ? 'published' : 'unpublished'} successfully`,
@@ -161,7 +178,7 @@ router.patch('/:id/publish', isAuthenticated, async (req, res) => {
  * PUT /api/courses/:id
  * Update course title and description
  */
-router.put('/:id', isAuthenticated, async (req, res) => {
+router.put('/:id', ...requireAuth, async (req, res) => {
     try {
         const user = (req as any).user;
         if (!user || (user.role !== 'teacher' && user.role !== 'admin')) {
@@ -172,7 +189,10 @@ router.put('/:id', isAuthenticated, async (req, res) => {
         const { title, description } = req.body;
 
         // Check if course exists
-        const existingCourse = await getCourseById(courseId);
+        const orgId = (req as any).tenant?.organizationId;
+        if (!orgId) return res.status(400).json({ message: "Organization context required" });
+
+        const existingCourse = await getCourseById(courseId, orgId);
         if (!existingCourse) {
             return res.status(404).json({ message: 'Course not found.' });
         }
@@ -207,7 +227,7 @@ router.put('/:id', isAuthenticated, async (req, res) => {
  * DELETE /api/courses/:id
  * Delete a course (and cascade to enrollments and lessons)
  */
-router.delete('/:id', isAuthenticated, async (req, res) => {
+router.delete('/:id', ...requireAuth, async (req, res) => {
     try {
         const user = (req as any).user;
         if (!user || (user.role !== 'teacher' && user.role !== 'admin')) {
@@ -217,7 +237,10 @@ router.delete('/:id', isAuthenticated, async (req, res) => {
         const courseId = req.params.id;
 
         // Check if course exists
-        const existingCourse = await getCourseById(courseId);
+        const orgId = (req as any).tenant?.organizationId;
+        if (!orgId) return res.status(400).json({ message: "Organization context required" });
+
+        const existingCourse = await getCourseById(courseId, orgId);
         if (!existingCourse) {
             return res.status(404).json({ message: 'Course not found.' });
         }
@@ -228,7 +251,7 @@ router.delete('/:id', isAuthenticated, async (req, res) => {
         }
 
         // Delete the course (will cascade to enrollments and lessons via DB constraints)
-        await deleteCourse(courseId);
+        await deleteCourse(courseId, orgId);
 
         res.status(200).json({
             message: 'Course deleted successfully'
@@ -247,7 +270,7 @@ router.delete('/:id', isAuthenticated, async (req, res) => {
  * GET /api/courses/:courseId/lessons/:lessonId
  * Get a specific lesson in a course
  */
-router.get('/:courseId/lessons/:lessonId', isAuthenticated, async (req, res) => {
+router.get('/:courseId/lessons/:lessonId', ...requireAuth, async (req, res) => {
     try {
         const user = (req as any).user;
         const { courseId, lessonId } = req.params;
@@ -280,7 +303,10 @@ router.get('/:courseId/lessons/:lessonId', isAuthenticated, async (req, res) => 
         }
 
         // Verify access
-        const course = await getCourseById(courseId);
+        const orgId = (req as any).tenant?.organizationId;
+        if (!orgId) return res.status(400).json({ message: "Organization context required" });
+
+        const course = await getCourseById(courseId, orgId);
         if (!course) {
             return res.status(404).json({ message: 'Course not found.' });
         }
@@ -300,7 +326,7 @@ router.get('/:courseId/lessons/:lessonId', isAuthenticated, async (req, res) => 
  * PUT /api/courses/:courseId/lessons/:lessonId
  * Update a lesson in a course
  */
-router.put('/:courseId/lessons/:lessonId', isAuthenticated, async (req, res) => {
+router.put('/:courseId/lessons/:lessonId', ...requireAuth, async (req, res) => {
     try {
         const user = (req as any).user;
         if (!user || (user.role !== 'teacher' && user.role !== 'admin')) {
@@ -311,7 +337,10 @@ router.put('/:courseId/lessons/:lessonId', isAuthenticated, async (req, res) => 
         const { title } = req.body;
 
         // Verify course ownership
-        const course = await getCourseById(courseId);
+        const orgId = (req as any).tenant?.organizationId;
+        if (!orgId) return res.status(400).json({ message: "Organization context required" });
+
+        const course = await getCourseById(courseId, orgId);
         if (!course) {
             return res.status(404).json({ message: 'Course not found.' });
         }
@@ -321,7 +350,7 @@ router.put('/:courseId/lessons/:lessonId', isAuthenticated, async (req, res) => 
         }
 
         // Verify lesson exists and belongs to course
-        const lesson = await getLessonById(lessonId);
+        const lesson = await getLessonById(lessonId, orgId);
         if (!lesson || lesson.courseId !== courseId) {
             return res.status(404).json({ message: 'Lesson not found in this course.' });
         }
@@ -351,7 +380,7 @@ router.put('/:courseId/lessons/:lessonId', isAuthenticated, async (req, res) => 
  * DELETE /api/courses/:courseId/lessons/:lessonId
  * Delete a lesson from a course
  */
-router.delete('/:courseId/lessons/:lessonId', isAuthenticated, async (req, res) => {
+router.delete('/:courseId/lessons/:lessonId', ...requireAuth, async (req, res) => {
     try {
         const user = (req as any).user;
         if (!user || (user.role !== 'teacher' && user.role !== 'admin')) {
@@ -361,7 +390,10 @@ router.delete('/:courseId/lessons/:lessonId', isAuthenticated, async (req, res) 
         const { courseId, lessonId } = req.params;
 
         // Verify course ownership
-        const course = await getCourseById(courseId);
+        const orgId = (req as any).tenant?.organizationId;
+        if (!orgId) return res.status(400).json({ message: "Organization context required" });
+
+        const course = await getCourseById(courseId, orgId);
         if (!course) {
             return res.status(404).json({ message: 'Course not found.' });
         }
@@ -371,7 +403,7 @@ router.delete('/:courseId/lessons/:lessonId', isAuthenticated, async (req, res) 
         }
 
         // Verify lesson exists and belongs to course
-        const lesson = await getLessonById(lessonId);
+        const lesson = await getLessonById(lessonId, orgId);
         if (!lesson || lesson.courseId !== courseId) {
             return res.status(404).json({ message: 'Lesson not found in this course.' });
         }
@@ -396,7 +428,7 @@ router.delete('/:courseId/lessons/:lessonId', isAuthenticated, async (req, res) 
  * PATCH /api/courses/:courseId/lessons/:lessonId/publish
  * Toggle publish status of a lesson
  */
-router.patch('/:courseId/lessons/:lessonId/publish', isAuthenticated, async (req, res) => {
+router.patch('/:courseId/lessons/:lessonId/publish', ...requireAuth, async (req, res) => {
     try {
         const user = (req as any).user;
         if (!user || (user.role !== 'teacher' && user.role !== 'admin')) {
@@ -406,7 +438,10 @@ router.patch('/:courseId/lessons/:lessonId/publish', isAuthenticated, async (req
         const { courseId, lessonId } = req.params;
 
         // Verify course ownership
-        const course = await getCourseById(courseId);
+        const orgId = (req as any).tenant?.organizationId;
+        if (!orgId) return res.status(400).json({ message: "Organization context required" });
+
+        const course = await getCourseById(courseId, orgId);
         if (!course) {
             return res.status(404).json({ message: 'Course not found.' });
         }
@@ -416,7 +451,7 @@ router.patch('/:courseId/lessons/:lessonId/publish', isAuthenticated, async (req
         }
 
         // Verify lesson exists and belongs to course
-        const lesson = await getLessonById(lessonId);
+        const lesson = await getLessonById(lessonId, orgId);
         if (!lesson || lesson.courseId !== courseId) {
             return res.status(404).json({ message: 'Lesson not found in this course.' });
         }

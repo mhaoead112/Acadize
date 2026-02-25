@@ -6,6 +6,10 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs/promises';
 import { isAuthenticated } from '../middleware/auth.middleware.js';
+import { requireSubscription } from '../middleware/subscription.middleware.js';
+
+// Combined auth + subscription middleware
+const requireAuth = [isAuthenticated, requireSubscription];
 import { createLesson, getLessonsByCourse, getLessonById, deleteLesson, updateLesson, reorderLessons } from '../services/lesson.service.js';
 import { getCourseById } from '../services/course.service.js';
 import { uploadFile, deleteFile, isCloudStorageConfigured } from '../services/cloud-storage.service.js';
@@ -67,12 +71,15 @@ const upload = multer({
  * POST /api/lessons/upload
  * Upload a new lesson file
  */
-router.post('/upload', isAuthenticated, upload.single('file'), async (req, res) => {
+router.post('/upload', ...requireAuth, upload.single('file'), async (req, res) => {
     try {
         const user = (req as any).user;
         if (!user || (user.role !== 'teacher' && user.role !== 'admin')) {
             return res.status(403).json({ message: 'Forbidden: Teachers or Admins only.' });
         }
+
+        const orgId = (req as any).tenant?.organizationId;
+        if (!orgId) return res.status(400).json({ message: "Organization context required" });
 
         const { courseId, lessonTitle } = req.body;
         const file = req.file;
@@ -85,8 +92,8 @@ router.post('/upload', isAuthenticated, upload.single('file'), async (req, res) 
             return res.status(400).json({ message: 'No file uploaded.' });
         }
 
-        // Verify course exists and user owns it
-        const course = await getCourseById(courseId);
+        // Verify course exists and user owns it (enforces orgId)
+        const course = await getCourseById(courseId, orgId);
         if (!course) {
             // Delete uploaded file if course doesn't exist
             await fs.unlink(file.path).catch(() => { });
@@ -112,7 +119,8 @@ router.post('/upload', isAuthenticated, upload.single('file'), async (req, res) 
             fileName: file.originalname,
             filePath: uploadResult.url, // Now stores cloud URL or local path
             fileType: file.mimetype,
-            fileSize: file.size.toString()
+            fileSize: file.size.toString(),
+            organizationId: orgId
         });
 
         console.log(`Lesson uploaded to ${uploadResult.isCloudinary ? 'Cloudinary' : 'local storage'}: ${uploadResult.url}`);
@@ -181,8 +189,11 @@ router.post('/upload', isAuthenticated, upload.single('file'), async (req, res) 
 router.get('/course/:courseId', async (req, res) => {
     try {
         const { courseId } = req.params;
+        const orgId = (req as any).tenant?.organizationId;
+        if (!orgId) return res.status(400).json({ message: "Organization context required" });
 
-        const courseLessons = await getLessonsByCourse(courseId);
+        const locale = (req as any).locale;
+        const courseLessons = await getLessonsByCourse(courseId, orgId, locale);
 
         res.status(200).json({
             lessons: courseLessons
@@ -203,7 +214,11 @@ router.get('/course/:courseId', async (req, res) => {
  */
 router.get('/:id', async (req, res) => {
     try {
-        const lesson = await getLessonById(req.params.id);
+        const orgId = (req as any).tenant?.organizationId;
+        if (!orgId) return res.status(400).json({ message: "Organization context required" });
+
+        const locale = (req as any).locale;
+        const lesson = await getLessonById(req.params.id, orgId, locale);
 
         if (!lesson) {
             return res.status(404).json({ message: 'Lesson not found.' });
@@ -224,24 +239,27 @@ router.get('/:id', async (req, res) => {
  * PATCH /api/lessons/:id
  * Update a lesson (title or metadata)
  */
-router.patch('/:id', isAuthenticated, async (req, res) => {
+router.patch('/:id', ...requireAuth, async (req, res) => {
     try {
         const user = (req as any).user;
         if (!user || (user.role !== 'teacher' && user.role !== 'admin')) {
             return res.status(403).json({ message: 'Forbidden: Teachers or Admins only.' });
         }
 
+        const orgId = (req as any).tenant?.organizationId;
+        if (!orgId) return res.status(400).json({ message: "Organization context required" });
+
         const lessonId = req.params.id;
         const { title } = req.body;
 
-        // Get lesson to verify ownership
-        const lesson = await getLessonById(lessonId);
+        // Get lesson to verify ownership (enforces orgId)
+        const lesson = await getLessonById(lessonId, orgId);
         if (!lesson) {
             return res.status(404).json({ message: 'Lesson not found.' });
         }
 
-        // Get course to verify ownership
-        const course = await getCourseById(lesson.courseId);
+        // Get course to verify ownership (enforces orgId)
+        const course = await getCourseById(lesson.courseId, orgId);
         if (!course) {
             return res.status(404).json({ message: 'Course not found.' });
         }
@@ -251,7 +269,7 @@ router.patch('/:id', isAuthenticated, async (req, res) => {
         }
 
         // Update lesson
-        const updatedLesson = await updateLesson(lessonId, { title });
+        const updatedLesson = await updateLesson(lessonId, { title }, orgId);
 
         res.status(200).json({
             message: 'Lesson updated successfully',
@@ -271,12 +289,15 @@ router.patch('/:id', isAuthenticated, async (req, res) => {
  * POST /api/lessons/reorder
  * Reorder lessons in a course
  */
-router.post('/reorder', isAuthenticated, async (req, res) => {
+router.post('/reorder', ...requireAuth, async (req, res) => {
     try {
         const user = (req as any).user;
         if (!user || (user.role !== 'teacher' && user.role !== 'admin')) {
             return res.status(403).json({ message: 'Forbidden: Teachers or Admins only.' });
         }
+
+        const orgId = (req as any).tenant?.organizationId;
+        if (!orgId) return res.status(400).json({ message: "Organization context required" });
 
         const { lessons: lessonOrders } = req.body;
 
@@ -286,16 +307,16 @@ router.post('/reorder', isAuthenticated, async (req, res) => {
 
         // Verify ownership of first lesson to check course ownership
         if (lessonOrders.length > 0) {
-            const firstLesson = await getLessonById(lessonOrders[0].id);
+            const firstLesson = await getLessonById(lessonOrders[0].id, orgId);
             if (firstLesson) {
-                const course = await getCourseById(firstLesson.courseId);
+                const course = await getCourseById(firstLesson.courseId, orgId);
                 if (course && course.teacherId !== user.id && user.role !== 'admin') {
                     return res.status(403).json({ message: "You don't have permission to reorder these lessons." });
                 }
             }
         }
 
-        const updatedLessons = await reorderLessons(lessonOrders);
+        const updatedLessons = await reorderLessons(lessonOrders, orgId);
 
         res.status(200).json({
             message: 'Lessons reordered successfully',
@@ -315,23 +336,26 @@ router.post('/reorder', isAuthenticated, async (req, res) => {
  * DELETE /api/lessons/:id
  * Delete a lesson
  */
-router.delete('/:id', isAuthenticated, async (req, res) => {
+router.delete('/:id', ...requireAuth, async (req, res) => {
     try {
         const user = (req as any).user;
         if (!user || (user.role !== 'teacher' && user.role !== 'admin')) {
             return res.status(403).json({ message: 'Forbidden: Teachers or Admins only.' });
         }
 
+        const orgId = (req as any).tenant?.organizationId;
+        if (!orgId) return res.status(400).json({ message: "Organization context required" });
+
         const lessonId = req.params.id;
 
         // Get lesson to verify ownership
-        const lesson = await getLessonById(lessonId);
+        const lesson = await getLessonById(lessonId, orgId);
         if (!lesson) {
             return res.status(404).json({ message: 'Lesson not found.' });
         }
 
         // Get course to verify ownership
-        const course = await getCourseById(lesson.courseId);
+        const course = await getCourseById(lesson.courseId, orgId);
         if (!course) {
             return res.status(404).json({ message: 'Course not found.' });
         }
@@ -349,7 +373,7 @@ router.delete('/:id', isAuthenticated, async (req, res) => {
         }
 
         // Delete lesson from database
-        await deleteLesson(lessonId);
+        await deleteLesson(lessonId, orgId);
 
         res.status(200).json({
             message: 'Lesson deleted successfully'
@@ -371,7 +395,10 @@ router.delete('/:id', isAuthenticated, async (req, res) => {
  */
 router.get('/:id/download', async (req, res) => {
     try {
-        const lesson = await getLessonById(req.params.id);
+        const orgId = (req as any).tenant?.organizationId;
+        if (!orgId) return res.status(400).json({ message: "Organization context required" });
+        const locale = (req as any).locale;
+        const lesson = await getLessonById(req.params.id, orgId, locale);
 
         if (!lesson) {
             return res.status(404).json({ message: 'Lesson not found.' });
