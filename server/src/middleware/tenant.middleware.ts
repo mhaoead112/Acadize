@@ -167,11 +167,12 @@ export const tenantMiddleware = async (
 
     console.log('[TenantMiddleware] Resolved subdomain:', subdomain, { devSubdomain, originSubdomain, hostname });
 
-    // Skip tenant resolution for certain paths (health checks, registration, etc.)
+    // Skip tenant resolution for certain paths (health checks, registration, webhooks)
     // Note: req.path doesn't include /api when middleware is mounted at /api
     if (req.path === '/health' ||
         req.path === '/api/health' ||
-        req.path.startsWith('/registration/')) {
+        req.path.startsWith('/registration/') ||
+        req.path.startsWith('/webhooks/')) {
         return next();
     }
 

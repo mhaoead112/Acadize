@@ -1,36 +1,37 @@
 # Paymob integration – dashboard URLs
 
-Use these endpoints in the **Paymob dashboard** for where to send users after payment.
+Configure these two callbacks in the **Paymob dashboard**. Replace `YOUR_API_DOMAIN` with your backend host (e.g. `your-app.onrender.com`), **no trailing slash**.
 
-## Backend callback (recommended)
+---
 
-The app uses a **single backend callback**. Paymob redirects the user to this URL after payment; the server then redirects to the correct frontend page based on success/failure.
+## 1. Transaction processed callback (server-to-server)
 
-- **Callback URL (use for both success and failure in Paymob):**
-  ```text
-  https://YOUR_API_DOMAIN/api/webhooks/paymob/callback
-  ```
-  Replace `YOUR_API_DOMAIN` with your backend host (e.g. `api.acadize.com` or `your-app.onrender.com`), **no trailing slash**.
+Paymob sends a **POST** to your server when the transaction is processed. The app uses it to activate subscriptions and update payment status.
 
-- **Examples:**
-  - Production: `https://your-backend.onrender.com/api/webhooks/paymob/callback`
-  - Local: `http://localhost:3001/api/webhooks/paymob/callback`
+| In Paymob dashboard | Value |
+|---------------------|--------|
+| **Transaction processed callback URL** | `https://YOUR_API_DOMAIN/api/webhooks/paymob` |
+| **Method** | POST |
 
-If the Paymob dashboard has **separate fields** for “Success redirect URL” and “Failure redirect URL”, you can set **both** to this same callback URL. Paymob will append query params (`success=true` or `success=false`, `order`, `id`); the backend reads them and redirects the user to the correct frontend page.
+- Example production: `https://your-backend.onrender.com/api/webhooks/paymob`
+- Example local: `http://localhost:3001/api/webhooks/paymob`
 
-## Frontend pages (for reference only)
+---
 
-After the callback, users are sent to:
+## 2. Transaction response callback (user redirect)
 
-- **Success:** `{CLIENT_URL}/checkout-success?order=...&transaction=...`
-- **Failure:** `{CLIENT_URL}/checkout-failed?order=...&transaction=...`  
-  (`CLIENT_URL` is your frontend origin, e.g. `https://app.acadize.com` or `http://localhost:5173`.)
+After payment, Paymob **redirects the user's browser** to this URL. The app then redirects the user to the correct frontend page (success or failure).
 
-You do **not** put these frontend URLs in the Paymob dashboard; the backend builds them using the `CLIENT_URL` env var.
+| In Paymob dashboard | Value |
+|---------------------|--------|
+| **Transaction response callback URL** | `https://YOUR_API_DOMAIN/api/webhooks/paymob/callback` |
 
-## Webhook (server-to-server)
+- Example production: `https://your-backend.onrender.com/api/webhooks/paymob/callback`
+- Example local: `http://localhost:3001/api/webhooks/paymob/callback`
 
-For **transaction processed** callbacks (server-to-server), configure in Paymob:
+If Paymob has separate "Success redirect URL" and "Failure redirect URL", set **both** to this same URL. The backend reads query params (`success`, `order`, `id`) and redirects to:
 
-- **Webhook URL:** `https://YOUR_API_DOMAIN/api/webhooks/paymob`  
-  Method: **POST**. Used to activate subscriptions and update payment status.
+- Success → `{CLIENT_URL}/checkout-success?...`
+- Failure → `{CLIENT_URL}/checkout-failed?...`
+
+(`CLIENT_URL` is your frontend origin; set it in `.env`.)
