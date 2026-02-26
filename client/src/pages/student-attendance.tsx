@@ -63,7 +63,7 @@ interface CourseSummary {
 }
 
 type ViewMode = "list" | "calendar";
-type AcademicStatus = "Good Standing" | "At Risk" | "Critical";
+type AcademicStatusKey = "goodStanding" | "atRisk" | "critical";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers
@@ -83,19 +83,21 @@ function formatTimeRange(start: string, end: string | null): string {
   return `${s} - ${formatTime(end)}`;
 }
 
-function monthYearLabel(date: Date): string {
-  return date.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+const MONTH_KEYS = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"] as const;
+function monthYearLabel(date: Date, t: (k: string) => string): string {
+  const monthKey = MONTH_KEYS[date.getMonth()];
+  return `${t(monthKey)} ${date.getFullYear()}`;
 }
 
-function formatRelative(dateStr: string): string {
+function formatRelative(dateStr: string, t: (k: string) => string): string {
   const d = new Date(dateStr);
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
   const dDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  if (dDate.getTime() === today.getTime()) return `Today ${formatTime(d)}`;
-  if (dDate.getTime() === yesterday.getTime()) return `Yesterday ${formatTime(d)}`;
+  if (dDate.getTime() === today.getTime()) return `${t("today")} ${formatTime(d)}`;
+  if (dDate.getTime() === yesterday.getTime()) return `${t("yesterday")} ${formatTime(d)}`;
   return `${formatDate(d)} ${formatTime(d)}`;
 }
 
@@ -114,8 +116,9 @@ function getStatusBadgeClass(status: AttendanceRecord["status"]): string {
   }
 }
 
-function getStatusLabel(status: AttendanceRecord["status"]): string {
-  return status.charAt(0).toUpperCase() + status.slice(1);
+function getStatusLabel(status: AttendanceRecord["status"], t: (k: string) => string): string {
+  const key = status === "present" ? "statusPresent" : status === "late" ? "statusLate" : status === "absent" ? "statusAbsent" : "statusExcused";
+  return t(key);
 }
 
 function computeCurrentStreak(records: AttendanceRecord[]): number {
@@ -130,10 +133,10 @@ function computeCurrentStreak(records: AttendanceRecord[]): number {
   return streak;
 }
 
-function getAcademicStatus(overallPct: number): AcademicStatus {
-  if (overallPct >= 80) return "Good Standing";
-  if (overallPct >= 60) return "At Risk";
-  return "Critical";
+function getAcademicStatus(overallPct: number): AcademicStatusKey {
+  if (overallPct >= 80) return "goodStanding";
+  if (overallPct >= 60) return "atRisk";
+  return "critical";
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -165,18 +168,18 @@ export default function StudentAttendancePage() {
           headers: { Accept: "application/json", ...getAuthHeaders() },
           credentials: "include",
         });
-        if (!res.ok) throw new Error("Failed to load attendance");
+        if (!res.ok) throw new Error(t("failedToLoadAttendance"));
         const data = await res.json();
         setRecords(data.records ?? []);
         setCourseSummaries(data.courseSummaries ?? []);
       } catch (e: unknown) {
-        setError(e instanceof Error ? e.message : "Something went wrong");
+        setError(e instanceof Error ? e.message : t("somethingWentWrong"));
       } finally {
         setIsLoading(false);
       }
     };
     fetchAttendance();
-  }, [token, getAuthHeaders]);
+  }, [token, getAuthHeaders, t]);
 
   // Derived: overview
   const overview = useMemo(() => {
@@ -297,7 +300,7 @@ export default function StudentAttendancePage() {
             <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-500/30 rounded-xl p-8 text-center">
               <p className="text-red-600 dark:text-red-400">{error}</p>
               <Button variant="outline" className="mt-4" onClick={() => window.location.reload()}>
-                Retry
+                {t("retry")}
               </Button>
             </div>
           </div>
@@ -307,7 +310,7 @@ export default function StudentAttendancePage() {
   }
 
   const academicYearLabel = `${new Date().getFullYear() - 1}-${new Date().getFullYear()}`;
-  const semesterLabel = new Date().getMonth() >= 7 ? "Fall" : "Spring";
+  const semesterLabel = new Date().getMonth() >= 7 ? t("fallSemester") : t("springSemester");
 
   return (
     <StudentLayout>
@@ -318,7 +321,7 @@ export default function StudentAttendancePage() {
             <div>
               <h2 className="text-3xl font-bold text-slate-900 dark:text-white">{t('myAttendance')}</h2>
               <p className="text-slate-600 dark:text-slate-400 mt-1">
-                Academic Year {academicYearLabel} • {semesterLabel} Semester
+                {t("academicYearSemester", { year: academicYearLabel, semester: semesterLabel })}
               </p>
             </div>
             <div className="flex items-center gap-2 rounded-lg border border-slate-300 dark:border-white/10 p-1 bg-white dark:bg-card">
@@ -332,7 +335,7 @@ export default function StudentAttendancePage() {
                 }`}
               >
                 <List className="h-4 w-4" />
-                List View
+                {t("listView")}
               </button>
               <button
                 type="button"
@@ -344,7 +347,7 @@ export default function StudentAttendancePage() {
                 }`}
               >
                 <CalendarIcon className="h-4 w-4" />
-                Calendar View
+                {t("calendarView")}
               </button>
             </div>
           </div>
@@ -354,9 +357,9 @@ export default function StudentAttendancePage() {
             <Card className="border-l-4 border-l-[#FFD700] bg-white dark:bg-card border-slate-200 dark:border-white/10">
               <CardContent className="p-6 flex flex-row items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Overall Attendance</p>
+                  <p className="text-sm font-medium text-slate-600 dark:text-slate-400">{t("overallAttendance")}</p>
                   <p className="text-3xl font-bold text-slate-900 dark:text-white mt-1">{overview.overallPct}%</p>
-                  <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1">Sessions tracked</p>
+                  <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1">{t("sessionsTracked")}</p>
                 </div>
                 <div className="relative w-16 h-16">
                   <svg className="w-16 h-16 -rotate-90" viewBox="0 0 36 36">
@@ -388,7 +391,7 @@ export default function StudentAttendancePage() {
               <CardContent className="p-6">
                 <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
                   <CalendarIcon className="h-5 w-5" />
-                  <span className="text-sm font-medium">Sessions Attended</span>
+                  <span className="text-sm font-medium">{t("sessionsAttended")}</span>
                 </div>
                 <p className="text-3xl font-bold text-slate-900 dark:text-white mt-2">
                   {overview.sessionsAttended}/{overview.totalSessions}
@@ -408,30 +411,30 @@ export default function StudentAttendancePage() {
               <CardContent className="p-6">
                 <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
                   <Flame className="h-5 w-5 text-orange-500" />
-                  <span className="text-sm font-medium">Current Streak</span>
+                  <span className="text-sm font-medium">{t("currentStreak")}</span>
                 </div>
-                <p className="text-3xl font-bold text-slate-900 dark:text-white mt-2">{overview.currentStreak} Sessions</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Consecutive days with attendance</p>
+                <p className="text-3xl font-bold text-slate-900 dark:text-white mt-2">{overview.currentStreak} {t("sessionsAttended")}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{t("consecutiveDaysAttendance")}</p>
               </CardContent>
             </Card>
 
             <Card className="border-l-4 border-l-emerald-600 bg-white dark:bg-card border-slate-200 dark:border-white/10">
               <CardContent className="p-6">
-                <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Academic Status</p>
+                <p className="text-sm font-medium text-slate-600 dark:text-slate-400">{t("academicStatus")}</p>
                 <span
                   className={`inline-block mt-2 px-3 py-1.5 rounded-md text-sm font-bold ${
-                    overview.status === "Good Standing"
+                    overview.status === "goodStanding"
                       ? "bg-[#FFD700]/20 text-[#FFD700] border border-[#FFD700]/30"
-                      : overview.status === "At Risk"
+                      : overview.status === "atRisk"
                         ? "bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30"
                         : "bg-red-500/20 text-red-600 dark:text-red-400 border border-red-500/30"
                   }`}
                 >
-                  {overview.status.toUpperCase()}
+                  {t(overview.status).toUpperCase()}
                 </span>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 flex items-center gap-1">
                   <CheckCircle2 className="h-3.5 w-3.5" />
-                  Verified by system
+                  {t("verifiedBySystem")}
                 </p>
               </CardContent>
             </Card>
@@ -442,11 +445,11 @@ export default function StudentAttendancePage() {
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-xl">
                 <FolderOpen className="h-5 w-5 text-[#FFD700]" />
-                Course Breakdown
+                {t("courseBreakdown")}
               </CardTitle>
               <Link href="/student/courses">
                 <Button variant="link" className="text-[#FFD700] font-semibold p-0 h-auto">
-                  View All Courses
+                  {t("viewAllCourses")}
                 </Button>
               </Link>
             </CardHeader>
@@ -473,10 +476,10 @@ export default function StudentAttendancePage() {
                         <span className="text-xl font-bold text-slate-900 dark:text-white">{pct}%</span>
                       </div>
                       <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                        {attended}/{c.total} SESSIONS
+                        {attended}/{c.total} {t("sessionsAttended").toUpperCase()}
                       </p>
                       <div className="mt-2">
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">PROGRESS</p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">{t("progress").toUpperCase()}</p>
                         <div className="w-full bg-slate-200 dark:bg-white/10 rounded-full h-2">
                           <div
                             className="h-2 rounded-full bg-[#FFD700] transition-all"
@@ -486,7 +489,7 @@ export default function StudentAttendancePage() {
                       </div>
                       <Link href={`/student/courses/${c.courseId}`}>
                         <Button variant="ghost" size="sm" className="mt-3 text-[#FFD700] hover:text-[#FFD700]/80 p-0 h-auto font-semibold">
-                          View Details
+                          {t("viewDetails")}
                         </Button>
                       </Link>
                     </div>
@@ -494,7 +497,7 @@ export default function StudentAttendancePage() {
                 })}
               </div>
               {courseSummaries.length === 0 && (
-                <p className="text-slate-500 dark:text-slate-400 text-center py-8">No course attendance data yet.</p>
+                <p className="text-slate-500 dark:text-slate-400 text-center py-8">{t("noCourseAttendanceData")}</p>
               )}
             </CardContent>
           </Card>
@@ -504,7 +507,7 @@ export default function StudentAttendancePage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-xl">
                 <Clock className="h-5 w-5 text-[#FFD700]" />
-                Recent Activity
+                {t("recentActivity")}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -535,17 +538,17 @@ export default function StudentAttendancePage() {
                             r.status === "absent" ? "text-red-500 dark:text-red-400" : "text-emerald-600 dark:text-emerald-400"
                           }`}
                         >
-                          {r.status === "absent" ? formatDate(r.sessionStart) + " ABSENT" : formatRelative(r.joinTime || r.sessionStart)}
+                          {r.status === "absent" ? formatDate(r.sessionStart) + " " + t("statusAbsent").toUpperCase() : formatRelative(r.joinTime || r.sessionStart, t)}
                         </p>
                       </div>
                       <span className={`shrink-0 text-xs font-bold px-2 py-1 rounded border ${getStatusBadgeClass(r.status)}`}>
-                        {getStatusLabel(r.status)}
+                        {getStatusLabel(r.status, t)}
                       </span>
                     </li>
                   ))}
                 </ul>
                 {recentActivity.length === 0 && (
-                  <p className="text-slate-500 dark:text-slate-400 text-center py-8">No recent activity.</p>
+                  <p className="text-slate-500 dark:text-slate-400 text-center py-8">{t("noRecentActivity")}</p>
                 )}
               </div>
             </CardContent>
@@ -555,7 +558,7 @@ export default function StudentAttendancePage() {
           {viewMode === "list" && (
             <Card className="bg-white dark:bg-card border-slate-200 dark:border-white/10">
               <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="text-xl">Full Attendance History</CardTitle>
+                <CardTitle className="text-xl">{t("fullAttendanceHistory")}</CardTitle>
                 <div className="flex items-center gap-2">
                   <div className="relative">
                     <Filter className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -567,15 +570,15 @@ export default function StudentAttendancePage() {
                       }}
                       className="pl-9 pr-4 py-2 bg-white dark:bg-card border border-slate-300 dark:border-white/10 rounded-lg text-slate-900 dark:text-white text-sm"
                     >
-                      <option value="all">All</option>
-                      <option value="present">Present</option>
-                      <option value="late">Late</option>
-                      <option value="absent">Absent</option>
+                      <option value="all">{t("filterAll")}</option>
+                      <option value="present">{t("statusPresent")}</option>
+                      <option value="late">{t("statusLate")}</option>
+                      <option value="absent">{t("statusAbsent")}</option>
                     </select>
                   </div>
                   <Button variant="outline" size="sm" className="gap-2">
                     <Download className="h-4 w-4" />
-                    Export
+                    {t("export")}
                   </Button>
                 </div>
               </CardHeader>
@@ -584,12 +587,12 @@ export default function StudentAttendancePage() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-slate-200 dark:border-white/10 text-left text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                        <th className="pb-3 pr-4">Date</th>
-                        <th className="pb-3 pr-4">Course</th>
-                        <th className="pb-3 pr-4">Instructor</th>
-                        <th className="pb-3 pr-4">Time</th>
-                        <th className="pb-3 pr-4">Status</th>
-                        <th className="pb-3 w-10">Actions</th>
+                        <th className="pb-3 pr-4">{t("date")}</th>
+                        <th className="pb-3 pr-4">{t("course")}</th>
+                        <th className="pb-3 pr-4">{t("instructor")}</th>
+                        <th className="pb-3 pr-4">{t("time")}</th>
+                        <th className="pb-3 pr-4">{t("status")}</th>
+                        <th className="pb-3 w-10">{t("actions")}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -603,7 +606,7 @@ export default function StudentAttendancePage() {
                           </td>
                           <td className="py-3 pr-4">
                             <span className={`inline-block px-2 py-1 rounded text-xs font-bold border ${getStatusBadgeClass(r.status)}`}>
-                              {getStatusLabel(r.status)}
+                              {getStatusLabel(r.status, t)}
                             </span>
                           </td>
                           <td className="py-3">
@@ -656,10 +659,10 @@ export default function StudentAttendancePage() {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-6 py-4 border-b border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-white/5">
                   <div>
                     <h3 className="text-2xl font-bold text-slate-900 dark:text-white">
-                      {monthYearLabel(calendarMonth)}
+                      {monthYearLabel(calendarMonth, t)}
                     </h3>
                     <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-                      Monthly attendance overview and session history
+                      {t("monthlyAttendanceOverview")}
                     </p>
                   </div>
                   <div className="flex items-center gap-2 flex-wrap">
@@ -669,7 +672,7 @@ export default function StudentAttendancePage() {
                         setCalendarMonth((d) => new Date(d.getFullYear(), d.getMonth() - 1, 1))
                       }
                       className="p-2 rounded-lg text-[#FFD700] hover:bg-[#FFD700]/10 transition-colors"
-                      aria-label="Previous month"
+                      aria-label={t("previousMonth")}
                     >
                       <ChevronLeft className="h-5 w-5" />
                     </button>
@@ -683,7 +686,7 @@ export default function StudentAttendancePage() {
                         setSelectedDate(today);
                       }}
                     >
-                      Today
+                      {t("today")}
                     </Button>
                     <button
                       type="button"
@@ -691,7 +694,7 @@ export default function StudentAttendancePage() {
                         setCalendarMonth((d) => new Date(d.getFullYear(), d.getMonth() + 1, 1))
                       }
                       className="p-2 rounded-lg text-[#FFD700] hover:bg-[#FFD700]/10 transition-colors"
-                      aria-label="Next month"
+                      aria-label={t("nextMonth")}
                     >
                       <ChevronRight className="h-5 w-5" />
                     </button>
@@ -700,7 +703,7 @@ export default function StudentAttendancePage() {
                       className="bg-[#FFD700] text-slate-900 hover:bg-[#FFD700]/90 gap-2 ml-2"
                     >
                       <Menu className="h-4 w-4" />
-                      Back to List View
+                      {t("backToListView")}
                     </Button>
                   </div>
                 </div>
@@ -709,7 +712,7 @@ export default function StudentAttendancePage() {
                   {/* Left: Calendar grid (~2/3) */}
                   <div className="flex-1 p-6 lg:min-w-0 lg:max-w-[66%]">
                     <div className="grid grid-cols-7 gap-1">
-                      {["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"].map((day) => (
+                      {[t("mon"), t("tue"), t("wed"), t("thu"), t("fri"), t("sat"), t("sun")].map((day) => (
                         <div
                           key={day}
                           className="py-2 text-center text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400"
@@ -778,13 +781,13 @@ export default function StudentAttendancePage() {
                     <div className="grid grid-cols-2 gap-3 mb-6">
                       <div className="rounded-xl bg-emerald-600 dark:bg-emerald-700/90 p-4 text-white">
                         <p className="text-xs font-bold uppercase tracking-wider opacity-90">
-                          Present
+                          {t("statusPresent")}
                         </p>
                         <p className="text-2xl font-bold mt-1">{monthSummary.present}</p>
                       </div>
                       <div className="rounded-xl bg-red-600 dark:bg-red-700/90 p-4 text-white">
                         <p className="text-xs font-bold uppercase tracking-wider opacity-90">
-                          Absent
+                          {t("statusAbsent")}
                         </p>
                         <p className="text-2xl font-bold mt-1">{monthSummary.absent}</p>
                       </div>
@@ -798,8 +801,7 @@ export default function StudentAttendancePage() {
                             {formatDate(selectedDate)}
                           </p>
                           <span className="text-slate-500 dark:text-slate-400 text-sm">
-                            {sessionsOnSelectedDate.length} Session
-                            {sessionsOnSelectedDate.length !== 1 ? "s" : ""} Scheduled
+                            {t("sessionScheduled", { count: sessionsOnSelectedDate.length })}
                           </span>
                           <Info className="h-4 w-4 text-slate-400 shrink-0" />
                         </div>
@@ -845,8 +847,8 @@ export default function StudentAttendancePage() {
                                       <XCircle className="h-3 w-3" />
                                     )}
                                     {r.status === "present" || r.status === "late"
-                                      ? "PRESENT"
-                                      : getStatusLabel(r.status)}
+                                      ? t("statusPresent").toUpperCase()
+                                      : getStatusLabel(r.status, t)}
                                   </span>
                                 </div>
                               </li>
@@ -854,7 +856,7 @@ export default function StudentAttendancePage() {
                         </ul>
                         {sessionsOnSelectedDate.length === 0 && (
                           <p className="text-slate-500 dark:text-slate-400 text-sm py-4">
-                            No sessions on this day.
+                            {t("noSessionsOnThisDay")}
                           </p>
                         )}
                         <Link href="/student/courses" className="block mt-6">
@@ -863,14 +865,14 @@ export default function StudentAttendancePage() {
                             size="lg"
                           >
                             <BookOpen className="h-4 w-4" />
-                            View Course Materials
+                            {t("viewCourseMaterials")}
                           </Button>
                         </Link>
                       </>
                     ) : (
                       <div className="flex-1 flex items-center justify-center py-8">
                         <p className="text-slate-500 dark:text-slate-400 text-sm text-center">
-                          Select a day to see sessions
+                          {t("selectDayToSeeSessions")}
                         </p>
                       </div>
                     )}
@@ -880,19 +882,19 @@ export default function StudentAttendancePage() {
                 {/* Footer: Legend */}
                 <div className="flex flex-wrap items-center gap-4 px-6 py-3 border-t border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-white/5 text-sm">
                   <span className="text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wider">
-                    Legend:
+                    {t("legend")}:
                   </span>
                   <span className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
                     <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-                    Present
+                    {t("statusPresent")}
                   </span>
                   <span className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
                     <span className="w-2 h-2 rounded-full bg-red-500 shrink-0" />
-                    Absent
+                    {t("statusAbsent")}
                   </span>
                   <span className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
                     <span className="w-2 h-2 rounded-full bg-slate-400 shrink-0" />
-                    No Class Scheduled
+                    {t("noClassScheduled")}
                   </span>
                 </div>
               </CardContent>

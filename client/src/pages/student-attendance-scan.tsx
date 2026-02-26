@@ -61,16 +61,18 @@ interface AttendanceHistoryItem {
 // Helpers
 // ─────────────────────────────────────────────────────────────────────────────
 
-function formatAttendanceDate(iso: string): string {
+function formatAttendanceDate(iso: string, t: (k: string) => string): string {
   const d = new Date(iso);
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
   const dDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  if (dDate.getTime() === today.getTime()) return `Today • ${d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`;
-  if (dDate.getTime() === yesterday.getTime()) return `Yesterday • ${d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`;
-  return `${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} • ${d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`;
+  const timeStr = d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+  if (dDate.getTime() === today.getTime()) return `${t("today")} • ${timeStr}`;
+  if (dDate.getTime() === yesterday.getTime()) return `${t("yesterday")} • ${timeStr}`;
+  const dateStr = d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  return `${dateStr} • ${timeStr}`;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -101,7 +103,7 @@ export default function StudentAttendanceScan() {
           credentials: 'include',
           headers: { Accept: 'application/json', ...getAuthHeaders() },
         });
-        if (!res.ok) throw new Error('Failed to load sessions');
+        if (!res.ok) throw new Error(t("failedToLoadSessions"));
         const data = await res.json();
         const sessions: ActiveSession[] = data.sessions ?? [];
         if (cancelled) return;
@@ -113,7 +115,7 @@ export default function StudentAttendanceScan() {
         } else setPhase('session_select');
       } catch (e) {
         if (!cancelled) {
-          setErrorMessage(e instanceof Error ? e.message : 'Something went wrong');
+          setErrorMessage(e instanceof Error ? e.message : t("somethingWentWrong"));
           setPhase('error');
         }
       }
@@ -168,7 +170,7 @@ export default function StudentAttendanceScan() {
   const handleManualSubmit = useCallback(async () => {
     const raw = manualCode.trim();
     if (!raw) {
-      setManualError('Enter the code from the board');
+      setManualError(t("enterCodeFromBoard"));
       return;
     }
     let token = '';
@@ -185,7 +187,7 @@ export default function StudentAttendanceScan() {
       }
       if (!token || !sessionId) throw new Error('Invalid code');
     } catch {
-      setManualError('Invalid code format. Use the code shown on the board or paste the full QR content.');
+      setManualError(t("invalidCodeFormat"));
       return;
     }
     setManualError('');
@@ -202,19 +204,19 @@ export default function StudentAttendanceScan() {
         const record: AttendanceRecord = {
           attendanceId: data.attendanceId,
           sessionId,
-          message: data.message ?? 'Attendance recorded.',
+          message: data.message ?? t("attendanceRecorded"),
           gpsValid: data.gpsValid,
         };
         await handleScanSuccess(record);
         return;
       }
-      setManualError(data.message ?? 'Check-in failed. Try again.');
+      setManualError(data.message ?? t("checkInFailed"));
     } catch {
-      setManualError('Network error. Check your connection.');
+      setManualError(t("networkError"));
     } finally {
       setManualSubmitting(false);
     }
-  }, [manualCode, handleScanSuccess]);
+  }, [manualCode, handleScanSuccess, t]);
 
   const goToScanning = (session: ActiveSession) => {
     setSelectedSession(session);
@@ -305,14 +307,14 @@ export default function StudentAttendanceScan() {
               <div className="w-20 h-20 rounded-full bg-red-500/20 flex items-center justify-center mb-6">
                 <span className="material-symbols-outlined text-4xl text-red-400">error</span>
               </div>
-              <h2 className="text-lg font-bold text-white mb-2">Something went wrong</h2>
+              <h2 className="text-lg font-bold text-white mb-2">{t("somethingWentWrong")}</h2>
               <p className="text-slate-400 text-sm mb-8">{errorMessage}</p>
               <button
                 type="button"
                 onClick={() => setLocation('/student/dashboard')}
                 className={`${minTap} px-8 rounded-2xl bg-white/10 text-white font-semibold border border-white/20`}
               >
-                Return to Dashboard
+                {t("returnToDashboard")}
               </button>
             </motion.div>
           )}
@@ -352,7 +354,7 @@ export default function StudentAttendanceScan() {
                 onClick={() => setLocation('/student/dashboard')}
                 className={`${minTap} mt-8 w-full rounded-2xl bg-white/5 text-slate-400 font-medium border border-white/10`}
               >
-                Cancel
+                {t("common:actions.cancel")}
               </button>
             </motion.div>
           )}
@@ -366,7 +368,7 @@ export default function StudentAttendanceScan() {
               exit={{ opacity: 0 }}
               className="flex-1 flex flex-col p-6"
             >
-              <p className="text-slate-400 text-center text-lg mb-2">Align the QR code within the frame to check-in</p>
+              <p className="text-slate-400 text-center text-lg mb-2">{t("alignQrCode")}</p>
               <div className="flex-1 flex flex-col items-center justify-center">
                 <button
                   type="button"
@@ -374,16 +376,16 @@ export default function StudentAttendanceScan() {
                   className={`${minTap} w-full max-w-[280px] mx-auto rounded-2xl border-2 border-[#FFD700] bg-[#FFD700]/10 text-[#FFD700] font-bold text-lg flex items-center justify-center gap-3 shadow-lg`}
                 >
                   <span className="material-symbols-outlined text-3xl">qr_code_scanner</span>
-                  Open camera to scan
+                  {t("openCameraToScan")}
                 </button>
               </div>
               <div className="mt-8">
-                <p className="text-slate-400 text-sm mb-2">Camera not working? Enter code from board</p>
+                <p className="text-slate-400 text-sm mb-2">{t("cameraNotWorking")}</p>
                 <input
                   type="text"
                   value={manualCode}
                   onChange={(e) => { setManualCode(e.target.value); setManualError(''); }}
-                  placeholder="Paste code or token, session ID"
+                  placeholder={t("pasteCodePlaceholder")}
                   className="w-full min-h-[48px] px-4 rounded-xl bg-white/5 border border-white/10 text-white placeholder-slate-500"
                 />
                 {manualError && <p className="text-red-400 text-sm mt-2">{manualError}</p>}
@@ -393,7 +395,7 @@ export default function StudentAttendanceScan() {
                   disabled={manualSubmitting}
                   className={`${minTap} mt-3 w-full rounded-xl bg-white/10 text-white font-medium border border-white/10 disabled:opacity-50`}
                 >
-                  {manualSubmitting ? 'Submitting…' : 'Submit code'}
+                  {manualSubmitting ? t("submitting") : t("submitCode")}
                 </button>
               </div>
             </motion.div>
@@ -417,20 +419,20 @@ export default function StudentAttendanceScan() {
                 >
                   <span className="material-symbols-outlined text-5xl text-emerald-400">check_circle</span>
                 </motion.div>
-                <h2 className="text-xl font-bold text-white mb-1">Attendance Recorded!</h2>
+                <h2 className="text-xl font-bold text-white mb-1">{t("attendanceRecordedTitle")}</h2>
                 {successSessionDetail?.courseTitle && (
                   <p className="text-[#FFD700] font-medium">{successSessionDetail.courseTitle}</p>
                 )}
                 {successSessionDetail?.title && (
                   <p className="text-slate-400 text-sm mt-1">{successSessionDetail.title}</p>
                 )}
-                <p className="text-slate-500 text-sm mt-2">Check-in time: Just now</p>
+                <p className="text-slate-500 text-sm mt-2">{t("checkInTimeJustNow")}</p>
                 <button
                   type="button"
                   onClick={() => setLocation('/student/dashboard')}
                   className={`${minTap} mt-8 px-8 rounded-2xl bg-[#FFD700] text-slate-900 font-bold shadow-lg shadow-[#FFD700]/20`}
                 >
-                  Return to Dashboard
+                  {t("returnToDashboard")}
                 </button>
               </div>
             </motion.div>
@@ -441,13 +443,13 @@ export default function StudentAttendanceScan() {
         {(phase === 'session_select' || phase === 'scan_ready' || phase === 'success') && attendanceHistory.length > 0 && (
           <section className="border-t border-white/10 p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base font-semibold text-white">Recent Attendance</h3>
+              <h3 className="text-base font-semibold text-white">{t("recentAttendance")}</h3>
               <button
                 type="button"
-                onClick={() => setLocation('/student/dashboard')}
+                onClick={() => setLocation('/student/attendance')}
                 className="text-sm font-bold text-[#FFD700] uppercase tracking-wide"
               >
-                View all
+                {t("viewAll")}
               </button>
             </div>
             <ul className="space-y-3">
@@ -461,7 +463,7 @@ export default function StudentAttendanceScan() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-white truncate">{r.courseTitle}</p>
-                    <p className="text-xs text-slate-400">{formatAttendanceDate(r.joinTime || r.sessionStart)}</p>
+                    <p className="text-xs text-slate-400">{formatAttendanceDate(r.joinTime || r.sessionStart, t)}</p>
                   </div>
                   <span className="material-symbols-outlined text-emerald-400 text-xl">check_circle</span>
                 </li>

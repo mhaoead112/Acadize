@@ -59,8 +59,8 @@ export function SubscriptionGuard({ children }: SubscriptionGuardProps) {
         // 401 means the auth middleware rejected the token; let the protected route handle it
         // 5xx means the subscription service is down; fail-open so users aren't locked out
         if (response.status === 402) {
-          console.log(`Subscription check returned 402, redirecting to subscription-required...`);
-          setLocation('/subscription-required');
+          console.log(`Subscription check returned 402, redirecting to checkout...`);
+          setLocation('/activate');
           return;
         }
 
@@ -76,7 +76,7 @@ export function SubscriptionGuard({ children }: SubscriptionGuardProps) {
           if (data.hasAccess || data.status === 'not_required') {
             setHasAccess(true);
           } else {
-            setLocation('/subscription-required');
+            setLocation('/activate');
             return;
           }
         }

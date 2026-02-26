@@ -451,6 +451,139 @@ router.post('/enroll', ...requireAuth, async (req, res) => {
 });
 
 /**
+ * PROTECTED (STUDENT)
+ * GET /api/enrollments/join/preview?courseId=... or &joinCode=...
+ * Returns minimal course info for join confirmation. 404 if not found or not published in org.
+ */
+router.get('/join/preview', ...requireAuth, async (req, res) => {
+    try {
+        const user = (req as any).user;
+        if (!user || user.role !== 'student') {
+            return res.status(403).json({ message: 'Only students can join courses' });
+        }
+        const orgId = (req as any).tenant?.organizationId;
+        if (!orgId) {
+            return res.status(400).json({ message: 'Organization context required' });
+        }
+        const courseId = req.query.courseId as string | undefined;
+        const joinCode = req.query.joinCode as string | undefined;
+        if (!courseId && !joinCode) {
+            return res.status(400).json({ message: 'courseId or joinCode is required' });
+        }
+
+        const course = await resolveCourseForJoin(orgId, courseId || undefined, joinCode || undefined);
+        if (!course || course.organizationId !== orgId) {
+            return res.status(404).json({ message: 'Course not found' });
+        }
+        if (!course.isPublished) {
+            return res.status(404).json({ message: 'Course is not available to join' });
+        }
+        const [teacher] = await db
+            .select({ fullName: users.fullName })
+            .from(users)
+            .where(eq(users.id, course.teacherId))
+            .limit(1);
+        res.status(200).json({
+            id: course.id,
+            title: course.title,
+            description: course.description ?? null,
+            teacherName: teacher?.fullName ?? null,
+        });
+    } catch (error) {
+        console.error('Error fetching join preview:', error);
+        res.status(500).json({
+            message: 'Failed to fetch course preview',
+            error: error instanceof Error ? error.message : 'Unknown error',
+        });
+    }
+});
+
+/** Resolve course by courseId or joinCode for current org. */
+async function resolveCourseForJoin(orgId: string, courseId?: string, joinCode?: string): Promise<typeof courses.$inferSelect | null> {
+    if (courseId) {
+        const [c] = await db
+            .select()
+            .from(courses)
+            .where(and(eq(courses.id, courseId), eq(courses.organizationId, orgId)))
+            .limit(1);
+        return c ?? null;
+    }
+    if (joinCode) {
+        const [c] = await db
+            .select()
+            .from(courses)
+            .where(and(
+                eq(courses.joinCode, joinCode),
+                eq(courses.organizationId, orgId)
+            ))
+            .limit(1);
+        return c ?? null;
+    }
+    return null;
+}
+
+/**
+ * PROTECTED (STUDENT)
+ * POST /api/enrollments/join
+ * Self-enroll in a course by courseId or joinCode.
+ */
+router.post('/join', ...requireAuth, async (req, res) => {
+    try {
+        const user = (req as any).user;
+        if (!user || user.role !== 'student') {
+            return res.status(403).json({ message: 'Only students can join courses' });
+        }
+        const orgId = (req as any).tenant?.organizationId;
+        if (!orgId) {
+            return res.status(400).json({ message: 'Organization context required' });
+        }
+        const { courseId, joinCode } = req.body as { courseId?: string; joinCode?: string };
+        if (!courseId && !joinCode) {
+            return res.status(400).json({ message: 'courseId or joinCode is required' });
+        }
+
+        const course = await resolveCourseForJoin(orgId, courseId, joinCode);
+        if (!course) {
+            return res.status(404).json({ message: 'Course not found' });
+        }
+        if (!course.isPublished) {
+            return res.status(400).json({ message: 'Course is not available to join' });
+        }
+        if (course.organizationId !== orgId || (user as any).organizationId !== orgId) {
+            return res.status(403).json({ message: 'You do not have access to this course' });
+        }
+
+        const [existing] = await db
+            .select()
+            .from(enrollments)
+            .where(and(
+                eq(enrollments.studentId, user.id),
+                eq(enrollments.courseId, course.id)
+            ))
+            .limit(1);
+        if (existing) {
+            return res.status(400).json({ message: 'You are already enrolled in this course' });
+        }
+
+        const [enrollment] = await db
+            .insert(enrollments)
+            .values({ studentId: user.id, courseId: course.id })
+            .returning();
+        res.status(201).json({
+            message: 'Enrolled successfully',
+            enrollment: { id: enrollment!.id, courseId: course.id, enrolledAt: enrollment!.enrolledAt },
+            course: { id: course.id, title: course.title },
+        });
+    } catch (error) {
+        console.error('Error joining course:', error);
+        res.status(500).json({
+            message: 'Failed to join course',
+            error: error instanceof Error ? error.message : 'Unknown error',
+        });
+    }
+});
+
+/**
  * PROTECTED (TEACHER)
  * DELETE /api/enrollments/:enrollmentId
  * Remove a student from a course

@@ -173,11 +173,14 @@ export const courses = pgTable("courses", {
   teacherId: text("teacher_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
   isPublished: boolean("is_published").default(false).notNull(),
   imageUrl: text("image_url"),
+  /** Short code for students to join (e.g. 6–8 chars). Optional; when set, students can enroll via join code or invite link. */
+  joinCode: varchar("join_code", { length: 16 }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
 }, (table) => ({
   orgIdx: index("courses_org_idx").on(table.organizationId),
   teacherIdx: index("courses_teacher_idx").on(table.teacherId),
+  joinCodeIdx: index("courses_join_code_idx").on(table.joinCode),
 }));
 
 export const courseTranslations = pgTable("course_translations", {

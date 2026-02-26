@@ -24,6 +24,10 @@ export interface TenantContext {
     defaultLocale: string;
     /** i18n: list of enabled locale codes (e.g. ['en', 'ar']) */
     enabledLocales: string[];
+    /** Per-user subscription pricing (for activate/checkout pages) */
+    userMonthlyPricePiasters: number | null;
+    userAnnualPricePiasters: number | null;
+    userCurrency: string;
 }
 
 // Extend Express Request to include tenant context
@@ -110,6 +114,9 @@ async function lookupOrganization(subdomain: string, hostname: string): Promise<
             },
             defaultLocale: org.defaultLocale ?? 'en',
             enabledLocales,
+            userMonthlyPricePiasters: org.userMonthlyPricePiasters ?? null,
+            userAnnualPricePiasters: org.userAnnualPricePiasters ?? null,
+            userCurrency: org.userCurrency ?? 'EGP',
         };
 
         // Cache the result

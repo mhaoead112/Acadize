@@ -128,14 +128,14 @@ router.get('/paymob/callback', async (req, res) => {
         const clientBaseUrl = process.env.CLIENT_URL || 'http://localhost:5173';
 
         if (isSuccess) {
-            res.redirect(`${clientBaseUrl}/checkout/success?order=${order}&transaction=${transactionId}`);
+            res.redirect(`${clientBaseUrl}/checkout-success?order=${order}&transaction=${transactionId}`);
         } else {
-            res.redirect(`${clientBaseUrl}/checkout/failed?order=${order}&transaction=${transactionId}`);
+            res.redirect(`${clientBaseUrl}/checkout-failed?order=${order}&transaction=${transactionId}`);
         }
     } catch (error) {
         console.error('[Webhook] Paymob callback redirect error:', error);
         const clientBaseUrl = process.env.CLIENT_URL || 'http://localhost:5173';
-        res.redirect(`${clientBaseUrl}/checkout/failed?error=processing`);
+        res.redirect(`${clientBaseUrl}/checkout-failed?error=processing`);
     }
 });
 

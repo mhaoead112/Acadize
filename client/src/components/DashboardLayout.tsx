@@ -250,8 +250,8 @@ function SidebarNavItem({ item, isActive, colors, isSubmenuItem = false }: {
     rounded-lg transition-all duration-200 group
     ${isSubmenuItem ? 'pl-10 text-sm' : ''}
     ${isActive 
-      ? 'bg-gray-900 text-white' 
-      : 'text-gray-600 hover:bg-gray-50'
+      ? 'bg-gray-900 dark:bg-slate-700 text-white' 
+      : 'text-gray-600 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800'
     }
   `;
 
@@ -329,7 +329,7 @@ function UserMenu({ user, onLogout }: { user: any; onLogout: () => void }) {
       <DropdownMenuTrigger asChild>
         <Button 
           variant="ghost" 
-          className="relative h-10 w-10 rounded-full hover:bg-gray-100"
+          className="relative h-10 w-10 rounded-full hover:bg-gray-100 dark:hover:bg-slate-800"
           data-testid="user-menu-trigger"
         >
           <Avatar className="h-9 w-9">
@@ -347,7 +347,7 @@ function UserMenu({ user, onLogout }: { user: any; onLogout: () => void }) {
         <div className="flex items-center justify-start gap-2 p-2">
           <div className="flex flex-col space-y-1 leading-none">
             <p className="font-medium">{user?.fullName || user?.username || 'User'}</p>
-            <p className="w-[200px] truncate text-sm text-gray-600">
+            <p className="w-[200px] truncate text-sm text-gray-600 dark:text-slate-400">
               {user?.email}
             </p>
             <Badge className="w-fit text-xs capitalize" variant="secondary">
@@ -433,7 +433,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-950">
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div 
@@ -444,13 +444,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
       {/* Sidebar */}
       <div className={`
-        fixed inset-y-0 left-0 z-50 w-64 sm:w-[245px] bg-white border-r border-gray-100
+        fixed inset-y-0 left-0 z-50 w-64 sm:w-[245px] bg-white dark:bg-slate-900 border-r border-gray-100 dark:border-slate-800
         transform transition-transform duration-300 ease-in-out md:translate-x-0
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
         <div className="flex flex-col h-full">
           {/* Sidebar header */}
-          <div className="flex items-center justify-between h-16 sm:h-20 px-4 sm:px-6 border-b border-gray-100">
+          <div className="flex items-center justify-between h-16 sm:h-20 px-4 sm:px-6 border-b border-gray-100 dark:border-slate-800">
             <div className="flex items-center gap-2.5">
 <div className="mb-6 mt-10">
             <img 
@@ -491,15 +491,15 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           </nav>
 
           {/* Sidebar footer - Settings and Logout */}
-          <div className="border-t border-gray-100">
+          <div className="border-t border-gray-100 dark:border-slate-800">
             <div className="px-3 sm:px-4 py-3 space-y-1">
               <Link href="/settings">
                 <div className={`
                   flex items-center w-full px-3 py-2.5 text-left rounded-lg
                   transition-all duration-200 group
                   ${location === '/settings' 
-                    ? 'bg-gray-100 text-gray-900' 
-                    : 'text-gray-600 hover:bg-gray-50'
+                    ? 'bg-gray-100 dark:bg-slate-800 text-gray-900 dark:text-white' 
+                    : 'text-gray-600 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800'
                   }
                 `}>
                   <div className="flex items-center space-x-3">
@@ -514,7 +514,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 className="
                   flex items-center w-full px-3 py-2.5 text-left rounded-lg
                   transition-all duration-200 group
-                  text-gray-600 hover:bg-gray-50
+                  text-gray-600 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800
                 "
               >
                 <div className="flex items-center space-x-3">
@@ -530,7 +530,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       {/* Main content */}
       <div className="md:pl-64 sm:md:pl-[245px]">
         {/* Top header */}
-        <header className="bg-white border-b border-gray-100 h-14 sm:h-16 md:h-20">
+        <header className="bg-white dark:bg-slate-900 border-b border-gray-100 dark:border-slate-800 h-14 sm:h-16 md:h-20">
           <div className="flex items-center justify-between h-full px-3 sm:px-4 md:px-6 lg:px-8">
             <div className="flex items-center flex-1 max-w-2xl">
               <Button
@@ -546,11 +546,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               {/* Search */}
               <div className="flex items-center flex-1">
                 <div className="relative w-full max-w-xl">
-                  <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-slate-500" />
                   <Input
                     type="search"
                     placeholder="Search..."
-                    className="pl-9 sm:pl-11 pr-3 sm:pr-4 h-9 sm:h-10 md:h-11 bg-gray-50 border-0 rounded-lg text-xs sm:text-sm focus-visible:ring-1 focus-visible:ring-gray-300"
+                    className="pl-9 sm:pl-11 pr-3 sm:pr-4 h-9 sm:h-10 md:h-11 bg-gray-50 dark:bg-slate-800 border-0 rounded-lg text-xs sm:text-sm focus-visible:ring-1 focus-visible:ring-gray-300 dark:focus-visible:ring-slate-600"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     data-testid="search-input"
@@ -565,14 +565,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
               {/* User Profile */}
               <Link href={`/${user?.role || 'student'}/profile`}>
-                <div className="flex items-center gap-2 sm:gap-3 pl-2 sm:pl-3 border-l border-gray-200 cursor-pointer hover:bg-gray-50 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg transition-colors">
+                <div className="flex items-center gap-2 sm:gap-3 pl-2 sm:pl-3 border-l border-gray-200 dark:border-slate-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg transition-colors">
                   <div className="hidden lg:block text-right">
-                    <p className="text-sm font-semibold text-gray-900">{displayName}</p>
-                    <p className="text-xs text-gray-500 capitalize">
+                    <p className="text-sm font-semibold text-gray-900 dark:text-white">{displayName}</p>
+                    <p className="text-xs text-gray-500 dark:text-slate-400 capitalize">
                       {user?.grade || (user?.role === 'student' ? 'Student' : user?.role)}
                     </p>
                   </div>
-                  <Avatar className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 ring-2 ring-gray-100">
+                    <Avatar className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 ring-2 ring-gray-100 dark:ring-slate-700">
                     <AvatarImage 
                       src={user?.profilePicture ? assetUrl(user.profilePicture) : ''} 
                       alt={displayName} 
@@ -588,7 +588,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-5 md:py-6 bg-gray-50">
+        <main className="flex-1 px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-5 md:py-6 bg-gray-50 dark:bg-slate-950">
           <div className="animate-fade-in">
             {children}
           </div>

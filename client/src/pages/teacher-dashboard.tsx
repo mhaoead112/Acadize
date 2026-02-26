@@ -287,10 +287,8 @@ export default function TeacherDashboard() {
                 <h2 className="text-navy dark:text-white text-[20px] font-bold leading-tight tracking-[-0.015em]">
                   {t('activeClasses')}
                 </h2>
-                <Link href="/teacher/courses">
-                  <a className="text-navy dark:text-gold text-sm font-medium hover:underline">
-                    {t('viewAll')}
-                  </a>
+                <Link href="/teacher/courses" className="text-navy dark:text-gold text-sm font-medium hover:underline">
+                  {t('viewAll')}
                 </Link>
               </div>
 
@@ -310,27 +308,25 @@ export default function TeacherDashboard() {
                     const emoji = getIconForCourse(course.title);
                     
                     return (
-                      <Link key={course.id} href={`/teacher/courses/${course.id}`}>
-                        <a className="block">
-                          <div className="flex flex-col gap-3 rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-slate-800 p-4 shadow-sm hover:shadow-md transition-all cursor-pointer group">
-                            <div className="flex items-center gap-3">
-                              <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-emerald-200 to-teal-300 flex items-center justify-center text-2xl flex-shrink-0">
-                                {emoji}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <h3 className="font-bold text-navy dark:text-white text-base leading-tight group-hover:text-emerald-600 transition-colors truncate">
-                                  {course.title}
-                                </h3>
-                                <p className="text-sm text-slate-500 dark:text-gray-400">
-                                  {course.status === 'published' ? t('published') : t('draft')}
-                                </p>
-                              </div>
+                      <Link key={course.id} href={`/teacher/courses/${course.id}`} className="block">
+                        <div className="flex flex-col gap-3 rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-slate-800 p-4 shadow-sm hover:shadow-md transition-all cursor-pointer group">
+                          <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-emerald-200 to-teal-300 flex items-center justify-center text-2xl flex-shrink-0">
+                              {emoji}
                             </div>
-                            <p className="text-sm text-slate-600 dark:text-gray-400 line-clamp-2">
-                              {course.description || t('noDescriptionAvailable')}
-                            </p>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-bold text-navy dark:text-white text-base leading-tight group-hover:text-emerald-600 transition-colors truncate">
+                                {course.title}
+                              </h3>
+                              <p className="text-sm text-slate-500 dark:text-gray-400">
+                                {course.status === 'published' ? t('published') : t('draft')}
+                              </p>
+                            </div>
                           </div>
-                        </a>
+                          <p className="text-sm text-slate-600 dark:text-gray-400 line-clamp-2">
+                            {course.description || t('noDescriptionAvailable')}
+                          </p>
+                        </div>
                       </Link>
                     );
                   })}
@@ -344,10 +340,8 @@ export default function TeacherDashboard() {
                 <h2 className="text-navy dark:text-white text-[20px] font-bold leading-tight tracking-[-0.015em]">
                   {t('upcomingAssignments')}
                 </h2>
-                <Link href="/teacher/assignments">
-                  <a className="text-navy dark:text-gold text-sm font-medium hover:underline">
-                    {t('viewAll')}
-                  </a>
+                <Link href="/teacher/assignments" className="text-navy dark:text-gold text-sm font-medium hover:underline">
+                  {t('viewAll')}
                 </Link>
               </div>
 

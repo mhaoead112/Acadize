@@ -49,6 +49,7 @@ import DemoLogin from "@/components/DemoLogin";
 // Import new dashboard pages
 import StudentDashboard from "@/pages/student-dashboard";
 import StudentCoursesPage from "@/pages/student-courses";
+import StudentJoinCoursePage from "@/pages/student-join-course";
 import StudentSearchResultsPage from "@/pages/student-search-results";
 import StudentCourseDetailPage from "@/pages/student-course-detail";
 import StudentProgressPage from "@/pages/student-progress";
@@ -87,6 +88,11 @@ import TeacherAssignmentSubmissions from "@/pages/teacher-assignment-submissions
 import Login from "@/pages/login";
 import Register from "@/pages/register";
 import ChangePassword from "@/pages/change-password";
+import Activate from "@/pages/activate";
+import ActivateFreeTrial from "@/pages/activate-free-trial";
+import SubscriptionRequired from "@/pages/subscription-required";
+import CheckoutSuccess from "@/pages/checkout-success";
+import CheckoutFailed from "@/pages/checkout-failed";
 import StudyGroupsChatPage from "@/pages/study-groups-chat-enhanced";
 import ProfilePage from "@/pages/student-profile";
 import StudentAttendanceScan from "@/pages/student-attendance-scan";
@@ -196,15 +202,25 @@ function Router() {
           {/* Register route - kept for future admin functionality, redirects to login */}
           <Route path="/register">
             <PublicOnlyRoute>
-              <Login />
+              <Register />
             </PublicOnlyRoute>
           </Route>
 
-          {/* Demo login route - high priority */}
-          <Route path="/demo">
-            <PublicOnlyRoute>
-              <DemoLogin />
-            </PublicOnlyRoute>
+          {/* Subscription / checkout - plan selection and payment for existing users */}
+          <Route path="/activate">
+            <Activate />
+          </Route>
+          <Route path="/activate-free-trial">
+            <ActivateFreeTrial />
+          </Route>
+          <Route path="/subscription-required">
+            <SubscriptionRequired />
+          </Route>
+          <Route path="/checkout-success">
+            <CheckoutSuccess />
+          </Route>
+          <Route path="/checkout-failed">
+            <CheckoutFailed />
           </Route>
 
           {/* Change password route - for first-time login */}
@@ -278,6 +294,10 @@ function Router() {
             <StudentRoute>
               <StudentSearchResultsPage />
             </StudentRoute>
+          </Route>
+
+          <Route path="/student/join">
+            <StudentJoinCoursePage />
           </Route>
 
           <Route path="/student/courses">

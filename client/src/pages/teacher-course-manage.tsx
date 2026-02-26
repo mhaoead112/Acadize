@@ -4,7 +4,7 @@ import { useRoute, useLocation } from "wouter";
 import { 
   BookOpen, Users, FileText, Settings, Trash2, Plus,
   ArrowLeft, Calendar, Clock, TrendingUp, CheckCircle2, Loader2,
-  UserPlus, Search, Megaphone, Pin, ChevronRight, BarChart3
+  UserPlus, Search, Megaphone, Pin, ChevronRight, BarChart3, Link2, Copy
 } from "lucide-react";
 import TeacherLayout from "@/components/TeacherLayout";
 import { Button } from "@/components/ui/button";
@@ -32,6 +32,7 @@ interface Course {
   status: string;
   teacherId: string;
   createdAt: string;
+  joinCode?: string | null;
 }
 
 interface Lesson {
@@ -110,6 +111,7 @@ export default function TeacherCourseManage() {
   const [loadingStudents, setLoadingStudents] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'content' | 'assignments' | 'roster' | 'announcements'>('overview');
   const [rosterSearch, setRosterSearch] = useState("");
+  const [generatingJoinCode, setGeneratingJoinCode] = useState(false);
 
   const courseId = params?.id;
 
@@ -407,6 +409,41 @@ export default function TeacherCourseManage() {
     fetchAvailableStudents();
   };
 
+  const handleGenerateJoinCode = async () => {
+    if (!courseId || !token || courseId === 'create') return;
+    setGeneratingJoinCode(true);
+    try {
+      const res = await fetch(apiEndpoint(`/api/courses/${courseId}/join-code`), {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        toast({ title: 'Error', description: data.message || 'Failed to generate invite code', variant: 'destructive' });
+        return;
+      }
+      setCourse((c) => (c ? { ...c, joinCode: data.joinCode } : null));
+      toast({ title: 'Invite code generated', description: 'Students can join with this code or the invite link.' });
+    } catch {
+      toast({ title: 'Error', description: 'Failed to generate invite code', variant: 'destructive' });
+    } finally {
+      setGeneratingJoinCode(false);
+    }
+  };
+
+  const inviteLink = typeof window !== 'undefined' && course
+    ? `${window.location.origin}/student/join?${course.joinCode ? `code=${encodeURIComponent(course.joinCode)}` : `courseId=${encodeURIComponent(course.id)}`}`
+    : '';
+
+  const copyInviteLink = () => {
+    if (!inviteLink) return;
+    navigator.clipboard.writeText(inviteLink).then(() => {
+      toast({ title: 'Copied', description: 'Invite link copied to clipboard.' });
+    }).catch(() => {
+      toast({ title: 'Error', description: 'Could not copy link', variant: 'destructive' });
+    });
+  };
+
   // Filter students by search term
   const filteredStudents = availableStudents.filter(student =>
     student.fullName?.toLowerCase().includes(studentSearchTerm.toLowerCase()) ||
@@ -605,6 +642,34 @@ export default function TeacherCourseManage() {
                       Edit Course
                     </Button>
                   </div>
+                </div>
+
+                <div className="bg-white dark:bg-slate-800 rounded-xl p-5 border border-slate-200 dark:border-slate-800 flex flex-col gap-3">
+                  <div className="flex items-center gap-2">
+                    <Link2 className="h-5 w-5 text-primary" />
+                    <span className="text-sm font-bold text-slate-900 dark:text-white">Invite students</span>
+                  </div>
+                  <p className="text-sm text-slate-600 dark:text-slate-300">
+                    Share the invite link or join code so students can enroll themselves.
+                  </p>
+                  {course.joinCode ? (
+                    <div className="space-y-2">
+                      <p className="text-xs text-slate-500 dark:text-slate-400">Join code</p>
+                      <p className="font-mono text-lg font-bold text-slate-900 dark:text-white tracking-wider">{course.joinCode}</p>
+                      <Button variant="outline" size="sm" onClick={copyInviteLink} className="w-full gap-2">
+                        <Copy className="h-4 w-4" />
+                        Copy invite link
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={handleGenerateJoinCode} disabled={generatingJoinCode}>
+                        {generatingJoinCode ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Regenerate code'}
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button onClick={handleGenerateJoinCode} disabled={generatingJoinCode} className="w-full gap-2">
+                      {generatingJoinCode ? <Loader2 className="h-4 w-4 animate-spin" /> : <Link2 className="h-4 w-4" />}
+                      Generate invite code
+                    </Button>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">

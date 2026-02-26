@@ -203,7 +203,7 @@ function ActiveSessionBanner({
             <span>Attendance</span>
             <span className="text-emerald-300">{pct}%</span>
           </div>
-          <div className="h-2 w-full rounded-full bg-white/10">
+          <div className="h-2 w-full rounded-full bg-slate-200 dark:bg-white/10">
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${pct}%` }}

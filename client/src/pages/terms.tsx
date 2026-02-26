@@ -187,7 +187,7 @@ export default function Terms() {
                 </button>
               </Link>
               <Link href="/privacy">
-                <button className="px-8 py-3 rounded-lg border border-secondary-dark text-white font-bold transition-all hover:bg-white/5">
+                <button className="px-8 py-3 rounded-lg border border-slate-600 dark:border-secondary-dark text-white font-bold transition-all hover:bg-slate-100 dark:hover:bg-white/5">
                   View Privacy Policy
                 </button>
               </Link>

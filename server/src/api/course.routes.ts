@@ -222,6 +222,57 @@ router.put('/:id', ...requireAuth, async (req, res) => {
     }
 });
 
+function randomJoinCode(length = 8): string {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let code = '';
+    for (let i = 0; i < length; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return code;
+}
+
+/**
+ * PROTECTED (TEACHER ONLY)
+ * POST /api/courses/:id/join-code
+ * Generate or regenerate join code for a course. Students can join with this code or invite link.
+ */
+router.post('/:id/join-code', ...requireAuth, async (req, res) => {
+    try {
+        const user = (req as any).user;
+        if (!user || (user.role !== 'teacher' && user.role !== 'admin')) {
+            return res.status(403).json({ message: 'Forbidden: Teachers or Admins only.' });
+        }
+        const courseId = req.params.id;
+        const orgId = (req as any).tenant?.organizationId;
+        if (!orgId) return res.status(400).json({ message: 'Organization context required' });
+
+        const existingCourse = await getCourseById(courseId, orgId);
+        if (!existingCourse) {
+            return res.status(404).json({ message: 'Course not found.' });
+        }
+        if (existingCourse.teacherId !== user.id && user.role !== 'admin') {
+            return res.status(403).json({ message: "You don't have permission to update this course." });
+        }
+
+        let joinCode = randomJoinCode(8);
+        const maxAttempts = 10;
+        for (let attempt = 0; attempt < maxAttempts; attempt++) {
+            const existing = await db.select({ id: courses.id }).from(courses).where(and(eq(courses.joinCode, joinCode), eq(courses.organizationId, orgId))).limit(1);
+            if (existing.length === 0) break;
+            joinCode = randomJoinCode(8);
+        }
+
+        await db.update(courses).set({ joinCode, updatedAt: new Date() }).where(eq(courses.id, courseId));
+        res.status(200).json({ joinCode, invitePath: `/student/join?code=${encodeURIComponent(joinCode)}` });
+    } catch (error) {
+        console.error('Error generating join code:', error);
+        res.status(500).json({
+            message: 'Failed to generate join code',
+            error: error instanceof Error ? error.message : 'Unknown error',
+        });
+    }
+});
+
 /**
  * PROTECTED (TEACHER ONLY)
  * DELETE /api/courses/:id

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation, Trans } from 'react-i18next';
 import { useTheme } from "@/contexts/ThemeContext";
 import { useTenant } from '@/hooks/useTenant';
-import { apiEndpoint } from '@/lib/config';
+import { apiEndpoint, getTenantHeaders } from '@/lib/config';
 import { useToast } from '@/hooks/use-toast';
 import {
   Check, ArrowLeft, ShieldCheck, Tag, Loader2,
@@ -98,7 +98,7 @@ export function RegisterStep4({
     try {
       const res = await fetch(apiEndpoint('/api/registration/validate-coupon'), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getTenantHeaders(),
         body: JSON.stringify({ code: couponInput.trim() }),
       });
       const result = await res.json();
@@ -201,7 +201,7 @@ export function RegisterStep4({
             flex items-center justify-center gap-2"
         >
           <PartyPopper className="w-4 h-4" />
-          {t('startMyFreeTrial')}
+          {t('continueToLogin')}
         </button>
 
         <p className={`text-xs mt-4 ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>
@@ -496,7 +496,7 @@ export function RegisterStep4({
             ) : (
               <>
                 <ShieldCheck className="w-5 h-5" />
-                {t('proceedToPay', { price: currentPrice })}
+                {t('proceedToPay', { price: finalPrice })}
                 <ChevronRight className="w-5 h-5" />
               </>
             )}

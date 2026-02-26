@@ -342,7 +342,7 @@ export default function TeacherStudents() {
                 );
               }) : (
                 <tr>
-                  <td colSpan={5} className="p-20 text-center text-slate-500 italic">No students found matching your criteria.</td>
+                  <td colSpan={5} className="p-20 text-center text-slate-500 dark:text-slate-400 italic">No students found matching your criteria.</td>
                 </tr>
               )}
             </tbody>

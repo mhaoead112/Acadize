@@ -211,9 +211,9 @@ export default function TeacherSessionLive() {
     try {
       await fetch(apiEndpoint('/api/attendance/manual'), {
         method: 'POST',
-        headers,
+        headers: { ...headers, 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ sessionId, targetUserId: userId, status }),
+        body: JSON.stringify({ sessionId, userId, status }),
       });
       await fetchAttendance();
     } catch {/* ignore */}

@@ -44,9 +44,9 @@ export function useSubscriptionCheck() {
                 });
 
                 if (response.status === 402) {
-                    // Payment required - redirect to info page
-                    console.log(`Subscription restricted (status: 402), redirecting to info page...`);
-                    setLocation('/subscription-required');
+                    // No valid subscription - send to checkout to select plan and pay
+                    console.log(`Subscription restricted (status: 402), redirecting to checkout...`);
+                    setLocation('/activate');
                 } else if (!response.ok) {
                     // Don't block on 401 or 5xx - let auth/other middleware handle it
                     console.warn(`Subscription check returned ${response.status}, not redirecting`);

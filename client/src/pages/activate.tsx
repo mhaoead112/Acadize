@@ -20,6 +20,7 @@ export default function Activate() {
   const [promoStatus, setPromoStatus] = useState<'idle' | 'valid' | 'invalid'>('idle');
   const [promoMessage, setPromoMessage] = useState('');
   const [promoDiscount, setPromoDiscount] = useState(0);
+  const [promoTrialDays, setPromoTrialDays] = useState(0);
   
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'annual'>('annual');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -60,9 +61,13 @@ export default function Activate() {
 
       if (data.valid) {
         setPromoStatus('valid');
-        setPromoDiscount(data.discount || 0);
-        setPromoMessage(`Code applied: ${promoCode.toUpperCase()}`);
-        toast({ title: "Promo Code Applied!", description: `You saved ${data.discount}%!` });
+        setPromoDiscount(data.discount ?? 0);
+        setPromoTrialDays(data.trialDays ?? 0);
+        setPromoMessage(data.description || `Code applied: ${promoCode.toUpperCase()}`);
+        toast({
+          title: "Promo Code Applied!",
+          description: data.trialDays ? `${data.trialDays}-day free trial` : `You saved ${data.discount ?? 0}%!`,
+        });
       } else {
         setPromoStatus('invalid');
         setPromoMessage(data.message || 'Invalid promo code');
@@ -78,22 +83,41 @@ export default function Activate() {
   const handleSubscribe = async () => {
     setIsProcessing(true);
     try {
+      const token = localStorage.getItem('acadize_token') || localStorage.getItem('eduverse_token');
+      const headers: Record<string, string> = { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) };
+
+      // If valid trial promo, activate trial instead of Paymob checkout
+      if (promoStatus === 'valid' && promoTrialDays > 0 && promoCode.trim()) {
+        const res = await fetch(apiEndpoint('/api/subscription/activate-trial'), {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ code: promoCode.trim() }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'Trial activation failed');
+        toast({ title: "Free trial activated!", description: `You have ${promoTrialDays} days of full access.` });
+        setLocation('/checkout-success');
+        return;
+      }
+
       const res = await fetch(apiEndpoint('/api/subscription/checkout'), {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('acadize_token') || localStorage.getItem('eduverse_token')}`
-        },
+        headers,
         body: JSON.stringify({
-          billingCycle: selectedPlan, 
-          promoCode: promoStatus === 'valid' ? promoCode : undefined
+          billingCycle: selectedPlan,
+          promoCode: promoStatus === 'valid' ? promoCode : undefined,
         }),
       });
 
       const data = await res.json();
 
-      if (data.url) {
-        window.location.href = data.url;
+      if (!res.ok) {
+        throw new Error(data.message || 'Checkout failed');
+      }
+
+      const checkoutUrl = data.iframeUrl ?? data.url;
+      if (checkoutUrl) {
+        window.location.href = checkoutUrl;
       } else if (data.success) {
         toast({ title: "Subscription Activated!", description: "Welcome aboard!" });
         setLocation('/checkout-success');
@@ -110,14 +134,17 @@ export default function Activate() {
     }
   };
 
-  const monthlyPrice = tenant?.userMonthlyPricePiasters ? (tenant.userMonthlyPricePiasters / 100) : 10;
-  const annualPrice = tenant?.userAnnualPricePiasters ? (tenant.userAnnualPricePiasters / 100) : 96;
-  const currency = tenant?.userCurrency || 'USD';
+  // Pricing from tenant (piasters → EGP: divide by 100); fallback 80 EGP / 768 EGP annual
+  const monthlyPrice = tenant?.userMonthlyPricePiasters != null ? tenant.userMonthlyPricePiasters / 100 : 80;
+  const annualPrice = tenant?.userAnnualPricePiasters != null ? tenant.userAnnualPricePiasters / 100 : 768;
+  const currency = tenant?.userCurrency || 'EGP';
+  const currencySymbol = currency === 'EGP' ? 'EGP' : currency === 'USD' ? '$' : currency;
 
   const selectedPrice = selectedPlan === 'monthly' ? monthlyPrice : annualPrice;
-  const platformFee = 0.30;
-  const discountAmount = promoStatus === 'valid' ? (selectedPrice * promoDiscount / 100) : 0;
-  const totalDue = selectedPrice + platformFee - discountAmount;
+  const hasTrial = promoStatus === 'valid' && promoTrialDays > 0;
+  const discountPercent = promoStatus === 'valid' ? promoDiscount : 0;
+  const discountAmount = hasTrial ? selectedPrice : (selectedPrice * discountPercent / 100);
+  const totalDue = hasTrial ? 0 : Math.max(0, selectedPrice - discountAmount);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#0B1120] text-slate-900 dark:text-white flex flex-col font-sans relative overflow-hidden transition-colors duration-300">
@@ -187,7 +214,7 @@ export default function Activate() {
                   </div>
                   
                   <div className="mb-auto">
-                    <span className="text-4xl font-bold">${monthlyPrice}</span>
+                    <span className="text-4xl font-bold">{currencySymbol} {monthlyPrice}</span>
                     <span className="text-slate-400 ml-2">/ month</span>
                   </div>
 
@@ -237,9 +264,9 @@ export default function Activate() {
                   </div>
                   
                   <div className="mb-auto">
-                    <span className="text-4xl font-bold">${(annualPrice / 12).toFixed(2)}</span>
+                    <span className="text-4xl font-bold">{currencySymbol} {Math.round(annualPrice / 12)}</span>
                     <span className="text-slate-400 ml-2">/ month</span>
-                    <p className="text-xs text-primary font-bold mt-1">${annualPrice} billed annually</p>
+                    <p className="text-xs text-primary font-bold mt-1">{currencySymbol} {annualPrice} billed annually</p>
                   </div>
 
                   <hr className="my-6 border-slate-100 dark:border-white/5" />
@@ -312,20 +339,16 @@ export default function Activate() {
                 <div className="space-y-4 mb-6 pb-6 border-b border-slate-100 dark:border-white/5 text-sm">
                   <div className="flex justify-between items-center">
                     <span className="text-slate-500 dark:text-gray-400 capitalize">{selectedPlan} Plan</span>
-                    <span className="font-bold">${selectedPrice.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-500 dark:text-gray-400">Platform Fee</span>
-                    <span className="font-bold">${platformFee.toFixed(2)}</span>
+                    <span className="font-bold">{currencySymbol} {selectedPrice}</span>
                   </div>
                   {promoStatus === 'valid' && (
-                    <motion.div 
+                    <motion.div
                       initial={{ opacity: 0, x: 10 }}
                       animate={{ opacity: 1, x: 0 }}
                       className="flex justify-between items-center text-green-500 font-bold"
                     >
-                      <span>Discount ({promoDiscount}%)</span>
-                      <span>-${discountAmount.toFixed(2)}</span>
+                      <span>{hasTrial ? `Free trial (${promoTrialDays} days)` : `Discount (${promoDiscount}%)`}</span>
+                      <span>-{currencySymbol} {discountAmount}</span>
                     </motion.div>
                   )}
                 </div>
@@ -333,8 +356,10 @@ export default function Activate() {
                 <div className="flex justify-between items-center mb-8">
                   <span className="text-lg font-bold">Total Due</span>
                   <div className="text-right">
-                    <span className="text-3xl font-bold text-primary">${totalDue.toFixed(2)}</span>
-                    <p className="text-[10px] text-slate-400 dark:text-gray-500 uppercase tracking-widest font-bold mt-1">One-time Charge</p>
+                    <span className="text-3xl font-bold text-primary">{currencySymbol} {totalDue}</span>
+                    <p className="text-[10px] text-slate-400 dark:text-gray-500 uppercase tracking-widest font-bold mt-1">
+                      {hasTrial ? 'Free trial — no charge today' : 'One-time Charge'}
+                    </p>
                   </div>
                 </div>
 

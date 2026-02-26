@@ -26,9 +26,16 @@ export default function Login() {
     password: ''
   });
 
+  const returnUrl = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('returnUrl') : null;
+  const safeReturnUrl = returnUrl && returnUrl.startsWith('/') && !returnUrl.startsWith('//') ? returnUrl : null;
+
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated && user) {
+      if (safeReturnUrl) {
+        setLocation(safeReturnUrl);
+        return;
+      }
       const roleRoutes: Record<string, string> = {
         student: '/student/dashboard',
         teacher: '/teacher/dashboard',
@@ -37,7 +44,7 @@ export default function Login() {
       };
       setLocation(roleRoutes[user.role] || '/');
     }
-  }, [isAuthenticated, user, setLocation]);
+  }, [isAuthenticated, user, setLocation, safeReturnUrl]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,15 +75,18 @@ export default function Login() {
           description: t('successfullySignedIn', { name: userData?.fullName || 'User' }),
         });
 
-        const roleRoutes: Record<string, string> = {
-          student: '/student/dashboard',
-          teacher: '/teacher/dashboard',
-          parent: '/parent/dashboard',
-          admin: '/admin/dashboard'
-        };
+        const redirectTo = safeReturnUrl || (() => {
+          const roleRoutes: Record<string, string> = {
+            student: '/student/dashboard',
+            teacher: '/teacher/dashboard',
+            parent: '/parent/dashboard',
+            admin: '/admin/dashboard'
+          };
+          return roleRoutes[userData?.role] || '/';
+        })();
 
         setTimeout(() => {
-          setLocation(roleRoutes[userData?.role] || '/');
+          setLocation(redirectTo);
         }, 300);
       } else {
         toast({

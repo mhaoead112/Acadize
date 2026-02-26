@@ -382,7 +382,7 @@ const StudentExams: React.FC = () => {
             {exam.antiCheatEnabled && (
               <div className="flex items-center gap-1.5 text-orange-400">
                 <span className="material-symbols-outlined text-[18px]">visibility</span>
-                <span className="text-xs">Proctored</span>
+                <span className="text-xs">{t('proctored')}</span>
               </div>
             )}
           </div>
@@ -401,12 +401,12 @@ const StudentExams: React.FC = () => {
             {isLocked ? (
               <>
                 <span className="material-symbols-outlined text-[18px]">lock</span>
-                Exam Locked
+                {t('examLocked')}
               </>
             ) : (
               <>
                 <span className="material-symbols-outlined text-[18px]">play_arrow</span>
-                Enter Session
+                {t('enterSession')}
               </>
             )}
           </button>
@@ -426,20 +426,20 @@ const StudentExams: React.FC = () => {
               {attempt.status.replace('_', ' ')}
             </span>
             <span className="text-xs dark:text-slate-500 text-slate-600 font-medium">
-              Attempt {attempt.attemptNumber}
+              {t('attemptNumber', { number: attempt.attemptNumber })}
             </span>
           </div>
           
           <div>
             <h4 className="text-lg font-bold dark:text-white text-slate-900 leading-tight">
-              {exam?.title || 'Unknown Exam'}
+              {exam?.title || t('unknownExam')}
             </h4>
             <p className="text-sm dark:text-slate-400 text-slate-600 mt-1">
               {formatDate(attempt.startedAt)}
             </p>
             {attempt.score !== null && (
               <p className={`text-sm mt-1 font-bold ${attempt.passed ? 'text-green-400' : 'text-red-400'}`}>
-                Score: {attempt.score} / {exam?.totalPoints || 100} ({Math.round(attempt.percentage || 0)}%)
+                {t('scoreLabel', { score: attempt.score, total: exam?.totalPoints || 100, percent: Math.round(attempt.percentage || 0) })}
               </p>
             )}
           </div>
@@ -447,7 +447,7 @@ const StudentExams: React.FC = () => {
           {attempt.flaggedForReview && (
             <div className="flex items-center gap-2 px-3 py-2 bg-orange-500/10 border border-orange-500/20 rounded-lg">
               <span className="material-symbols-outlined text-orange-400 text-[18px]">flag</span>
-              <span className="text-xs text-orange-400 font-medium">Flagged for Review</span>
+              <span className="text-xs text-orange-400 font-medium">{t('flaggedForReview')}</span>
             </div>
           )}
 

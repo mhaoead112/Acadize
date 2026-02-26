@@ -76,23 +76,29 @@ export async function registerOrder(params: {
     authToken: string;
     amountCents: number; // amount in piasters/cents
     currency: string;
-    merchantOrderId: string; // our internal order/subscription ID
+    merchantOrderId: string; // our internal order/subscription ID (must be unique per attempt)
     items?: Array<{ name: string; amount_cents: number; quantity: number }>;
 }): Promise<{ orderId: number }> {
-    const response = await axios.post(`${PAYMOB_API_BASE}/ecommerce/orders`, {
-        auth_token: params.authToken,
-        delivery_needed: false,
-        amount_cents: params.amountCents,
-        currency: params.currency,
-        merchant_order_id: params.merchantOrderId,
-        items: params.items || [{
-            name: 'EduVerse Subscription',
+    try {
+        const response = await axios.post(`${PAYMOB_API_BASE}/ecommerce/orders`, {
+            auth_token: params.authToken,
+            delivery_needed: false,
             amount_cents: params.amountCents,
-            quantity: 1,
-        }],
-    });
-
-    return { orderId: response.data.id };
+            currency: params.currency,
+            merchant_order_id: params.merchantOrderId,
+            items: params.items || [{
+                name: 'Acadize Subscription',
+                amount_cents: params.amountCents,
+                quantity: 1,
+            }],
+        });
+        return { orderId: response.data.id };
+    } catch (err: any) {
+        if (err?.response?.status === 422 && err?.response?.data?.message === 'duplicate') {
+            throw new Error('A checkout was already started for this plan. Please complete the existing payment or try again in a few minutes.');
+        }
+        throw err;
+    }
 }
 
 /**

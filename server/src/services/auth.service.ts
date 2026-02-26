@@ -148,6 +148,9 @@ export const loginUser = async (credentials: LoginUserDto): Promise<AuthResponse
         throw new Error("Invalid Password");
     }
 
+    // Inactive users (e.g. pending payment) are allowed to log in; they will be
+    // redirected to the plan/checkout page (e.g. /activate) by the subscription guard.
+
     // 3. Generate access and refresh tokens using TokenService
     const { TokenService } = await import('./token.service.js');
     const tokenPair = await TokenService.generateTokenPair({

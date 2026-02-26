@@ -7,7 +7,7 @@ import { RegisterStep2 } from './RegisterStep2';
 import { RegisterStep3 } from './RegisterStep3';
 import { RegisterStep4 } from './RegisterStep4';
 import { useTenant } from '@/hooks/useTenant';
-import { apiEndpoint } from '@/lib/config';
+import { apiEndpoint, getTenantHeaders } from '@/lib/config';
 import { useToast } from '@/hooks/use-toast';
 
 export function RegisterWizard() {
@@ -92,7 +92,7 @@ export function RegisterWizard() {
 
       const response = await fetch(apiEndpoint('/api/registration/create-with-payment'), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getTenantHeaders(),
         body: JSON.stringify(payload),
       });
 
@@ -177,7 +177,7 @@ export function RegisterWizard() {
             onBack={handleBack}
             onPaymentComplete={handlePaymentComplete}
             userId={userId || ''}
-            organizationId={tenant?.id || ''}
+            organizationId={tenant?.organizationId ?? tenant?.id ?? ''}
             pricing={pricing}
             userRole={formData.role}
             checkoutData={checkoutData}

@@ -81,7 +81,9 @@ export async function activateTrial(params: {
 }) {
     // 1. Check if user already has a subscription
     const existing = await getUserSubscription(params.userId, params.organizationId);
-    if (existing && ['trialing', 'active'].includes(existing.status)) {
+    // Allow trial when existing row is a checkout placeholder (user went to Paymob then back and applied promo)
+    const isCheckoutPlaceholder = existing?.status === 'trialing' && !existing?.promoCodeId && existing?.paymobOrderId;
+    if (existing && ['trialing', 'active'].includes(existing.status) && !isCheckoutPlaceholder) {
         throw new Error('You already have an active subscription or trial.');
     }
 
@@ -330,11 +332,30 @@ export async function createCheckout(params: {
         subscription = newSub;
     }
 
-    // 4. Create Paymob checkout
-    const checkout = await PaymobService.createCheckoutSession({
-        amountCents: amountPiasters, // in piasters (e.g. 8000 = 80 EGP); 0 for free-first-month
+    // 4. Create pending payment record first so we have a unique id for Paymob (avoids 422 duplicate merchant_order_id on retry)
+    const paymentMetadata: Record<string, unknown> = { billingCycle: params.billingCycle };
+    if (params.registrationData) {
+        Object.assign(paymentMetadata, params.registrationData);
+    }
+    const [paymentRow] = await db.insert(payments).values({
+        organizationId: params.organizationId,
+        userId: params.userId,
+        userSubscriptionId: subscription.id,
+        paymobOrderId: null, // set after Paymob call
+        amountPiasters: amountPiasters,
         currency: org.userCurrency || 'EGP',
-        merchantOrderId: subscription.id,
+        status: 'pending',
+        description: `${org.name} - ${params.billingCycle} subscription`,
+        metadata: paymentMetadata,
+    }).returning();
+
+    if (!paymentRow) throw new Error('Failed to create payment record.');
+
+    // 5. Create Paymob checkout with unique merchant_order_id (our payment id)
+    const checkout = await PaymobService.createCheckoutSession({
+        amountCents: amountPiasters,
+        currency: org.userCurrency || 'EGP',
+        merchantOrderId: paymentRow.id,
         billingData: {
             first_name: firstName,
             last_name: lastName,
@@ -343,25 +364,12 @@ export async function createCheckout(params: {
         },
     });
 
-    // 5. Store Paymob order ID on subscription
+    // 6. Update payment with Paymob order id; store on subscription for webhook lookup
+    await db.update(payments).set({ paymobOrderId: checkout.paymobOrderId.toString() }).where(eq(payments.id, paymentRow.id));
     await db
         .update(userSubscriptions)
-        .set({
-            paymobOrderId: checkout.paymobOrderId.toString(),
-        })
+        .set({ paymobOrderId: checkout.paymobOrderId.toString() })
         .where(eq(userSubscriptions.id, subscription.id));
-
-    // 6. Create pending payment record
-    await db.insert(payments).values({
-        organizationId: params.organizationId,
-        userId: params.userId,
-        userSubscriptionId: subscription.id,
-        paymobOrderId: checkout.paymobOrderId.toString(),
-        amountPiasters: amountPiasters,
-        currency: org.userCurrency || 'EGP',
-        status: 'pending',
-        description: `${org.name} - ${params.billingCycle} subscription`,
-    });
 
     return {
         iframeUrl: checkout.iframeUrl,
@@ -566,11 +574,11 @@ export async function handlePaymentSuccess(params: {
 
     // Wrap in transaction for atomicity
     await db.transaction(async (tx) => {
-        // Update payment record to success
+        // Update payment record to succeeded (enum value)
         await tx
             .update(payments)
             .set({
-                status: 'success',
+                status: 'succeeded',
                 paymobTransactionId: params.paymobTransactionId,
                 paidAt: now,
             })
@@ -612,6 +620,12 @@ export async function handlePaymentSuccess(params: {
                 currentPeriodEnd: periodEnd,
             });
         }
+
+        // Activate user so they can log in (registration flow)
+        await tx
+            .update(users)
+            .set({ isActive: true, emailVerified: true })
+            .where(eq(users.id, params.userId));
     });
 
     // Get user details for email (outside transaction)

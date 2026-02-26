@@ -1,13 +1,13 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 import { apiEndpoint } from "@/lib/config";
 import StudentLayout from "@/components/StudentLayout";
 import NotificationBell from "@/components/NotificationBell";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, BookOpen, ArrowRight, Search, X, GraduationCap } from "lucide-react";
+import { Loader2, BookOpen, ArrowRight, Search, GraduationCap, Link2 } from "lucide-react";
 import { Link } from "wouter";
 
 interface Course {
@@ -35,6 +35,10 @@ export default function StudentCoursesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("active");
   const [sortBy, setSortBy] = useState("name");
+  const [joinInput, setJoinInput] = useState("");
+  const [joinLoading, setJoinLoading] = useState(false);
+  const [joinError, setJoinError] = useState<string | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     // Read search query from URL on component mount
@@ -97,6 +101,46 @@ export default function StudentCoursesPage() {
 
     return sorted;
   }, [enrollments, searchQuery, filterStatus, sortBy]);
+
+  const handleJoinCourse = async () => {
+    const trimmed = joinInput.trim();
+    if (!trimmed || !token) return;
+    setJoinLoading(true);
+    setJoinError(null);
+    try {
+      const body = trimmed.length >= 20 ? { courseId: trimmed } : { joinCode: trimmed };
+      const res = await fetch(apiEndpoint("/api/enrollments/join"), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const msg = data.message || t("joinCourseNotFound") || "Course not found or you're already enrolled.";
+        setJoinError(msg);
+        toast({ title: t("joinFailed") || "Could not join", description: msg, variant: "destructive" });
+        return;
+      }
+      toast({ title: t("joinSuccess") || "Enrolled", description: t("joinSuccessDesc", { title: data.course?.title }) || "You joined the course." });
+      setJoinInput("");
+      setJoinError(null);
+      const listRes = await fetch(apiEndpoint("/api/enrollments/student"), {
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      });
+      if (listRes.ok) {
+        const listData = await listRes.json();
+        setEnrollments(Array.isArray(listData) ? listData : []);
+      }
+    } catch {
+      setJoinError(t("joinPreviewFailed") || "Something went wrong.");
+      toast({ title: t("joinFailed") || "Could not join", variant: "destructive" });
+    } finally {
+      setJoinLoading(false);
+    }
+  };
 
   // Get course icon based on title - memoized
   const getCourseStyle = useCallback((title: string) => {
@@ -281,13 +325,26 @@ export default function StudentCoursesPage() {
                 );
               })}
 
-              <button className="bg-white dark:bg-slate-800 border-2 border-dashed border-slate-300 dark:border-white/10 rounded-xl flex flex-col items-center justify-center p-8 text-center hover:bg-slate-50 dark:hover:bg-white/5 hover:border-primary transition-all group h-full min-h-[360px]">
-                <div className="size-16 rounded-full bg-slate-100 dark:bg-white/10 text-slate-500 dark:text-slate-400 flex items-center justify-center mb-4 group-hover:bg-primary group-hover:text-black transition-colors">
-                  <span className="material-symbols-outlined text-3xl">add</span>
+              <div className="bg-white dark:bg-slate-800 border-2 border-dashed border-slate-300 dark:border-white/10 rounded-xl flex flex-col items-center justify-center p-6 text-center hover:bg-slate-50 dark:hover:bg-white/5 hover:border-primary transition-all group h-full min-h-[360px]">
+                <div className="size-16 rounded-full bg-slate-100 dark:bg-white/10 text-slate-500 dark:text-slate-400 flex items-center justify-center mb-4 group-hover:bg-primary group-hover:text-black dark:group-hover:text-black transition-colors">
+                  <Link2 className="h-8 w-8" />
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{t('enrollInNewClass')}</h3>
-                <p className="text-slate-600 dark:text-slate-400 text-sm max-w-[200px]">{t('browseCatalogDesc')}</p>
-              </button>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-1">{t('joinACourse') ?? t('enrollInNewClass')}</h3>
+                <p className="text-slate-600 dark:text-slate-400 text-sm max-w-[220px] mb-4">{t('joinACourseDesc') ?? t('browseCatalogDesc')}</p>
+                <div className="w-full max-w-xs flex flex-col gap-2">
+                  <Input
+                    placeholder={t('courseIdOrCodePlaceholder') ?? 'Course ID or invite code'}
+                    value={joinInput}
+                    onChange={(e) => { setJoinInput(e.target.value); setJoinError(null); }}
+                    onKeyDown={(e) => e.key === 'Enter' && handleJoinCourse()}
+                    className="bg-white dark:bg-card text-center"
+                  />
+                  <Button onClick={handleJoinCourse} disabled={joinLoading || !joinInput.trim()} className="w-full">
+                    {joinLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : t('join') ?? 'Join'}
+                  </Button>
+                </div>
+                {joinError && <p className="text-sm text-destructive mt-2 w-full max-w-xs">{joinError}</p>}
+              </div>
             </div>
           )}
         </div>

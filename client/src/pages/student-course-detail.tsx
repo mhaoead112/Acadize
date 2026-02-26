@@ -163,9 +163,9 @@ export default function StudentCourseDetailPage() {
   };
 
   const formatDate = (dateStr?: string) => {
-    if (!dateStr) return 'TBD';
+    if (!dateStr) return t('tbd');
     const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
   const getTimeAgo = (dateStr: string) => {
@@ -175,9 +175,9 @@ export default function StudentCourseDetailPage() {
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
     const diffDays = Math.floor(diffHours / 24);
 
-    if (diffHours < 1) return 'Just now';
-    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-    if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+    if (diffHours < 1) return t('justNow');
+    if (diffHours < 24) return t(diffHours === 1 ? 'hourAgo' : 'hoursAgo', { count: diffHours });
+    if (diffDays < 7) return t(diffDays === 1 ? 'dayAgo' : 'daysAgo', { count: diffDays });
     return formatDate(dateStr);
   };
 

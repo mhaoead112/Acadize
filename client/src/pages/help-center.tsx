@@ -294,7 +294,7 @@ export default function HelpCenter() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white font-sans antialiased overflow-x-hidden">
+    <div className="min-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-sans antialiased overflow-x-hidden">
 
       <section className="relative py-20 px-4 sm:px-6 lg:px-8">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent"></div>
@@ -302,7 +302,7 @@ export default function HelpCenter() {
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6">
             {t('helpCenterTitle')}
           </h1>
-          <p className="text-lg sm:text-xl text-text-muted max-w-3xl mx-auto mb-8">
+          <p className="text-lg sm:text-xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto mb-8">
             Search our knowledge base or browse categories to find answers
           </p>
           
@@ -316,7 +316,7 @@ export default function HelpCenter() {
         <>
           <section className="py-16 px-4 sm:px-6 lg:px-8">
             <div className="mx-auto max-w-7xl">
-              <h2 className="text-2xl font-bold mb-8">Browse by Category</h2>
+              <h2 className="text-2xl font-bold mb-8 text-slate-900 dark:text-white">Browse by Category</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {categories.map((category) => {
                   const Icon = category.icon;
@@ -324,18 +324,18 @@ export default function HelpCenter() {
                     <div
                       key={category.id}
                       onClick={() => setSelectedCategory(category.id)}
-                      className="group rounded-2xl border border-secondary-dark bg-slate-800 p-6 hover:border-primary hover:shadow-2xl hover:shadow-primary/20 transition-all cursor-pointer"
+                      className="group rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 hover:border-primary hover:shadow-2xl hover:shadow-primary/20 transition-all cursor-pointer"
                     >
                       <div className="flex flex-col items-center text-center gap-4">
                         <div className="flex size-12 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
                           <Icon className="h-6 w-6" />
                         </div>
                         <div className="flex-1">
-                          <h3 className="text-lg font-bold mb-2 group-hover:text-primary transition-colors">
+                          <h3 className="text-lg font-bold mb-2 text-slate-900 dark:text-white group-hover:text-primary transition-colors">
                             {category.title}
                           </h3>
-                          <p className="text-sm text-text-muted mb-3">{category.description}</p>
-                          <div className="text-xs text-text-muted">
+                          <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">{category.description}</p>
+                          <div className="text-xs text-slate-500 dark:text-slate-400">
                             {category.articles} articles
                           </div>
                         </div>
@@ -348,21 +348,21 @@ export default function HelpCenter() {
           </section>
 
           {/* Popular Articles */}
-          <section className="py-16 px-4 sm:px-6 lg:px-8 bg-slate-800/30">
+          <section className="py-16 px-4 sm:px-6 lg:px-8 bg-slate-50 dark:bg-slate-800/30">
             <div className="mx-auto max-w-7xl">
-              <h2 className="text-2xl font-bold mb-6">Popular Articles</h2>
+              <h2 className="text-2xl font-bold mb-6 text-slate-900 dark:text-white">Popular Articles</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-12">
                 {popularArticles.map((article) => (
                   <div
                     key={article.id}
                     onClick={() => setSelectedArticle(article.id)}
-                    className="group flex items-center gap-4 rounded-xl border border-secondary-dark bg-slate-800 p-5 hover:border-primary transition-all cursor-pointer"
+                    className="group flex items-center gap-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 hover:border-primary transition-all cursor-pointer"
                   >
                     <Book className="h-5 w-5 text-primary shrink-0" />
-                    <span className="flex-1 font-medium group-hover:text-primary transition-colors">
+                    <span className="flex-1 font-medium text-slate-900 dark:text-white group-hover:text-primary transition-colors">
                       {article.title}
                     </span>
-                    <span className="text-text-muted group-hover:text-primary transition-colors">
+                    <span className="text-slate-500 dark:text-slate-400 group-hover:text-primary transition-colors">
                       →
                     </span>
                   </div>
@@ -371,26 +371,26 @@ export default function HelpCenter() {
 
               {/* FAQ Section */}
               <div className="mt-16">
-                <h2 className="text-2xl font-bold mb-6">Frequently Asked Questions</h2>
+                <h2 className="text-2xl font-bold mb-6 text-slate-900 dark:text-white">Frequently Asked Questions</h2>
                 <div className="space-y-3">
                   {faqs.map((faq, index) => (
                     <div
                       key={index}
-                      className="rounded-xl border border-secondary-dark bg-slate-800 overflow-hidden"
+                      className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden"
                     >
                       <button
                         onClick={() => setExpandedFaq(expandedFaq === index ? null : index)}
-                        className="w-full flex items-center justify-between p-5 text-left hover:bg-white/5 transition-colors"
+                        className="w-full flex items-center justify-between p-5 text-left hover:bg-slate-50 dark:hover:bg-white/5 transition-colors text-slate-900 dark:text-white"
                       >
                         <span className="font-medium pr-4">{faq.question}</span>
                         {expandedFaq === index ? (
                           <ChevronUp className="h-5 w-5 text-primary shrink-0" />
                         ) : (
-                          <ChevronDown className="h-5 w-5 text-text-muted shrink-0" />
+                          <ChevronDown className="h-5 w-5 text-slate-500 dark:text-slate-400 shrink-0" />
                         )}
                       </button>
                       {expandedFaq === index && (
-                        <div className="px-5 pb-5 text-text-muted border-t border-secondary-dark pt-4">
+                        <div className="px-5 pb-5 text-slate-600 dark:text-slate-400 border-t border-slate-200 dark:border-slate-700 pt-4">
                           {faq.answer}
                         </div>
                       )}
@@ -412,7 +412,7 @@ export default function HelpCenter() {
             >
               ← Back to categories
             </button>
-            <h2 className="text-3xl font-bold mb-8">
+            <h2 className="text-3xl font-bold mb-8 text-slate-900 dark:text-white">
               {categories.find(c => c.id === selectedCategory)?.title}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -420,13 +420,13 @@ export default function HelpCenter() {
                 <div
                   key={article.id}
                   onClick={() => setSelectedArticle(article.id)}
-                  className="group flex items-center gap-4 rounded-xl border border-secondary-dark bg-slate-800 p-5 hover:border-primary transition-all cursor-pointer"
+                  className="group flex items-center gap-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 hover:border-primary transition-all cursor-pointer"
                 >
                   <Book className="h-5 w-5 text-primary shrink-0" />
-                  <span className="flex-1 font-medium group-hover:text-primary transition-colors">
+                  <span className="flex-1 font-medium text-slate-900 dark:text-white group-hover:text-primary transition-colors">
                     {article.title}
                   </span>
-                  <span className="text-text-muted group-hover:text-primary transition-colors">
+                  <span className="text-slate-500 dark:text-slate-400 group-hover:text-primary transition-colors">
                     →
                   </span>
                 </div>
@@ -455,9 +455,9 @@ export default function HelpCenter() {
               if (!article) return null;
               
               return (
-                <div className="rounded-2xl border border-secondary-dark bg-slate-800 p-8">
-                  <h1 className="text-3xl font-bold mb-4">{article.title}</h1>
-                  <p className="text-text-muted mb-8">{article.content}</p>
+                <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-8">
+                  <h1 className="text-3xl font-bold mb-4 text-slate-900 dark:text-white">{article.title}</h1>
+                  <p className="text-slate-600 dark:text-slate-400 mb-8">{article.content}</p>
                   
                   {article.steps && article.steps.length > 0 && (
                     <div className="mb-8">
@@ -471,7 +471,7 @@ export default function HelpCenter() {
                             <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-sm font-bold">
                               {index + 1}
                             </span>
-                            <span className="text-text-muted pt-0.5">{step}</span>
+                            <span className="text-slate-600 dark:text-slate-400 pt-0.5">{step}</span>
                           </li>
                         ))}
                       </ol>
@@ -479,14 +479,14 @@ export default function HelpCenter() {
                   )}
                   
                   {article.tips && article.tips.length > 0 && (
-                    <div className="bg-slate-950/50 p-6 rounded-lg border border-primary/20">
+                    <div className="bg-slate-100 dark:bg-slate-950/50 p-6 rounded-lg border border-slate-200 dark:border-primary/20">
                       <h3 className="text-lg font-semibold text-primary mb-3 flex items-center gap-2">
                         <AlertCircle className="w-5 h-5" />
                         Helpful Tips
                       </h3>
                       <ul className="space-y-2">
                         {article.tips.map((tip, index) => (
-                          <li key={index} className="flex gap-2 text-text-muted">
+                          <li key={index} className="flex gap-2 text-slate-600 dark:text-slate-400">
                             <span className="text-primary">•</span>
                             <span>{tip}</span>
                           </li>
@@ -506,13 +506,13 @@ export default function HelpCenter() {
           <div className="mx-auto max-w-7xl">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
               <div className="lg:col-span-2 space-y-6">
-                <div className="rounded-xl border border-secondary-dark bg-slate-800 p-6">
-                  <h3 className="text-lg font-bold mb-2">Still need help?</h3>
-                  <p className="text-sm text-text-muted mb-4">
+                <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
+                  <h3 className="text-lg font-bold mb-2 text-slate-900 dark:text-white">Still need help?</h3>
+                  <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
                     Can't find what you're looking for? Our support team is ready to assist you.
                   </p>
                   <Link href="/contact">
-                    <button className="w-full px-4 py-3 rounded-lg bg-primary text-background-dark font-bold transition-all hover:bg-primary-hover shadow-lg shadow-primary/30">
+                    <button className="w-full px-4 py-3 rounded-lg bg-primary text-slate-900 dark:text-slate-900 font-bold transition-all hover:bg-primary-hover shadow-lg shadow-primary/30">
                       Contact Support
                     </button>
                   </Link>
@@ -520,13 +520,13 @@ export default function HelpCenter() {
               </div>
 
               <div className="space-y-6">
-                <div className="rounded-xl border border-secondary-dark bg-slate-800 p-6">
-                  <h3 className="text-lg font-bold mb-2">Video Tutorials</h3>
-                  <p className="text-sm text-text-muted mb-4">
+                <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
+                  <h3 className="text-lg font-bold mb-2 text-slate-900 dark:text-white">Video Tutorials</h3>
+                  <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
                     Watch step-by-step guides to master Acadize
                   </p>
                   <Link href="/docs">
-                    <button className="w-full px-4 py-3 rounded-lg border border-secondary-dark text-white font-bold transition-all hover:bg-white/5">
+                    <button className="w-full px-4 py-3 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-bold transition-all hover:bg-slate-50 dark:hover:bg-white/5">
                       View Documentation
                     </button>
                   </Link>
@@ -540,49 +540,49 @@ export default function HelpCenter() {
 
       {/* Contact Options - Only show on main page */}
       {!selectedCategory && !selectedArticle && (
-        <section className="py-20 px-4 sm:px-6 lg:px-8">
+          <section className="py-20 px-4 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-7xl">
             <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold mb-4">Additional Support Options</h2>
-              <p className="text-text-muted">Choose the best way to get help</p>
+              <h2 className="text-3xl font-bold mb-4 text-slate-900 dark:text-white">Additional Support Options</h2>
+              <p className="text-slate-600 dark:text-slate-400">Choose the best way to get help</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-              <div className="rounded-2xl border border-secondary-dark bg-slate-800 p-8 text-center hover:border-primary transition-all">
+              <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-8 text-center hover:border-primary transition-all">
                 <div className="flex justify-center mb-4">
                   <div className="flex size-16 items-center justify-center rounded-full bg-primary/10 text-primary">
                     <FileText className="h-8 w-8" />
                   </div>
                 </div>
-                <h3 className="text-xl font-bold mb-2">Submit a Ticket</h3>
-                <p className="text-sm text-text-muted mb-4">
+                <h3 className="text-xl font-bold mb-2 text-slate-900 dark:text-white">Submit a Ticket</h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
                   Create a support ticket for detailed issues
                 </p>
-                <p className="text-xs text-text-muted mb-4">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
                   Response within 24 hours
                 </p>
                 <Link href="/contact">
-                  <button className="px-6 py-2 rounded-lg bg-primary text-background-dark font-bold transition-all hover:bg-primary-hover shadow-lg shadow-primary/30">
+                  <button className="px-6 py-2 rounded-lg bg-primary text-slate-900 font-bold transition-all hover:bg-primary-hover shadow-lg shadow-primary/30">
                     Submit Ticket
                   </button>
                 </Link>
               </div>
 
-              <div className="rounded-2xl border border-secondary-dark bg-slate-800 p-8 text-center hover:border-primary transition-all">
+              <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-8 text-center hover:border-primary transition-all">
                 <div className="flex justify-center mb-4">
                   <div className="flex size-16 items-center justify-center rounded-full bg-primary/10 text-primary">
                     <Book className="h-8 w-8" />
                   </div>
                 </div>
-                <h3 className="text-xl font-bold mb-2">Documentation</h3>
-                <p className="text-sm text-text-muted mb-4">
+                <h3 className="text-xl font-bold mb-2 text-slate-900 dark:text-white">Documentation</h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
                   Comprehensive guides and tutorials
                 </p>
-                <p className="text-xs text-text-muted mb-4">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
                   Always available
                 </p>
                 <Link href="/docs">
-                  <button className="px-6 py-2 rounded-lg border border-secondary-dark text-white font-bold transition-all hover:bg-white/5">
+                  <button className="px-6 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-bold transition-all hover:bg-slate-50 dark:hover:bg-white/5">
                     View Docs
                   </button>
                 </Link>

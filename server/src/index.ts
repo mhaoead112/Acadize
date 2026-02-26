@@ -468,16 +468,24 @@ app.use('/api/recordings', uploadLimiter, recordingUploadRoutes);
 
 // --- Tenant Info Endpoint ---
 app.get('/api/tenant/info', (req, res) => {
-  const tenant = (req as any).tenant;
-  if (!tenant) {
-    return res.status(400).json({ message: 'Organization context required.' });
+  try {
+    const tenant = (req as any).tenant;
+    if (!tenant) {
+      return res.status(400).json({ message: 'Organization context required.' });
+    }
+    res.json({
+      organizationId: tenant.organizationId ?? null,
+      name: tenant.name ?? '',
+      subdomain: tenant.subdomain ?? 'default',
+      plan: tenant.plan ?? 'free',
+      userMonthlyPricePiasters: tenant.userMonthlyPricePiasters ?? null,
+      userAnnualPricePiasters: tenant.userAnnualPricePiasters ?? null,
+      userCurrency: tenant.userCurrency ?? 'EGP',
+    });
+  } catch (err) {
+    try { logger.error('Tenant info error', err); } catch (_) { console.error('Tenant info error', err); }
+    res.status(500).json({ message: 'Failed to load organization info.' });
   }
-  res.json({
-    organizationId: tenant.organizationId,
-    name: tenant.name,
-    subdomain: tenant.subdomain,
-    plan: tenant.plan,
-  });
 });
 
 app.get('/api/health', (req, res) => {

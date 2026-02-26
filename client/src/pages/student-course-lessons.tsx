@@ -35,7 +35,7 @@ interface Course {
 }
 
 export default function StudentCourseLessonsPage() {
-  const { t } = useTranslation(['dashboard', 'common']);
+  const { t } = useTranslation(['dashboard', 'common', 'auth']);
   const [match, params] = useRoute("/student/courses/:courseId/lessons");
   const courseId = params?.courseId as string | undefined;
   const { getAuthHeaders, user } = useAuth();
@@ -218,10 +218,10 @@ export default function StudentCourseLessonsPage() {
       <div className="font-display bg-slate-50 dark:bg-[#0a192f] text-slate-900 dark:text-white overflow-hidden h-screen flex items-center justify-center">
         <div className="text-center">
           <span className="material-symbols-outlined text-6xl text-slate-400 dark:text-slate-500 mb-4 block">school</span>
-          <p className="text-slate-600 dark:text-slate-300 mb-6">Please sign in to view class lessons.</p>
+          <p className="text-slate-600 dark:text-slate-300 mb-6">{t('dashboard:pleaseSignInToViewLessons')}</p>
           <Link href="/login">
             <button className="px-6 py-3 bg-primary text-black rounded-lg font-bold hover:bg-primary/90 transition-colors shadow-lg">
-              Sign In
+              {t('auth:signIn')}
             </button>
           </Link>
         </div>
@@ -260,12 +260,12 @@ export default function StudentCourseLessonsPage() {
               whileTap="tap"
             >
               <span className="material-symbols-outlined text-[20px]">arrow_back</span>
-              <span className="font-medium">Back to Course</span>
+              <span className="font-medium">{t('dashboard:backToCourse')}</span>
             </motion.button>
           </Link>
           <div className="border-l border-slate-300 dark:border-white/20 pl-4">
-            <h1 className="text-lg font-bold text-slate-900 dark:text-white">{course?.title || 'Course Lessons'}</h1>
-            <p className="text-xs text-slate-500 dark:text-slate-400">{lessons.length} lessons</p>
+            <h1 className="text-lg font-bold text-slate-900 dark:text-white">{course?.title || t('dashboard:courseLessons')}</h1>
+            <p className="text-xs text-slate-500 dark:text-slate-400">{lessons.length} {t('dashboard:lessons').toLowerCase()}</p>
           </div>
         </div>
         <div className="flex items-center gap-3">

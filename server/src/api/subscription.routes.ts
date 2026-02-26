@@ -91,9 +91,12 @@ router.post('/validate-promo', ...auth, async (req, res) => {
         }
 
         const promoCode = await SubscriptionService.validatePromoCode(code, organizationId);
+        const description = (promoCode as any).description ?? (promoCode.trialDays ? `${promoCode.trialDays}-day free trial` : 'Discount applied');
         res.json({
             valid: true,
-            trialDays: promoCode.trialDays,
+            trialDays: promoCode.trialDays ?? 0,
+            discount: (promoCode as any).discountPercent ?? 0,
+            description,
             code: promoCode.code,
         });
     } catch (error) {
@@ -258,10 +261,12 @@ router.post('/checkout', ...auth, async (req, res) => {
             billingCycle,
         });
 
-        res.json(checkout);
+        res.json({ ...checkout, url: checkout.iframeUrl });
     } catch (error) {
         console.error('[Subscription] Checkout error:', error);
-        res.status(500).json({ message: error instanceof Error ? error.message : 'Failed to create checkout.' });
+        const message = error instanceof Error ? error.message : 'Failed to create checkout.';
+        const status = message.includes('checkout was already started') ? 400 : 500;
+        res.status(status).json({ message });
     }
 });
 
