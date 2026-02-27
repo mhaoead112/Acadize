@@ -311,17 +311,14 @@ const QrScanner: React.FC<QrScannerProps> = ({ onClose, onSuccess }) => {
             }
 
             const { apiEndpoint } = await import('@/lib/config');
+            const { apiRequest } = await import('@/lib/api-client');
 
-            const res = await fetch(apiEndpoint('/api/attendance/scan'), {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify(body),
-            });
+            const data = await apiRequest<{ success?: boolean; attendanceId?: string; message?: string; gpsValid?: boolean; code?: string }>(
+                apiEndpoint('/api/attendance/scan'),
+                { method: 'POST', body: JSON.stringify(body) }
+            );
 
-            const data = await res.json();
-
-            if (res.ok && data.success) {
+            if (data.success) {
                 vibrate([80, 50, 80]);
                 const record: AttendanceRecord = {
                     attendanceId: data.attendanceId,
@@ -335,7 +332,7 @@ const QrScanner: React.FC<QrScannerProps> = ({ onClose, onSuccess }) => {
                 return;
             }
 
-            // Differentiate known errors
+            // Differentiate known errors (apiRequest throws on non-2xx, so we only get here if success was false)
             const code: string = data.code ?? '';
             const msg: string = data.message ?? 'Something went wrong. Please try again.';
 

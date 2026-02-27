@@ -12,8 +12,8 @@ import { useTranslation } from 'react-i18next';
 import { useLocation } from 'wouter';
 import { motion, AnimatePresence } from 'framer-motion';
 import QrScanner, { type AttendanceRecord } from '@/components/attendance/QrScanner';
-import { useAuth } from '@/hooks/useAuth';
 import { apiEndpoint } from '@/lib/config';
+import { apiRequest } from '@/lib/api-client';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -82,7 +82,6 @@ function formatAttendanceDate(iso: string, t: (k: string) => string): string {
 export default function StudentAttendanceScan() {
   const { t } = useTranslation(['dashboard', 'common']);
   const [, setLocation] = useLocation();
-  const { getAuthHeaders } = useAuth();
   const [phase, setPhase] = useState<PagePhase>('loading');
   const [activeSessions, setActiveSessions] = useState<ActiveSession[]>([]);
   const [selectedSession, setSelectedSession] = useState<ActiveSession | null>(null);
@@ -99,12 +98,7 @@ export default function StudentAttendanceScan() {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch(apiEndpoint('/api/sessions/student/active'), {
-          credentials: 'include',
-          headers: { Accept: 'application/json', ...getAuthHeaders() },
-        });
-        if (!res.ok) throw new Error(t("failedToLoadSessions"));
-        const data = await res.json();
+        const data = await apiRequest<{ sessions?: ActiveSession[] }>(apiEndpoint('/api/sessions/student/active'));
         const sessions: ActiveSession[] = data.sessions ?? [];
         if (cancelled) return;
         setActiveSessions(sessions);
@@ -121,25 +115,20 @@ export default function StudentAttendanceScan() {
       }
     })();
     return () => { cancelled = true; };
-  }, [getAuthHeaders]);
+  }, [t]);
 
   // Fetch recent attendance (last 5)
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch(apiEndpoint('/api/attendance/my'), {
-          credentials: 'include',
-          headers: { Accept: 'application/json', ...getAuthHeaders() },
-        });
-        if (!res.ok) return;
-        const data = await res.json();
-        const records: AttendanceHistoryItem[] = (data.records ?? []).slice(0, 5);
+        const data = await apiRequest<{ records?: AttendanceHistoryItem[] }>(apiEndpoint('/api/attendance/my'));
+        const records = (data.records ?? []).slice(0, 5);
         setAttendanceHistory(records);
       } catch {
         // ignore
       }
     })();
-  }, [successRecord, getAuthHeaders]); // refetch after successful check-in
+  }, [successRecord]); // refetch after successful check-in
 
   const handleCloseScanner = useCallback(() => {
     if (activeSessions.length > 1) {
@@ -153,14 +142,8 @@ export default function StudentAttendanceScan() {
   const handleScanSuccess = useCallback(async (record: AttendanceRecord) => {
     setSuccessRecord(record);
     try {
-      const res = await fetch(apiEndpoint(`/api/sessions/${record.sessionId}`), {
-        credentials: 'include',
-        headers: { Accept: 'application/json', ...getAuthHeaders() },
-      });
-      if (res.ok) {
-        const session: SessionDetail = await res.json();
-        setSuccessSessionDetail(session);
-      }
+      const session = await apiRequest<SessionDetail>(apiEndpoint(`/api/sessions/${record.sessionId}`));
+      setSuccessSessionDetail(session);
     } catch {
       // use record.message only
     }
@@ -193,16 +176,13 @@ export default function StudentAttendanceScan() {
     setManualError('');
     setManualSubmitting(true);
     try {
-      const res = await fetch(apiEndpoint('/api/attendance/scan'), {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json', ...getAuthHeaders() },
-        body: JSON.stringify({ token, sessionId }),
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
+      const data = await apiRequest<{ success?: boolean; attendanceId?: string; message?: string; gpsValid?: boolean }>(
+        apiEndpoint('/api/attendance/scan'),
+        { method: 'POST', body: JSON.stringify({ token, sessionId }) }
+      );
+      if (data.success) {
         const record: AttendanceRecord = {
-          attendanceId: data.attendanceId,
+          attendanceId: data.attendanceId ?? '',
           sessionId,
           message: data.message ?? t("attendanceRecorded"),
           gpsValid: data.gpsValid,
@@ -211,8 +191,8 @@ export default function StudentAttendanceScan() {
         return;
       }
       setManualError(data.message ?? t("checkInFailed"));
-    } catch {
-      setManualError(t("networkError"));
+    } catch (e) {
+      setManualError(e instanceof Error ? e.message : t("networkError"));
     } finally {
       setManualSubmitting(false);
     }
