@@ -7,8 +7,10 @@
  */
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Html5Qrcode, Html5QrcodeScannerState } from 'html5-qrcode';
 import './QrScanner.css';
+
+type Html5QrcodeModule = typeof import('html5-qrcode');
+type Html5QrcodeInstance = import('html5-qrcode').Html5Qrcode;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -230,9 +232,17 @@ const QrScanner: React.FC<QrScannerProps> = ({ onClose, onSuccess }) => {
     const [redirectCountdown, setRedirectCountdown] = useState(SUCCESS_REDIRECT_MS / 1000);
 
     // Track whether we are actively scanning (to ignore decoded events after pause)
-    const scannerRef = useRef<Html5Qrcode | null>(null);
+    const scannerRef = useRef<Html5QrcodeInstance | null>(null);
     const isScanningRef = useRef(false);
+    const qrModuleRef = useRef<Html5QrcodeModule | null>(null);
     const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+    const loadQrModule = useCallback(async () => {
+        if (!qrModuleRef.current) {
+            qrModuleRef.current = await import('html5-qrcode');
+        }
+        return qrModuleRef.current;
+    }, []);
 
     // ── tear down camera ───────────────────────────────────────────────────
     const stopCamera = useCallback(async () => {
@@ -240,9 +250,10 @@ const QrScanner: React.FC<QrScannerProps> = ({ onClose, onSuccess }) => {
         if (scannerRef.current) {
             try {
                 const scanState = scannerRef.current.getState();
+                const qrModule = qrModuleRef.current;
                 if (
-                    scanState === Html5QrcodeScannerState.SCANNING ||
-                    scanState === Html5QrcodeScannerState.PAUSED
+                    qrModule && (scanState === qrModule.Html5QrcodeScannerState.SCANNING ||
+                     scanState === qrModule.Html5QrcodeScannerState.PAUSED)
                 ) {
                     await scannerRef.current.stop();
                 }
@@ -397,7 +408,8 @@ const QrScanner: React.FC<QrScannerProps> = ({ onClose, onSuccess }) => {
             const el = document.getElementById(QR_READER_ID);
             if (!el) throw new Error('QR reader element missing.');
 
-            const scanner = new Html5Qrcode(QR_READER_ID, { verbose: false });
+            const qrModule = await loadQrModule();
+            const scanner = new qrModule.Html5Qrcode(QR_READER_ID, { verbose: false });
             scannerRef.current = scanner;
 
             const config = {
@@ -435,7 +447,7 @@ const QrScanner: React.FC<QrScannerProps> = ({ onClose, onSuccess }) => {
                 setState('error');
             }
         }
-    }, [handleDecode]);
+    }, [handleDecode, loadQrModule]);
 
     // ── Retry: stop, reset, restart ────────────────────────────────────────
     const handleRetry = useCallback(async () => {

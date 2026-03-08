@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useStudentNotifications } from '@/contexts/StudentNotificationContext';
 import { useAuth } from '@/hooks/useAuth';
 import { apiEndpoint } from '@/lib/config';
+import { isRtlDirection, overlayEdgeClass } from '@/lib/rtl';
 
 interface ApiNotification {
   id: string;
@@ -40,53 +41,14 @@ const getColorClass = (type: string) => {
 };
 
 export default function NotificationBell() {
-  const { t } = useTranslation('common');
-  const { notifications, unreadCount, markAsRead, markAllAsRead, clearNotifications, addNotification } = useStudentNotifications();
+  const { t, i18n } = useTranslation('common');
+  const { notifications, unreadCount, markAsRead, clearNotifications, setNotificationsFromServer } = useStudentNotifications();
   const { token } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const isRTL = isRtlDirection(i18n.dir());
 
-  // Fetch notifications from API
-  useEffect(() => {
-    const fetchNotifications = async () => {
-      if (!token) return;
-      
-      setIsLoading(true);
-      try {
-        const res = await fetch(apiEndpoint('/api/notifications'), {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-        
-        if (res.ok) {
-          const data: ApiNotification[] = await res.json();
-          // Clear existing and add fetched notifications
-          clearNotifications();
-          data.forEach(notif => {
-            addNotification({
-              title: notif.title,
-              message: notif.message,
-              type: notif.type
-            });
-          });
-        }
-      } catch (error) {
-        console.error('Failed to fetch notifications:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchNotifications();
-    // Poll for new notifications every 30 seconds
-    const interval = setInterval(fetchNotifications, 30000);
-    return () => clearInterval(interval);
-  }, [token]);
-
-  // Format timestamp
   const formatTime = (timestamp: string) => {
     const date = new Date(timestamp);
     const now = new Date();
@@ -102,7 +64,47 @@ export default function NotificationBell() {
     return date.toLocaleDateString();
   };
 
-  // Close dropdown when clicking outside
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      if (!token) return;
+
+      setIsLoading(true);
+      try {
+        const res = await fetch(apiEndpoint('/api/notifications'), {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (res.ok) {
+          const data: ApiNotification[] = await res.json();
+          const normalized = data
+            .slice()
+            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+            .map((notif) => ({
+              id: notif.id,
+              title: notif.title,
+              message: notif.message,
+              type: notif.type,
+              read: notif.read,
+              time: formatTime(notif.createdAt),
+            }));
+
+          setNotificationsFromServer(normalized);
+        }
+      } catch (error) {
+        console.error('Failed to fetch notifications:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 30000);
+    return () => clearInterval(interval);
+  }, [token, setNotificationsFromServer]);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -127,15 +129,16 @@ export default function NotificationBell() {
           notifications
         </span>
         {unreadCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 bg-gradient-to-br from-red-500 to-red-600 dark:from-[#FFD700] dark:to-yellow-600 text-white dark:text-slate-900 text-[10px] font-bold size-5 rounded-full flex items-center justify-center shadow-lg shadow-red-500/30 dark:shadow-[#FFD700]/30 ring-2 ring-white dark:ring-[#0a192f] animate-pulse">
+          <span className={`absolute -top-0.5 ${isRTL ? '-left-0.5' : '-right-0.5'} bg-gradient-to-br from-red-500 to-red-600 dark:from-[#FFD700] dark:to-yellow-600 text-white dark:text-slate-900 text-[10px] font-bold size-5 rounded-full flex items-center justify-center shadow-lg shadow-red-500/30 dark:shadow-[#FFD700]/30 ring-2 ring-white dark:ring-[#0a192f] animate-pulse`}>
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-3 w-80 md:w-96 rounded-2xl shadow-2xl dark:shadow-black/50 border border-slate-200 dark:border-white/10 bg-white/95 dark:bg-[#112240]/95 backdrop-blur-xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-          {/* Header */}
+        <div
+          className={`absolute mt-3 w-80 max-w-[calc(100vw-1rem)] md:w-96 rounded-2xl shadow-2xl dark:shadow-black/50 border border-slate-200 dark:border-white/10 bg-white/95 dark:bg-[#112240]/95 backdrop-blur-xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200 ${overlayEdgeClass(isRTL)}`}
+        >
           <div className="sticky top-0 px-5 py-4 border-b border-slate-200 dark:border-white/10 bg-white/95 dark:bg-[#112240]/95 backdrop-blur-sm z-10">
             <div className="flex items-center justify-between">
               <div>
@@ -157,7 +160,6 @@ export default function NotificationBell() {
             </div>
           </div>
 
-          {/* Notifications List */}
           <div className="max-h-[450px] overflow-y-auto">
             {isLoading ? (
               <div className="p-8 text-center">
@@ -178,8 +180,8 @@ export default function NotificationBell() {
                     key={notification.id}
                     onClick={() => markAsRead(notification.id)}
                     className={`p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors border-l-4 ${
-                      !notification.read 
-                        ? `border-l-blue-600 dark:border-l-[#FFD700] bg-blue-50/50 dark:bg-blue-500/5` 
+                      !notification.read
+                        ? `border-l-blue-600 dark:border-l-[#FFD700] bg-blue-50/50 dark:bg-blue-500/5`
                         : 'border-l-transparent'
                     }`}
                   >

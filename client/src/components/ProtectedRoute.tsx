@@ -3,8 +3,10 @@ import { useEffect } from "react";
 import { useLocation } from "wouter";
 import type { UserRole } from "@shared/schema";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, Shield, AlertCircle } from "lucide-react";
+import { Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { usePortalI18n } from "@/hooks/usePortalI18n";
+import { StatePanel } from "@/components/ui/state-panel";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -21,6 +23,7 @@ export function ProtectedRoute({
 }: ProtectedRouteProps) {
   const { user, isAuthenticated, isLoading } = useAuth();
   const [location, setLocation] = useLocation();
+  const { t } = usePortalI18n("common");
 
   useEffect(() => {
     if (isLoading) {
@@ -62,13 +65,13 @@ export function ProtectedRoute({
   // Show loading state while checking authentication
   if (requireAuth && isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-slate-900">
-        <Card className="w-96 dark:bg-slate-800 dark:border-slate-700">
-          <CardContent className="flex flex-col items-center justify-center p-8">
-            <Loader2 className="h-8 w-8 animate-spin text-blue-600 dark:text-blue-400 mb-4" />
-            <p className="text-gray-600 dark:text-gray-300">Checking authentication...</p>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-slate-900 p-4">
+        <StatePanel
+          variant="loading"
+          title={t("auth.checkingAuthentication", { defaultValue: "Checking authentication..." })}
+          description={t("common.pleaseWait", { defaultValue: "Please wait while we verify your session." })}
+          className="w-full max-w-sm"
+        />
       </div>
     );
   }
@@ -88,10 +91,12 @@ export function ProtectedRoute({
               <Shield className="h-8 w-8 text-red-600 dark:text-red-400" />
             </div>
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-              Access Denied
+              {t("auth.accessDenied", { defaultValue: "Access Denied" })}
             </h2>
             <p className="text-gray-600 dark:text-gray-300 mb-4">
-              You don't have permission to access this page. You'll be redirected to your dashboard.
+              {t("auth.accessDeniedDescription", {
+                defaultValue: "You don't have permission to access this page. You'll be redirected to your dashboard.",
+              })}
             </p>
             <Button 
               onClick={() => {
@@ -105,7 +110,7 @@ export function ProtectedRoute({
               }}
               className="w-full"
             >
-              Go to My Dashboard
+              {t("auth.goToMyDashboard", { defaultValue: "Go to My Dashboard" })}
             </Button>
           </CardContent>
         </Card>

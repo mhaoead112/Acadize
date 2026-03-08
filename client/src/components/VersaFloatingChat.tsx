@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { apiEndpoint } from "@/lib/config";
+import { useTranslation } from "react-i18next";
 
 interface Message {
   id: string;
@@ -16,11 +17,13 @@ interface Message {
 }
 
 export default function VersaFloatingChat() {
+  const { t, i18n } = useTranslation('dashboard');
+  const isRTL = i18n.language?.startsWith('ar') || i18n.dir() === 'rtl' || (typeof document !== "undefined" && document.documentElement.dir === "rtl");
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      content: "Hi! I'm Versa, your AI learning assistant! 🌟 Ask me anything about any subject - from math to history, science to literature. I'm here to help you learn!",
+      content: t('versaWelcome'),
       isUser: false,
       timestamp: new Date()
     }
@@ -64,7 +67,7 @@ export default function VersaFloatingChat() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || errorData.error || "Failed to get response");
+        throw new Error(errorData.message || errorData.error || t('failedToGetResponse'));
       }
 
       const data = await response.json();
@@ -80,15 +83,15 @@ export default function VersaFloatingChat() {
     } catch (error: any) {
       console.error("Chat error:", error);
       toast({
-        title: "Error",
-        description: error.message || "Failed to send message. Please try again.",
+        title: t('error'),
+        description: error.message || t('failedToSendMessageRetry'),
         variant: "destructive"
       });
 
       // Add error message to chat
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: "Sorry, I'm having trouble responding right now. Please try again in a moment.",
+        content: t('versaTemporaryIssue'),
         isUser: false,
         timestamp: new Date()
       };
@@ -109,17 +112,17 @@ export default function VersaFloatingChat() {
     <>
       {/* Floating Button - Enhanced Design */}
       {!isOpen && (
-        <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 group">
+        <div className={`fixed bottom-4 sm:bottom-6 z-50 group ${isRTL ? 'left-4 sm:left-6' : 'right-4 sm:right-6'}`}>
           {/* Pulsing glow effect */}
           <div className="absolute inset-0 h-14 w-14 sm:h-16 sm:w-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 opacity-40 blur-lg animate-pulse group-hover:opacity-60 transition-opacity" />
           
           {/* Tooltip */}
-          <div className="absolute bottom-full right-0 mb-3 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 pointer-events-none">
+          <div className={`absolute bottom-full mb-3 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 pointer-events-none ${isRTL ? 'left-0' : 'right-0'}`}>
             <div className="bg-gray-900 text-white text-sm px-4 py-2 rounded-lg shadow-xl whitespace-nowrap flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-yellow-400" />
-              <span>Ask Versa anything!</span>
+              <span>{t('askVersaAnything')}</span>
             </div>
-            <div className="absolute -bottom-1 right-6 w-2 h-2 bg-gray-900 rotate-45" />
+            <div className={`absolute -bottom-1 w-2 h-2 bg-gray-900 rotate-45 ${isRTL ? 'left-6' : 'right-6'}`} />
           </div>
           
           <Button
@@ -138,7 +141,7 @@ export default function VersaFloatingChat() {
           </Button>
           
           {/* "AI" label */}
-          <div className="absolute -left-2 -bottom-1 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg">
+          <div className={`absolute -bottom-1 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg ${isRTL ? '-left-2' : '-right-2'}`}>
             AI
           </div>
         </div>
@@ -146,7 +149,7 @@ export default function VersaFloatingChat() {
 
       {/* Chat Window - Enhanced Design */}
       {isOpen && (
-        <Card className="fixed bottom-0 right-0 sm:bottom-6 sm:right-6 w-full sm:w-[400px] h-[100vh] sm:h-[650px] sm:rounded-2xl shadow-2xl z-50 flex flex-col animate-in slide-in-from-bottom-5 duration-300 border-0 overflow-hidden">
+        <Card className={`fixed bottom-0 sm:bottom-6 w-full sm:w-[400px] h-[100vh] sm:h-[650px] sm:rounded-2xl shadow-2xl z-50 flex flex-col animate-in slide-in-from-bottom-5 duration-300 border-0 overflow-hidden ${isRTL ? 'left-0 sm:left-6' : 'right-0 sm:right-6'}`}>
           {/* Header with gradient and particles effect */}
           <CardHeader className="relative bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 text-white rounded-t-none sm:rounded-t-2xl pb-4 sm:pb-5 pt-4 sm:pt-6 overflow-hidden">
             {/* Decorative circles */}
@@ -162,12 +165,12 @@ export default function VersaFloatingChat() {
                   <div className="flex items-center gap-2">
                     <CardTitle className="text-lg sm:text-xl font-bold">Versa</CardTitle>
                     <Badge className="bg-green-400/20 text-green-100 border-green-400/30 text-xs">
-                      Online
+                      {t('online')}
                     </Badge>
                   </div>
                   <p className="text-sm text-white/80 flex items-center gap-1.5 mt-0.5">
                     <Zap className="h-3.5 w-3.5 text-yellow-300" />
-                    Your AI Learning Companion
+                    {t('aiLearningCompanion')}
                   </p>
                 </div>
               </div>
@@ -184,25 +187,25 @@ export default function VersaFloatingChat() {
             {/* Quick action chips */}
             <div className="flex gap-2 mt-4 overflow-x-auto pb-1 relative z-10">
               <button
-                onClick={() => setInputMessage("Help me understand my lesson")}
+                onClick={() => setInputMessage(t('quickPromptExplainLesson'))}
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-white/15 hover:bg-white/25 rounded-full text-xs text-white/90 whitespace-nowrap transition-colors border border-white/20"
               >
                 <BookOpen className="h-3.5 w-3.5" />
-                Explain lesson
+                {t('explainLesson')}
               </button>
               <button
-                onClick={() => setInputMessage("Quiz me on this topic")}
+                onClick={() => setInputMessage(t('quickPromptQuizMe'))}
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-white/15 hover:bg-white/25 rounded-full text-xs text-white/90 whitespace-nowrap transition-colors border border-white/20"
               >
                 <Zap className="h-3.5 w-3.5" />
-                Quiz me
+                {t('quizMe')}
               </button>
               <button
-                onClick={() => setInputMessage("Give me study tips")}
+                onClick={() => setInputMessage(t('quickPromptStudyTips'))}
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-white/15 hover:bg-white/25 rounded-full text-xs text-white/90 whitespace-nowrap transition-colors border border-white/20"
               >
                 <Sparkles className="h-3.5 w-3.5" />
-                Study tips
+                {t('studyTips')}
               </button>
             </div>
           </CardHeader>
@@ -265,7 +268,7 @@ export default function VersaFloatingChat() {
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  placeholder="Ask me anything..."
+                  placeholder={t('askMeAnythingPlaceholder')}
                   disabled={isLoading}
                   className="flex-1 rounded-xl border-gray-200 focus:border-purple-300 focus:ring-purple-200 bg-gray-50"
                 />
@@ -281,7 +284,7 @@ export default function VersaFloatingChat() {
               <div className="flex items-center justify-center gap-1.5 mt-3">
                 <Sparkles className="h-3 w-3 text-purple-400" />
                 <p className="text-[11px] text-gray-400">
-                  Powered by Google Gemini AI
+                  {t('poweredByGemini')}
                 </p>
               </div>
             </div>
