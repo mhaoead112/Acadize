@@ -16,6 +16,8 @@ import {
   TrendingDown, Activity, ArrowRight, RefreshCw
 } from "lucide-react";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { usePortalI18n } from '@/hooks/usePortalI18n';
+
 
 interface ChildData {
   id: string;
@@ -71,6 +73,7 @@ interface DashboardData {
 }
 
 export default function ParentDashboardEnhanced() {
+  const { t } = usePortalI18n("common");
   const { user, token } = useAuth();
   const [, setLocation] = useLocation();
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);

@@ -19,9 +19,10 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { useBrandingContext } from "@/contexts/BrandingContext";
 import { 
   Settings, Globe, Mail, Bell, Lock, Database, 
-  Shield, DollarSign, Palette, Save, AlertTriangle, RefreshCw
+  Shield, DollarSign, Palette, Save, AlertTriangle, RefreshCw, Image, Phone
 } from "lucide-react";
 
 export default function AdminSettings() {
@@ -106,6 +107,76 @@ export default function AdminSettings() {
     commissionRate: "10",
     minimumPayout: "50",
   });
+
+  // ── Branding Settings ──────────────────────────────────────────────────────
+  const { refetch: refetchBranding } = useBrandingContext();
+
+  const { data: brandingData, refetch: refetchBrandingData } = useQuery({
+    queryKey: ['org-branding'],
+    queryFn: async () => {
+      const res = await fetch(apiEndpoint('/api/org/branding'), {
+        headers: { Authorization: `Bearer ${token}` },
+        credentials: 'include',
+      });
+      if (!res.ok) throw new Error('Failed to fetch branding');
+      return res.json();
+    },
+    enabled: !!token,
+  });
+
+  const [brandingSettings, setBrandingSettings] = useState({
+    logoUrl: '',
+    faviconUrl: '',
+    primaryColor: '#6366f1',
+    secondaryColor: '#8b5cf6',
+    contactEmail: '',
+    contactPhone: '',
+  });
+
+  useEffect(() => {
+    if (brandingData) {
+      setBrandingSettings({
+        logoUrl: brandingData.logoUrl ?? '',
+        faviconUrl: brandingData.faviconUrl ?? '',
+        primaryColor: brandingData.primaryColor ?? '#6366f1',
+        secondaryColor: brandingData.secondaryColor ?? '#8b5cf6',
+        contactEmail: brandingData.contactEmail ?? '',
+        contactPhone: brandingData.contactPhone ?? '',
+      });
+    }
+  }, [brandingData]);
+
+  const saveBrandingMutation = useMutation({
+    mutationFn: async (data: typeof brandingSettings) => {
+      const res = await fetch(apiEndpoint('/api/org/branding'), {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          logoUrl: data.logoUrl || null,
+          faviconUrl: data.faviconUrl || null,
+          primaryColor: data.primaryColor,
+          secondaryColor: data.secondaryColor,
+          contactEmail: data.contactEmail || null,
+          contactPhone: data.contactPhone || null,
+        }),
+      });
+      if (!res.ok) throw new Error('Failed to save branding');
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: 'Branding saved!', description: 'Your brand identity has been updated.' });
+      refetchBrandingData();
+      // Re-fetch the BrandingContext so CSS vars update immediately
+      refetchBranding();
+      queryClient.invalidateQueries({ queryKey: ['org-branding'] });
+    },
+    onError: (e: Error) => toast({ title: 'Error', description: e.message, variant: 'destructive' }),
+  });
+  // ───────────────────────────────────────────────────────────────────────────
 
   const [localeSettings, setLocaleSettings] = useState({ defaultLocale: "en", enabledLocales: ["en"] as string[] });
 
@@ -289,6 +360,12 @@ export default function AdminSettings() {
               <Globe className="h-4 w-4 mr-2" />
               General
             </TabsTrigger>
+            {brandingData?.subdomain !== 'default' && brandingData?.subdomain !== 'acadize' && (
+              <TabsTrigger value="branding">
+                <Palette className="h-4 w-4 mr-2" />
+                Branding
+              </TabsTrigger>
+            )}
             <TabsTrigger value="email">
               <Mail className="h-4 w-4 mr-2" />
               Email
@@ -310,6 +387,147 @@ export default function AdminSettings() {
               Language
             </TabsTrigger>
           </TabsList>
+
+          {/* ── Branding Settings ── */}
+          {brandingData?.subdomain !== 'default' && brandingData?.subdomain !== 'acadize' && (
+            <TabsContent value="branding">
+              <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Academy Brand Identity</CardTitle>
+                  <CardDescription>Customize your academy's logo, colors, and contact info. Changes apply immediately across all pages.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-8">
+
+                  {/* Logo */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                      <Label>Logo URL</Label>
+                      <p className="text-xs text-muted-foreground">Link to your academy logo (PNG/SVG, transparent background recommended)</p>
+                      <Input
+                        value={brandingSettings.logoUrl}
+                        onChange={(e) => setBrandingSettings({ ...brandingSettings, logoUrl: e.target.value })}
+                        placeholder="https://cdn.youracademy.com/logo.png"
+                      />
+                    </div>
+                    {/* Logo Preview */}
+                    <div className="space-y-3">
+                      <Label>Logo Preview</Label>
+                      <div className="h-20 w-full rounded-xl border-2 border-dashed border-border flex items-center justify-center bg-muted/30">
+                        {brandingSettings.logoUrl ? (
+                          <img src={brandingSettings.logoUrl} alt="Logo preview" className="max-h-16 max-w-full object-contain" />
+                        ) : (
+                          <span className="text-muted-foreground text-sm">No logo URL entered</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Favicon */}
+                  <div className="space-y-2">
+                    <Label>Favicon URL</Label>
+                    <p className="text-xs text-muted-foreground">Square icon shown in browser tab (32×32 or 64×64 .ico / .png)</p>
+                    <Input
+                      value={brandingSettings.faviconUrl}
+                      onChange={(e) => setBrandingSettings({ ...brandingSettings, faviconUrl: e.target.value })}
+                      placeholder="https://cdn.youracademy.com/favicon.ico"
+                    />
+                  </div>
+
+                  {/* Colors */}
+                  <div>
+                    <Label className="text-base font-semibold mb-4 block">Brand Colors</Label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* Primary */}
+                      <div className="space-y-3">
+                        <Label>Primary Color</Label>
+                        <p className="text-xs text-muted-foreground">Used for buttons, active states, and CTA elements</p>
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="color"
+                            value={brandingSettings.primaryColor}
+                            onChange={(e) => setBrandingSettings({ ...brandingSettings, primaryColor: e.target.value })}
+                            className="w-12 h-12 rounded-xl border border-border cursor-pointer p-1"
+                          />
+                          <Input
+                            value={brandingSettings.primaryColor}
+                            onChange={(e) => setBrandingSettings({ ...brandingSettings, primaryColor: e.target.value })}
+                            className="font-mono text-sm"
+                            maxLength={7}
+                          />
+                        </div>
+                        {/* Color preview swatch */}
+                        <div
+                          className="h-10 rounded-xl flex items-center justify-center text-white text-sm font-semibold"
+                          style={{ backgroundColor: brandingSettings.primaryColor }}
+                        >
+                          Button Preview
+                        </div>
+                      </div>
+
+                      {/* Secondary */}
+                      <div className="space-y-3">
+                        <Label>Secondary / Accent Color</Label>
+                        <p className="text-xs text-muted-foreground">Used for badges, hover states, and secondary accents</p>
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="color"
+                            value={brandingSettings.secondaryColor}
+                            onChange={(e) => setBrandingSettings({ ...brandingSettings, secondaryColor: e.target.value })}
+                            className="w-12 h-12 rounded-xl border border-border cursor-pointer p-1"
+                          />
+                          <Input
+                            value={brandingSettings.secondaryColor}
+                            onChange={(e) => setBrandingSettings({ ...brandingSettings, secondaryColor: e.target.value })}
+                            className="font-mono text-sm"
+                            maxLength={7}
+                          />
+                        </div>
+                        <div
+                          className="h-10 rounded-xl flex items-center justify-center text-white text-sm font-semibold"
+                          style={{ backgroundColor: brandingSettings.secondaryColor }}
+                        >
+                          Accent Preview
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Contact */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label>Contact Email</Label>
+                      <Input
+                        type="email"
+                        value={brandingSettings.contactEmail}
+                        onChange={(e) => setBrandingSettings({ ...brandingSettings, contactEmail: e.target.value })}
+                        placeholder="support@youracademy.com"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Contact Phone</Label>
+                      <Input
+                        type="tel"
+                        value={brandingSettings.contactPhone}
+                        onChange={(e) => setBrandingSettings({ ...brandingSettings, contactPhone: e.target.value })}
+                        placeholder="+1 (555) 000-0000"
+                      />
+                    </div>
+                  </div>
+
+                  <Button
+                    onClick={() => saveBrandingMutation.mutate(brandingSettings)}
+                    disabled={saveBrandingMutation.isPending}
+                    className="bg-brand-primary hover:opacity-90 text-white"
+                  >
+                    <Save className="h-4 w-4 mr-2" />
+                    {saveBrandingMutation.isPending ? 'Saving...' : 'Save Brand Identity'}
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+          )}
 
           {/* Locale (i18n) Settings */}
           <TabsContent value="locale">
@@ -552,6 +770,8 @@ export default function AdminSettings() {
               </CardContent>
             </Card>
           </TabsContent>
+
+
 
           {/* Notification Settings */}
           <TabsContent value="notifications">

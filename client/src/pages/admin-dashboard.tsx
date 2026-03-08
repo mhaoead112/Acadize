@@ -6,6 +6,8 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from "recharts";
 import AdminLayout from "@/components/AdminLayout";
+import { DashboardStatsSkeleton } from "@/components/skeletons/DashboardStatsSkeleton";
+import { TableSkeleton } from "@/components/skeletons/TableSkeleton";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { apiEndpoint } from "@/lib/config";
@@ -151,11 +153,9 @@ export default function AdminDashboard() {
   if (isLoading) {
     return (
       <AdminLayout>
-        <div className="flex flex-col items-center justify-center h-64 gap-4">
-          <div className="relative">
-            <div className="w-16 h-16 border-4 border-slate-200 dark:border-white/10 rounded-full animate-spin border-t-[#FFD700]" />
-          </div>
-          <p className="text-slate-600 dark:text-slate-300 font-medium">Loading dashboard...</p>
+        <div className="space-y-8 pb-12 px-6 md:px-8">
+          <DashboardStatsSkeleton />
+          <TableSkeleton rows={6} columns={5} />
         </div>
       </AdminLayout>
     );

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
 import AdminLayout from "@/components/AdminLayout";
@@ -17,7 +17,6 @@ import {
   Mail, Shield, GraduationCap, UserCog, Download, Upload, CheckCircle, XCircle,
   RefreshCw, UserPlus
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   Table,
   TableBody,
@@ -45,6 +44,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { TableSkeleton } from "@/components/skeletons/TableSkeleton";
 
 interface User {
   id: number;
@@ -197,33 +197,44 @@ export default function AdminUsers() {
     }
   };
 
-  const filteredUsers = users.filter(u => {
-    const matchesSearch =
-      (u.fullName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (u.email || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (u.username || '').toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesRole = roleFilter === 'all' || u.role === roleFilter;
-    const matchesStatus = statusFilter === 'all' || u.status === statusFilter;
-    return matchesSearch && matchesRole && matchesStatus;
-  });
+  const filteredUsers = useMemo(() => {
+    const normalizedSearch = searchQuery.trim().toLowerCase();
 
-  const sortedUsers = [...filteredUsers].sort((a, b) => {
-    switch (sortOption) {
-      case 'name-asc':
-        return (a.fullName || '').localeCompare(b.fullName || '');
-      case 'name-desc':
-        return (b.fullName || '').localeCompare(a.fullName || '');
-      case 'role':
-        return (a.role || '').localeCompare(b.role || '');
-      case 'status':
-        return (a.status || '').localeCompare(b.status || '');
-      case 'oldest':
-        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-      case 'recent':
-      default:
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-    }
-  });
+    return users.filter((u) => {
+      const matchesSearch =
+        !normalizedSearch ||
+        (u.fullName || '').toLowerCase().includes(normalizedSearch) ||
+        (u.email || '').toLowerCase().includes(normalizedSearch) ||
+        (u.username || '').toLowerCase().includes(normalizedSearch);
+      const matchesRole = roleFilter === 'all' || u.role === roleFilter;
+      const matchesStatus = statusFilter === 'all' || u.status === statusFilter;
+      return matchesSearch && matchesRole && matchesStatus;
+    });
+  }, [users, searchQuery, roleFilter, statusFilter]);
+
+  const sortedUsers = useMemo(() => {
+    const next = [...filteredUsers];
+
+    next.sort((a, b) => {
+      switch (sortOption) {
+        case 'name-asc':
+          return (a.fullName || '').localeCompare(b.fullName || '');
+        case 'name-desc':
+          return (b.fullName || '').localeCompare(a.fullName || '');
+        case 'role':
+          return (a.role || '').localeCompare(b.role || '');
+        case 'status':
+          return (a.status || '').localeCompare(b.status || '');
+        case 'oldest':
+          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        case 'recent':
+        default:
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      }
+    });
+
+    return next;
+  }, [filteredUsers, sortOption]);
 
   const totalPages = Math.max(1, Math.ceil(sortedUsers.length / pageSize));
   const safePage = Math.max(1, Math.min(currentPage, totalPages));
@@ -343,11 +354,8 @@ export default function AdminUsers() {
   if (loading) {
     return (
       <AdminLayout>
-        <div className="flex flex-col items-center justify-center h-64 gap-4">
-          <div className="relative">
-            <div className="w-16 h-16 border-4 border-slate-200 dark:border-white/10 rounded-full animate-spin border-t-[#FFD700]" />
-          </div>
-          <p className="text-slate-600 dark:text-slate-300 font-medium">Loading users...</p>
+        <div className="space-y-8 pb-12 px-6 md:px-8">
+          <TableSkeleton rows={8} columns={5} />
         </div>
       </AdminLayout>
     );
@@ -454,14 +462,8 @@ export default function AdminUsers() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 dark:divide-white/10">
-                <AnimatePresence>
                   {currentPageUsers.map((user) => (
-                    <motion.tr 
-                      key={user.id}
-                      layout
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
+                    <tr key={user.id}
                       className="group hover:bg-slate-50 dark:hover:bg-[#0a192f]/20 transition-colors"
                     >
                       <td className="p-6">
@@ -525,9 +527,8 @@ export default function AdminUsers() {
                           </button>
                         </div>
                       </td>
-                    </motion.tr>
+                    </tr>
                   ))}
-                </AnimatePresence>
               </tbody>
             </table>
           </div>
@@ -570,22 +571,13 @@ export default function AdminUsers() {
         </div>
 
         {/* Add User Modal */}
-        <AnimatePresence>
           {isAddModalOpen && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
+              <div
                 onClick={() => setIsAddModalOpen(false)}
                 className="absolute inset-0 bg-slate-900/70 dark:bg-slate-900/90 backdrop-blur-md"
               />
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                className="bg-white dark:bg-[#112240] border border-slate-200 dark:border-white/10 w-full max-w-lg rounded-[2rem] shadow-2xl relative z-10 overflow-hidden"
-              >
+              <div className="bg-white dark:bg-[#112240] border border-slate-200 dark:border-white/10 w-full max-w-lg rounded-[2rem] shadow-2xl relative z-10 overflow-hidden">
                 <div className="p-6 border-b border-slate-200 dark:border-white/10 flex justify-between items-center bg-slate-50 dark:bg-[#0a192f]/30">
                   <div className="flex items-center gap-3">
                     <div className="bg-[#FFD700]/20 p-2 rounded-xl text-[#FFD700]">
@@ -680,11 +672,11 @@ export default function AdminUsers() {
                     </button>
                   </div>
                 </form>
-              </motion.div>
+              </div>
             </div>
           )}
-        </AnimatePresence>
       </div>
     </AdminLayout>
   );
 }
+

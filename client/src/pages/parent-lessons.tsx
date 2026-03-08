@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/hooks/useAuth";
+import { usePortalI18n } from '@/hooks/usePortalI18n';
+
 import { 
   BookOpen, CheckCircle2, Circle, FileText, 
   Video, Image, File, ArrowLeft
@@ -34,6 +36,7 @@ interface LessonCompletionData {
 }
 
 export default function ParentLessons() {
+  const { t } = usePortalI18n("common");
   const { token } = useAuth();
   const [, setLocation] = useLocation();
   const params = useParams();

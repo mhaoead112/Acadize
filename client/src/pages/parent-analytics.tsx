@@ -12,6 +12,8 @@ import {
   Award, AlertCircle, CheckCircle, BarChart3
 } from "lucide-react";
 import { LineChart, Line, BarChart, Bar, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { usePortalI18n } from '@/hooks/usePortalI18n';
+
 
 interface AnalyticsData {
   gradesTrend: Array<{
@@ -44,6 +46,7 @@ interface AnalyticsData {
 }
 
 export default function ParentAnalytics() {
+  const { t } = usePortalI18n("common");
   const { token } = useAuth();
   const [, setLocation] = useLocation();
   const params = useParams();

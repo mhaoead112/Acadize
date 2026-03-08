@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { getStoredUser } from '@/lib/api-client';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
+import { useBranding } from '@/contexts/BrandingContext';
 
 interface LoginCredentials {
   email: string;
@@ -19,6 +20,7 @@ export default function Login() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const { login, isAuthenticated, user } = useAuth();
+  const branding = useBranding();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<LoginCredentials>({
@@ -131,7 +133,11 @@ export default function Login() {
             <div className="max-w-[400px] mx-auto w-full">
               {/* Logo & Brand */}
               <div className="flex items-center gap-3 mb-10">
-                <AcadizeLogo variant="full" size="xl" />
+                {branding.logoUrl ? (
+                  <img src={branding.logoUrl} alt={branding.name} className="h-12 w-auto object-contain" />
+                ) : (
+                  <AcadizeLogo variant="full" size="xl" />
+                )}
               </div>
 
               <div className="mb-10">
@@ -139,7 +145,7 @@ export default function Login() {
                   {t('welcomeBack')}
                 </h1>
                 <p className="text-slate-500 dark:text-gray-400 font-medium">
-                  {t('enterCredentials')}
+                  {branding.name !== 'Acadize' ? `Sign in to ${branding.name}` : t('enterCredentials')}
                 </p>
               </div>
 
@@ -150,14 +156,14 @@ export default function Login() {
                     {t('studentIdEmail')}
                   </label>
                   <div className="relative group">
-                    <School className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" size={20} />
+                    <School className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-primary transition-colors" size={20} />
                     <input 
                       type="text"
                       name="email"
                       value={formData.email}
                       onChange={handleInputChange}
                       placeholder={t('emailPlaceholder')}
-                      className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl h-14 pl-12 pr-4 outline-none focus:ring-2 focus:ring-primary/50 transition-all font-medium"
+                      className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl h-14 pl-12 pr-4 outline-none focus:ring-2 focus:ring-brand-primary/50 transition-all font-medium"
                       disabled={isLoading}
                     />
                   </div>
@@ -172,20 +178,20 @@ export default function Login() {
                     <button 
                       type="button"
                       onClick={() => setLocation('/forgot-password')}
-                      className="text-xs font-bold text-primary hover:underline"
+                      className="text-xs font-bold text-brand-primary hover:underline"
                     >
                       {t('forgot')}
                     </button>
                   </div>
                   <div className="relative group">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" size={20} />
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-primary transition-colors" size={20} />
                     <input 
                       type={showPassword ? "text" : "password"}
                       name="password"
                       value={formData.password}
                       onChange={handleInputChange}
                       placeholder={t('passwordPlaceholder')}
-                      className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl h-14 pl-12 pr-12 outline-none focus:ring-2 focus:ring-primary/50 transition-all font-medium"
+                      className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl h-14 pl-12 pr-12 outline-none focus:ring-2 focus:ring-brand-primary/50 transition-all font-medium"
                       disabled={isLoading}
                     />
                     <button 
@@ -201,7 +207,7 @@ export default function Login() {
                 <Button 
                   type="submit"
                   disabled={isLoading}
-                  className="w-full h-14 bg-primary hover:bg-primary-hover text-navy-950 font-bold rounded-2xl shadow-xl shadow-primary/20 text-lg group"
+                  className="w-full h-14 bg-brand-primary hover:bg-brand-secondary text-white font-bold rounded-2xl shadow-xl shadow-brand-primary/20 text-lg group"
                 >
                   {isLoading ? (
                     <Loader2 className="animate-spin" size={24} />
@@ -216,7 +222,7 @@ export default function Login() {
 
               <div className="mt-10 text-center">
                 <p className="text-sm text-slate-500 dark:text-gray-400">
-                  {t('noAccount')} <button onClick={() => setLocation('/register')} className="text-primary font-bold hover:underline">{t('createAccount')}</button>
+                  {t('noAccount')} <button onClick={() => setLocation('/register')} className="text-brand-primary font-bold hover:underline">{t('createAccount')}</button>
                 </p>
               </div>
             </div>
@@ -228,19 +234,19 @@ export default function Login() {
             <div className="absolute inset-0 opacity-40 dark:opacity-20 pointer-events-none" style={{ backgroundImage: 'radial-gradient(#F2D00D 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
             
             <div className="relative z-10 space-y-6">
-              <div className="w-16 h-1.5 bg-primary rounded-full shadow-lg shadow-primary/50" />
+              <div className="w-16 h-1.5 bg-brand-primary rounded-full shadow-lg shadow-brand-primary/50" />
               <blockquote className="text-3xl font-bold leading-tight tracking-tight">
                 "{t('quote')}"
               </blockquote>
               <div>
-                <p className="text-lg font-bold text-primary">{t('quoteAuthor')}</p>
+                <p className="text-lg font-bold text-brand-primary">{branding.name !== 'Acadize' ? branding.name : t('quoteAuthor')}</p>
                 <p className="text-sm text-slate-500 font-medium tracking-wide">{t('premiumExperience')}</p>
               </div>
             </div>
 
             {/* Floating Visual Elements */}
-            <div className="absolute top-20 right-20 w-32 h-32 bg-primary/20 rounded-[2rem] blur-2xl animate-float" />
-            <div className="absolute bottom-40 right-40 w-24 h-24 bg-blue-500/10 rounded-[1.5rem] blur-xl animate-float-delayed" />
+            <div className="absolute top-20 right-20 w-32 h-32 bg-brand-primary/20 rounded-[2rem] blur-2xl animate-float" />
+            <div className="absolute bottom-40 right-40 w-24 h-24 bg-brand-secondary/10 rounded-[1.5rem] blur-xl animate-float-delayed" />
           </div>
         </motion.div>
       </main>
@@ -248,11 +254,11 @@ export default function Login() {
       <footer className="py-8 text-center text-xs text-slate-400 dark:text-gray-500 relative z-10 transition-opacity hover:opacity-100">
         <p>{t('copyright')}</p>
         <div className="flex justify-center gap-6 mt-3 font-bold uppercase tracking-widest text-[10px]">
-          <button onClick={() => setLocation('/privacy')} className="hover:text-primary transition-colors">{t('privacy')}</button>
+          <button onClick={() => setLocation('/privacy')} className="hover:text-brand-primary transition-colors">{t('privacy')}</button>
           <span className="opacity-20">/</span>
-          <button onClick={() => setLocation('/terms')} className="hover:text-primary transition-colors">{t('terms')}</button>
+          <button onClick={() => setLocation('/terms')} className="hover:text-brand-primary transition-colors">{t('terms')}</button>
           <span className="opacity-20">/</span>
-          <button onClick={() => setLocation('/support')} className="hover:text-primary transition-colors">{t('contact')}</button>
+          <button onClick={() => setLocation('/support')} className="hover:text-brand-primary transition-colors">{t('contact')}</button>
         </div>
       </footer>
     </div>

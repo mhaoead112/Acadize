@@ -21,8 +21,11 @@ import {
 } from "@/components/ui/select";
 import { UserGrowthChart, RevenueChart, EngagementChart } from "@/components/Charts";
 import { apiEndpoint, assetUrl } from '@/lib/config';
+import { usePortalI18n } from '@/hooks/usePortalI18n';
+
 
 export default function AdminAnalytics() {
+  const { t } = usePortalI18n("common");
   const { token } = useAuth();
   const [timeRange, setTimeRange] = useState("7d");
 
