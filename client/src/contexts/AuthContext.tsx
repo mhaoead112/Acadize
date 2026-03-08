@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import type { User } from '@shared/schema';
 import { apiEndpoint, getSubdomain } from '@/lib/config';
 import { refreshTokenIfNeeded, isTokenExpired, clearAuthData } from '@/lib/api-client';
+import { logger } from '@/lib/logger';
 import {
   getStoredToken,
   getStoredUser,
@@ -58,7 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const currentSubdomain = getSubdomain();
         
         if (storedSubdomain && storedSubdomain !== currentSubdomain) {
-          console.log('Subdomain mismatch (session from ' + storedSubdomain + '), clearing auth');
+          logger.info('Subdomain mismatch (session from ' + storedSubdomain + '), clearing auth');
           clearAuthData();
           setAuthState({ user: null, token: null, isAuthenticated: false });
           setIsLoading(false);
@@ -67,10 +68,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         // If token is expired, try to refresh it immediately
         if (isTokenExpired()) {
-          console.log('Initial token expired, attempting refresh...');
+          logger.info('Initial token expired, attempting refresh...');
           const refreshed = await refreshTokenIfNeeded();
           if (!refreshed) {
-            console.log('Initial refresh failed, clearing auth');
+            logger.info('Initial refresh failed, clearing auth');
             clearAuthData();
             setAuthState({ user: null, token: null, isAuthenticated: false });
             setIsLoading(false);
@@ -115,7 +116,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             user
           }));
         } catch (error) {
-          console.error('Failed to parse updated user data:', error);
+          logger.error('Failed to parse updated user data:', error);
         }
       }
     };
@@ -149,7 +150,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             user
           }));
         } catch (e) {
-          console.error('Failed to sync auth state after refresh', e);
+          logger.error('Failed to sync auth state after refresh', e);
         }
       }
     };
@@ -268,3 +269,4 @@ export function useAuth() {
   }
   return context;
 }
+
