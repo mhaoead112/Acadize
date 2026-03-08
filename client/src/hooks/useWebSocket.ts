@@ -1,23 +1,25 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { WS_URL } from '@/lib/config';
+import { getStoredToken } from '@/lib/auth-storage';
+import { logger } from '@/lib/logger';
 
-interface WSMessage {
-  type: string;
-  [key: string]: any;
+export interface WSMessage {
+  type?: string;
+  [key: string]: unknown;
 }
 
 interface UseWebSocketReturn {
   socket: WebSocket | null;
   isConnected: boolean;
-  sendMessage: (data: any) => boolean;
+  sendMessage: (data: WSMessage) => boolean;
   disconnect: () => void;
   reconnect: () => void;
 }
 
-export function useWebSocket(onMessage?: (data: any) => void): UseWebSocketReturn {
+export function useWebSocket(onMessage?: (data: WSMessage) => void): UseWebSocketReturn {
   const [socket, setSocket] = useState<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
+  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const shouldReconnectRef = useRef(true);
   const onMessageRef = useRef(onMessage);
 
@@ -29,67 +31,64 @@ export function useWebSocket(onMessage?: (data: any) => void): UseWebSocketRetur
     if (socket?.readyState === WebSocket.OPEN) return;
 
     try {
-      // Connect to WebSocket server using configured WS_URL
-      const token = localStorage.getItem('auth_token') || localStorage.getItem('eduverse_token');
+      const token = getStoredToken();
       const wsUrl = token ? `${WS_URL}/?token=${token}` : WS_URL;
       const ws = new WebSocket(wsUrl);
 
       ws.onopen = () => {
-        console.log('✅ WebSocket connected');
+        logger.info('WebSocket connected');
         setIsConnected(true);
         setSocket(ws);
 
-        // Authenticate
-        const token = localStorage.getItem('auth_token') || localStorage.getItem('eduverse_token');
-        if (token) {
-          ws.send(JSON.stringify({ type: 'auth', token }));
-          // Set presence to online after auth
+        const authToken = getStoredToken();
+        if (authToken) {
+          ws.send(JSON.stringify({ type: 'auth', token: authToken }));
           setTimeout(() => {
             ws.send(JSON.stringify({ type: 'presence', status: 'online' }));
           }, 100);
         }
 
-        // Clear reconnect timeout
         if (reconnectTimeoutRef.current) {
           clearTimeout(reconnectTimeoutRef.current);
+          reconnectTimeoutRef.current = null;
         }
       };
 
       ws.onmessage = (event) => {
         try {
-          const data: WSMessage = JSON.parse(event.data);
+          const data = JSON.parse(event.data as string) as WSMessage;
           onMessageRef.current?.(data);
         } catch (error) {
-          console.error('Failed to parse WebSocket message:', error);
+          logger.error('Failed to parse WebSocket message:', error);
         }
       };
 
       ws.onclose = () => {
-        console.log('🔌 WebSocket disconnected');
+        logger.info('WebSocket disconnected');
         setIsConnected(false);
         setSocket(null);
 
-        // Attempt to reconnect
         if (shouldReconnectRef.current) {
           reconnectTimeoutRef.current = setTimeout(() => {
-            console.log('🔄 Attempting to reconnect...');
+            logger.info('Attempting to reconnect WebSocket...');
             connect();
           }, 3000);
         }
       };
 
       ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
+        logger.error('WebSocket error:', error);
       };
     } catch (error) {
-      console.error('Failed to create WebSocket connection:', error);
+      logger.error('Failed to create WebSocket connection:', error);
     }
-  }, []);
+  }, [socket]);
 
   const disconnect = useCallback(() => {
     shouldReconnectRef.current = false;
     if (reconnectTimeoutRef.current) {
       clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
     }
     if (socket) {
       socket.close();
@@ -98,12 +97,12 @@ export function useWebSocket(onMessage?: (data: any) => void): UseWebSocketRetur
     setIsConnected(false);
   }, [socket]);
 
-  const sendMessage = useCallback((data: any): boolean => {
+  const sendMessage = useCallback((data: WSMessage): boolean => {
     if (socket?.readyState === WebSocket.OPEN) {
       socket.send(JSON.stringify(data));
       return true;
     }
-    console.warn('WebSocket is not connected');
+    logger.warn('WebSocket is not connected');
     return false;
   }, [socket]);
 

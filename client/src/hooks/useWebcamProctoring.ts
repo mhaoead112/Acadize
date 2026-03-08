@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { loadFaceDetectionModels, detectFaces, areModelsLoaded, FaceDetectionResult } from '@/lib/face-detection';
+import type { FaceDetectionResult } from '@/lib/face-detection';
 import { useAuth } from '@/hooks/useAuth';
 import { apiEndpoint } from '@/lib/config';
 
@@ -57,6 +57,7 @@ export function useWebcamProctoring(
     const streamRef = useRef<MediaStream | null>(null);
     const internalVideoRef = useRef<HTMLVideoElement | null>(null); // Internal video for detection
     const detectionIntervalRef = useRef<NodeJS.Timeout | null>(null);
+    const faceDetectionLibRef = useRef<typeof import('@/lib/face-detection') | null>(null);
     const noFaceTimerRef = useRef<Date | null>(null);
     const lookingAwayTimerRef = useRef<Date | null>(null);
     const isActiveRef = useRef(false); // Track active state for callbacks
@@ -107,6 +108,13 @@ export function useWebcamProctoring(
         }
     }, [token, attemptId]);
 
+    const loadFaceDetectionLib = useCallback(async () => {
+        if (!faceDetectionLibRef.current) {
+            faceDetectionLibRef.current = await import('@/lib/face-detection');
+        }
+        return faceDetectionLibRef.current;
+    }, []);
+
     // Run face detection
     const runDetection = useCallback(async () => {
         const videoElement = internalVideoRef.current;
@@ -124,7 +132,8 @@ export function useWebcamProctoring(
 
         try {
             console.log('[PROCTORING] Running face detection...');
-            const result: FaceDetectionResult = await detectFaces(videoElement);
+            const faceDetectionLib = await loadFaceDetectionLib();
+            const result: FaceDetectionResult = await faceDetectionLib.detectFaces(videoElement);
             const now = new Date();
 
             console.log('[PROCTORING] Detection result:', {
@@ -180,7 +189,7 @@ export function useWebcamProctoring(
         } catch (error) {
             console.error('[PROCTORING] Detection error:', error);
         }
-    }, [status.status, sendEvent]);
+    }, [sendEvent, loadFaceDetectionLib]);
 
     // Start proctoring
     const startProctoring = useCallback(async (): Promise<boolean> => {
@@ -192,9 +201,10 @@ export function useWebcamProctoring(
         try {
             setStatus(prev => ({ ...prev, status: 'initializing' }));
 
-            // Load face detection models
-            if (!areModelsLoaded()) {
-                await loadFaceDetectionModels();
+            // Load face detection models on demand when proctoring starts
+            const faceDetectionLib = await loadFaceDetectionLib();
+            if (!faceDetectionLib.areModelsLoaded()) {
+                await faceDetectionLib.loadFaceDetectionModels();
             }
 
             setStatus(prev => ({ ...prev, status: 'requesting_permission' }));
@@ -281,7 +291,7 @@ export function useWebcamProctoring(
 
             return false;
         }
-    }, [isSupported, enabled, attemptId, sendEvent, runDetection]);
+    }, [isSupported, enabled, attemptId, sendEvent, runDetection, loadFaceDetectionLib]);
 
     // Stop proctoring
     const stopProctoring = useCallback(() => {
