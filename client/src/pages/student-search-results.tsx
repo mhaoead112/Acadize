@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { apiEndpoint } from "@/lib/config";
-import StudentLayout from "@/components/StudentLayout";
+
 import { Card } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
@@ -174,7 +174,7 @@ export default function StudentSearchResultsPage() {
   };
 
   return (
-    <StudentLayout>
+    <>
       <div className="flex-1 overflow-y-auto p-4 md:p-8 bg-slate-50 dark:bg-background">
         <div className="max-w-[1400px] mx-auto">
           {/* Search Header */}
@@ -406,6 +406,6 @@ export default function StudentSearchResultsPage() {
           )}
         </div>
       </div>
-    </StudentLayout>
+    </>
   );
 }

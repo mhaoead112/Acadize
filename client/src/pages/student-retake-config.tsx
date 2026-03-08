@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
-import StudentLayout from '../components/StudentLayout';
+
 import { useAuth } from '../hooks/useAuth';
 import { apiEndpoint } from '../lib/config';
+import { usePortalI18n } from '@/hooks/usePortalI18n';
+
 
 interface MistakeTopic {
   topic: string;
@@ -11,6 +13,7 @@ interface MistakeTopic {
 }
 
 export default function StudentRetakeConfig() {
+  const { t } = usePortalI18n("common");
   const [, setLocation] = useLocation();
   const { user, getAuthHeaders } = useAuth();
 
@@ -66,7 +69,10 @@ export default function StudentRetakeConfig() {
       
       const response = await fetch(apiEndpoint('/api/retakes'), {
         method: 'POST',
-        headers: getAuthHeaders(),
+        headers: {
+          ...getAuthHeaders(),
+          'Content-Type': 'application/json',
+        },
         credentials: 'include',
         body: JSON.stringify({
           topicNames: selectedTopics,
@@ -91,29 +97,25 @@ export default function StudentRetakeConfig() {
 
   if (loading) {
     return (
-      <StudentLayout>
-        <div className="w-full h-screen flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-        </div>
-      </StudentLayout>
+      <div className="w-full flex items-center justify-center min-h-[60vh]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
     );
   }
 
   if (error && topics.length === 0) {
     return (
-      <StudentLayout>
-        <div className="w-full max-w-5xl mx-auto p-4 sm:p-8">
-          <div className="bg-red-500/10 border border-red-500/30 p-4 rounded-xl flex items-center gap-3 text-red-400">
-            <span className="material-symbols-outlined">error</span>
-            <p className="text-sm font-medium">{error}</p>
-          </div>
+      <div className="w-full max-w-5xl mx-auto p-4 sm:p-8">
+        <div className="bg-red-500/10 border border-red-500/30 p-4 rounded-xl flex items-center gap-3 text-red-400">
+          <span className="material-symbols-outlined">error</span>
+          <p className="text-sm font-medium">{error}</p>
         </div>
-      </StudentLayout>
+      </div>
     );
   }
 
   return (
-    <StudentLayout>
+    <>
       <div className="w-full max-w-5xl mx-auto p-4 sm:p-8 flex flex-col gap-8">
         {error && (
           <div className="bg-red-500/10 border border-red-500/30 p-4 rounded-xl flex items-center gap-3 text-red-400">
@@ -294,6 +296,6 @@ export default function StudentRetakeConfig() {
           </div>
         </div>
       </div>
-    </StudentLayout>
+    </>
   );
 }

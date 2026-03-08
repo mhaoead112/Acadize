@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import StudentLayout from "@/components/StudentLayout";
+
 import NotificationBell from "@/components/NotificationBell";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -44,9 +44,10 @@ const MONTH_KEYS = ['january', 'february', 'march', 'april', 'may', 'june', 'jul
 const FILTER_KEYS = ['assignmentsFilter', 'classesFilter', 'examsFilter', 'eventsFilter'] as const;
 
 export default function StudentCalendar() {
-  const { t } = useTranslation('dashboard');
+  const { t, i18n } = useTranslation('dashboard');
   const { toast } = useToast();
   const { token, getAuthHeaders } = useAuth();
+  const locale = i18n.language?.startsWith('ar') ? 'ar-EG' : 'en-US';
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [view, setView] = useState<'month' | 'week' | 'day'>('month');
@@ -57,6 +58,13 @@ export default function StudentCalendar() {
   const [activeFilters, setActiveFilters] = useState<string[]>([...FILTER_KEYS]);
   const DAYS = useMemo(() => DAY_KEYS.map(k => t(k)), [t]);
   const MONTHS = useMemo(() => MONTH_KEYS.map(k => t(k)), [t]);
+  const upcomingEvents = useMemo(
+    () =>
+      events
+        .filter(e => new Date(e.startTime) >= new Date())
+        .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime()),
+    [events]
+  );
 
   useEffect(() => {
     if (token) {
@@ -150,6 +158,17 @@ export default function StudentCalendar() {
         return 'bg-gray-500';
     }
   };
+
+  const getEventTypeLabel = useCallback((type: CalendarEvent['type']) => {
+    const map: Record<CalendarEvent['type'], string> = {
+      assignment: t('assignmentsFilter'),
+      exam: t('examsFilter'),
+      class: t('classesFilter'),
+      event: t('eventsFilter'),
+      deadline: t('assignmentsFilter'),
+    };
+    return map[type] || type;
+  }, [t]);
 
   const getDaysInMonth = (date: Date) => {
     const year = date.getFullYear();
@@ -329,7 +348,7 @@ export default function StudentCalendar() {
           {hours.map(hour => (
             <div key={hour} className="grid grid-cols-8 gap-0 border-b border-slate-100 dark:border-white/5">
               <div className="p-2 text-xs text-slate-400 dark:text-slate-500 font-medium border-r border-slate-200 dark:border-white/10 text-right pr-3">
-                {hour === 0 ? '12 AM' : hour < 12 ? `${hour} AM` : hour === 12 ? '12 PM' : `${hour - 12} PM`}
+                {formatHourLabel(hour)}
               </div>
               {weekDates.map((date, dayIdx) => {
                 const dayEvents = getEventsForDate(date).filter(event => {
@@ -391,7 +410,7 @@ export default function StudentCalendar() {
           return end.getTime() - start.getTime() >= 24 * 60 * 60 * 1000;
         }).length > 0 && (
           <div className="p-3 border-b border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800">
-            <div className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-2">All Day</div>
+            <div className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-2">{t('allDay')}</div>
             <div className="space-y-1">
               {dayEvents.filter(e => {
                 const start = new Date(e.startTime);
@@ -429,7 +448,7 @@ export default function StudentCalendar() {
                 className={`flex border-b border-slate-100 dark:border-white/5 ${isCurrentHour ? 'bg-blue-50 dark:bg-blue-500/10' : ''}`}
               >
                 <div className="w-20 p-3 text-xs text-slate-400 dark:text-slate-500 font-medium text-right border-r border-slate-200 dark:border-white/10">
-                  {hour === 0 ? '12 AM' : hour < 12 ? `${hour} AM` : hour === 12 ? '12 PM' : `${hour - 12} PM`}
+                  {formatHourLabel(hour)}
                 </div>
                 <div className="flex-1 min-h-[60px] p-2 relative">
                   {hourEvents.map((event, idx) => (
@@ -464,15 +483,19 @@ export default function StudentCalendar() {
   };
 
   const formatTime = useCallback((date: Date) => {
-    return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-  }, []);
+    return date.toLocaleTimeString(locale, { hour: 'numeric', minute: '2-digit', hour12: true });
+  }, [locale]);
 
   const formatDate = useCallback((date: Date) => {
-    return date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-  }, []);
+    return date.toLocaleDateString(locale, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  }, [locale]);
+
+  const formatHourLabel = useCallback((hour: number) => {
+    return new Date(2026, 0, 1, hour).toLocaleTimeString(locale, { hour: 'numeric', hour12: true });
+  }, [locale]);
 
   return (
-    <StudentLayout>
+    <>
       {/* Header */}
       <header className="w-full px-8 py-6 flex flex-wrap items-end justify-between gap-4 shrink-0 bg-white dark:bg-background border-b border-slate-200 dark:border-white/10">
         <div className="flex flex-col gap-1">
@@ -551,6 +574,35 @@ export default function StudentCalendar() {
         </div>
 
         {/* Main Content */}
+        {loading ? (
+          <div className="flex-1 px-8 py-8 overflow-hidden flex gap-6">
+            <div className="flex-1 bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-lg border border-slate-200 dark:border-white/10">
+              <div className="grid grid-cols-7 gap-2 mb-4">
+                {Array.from({ length: 7 }).map((_, i) => (
+                  <div key={i} className="h-5 rounded bg-slate-200 dark:bg-slate-700 animate-pulse" />
+                ))}
+              </div>
+              <div className="grid grid-cols-7 grid-rows-5 gap-2">
+                {Array.from({ length: 35 }).map((_, i) => (
+                  <div key={i} className="h-20 rounded bg-slate-100 dark:bg-slate-700/60 animate-pulse" />
+                ))}
+              </div>
+            </div>
+            <div className="w-96 flex flex-col gap-6 shrink-0">
+              <div className="rounded-3xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-800 p-6 space-y-3">
+                <div className="h-4 w-24 rounded bg-slate-200 dark:bg-slate-700 animate-pulse" />
+                <div className="h-8 w-32 rounded bg-slate-100 dark:bg-slate-700/60 animate-pulse" />
+                <div className="h-20 rounded-xl bg-slate-100 dark:bg-slate-700/60 animate-pulse" />
+              </div>
+              <div className="rounded-3xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-800 p-6 space-y-3">
+                <div className="h-5 w-28 rounded bg-slate-200 dark:bg-slate-700 animate-pulse" />
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="h-16 rounded-xl bg-slate-100 dark:bg-slate-700/60 animate-pulse" />
+                ))}
+              </div>
+            </div>
+          </div>
+        ) : (
         <div className="flex-1 px-8 py-8 overflow-hidden flex gap-6">
           {/* Calendar */}
           <div className="flex-1 bg-white dark:bg-slate-800 rounded-3xl p-6 flex flex-col shadow-lg overflow-hidden border border-slate-200 dark:border-white/10">
@@ -647,9 +699,9 @@ export default function StudentCalendar() {
             <div className="flex flex-col gap-4 bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-lg border border-slate-200 dark:border-white/10">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Selected</p>
+                  <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{t('selectedDate')}</p>
                   <h2 className="text-slate-900 dark:text-white text-2xl font-bold">
-                    {selectedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    {selectedDate.toLocaleDateString(locale, { month: 'short', day: 'numeric' })}
                   </h2>
                 </div>
                 <div className="bg-blue-500/10 dark:bg-[#FFD700]/20 rounded-full p-2">
@@ -690,7 +742,7 @@ export default function StudentCalendar() {
                 ) : (
                   <div className="flex gap-3 items-center p-3 rounded-2xl border border-dashed border-slate-300 dark:border-white/10 text-slate-500 dark:text-slate-400 cursor-pointer hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
                     <Plus className="w-5 h-5" />
-                    <span className="text-xs font-medium">Add to this day</span>
+                    <span className="text-xs font-medium">{t('addToThisDay')}</span>
                   </div>
                 )}
               </div>
@@ -699,17 +751,13 @@ export default function StudentCalendar() {
             {/* Up Next */}
             <div className="flex flex-col gap-3">
               <div className="flex items-center justify-between px-2">
-                <h3 className="text-slate-900 dark:text-white text-lg font-bold">Up Next</h3>
+                <h3 className="text-slate-900 dark:text-white text-lg font-bold">{t('upNext')}</h3>
                 <a href="#" className="text-blue-600 dark:text-[#FFD700] text-xs font-bold hover:underline">
-                  View All
+                  {t('viewAll')}
                 </a>
               </div>
               <div className="flex flex-col gap-2">
-                {events
-                  .filter(e => new Date(e.startTime) >= new Date())
-                  .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
-                  .slice(0, 3)
-                  .map((event) => (
+                {upcomingEvents.slice(0, 3).map((event) => (
                     <div
                       key={event.id}
                       onClick={() => {
@@ -720,7 +768,7 @@ export default function StudentCalendar() {
                     >
                       <div className="flex flex-col items-center justify-center bg-slate-100 dark:bg-slate-800 rounded-xl w-12 h-12 shrink-0">
                         <span className="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase">
-                          {new Date(event.startTime).toLocaleDateString('en-US', { month: 'short' })}
+                          {new Date(event.startTime).toLocaleDateString(locale, { month: 'short' })}
                         </span>
                         <span className="text-slate-900 dark:text-white text-lg font-bold leading-none">
                           {new Date(event.startTime).getDate()}
@@ -739,10 +787,16 @@ export default function StudentCalendar() {
                       </div>
                     </div>
                   ))}
+                {upcomingEvents.length === 0 && (
+                  <div className="rounded-2xl border border-dashed border-slate-300 dark:border-white/10 p-4 text-center text-sm text-slate-500 dark:text-slate-400">
+                    {t('noEvents')}
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </div>
+        )}
 
         {/* Event Details Dialog */}
         <Dialog open={showEventDialog} onOpenChange={setShowEventDialog}>
@@ -760,7 +814,7 @@ export default function StudentCalendar() {
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
                   <Badge className={selectedEvent.color}>
-                    {selectedEvent.type}
+                    {getEventTypeLabel(selectedEvent.type)}
                   </Badge>
                   {selectedEvent.courseName && (
                     <Badge variant="outline">{selectedEvent.courseName}</Badge>
@@ -795,7 +849,7 @@ export default function StudentCalendar() {
                     <div className="flex items-center gap-3 text-sm">
                       <Video className="w-5 h-5 text-gray-500" />
                       <a href={selectedEvent.meetingLink} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                        Join Meeting
+                        {t('joinMeeting')}
                       </a>
                     </div>
                   )}
@@ -803,7 +857,7 @@ export default function StudentCalendar() {
                   {selectedEvent.participants && (
                     <div className="flex items-center gap-3 text-sm">
                       <Users className="w-5 h-5 text-gray-500" />
-                      <span>{selectedEvent.participants} participants</span>
+                      <span>{t('participantsCount', { count: selectedEvent.participants })}</span>
                     </div>
                   )}
                 </div>
@@ -836,7 +890,7 @@ export default function StudentCalendar() {
                     }}
                   >
                     <Bell className="w-4 h-4" />
-                    Add to Google Calendar
+                    {t('addToGoogleCalendar')}
                   </Button>
                   <Button 
                     variant="outline" 
@@ -846,17 +900,17 @@ export default function StudentCalendar() {
                       const startDate = new Date(selectedEvent.startTime);
                       const endDate = new Date(selectedEvent.endTime);
                       
-                      const eventText = `📅 ${selectedEvent.title}
+                      const eventText = `${selectedEvent.title}
 
-🕐 ${formatTime(startDate)} - ${formatTime(endDate)}
-📆 ${formatDate(startDate)}
-${selectedEvent.courseName ? `📚 Course: ${selectedEvent.courseName}` : ''}
-${selectedEvent.location ? `📍 Location: ${selectedEvent.location}` : ''}
-${selectedEvent.description ? `\n📝 ${selectedEvent.description}` : ''}
-${selectedEvent.meetingLink ? `\n🔗 Meeting: ${selectedEvent.meetingLink}` : ''}
+${t('time')}: ${formatTime(startDate)} - ${formatTime(endDate)}
+${t('date')}: ${formatDate(startDate)}
+${selectedEvent.courseName ? `${t('course')}: ${selectedEvent.courseName}` : ''}
+${selectedEvent.location ? `${t('location')}: ${selectedEvent.location}` : ''}
+${selectedEvent.description ? `\n${selectedEvent.description}` : ''}
+${selectedEvent.meetingLink ? `\n${t('meeting')}: ${selectedEvent.meetingLink}` : ''}
 
 ---
-Shared from EduVerse`;
+${t('sharedFromEduverse')}`
 
                       try {
                         if (navigator.share) {
@@ -868,8 +922,8 @@ Shared from EduVerse`;
                           // Fallback: copy to clipboard
                           await navigator.clipboard.writeText(eventText);
                           toast({
-                            title: 'Copied to clipboard',
-                            description: 'Event details have been copied to your clipboard',
+                            title: t('copiedToClipboard'),
+                            description: t('eventDetailsCopiedToClipboard'),
                           });
                         }
                       } catch (err) {
@@ -879,7 +933,7 @@ Shared from EduVerse`;
                     }}
                   >
                     <Share2 className="w-4 h-4" />
-                    Share
+                    {t('share')}
                   </Button>
                 </div>
               </div>
@@ -887,6 +941,6 @@ Shared from EduVerse`;
           </DialogContent>
         </Dialog>
       </div>
-    </StudentLayout>
+    </>
   );
 }

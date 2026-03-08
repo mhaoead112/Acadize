@@ -9,6 +9,8 @@ import { FillBlankQuestion } from '@/components/FillBlankQuestion';
 import { MatchingQuestion } from '@/components/MatchingQuestion';
 import QuestionContentRenderer from '@/components/QuestionContentRenderer';
 import '@/components/QuestionContentRenderer.css';
+import { usePortalI18n } from '@/hooks/usePortalI18n';
+
 
 // ============================================================================
 // TYPES
@@ -56,6 +58,7 @@ interface Exam {
 // ============================================================================
 
 const StudentExamPreview: React.FC = () => {
+  const { t } = usePortalI18n("common");
   const [, setLocation] = useLocation();
   const [match, params] = useRoute('/teacher/exams/:examId/preview');
   const { getAuthHeaders, isAuthenticated } = useAuth();

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { Suspense, useState, useEffect, useRef } from 'react';
 import { useRoute, useLocation } from 'wouter';
 import { useAuth } from '@/hooks/useAuth';
 import { apiEndpoint } from '@/lib/config';
@@ -7,12 +7,19 @@ import { useScreenRecording } from '@/hooks/useScreenRecording';
 import { useWebcamProctoring } from '@/hooks/useWebcamProctoring';
 import { ProctoringConsent, ProctoringOverlay, ProctoringAlert } from '@/components/exam';
 import { AutoSaveIndicator } from '@/components/AutoSaveIndicator';
-import { RichTextEditor } from '@/components/RichTextEditor';
-import { CodeEditor } from '@/components/CodeEditor';
 import { FillBlankQuestion } from '@/components/FillBlankQuestion';
 import { MatchingQuestion } from '@/components/MatchingQuestion';
 import QuestionContentRenderer from '@/components/QuestionContentRenderer';
 import '@/components/QuestionContentRenderer.css';
+import { usePortalI18n } from '@/hooks/usePortalI18n';
+
+
+const RichTextEditor = React.lazy(() =>
+  import('@/components/RichTextEditor').then((mod) => ({ default: mod.RichTextEditor }))
+);
+const CodeEditor = React.lazy(() =>
+  import('@/components/CodeEditor').then((mod) => ({ default: mod.CodeEditor }))
+);
 
 // ============================================================================
 // TYPES
@@ -65,6 +72,7 @@ type EventType = 'blur' | 'focus' | 'fullscreen_exit' | 'tab_switch' | 'copy_att
 // ============================================================================
 
 const StudentExamAttempt: React.FC = () => {
+  const { t } = usePortalI18n("common");
   const [, setLocation] = useLocation();
   const [match, params] = useRoute('/student/exams/:examId/attempt/:attemptId');
   const { user, getAuthHeaders, isAuthenticated } = useAuth();
@@ -87,6 +95,7 @@ const StudentExamAttempt: React.FC = () => {
   const [lastSaved, setLastSaved] = useState<Date | undefined>();
   const [showProctoringConsent, setShowProctoringConsent] = useState(false);
   const [proctoringAlert, setProctoringAlert] = useState<{ type: 'face_not_detected' | 'multiple_faces' | 'looking_away' | 'info'; isOpen: boolean }>({ type: 'info', isOpen: false });
+  const antiCheatEnabled = examData?.exam.antiCheatEnabled ?? false;
 
   // Refs for managing state without re-renders
   const answersRef = useRef(answers);
@@ -106,10 +115,10 @@ const StudentExamAttempt: React.FC = () => {
 
   // DevTools detection
   useDevToolsDetection(() => {
-    if (examData?.exam.antiCheatEnabled) {
+    if (antiCheatEnabled) {
       logEvent('devtools_open');
     }
-  }, 1000);
+  }, 4000, antiCheatEnabled);
 
   // Screen recording
   const {
@@ -148,7 +157,7 @@ const StudentExamAttempt: React.FC = () => {
     startProctoring,
     stopProctoring,
     isSupported: isProctoringSupported
-  } = useWebcamProctoring(attemptId, examData?.exam.antiCheatEnabled ?? false);
+  } = useWebcamProctoring(attemptId, antiCheatEnabled);
 
   // Show proctoring alert when violations occur
   useEffect(() => {
@@ -238,14 +247,14 @@ const StudentExamAttempt: React.FC = () => {
 
   // Start screen recording when exam loads (if anti-cheat enabled)
   useEffect(() => {
-    if (examData?.exam.antiCheatEnabled && isRecordingSupported && !isRecording) {
+    if (antiCheatEnabled && isRecordingSupported && !isRecording) {
       startRecording().catch((err) => {
         console.error('[RECORDING] Failed to start:', err);
         // Log event but allow exam to continue
         logEvent('page_unload'); // Use generic event for recording failure
       });
     }
-  }, [examData?.exam.antiCheatEnabled, isRecordingSupported]);
+  }, [antiCheatEnabled, isRecordingSupported]);
 
   // ============================================================================
   // TIMER & AUTO-SUBMIT
@@ -269,7 +278,7 @@ const StudentExamAttempt: React.FC = () => {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [examData]);
+  }, [antiCheatEnabled]);
 
   // ============================================================================
   // AUTO-SAVE ANSWERS
@@ -286,7 +295,7 @@ const StudentExamAttempt: React.FC = () => {
     return () => {
       if (autoSaveTimeoutRef.current) clearInterval(autoSaveTimeoutRef.current);
     };
-  }, [examData]);
+  }, [antiCheatEnabled]);
 
   const saveAnswers = async () => {
     if (!attemptId || isSubmittingRef.current) return;
@@ -441,7 +450,7 @@ const StudentExamAttempt: React.FC = () => {
 
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
-  }, [examData]);
+  }, [antiCheatEnabled]);
 
   // Context menu blocking
   useEffect(() => {
@@ -454,7 +463,7 @@ const StudentExamAttempt: React.FC = () => {
 
     document.addEventListener('contextmenu', handleContextMenu);
     return () => document.removeEventListener('contextmenu', handleContextMenu);
-  }, [examData]);
+  }, [antiCheatEnabled]);
 
   // Copy/Paste/Cut blocking
   useEffect(() => {
@@ -488,7 +497,7 @@ const StudentExamAttempt: React.FC = () => {
       document.removeEventListener('paste', handlePaste);
       document.removeEventListener('cut', handleCut);
     };
-  }, [examData]);
+  }, [antiCheatEnabled]);
 
   // Keyboard shortcut blocking
   useEffect(() => {
@@ -523,7 +532,7 @@ const StudentExamAttempt: React.FC = () => {
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [examData]);
+  }, [antiCheatEnabled]);
 
   // Prevent navigation away
   useEffect(() => {
@@ -537,7 +546,7 @@ const StudentExamAttempt: React.FC = () => {
 
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [examData]);
+  }, [antiCheatEnabled]);
 
   // ============================================================================
   // EXAM SUBMISSION
@@ -998,14 +1007,16 @@ const StudentExamAttempt: React.FC = () => {
                     </>
                   )}
 
-                  {/* Essay Question with Rich Text Editor */}
+                                    {/* Essay Question with Rich Text Editor */}
                   {currentQuestion.questionType === 'essay' && (
-                    <RichTextEditor
-                      value={(answers[currentQuestion.id] as string) || ''}
-                      onChange={(val) => handleAnswerChange(currentQuestion.id, val)}
-                      placeholder="Write your essay answer here... Be thorough and provide detailed explanations."
-                      maxLength={5000}
-                    />
+                    <Suspense fallback={<div className="rounded-lg border border-slate-300 dark:border-navy-border p-4 text-sm text-slate-600 dark:text-slate-400">Loading editor...</div>}>
+                      <RichTextEditor
+                        value={(answers[currentQuestion.id] as string) || ''}
+                        onChange={(val) => handleAnswerChange(currentQuestion.id, val)}
+                        placeholder="Write your essay answer here... Be thorough and provide detailed explanations."
+                        maxLength={5000}
+                      />
+                    </Suspense>
                   )}
 
                   {/* Short Answer Question */}
@@ -1033,13 +1044,15 @@ const StudentExamAttempt: React.FC = () => {
 
                   {/* Code Question with Monaco Editor */}
                   {currentQuestion.questionType === 'code' && (
-                    <CodeEditor
-                      value={(answers[currentQuestion.id] as string) || ''}
-                      onChange={(val) => handleAnswerChange(currentQuestion.id, val)}
-                      language="javascript"
-                      height="400px"
-                      maxLines={200}
-                    />
+                    <Suspense fallback={<div className="rounded-lg border border-slate-300 dark:border-navy-border p-4 text-sm text-slate-600 dark:text-slate-400">Loading code editor...</div>}>
+                      <CodeEditor
+                        value={(answers[currentQuestion.id] as string) || ''}
+                        onChange={(val) => handleAnswerChange(currentQuestion.id, val)}
+                        language="javascript"
+                        height="400px"
+                        maxLines={200}
+                      />
+                    </Suspense>
                   )}
 
                   {/* Matching Question with Dropdown Selectors */}
@@ -1130,3 +1143,4 @@ const StudentExamAttempt: React.FC = () => {
 };
 
 export default StudentExamAttempt;
+

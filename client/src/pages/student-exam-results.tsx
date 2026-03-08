@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useRoute, useLocation } from 'wouter';
 import { useAuth } from '@/hooks/useAuth';
 import { apiEndpoint } from '@/lib/config';
+import { usePortalI18n } from '@/hooks/usePortalI18n';
+
 
 interface ExamAttempt {
   id: string;
@@ -26,6 +28,7 @@ interface ExamInfo {
 }
 
 const StudentExamResults: React.FC = () => {
+  const { t } = usePortalI18n("common");
   const [, setLocation] = useLocation();
   const [match, params] = useRoute('/student/exams/:examId/results/:attemptId');
   const { getAuthHeaders } = useAuth();

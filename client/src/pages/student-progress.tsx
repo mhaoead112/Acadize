@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
-import StudentLayout from "@/components/StudentLayout";
+
 import NotificationBell from "@/components/NotificationBell";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, CheckCircle2, FileText, GraduationCap, AlertCircle } from "lucide-react";
+import { DashboardStatsSkeleton } from "@/components/skeletons/DashboardStatsSkeleton";
+
 import { apiEndpoint, assetUrl } from '@/lib/config';
 
 interface StudentAssignment {
@@ -71,7 +73,7 @@ export default function StudentProgressPage() {
   const grades = data?.grades || [];
 
   return (
-    <StudentLayout>
+    <>
       {/* Header */}
       <header className="flex items-center justify-between px-8 py-5 border-b border-slate-200 dark:border-white/10 bg-white/95 dark:bg-slate-950/95 backdrop-blur-sm z-20">
         <div className="flex-1">
@@ -88,9 +90,7 @@ export default function StudentProgressPage() {
       <div className="flex-1 overflow-y-auto p-4 md:p-8 lg:p-10 scroll-smooth bg-slate-50 dark:bg-slate-950">
         <div className="max-w-6xl mx-auto space-y-8">
         {isLoading ? (
-          <div className="flex items-center justify-center h-40 text-slate-500 dark:text-text-secondary">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-          </div>
+          <DashboardStatsSkeleton />
         ) : error ? (
           <Card className="border-red-500/20 bg-red-500/10 dark:bg-red-500/10">
             <CardContent className="py-6 text-sm text-red-600 dark:text-red-400 flex items-center gap-2">
@@ -209,6 +209,6 @@ export default function StudentProgressPage() {
         )}
         </div>
       </div>
-    </StudentLayout>
+    </>
   );
 }

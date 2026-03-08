@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useLocation } from 'wouter';
-import StudentLayout from '@/components/StudentLayout';
+
 import NotificationBell from '@/components/NotificationBell';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -152,16 +152,16 @@ export default function StudentProfilePage() {
                     bio: updated.bio
                 });
                 toast({
-                    title: 'Success',
-                    description: 'Profile updated successfully',
+                    title: t('toast.success'),
+                    description: t('profileUpdatedSuccessfully'),
                 });
             } else {
-                throw new Error('Failed to update profile');
+                throw new Error(t('failedToUpdateProfile'));
             }
         } catch (error) {
             toast({
-                title: 'Error',
-                description: 'Failed to update profile',
+                title: t('error'),
+                description: t('failedToUpdateProfile'),
                 variant: 'destructive'
             });
         }
@@ -174,8 +174,8 @@ export default function StudentProfilePage() {
         // Validate file type
         if (!file.type.startsWith('image/')) {
             toast({
-                title: 'Error',
-                description: 'Please select an image file',
+                title: t('error'),
+                description: t('pleaseSelectImageFile'),
                 variant: 'destructive'
             });
             return;
@@ -184,8 +184,8 @@ export default function StudentProfilePage() {
         // Validate file size (max 5MB)
         if (file.size > 5 * 1024 * 1024) {
             toast({
-                title: 'Error',
-                description: 'Image size must be less than 5MB',
+                title: t('error'),
+                description: t('imageSizeMustBeLessThan5MB'),
                 variant: 'destructive'
             });
             return;
@@ -211,21 +211,21 @@ export default function StudentProfilePage() {
                     profilePicture: updatedProfile.profilePicture
                 });
                 toast({
-                    title: 'Success',
-                    description: 'Profile picture updated successfully',
+                    title: t('toast.success'),
+                    description: t('profilePictureUpdatedSuccessfully'),
                 });
             } else {
                 const error = await response.json();
                 toast({
-                    title: 'Error',
-                    description: error.error || 'Failed to upload picture',
+                    title: t('error'),
+                    description: error.error || t('failedToUploadPicture'),
                     variant: 'destructive'
                 });
             }
         } catch (error) {
             toast({
-                title: 'Error',
-                description: 'Failed to update profile picture',
+                title: t('error'),
+                description: t('failedToUpdateProfilePicture'),
                 variant: 'destructive'
             });
         } finally {
@@ -239,16 +239,16 @@ export default function StudentProfilePage() {
         try {
             if (navigator.share) {
                 await navigator.share({
-                    title: `${profile?.fullName}'s Profile`,
-                    text: `Check out ${profile?.fullName}'s student profile`,
+                    title: t('profileShareTitle', { name: profile?.fullName }),
+                    text: t('profileShareText', { name: profile?.fullName }),
                     url: profileUrl
                 });
             } else {
                 // Fallback: copy to clipboard
                 await navigator.clipboard.writeText(profileUrl);
                 toast({
-                    title: 'Link Copied',
-                    description: 'Profile link copied to clipboard',
+                    title: t('linkCopied'),
+                    description: t('profileLinkCopied'),
                 });
             }
         } catch (error) {
@@ -259,30 +259,26 @@ export default function StudentProfilePage() {
 
     if (loading) {
         return (
-            <StudentLayout>
-                <div className="flex flex-col items-center justify-center gap-4 h-full">
-                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                    <p className="text-slate-600 dark:text-slate-400 text-sm">{t('common:common.loading')}</p>
-                </div>
-            </StudentLayout>
+            <div className="flex flex-col items-center justify-center gap-4 min-h-[60vh]">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                <p className="text-slate-600 dark:text-slate-400 text-sm">{t('common:common.loading')}</p>
+            </div>
         );
     }
 
     if (!profile) {
         return (
-            <StudentLayout>
-                <div className="flex items-center justify-center h-full">
-                    <p className="text-slate-400">Profile not found</p>
-                </div>
-            </StudentLayout>
+            <div className="flex items-center justify-center min-h-[60vh]">
+                <p className="text-slate-400">{t('profileNotFound')}</p>
+            </div>
         );
     }
 
     return (
-        <StudentLayout>
-            <header className="flex items-center justify-between px-8 py-5 border-b border-slate-200 dark:border-navy-border bg-white dark:bg-navy-card backdrop-blur-sm sticky top-0 z-20">
+        <>
+            {/* <header className="flex items-center justify-between px-8 py-5 border-b border-slate-200 dark:border-navy-border bg-white dark:bg-navy-card backdrop-blur-sm sticky top-0 z-20">
                 <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
-                    <Link href="/student/dashboard" className="hover:text-slate-900 dark:hover:text-white transition-colors">Home</Link>
+                    <Link href="/student/dashboard" className="hover:text-slate-900 dark:hover:text-white transition-colors">{t('home')}</Link>
                     <span className="material-symbols-outlined text-xs">chevron_right</span>
                     <span className="text-slate-900 dark:text-white font-medium">{t('profile')}</span>
                 </div>
@@ -297,7 +293,7 @@ export default function StudentProfilePage() {
                         )}
                     </div>
                 </div>
-            </header>
+            </header> */}
 
             <div className="flex-1 overflow-y-auto p-4 md:p-8 lg:p-10 scroll-smooth bg-slate-50 dark:bg-[#0a192f]">
                 <div className="max-w-6xl mx-auto flex flex-col gap-8">
@@ -333,20 +329,20 @@ export default function StudentProfilePage() {
                             <div className="flex flex-col gap-2 mt-2">
                                 <div>
                                     <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">{profile.fullName}</h1>
-                                    <p className="text-primary font-bold">{profile.grade || 'Student'}</p>
+                                    <p className="text-primary font-bold">{profile.grade || t('student')}</p>
                                 </div>
                                 <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-slate-500 dark:text-slate-400 mt-1 justify-center sm:justify-start">
                                     <div className="flex items-center gap-1.5">
                                         <span className="material-symbols-outlined text-[18px]">school</span>
-                                        Class of 2025
+                                        {t('classOfYear', { year: 2025 })}
                                     </div>
                                     <div className="flex items-center gap-1.5">
                                         <span className="material-symbols-outlined text-[18px]">id_card</span>
-                                        ID: {profile.id.slice(0, 8)}
+                                        {t('studentIdLabel', { id: profile.id.slice(0, 8) })}
                                     </div>
                                     <div className="flex items-center gap-1.5">
                                         <span className="material-symbols-outlined text-[18px] text-green-500">check_circle</span>
-                                        <span className="text-green-400 font-medium">Active</span>
+                                        <span className="text-green-400 font-medium">{t('active')}</span>
                                     </div>
                                 </div>
                             </div>
@@ -354,11 +350,11 @@ export default function StudentProfilePage() {
                         <div className="flex gap-3 w-full md:w-auto mt-4 md:mt-0">
                             <button onClick={handleShare} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg bg-slate-100 dark:bg-navy-dark border border-slate-200 dark:border-navy-border text-slate-900 dark:text-white font-medium hover:bg-slate-200 dark:hover:bg-navy-border transition-colors shadow-sm">
                                 <span className="material-symbols-outlined text-[20px]">share</span>
-                                <span>Share</span>
+                                <span>{t('share')}</span>
                             </button>
                             <button onClick={handleEditClick} className="flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg bg-primary text-white dark:text-navy-dark font-bold hover:opacity-90 transition-colors shadow-lg shadow-primary/20">
                                 <span className="material-symbols-outlined text-[20px] filled">edit</span>
-                                <span>Edit Profile</span>
+                                <span>{t('editProfile')}</span>
                             </button>
                         </div>
                     </div>
@@ -371,25 +367,25 @@ export default function StudentProfilePage() {
                                     onClick={() => setActiveTab('overview')}
                                     className={`pb-4 border-b-2 ${activeTab === 'overview' ? 'border-primary text-slate-900 dark:text-white' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'} font-bold text-sm flex items-center gap-2 transition-colors`}
                                 >
-                                    Overview
+                                    {t('overview')}
                                 </button>
                                 <button 
                                     onClick={() => setActiveTab('academic')}
                                     className={`pb-4 border-b-2 ${activeTab === 'academic' ? 'border-primary text-slate-900 dark:text-white' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'} font-medium text-sm flex items-center gap-2 transition-colors`}
                                 >
-                                    Academic History
+                                    {t('academicHistory')}
                                 </button>
                                 <button 
                                     onClick={() => setActiveTab('documents')}
                                     className={`pb-4 border-b-2 ${activeTab === 'documents' ? 'border-primary text-slate-900 dark:text-white' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'} font-medium text-sm flex items-center gap-2 transition-colors`}
                                 >
-                                    Documents
+                                    {t('documents')}
                                 </button>
                                 <button 
                                     onClick={() => setActiveTab('settings')}
                                     className={`pb-4 border-b-2 ${activeTab === 'settings' ? 'border-primary text-slate-900 dark:text-white' : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'} font-medium text-sm flex items-center gap-2 transition-colors`}
                                 >
-                                    Settings
+                                    {t('settings')}
                                 </button>
                             </nav>
                         </div>
@@ -403,40 +399,40 @@ export default function StudentProfilePage() {
                                     <div className="px-6 py-4 border-b border-slate-200 dark:border-navy-border flex justify-between items-center bg-slate-50 dark:bg-navy-dark">
                                         <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                                             <span className="material-symbols-outlined text-primary">person</span>
-                                            Student Information
+                                            {t('studentInformation')}
                                         </h3>
                                     </div>
                                     <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8">
                                         <div className="flex flex-col gap-1">
-                                            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Email Address</span>
+                                            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{t('emailAddress')}</span>
                                             <div className="flex items-center gap-2 text-slate-700 dark:text-slate-200 font-medium">
                                                 <span className="material-symbols-outlined text-sm text-slate-400">mail</span>
                                                 {profile.email}
                                             </div>
                                         </div>
                                         <div className="flex flex-col gap-1">
-                                            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Phone Number</span>
+                                            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{t('phoneNumber')}</span>
                                             <div className="flex items-center gap-2 text-slate-700 dark:text-slate-200 font-medium">
                                                 <span className="material-symbols-outlined text-sm text-slate-400">call</span>
-                                                {profile.phone || 'Not provided'}
+                                                {profile.phone || t('notProvided')}
                                             </div>
                                         </div>
                                         <div className="flex flex-col gap-1">
-                                            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Username</span>
+                                            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{t('username')}</span>
                                             <div className="flex items-center gap-2 text-slate-700 dark:text-slate-200 font-medium">
                                                 <span className="material-symbols-outlined text-sm text-slate-400">badge</span>
                                                 {profile.username}
                                             </div>
                                         </div>
                                         <div className="flex flex-col gap-1">
-                                            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Grade Level</span>
+                                            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{t('gradeLevel')}</span>
                                             <div className="flex items-center gap-2 text-slate-700 dark:text-slate-200 font-medium">
                                                 <span className="material-symbols-outlined text-sm text-slate-400">school</span>
-                                                {profile.grade || 'Not specified'}
+                                                {profile.grade || t('notSpecified')}
                                             </div>
                                         </div>
                                         <div className="md:col-span-2 flex flex-col gap-2 pt-4 border-t border-slate-200 dark:border-navy-border">
-                                            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Bio</span>
+                                            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{t('bio')}</span>
                                             <p className="text-slate-600 dark:text-slate-300 leading-relaxed text-sm">
                                                 {profile.bio || t('noBioProvided')}
                                             </p>
@@ -449,7 +445,7 @@ export default function StudentProfilePage() {
                                     <div className="px-6 py-4 border-b border-slate-200 dark:border-navy-border bg-slate-50 dark:bg-navy-dark">
                                         <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                                             <span className="material-symbols-outlined text-primary">school</span>
-                                            Enrolled Courses
+                                            {t('enrolledCourses')}
                                         </h3>
                                     </div>
                                     <div className="p-6">
@@ -462,10 +458,10 @@ export default function StudentProfilePage() {
                                                         </div>
                                                         <div className="flex-1">
                                                             <h4 className="text-slate-900 dark:text-white font-bold text-base">{enrollment.course.title}</h4>
-                                                            <p className="text-slate-500 dark:text-slate-400 text-sm">Course {index + 1}</p>
+                                                            <p className="text-slate-500 dark:text-slate-400 text-sm">{t('courseNumber', { number: index + 1 })}</p>
                                                         </div>
                                                         <Link href={`/student/courses/${enrollment.courseId}`}>
-                                                            <button className="text-xs font-bold bg-primary/20 text-primary px-3 py-1 rounded hover:bg-primary/30 transition-colors">View</button>
+                                                            <button className="text-xs font-bold bg-primary/20 text-primary px-3 py-1 rounded hover:bg-primary/30 transition-colors">{t('view')}</button>
                                                         </Link>
                                                     </div>
                                                 ))
@@ -483,19 +479,19 @@ export default function StudentProfilePage() {
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="bg-white dark:bg-navy-card p-4 rounded-xl border border-slate-200 dark:border-navy-border flex flex-col items-center justify-center text-center gap-1 hover:border-primary/50 transition-colors shadow-sm">
                                         <span className="text-3xl font-black text-slate-900 dark:text-white">{enrollments.length}</span>
-                                        <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wide">Courses</span>
+                                        <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wide">{t('courses')}</span>
                                     </div>
                                     <div className="bg-white dark:bg-navy-card p-4 rounded-xl border border-slate-200 dark:border-navy-border flex flex-col items-center justify-center text-center gap-1 hover:border-primary/50 transition-colors shadow-sm">
                                         <span className="text-3xl font-black text-slate-900 dark:text-white">{assignments.length}</span>
-                                        <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wide">Assignments</span>
+                                        <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wide">{t('assignments')}</span>
                                     </div>
                                 </div>
 
                                 {/* Today's Schedule */}
                                 <section className="bg-white dark:bg-navy-card rounded-xl border border-slate-200 dark:border-navy-border overflow-hidden flex flex-col shadow-sm">
                                     <div className="px-6 py-4 border-b border-slate-200 dark:border-navy-border flex justify-between items-center">
-                                        <h3 className="text-lg font-bold text-slate-900 dark:text-white">Today's Schedule</h3>
-                                        <Link href="/student/calendar" className="text-xs text-primary hover:underline font-bold">View All</Link>
+                                        <h3 className="text-lg font-bold text-slate-900 dark:text-white">{t('todaySchedule')}</h3>
+                                        <Link href="/student/calendar" className="text-xs text-primary hover:underline font-bold">{t('viewAll')}</Link>
                                     </div>
                                     <div className="p-4 flex flex-col gap-3">
                                         <p className="text-slate-500 dark:text-slate-400 text-sm">{t('noClassesScheduledToday')}</p>
@@ -507,22 +503,22 @@ export default function StudentProfilePage() {
 
                         {activeTab === 'academic' && (
                             <div className="bg-white dark:bg-navy-card rounded-xl border border-slate-200 dark:border-navy-border p-6">
-                                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Academic History</h3>
-                                <p className="text-slate-500 dark:text-slate-400">Academic history and transcripts will be displayed here.</p>
+                                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">{t('academicHistory')}</h3>
+                                <p className="text-slate-500 dark:text-slate-400">{t('academicHistoryPlaceholder')}</p>
                             </div>
                         )}
 
                         {activeTab === 'documents' && (
                             <div className="bg-white dark:bg-navy-card rounded-xl border border-slate-200 dark:border-navy-border p-6">
-                                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Documents</h3>
-                                <p className="text-slate-500 dark:text-slate-400">Your documents and files will be displayed here.</p>
+                                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">{t('documents')}</h3>
+                                <p className="text-slate-500 dark:text-slate-400">{t('documentsPlaceholder')}</p>
                             </div>
                         )}
 
                         {activeTab === 'settings' && (
                             <div className="bg-white dark:bg-navy-card rounded-xl border border-slate-200 dark:border-navy-border p-6">
-                                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Settings</h3>
-                                <p className="text-slate-500 dark:text-slate-400">Account settings and preferences will be displayed here.</p>
+                                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">{t('settings')}</h3>
+                                <p className="text-slate-500 dark:text-slate-400">{t('settingsPlaceholder')}</p>
                             </div>
                         )}
                     </div>
@@ -534,7 +530,7 @@ export default function StudentProfilePage() {
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-all" onClick={() => setIsEditing(false)}>
                     <div className="bg-white dark:bg-navy-card w-full max-w-2xl rounded-2xl shadow-2xl border border-slate-200 dark:border-navy-border overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
                         <div className="px-6 py-4 border-b border-slate-200 dark:border-navy-border flex justify-between items-center bg-slate-50 dark:bg-navy-dark">
-                            <h3 className="text-xl font-bold text-slate-900 dark:text-white">Edit Profile</h3>
+                            <h3 className="text-xl font-bold text-slate-900 dark:text-white">{t('editProfile')}</h3>
                             <button onClick={() => setIsEditing(false)} className="text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
                                 <span className="material-symbols-outlined">close</span>
                             </button>
@@ -543,7 +539,7 @@ export default function StudentProfilePage() {
                         <form onSubmit={handleSave} className="p-6 overflow-y-auto custom-scrollbar">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="col-span-2 md:col-span-1">
-                                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Full Name</label>
+                                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">{t('fullName')}</label>
                                     <input 
                                         type="text" 
                                         value={editForm.fullName} 
@@ -552,7 +548,7 @@ export default function StudentProfilePage() {
                                     />
                                 </div>
                                 <div className="col-span-2 md:col-span-1">
-                                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Grade</label>
+                                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">{t('grade')}</label>
                                     <input 
                                         type="text" 
                                         value={editForm.grade} 
@@ -561,7 +557,7 @@ export default function StudentProfilePage() {
                                     />
                                 </div>
                                 <div className="col-span-2 md:col-span-1">
-                                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Email</label>
+                                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">{t('email')}</label>
                                     <input 
                                         type="email" 
                                         value={editForm.email} 
@@ -570,7 +566,7 @@ export default function StudentProfilePage() {
                                     />
                                 </div>
                                 <div className="col-span-2 md:col-span-1">
-                                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Phone</label>
+                                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">{t('phone')}</label>
                                     <input 
                                         type="text" 
                                         value={editForm.phone} 
@@ -579,7 +575,7 @@ export default function StudentProfilePage() {
                                     />
                                 </div>
                                 <div className="col-span-2">
-                                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">Bio</label>
+                                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">{t('bio')}</label>
                                     <textarea 
                                         rows={4}
                                         value={editForm.bio} 
@@ -595,19 +591,19 @@ export default function StudentProfilePage() {
                                     onClick={() => setIsEditing(false)}
                                     className="px-6 py-2.5 rounded-lg border border-slate-300 dark:border-navy-border text-slate-700 dark:text-slate-300 font-bold hover:bg-slate-100 dark:hover:bg-navy-dark transition-colors"
                                 >
-                                    Cancel
+                                    {t('cancel')}
                                 </button>
                                 <button 
                                     type="submit"
                                     className="px-6 py-2.5 rounded-lg bg-primary text-white dark:text-navy-dark font-bold hover:opacity-90 transition-all shadow-lg shadow-primary/20"
                                 >
-                                    Save Changes
+                                    {t('saveChanges')}
                                 </button>
                             </div>
                         </form>
                     </div>
                 </div>
             )}
-        </StudentLayout>
+        </>
     );
 }

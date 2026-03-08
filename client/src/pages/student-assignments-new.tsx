@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { apiEndpoint } from '@/lib/config';
+import { usePortalI18n } from '@/hooks/usePortalI18n';
+
 
 interface APIAssignment {
   id: number;
@@ -58,6 +60,7 @@ const fetchAssignments = async (token: string): Promise<APIAssignment[]> => {
 };
 
 export default function StudentAssignments() {
+  const { t } = usePortalI18n("common");
   const { token, user } = useAuth();
   const { toast } = useToast();
   

@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
-import StudentLayout from '../components/StudentLayout';
+
 import { useAuth } from '../hooks/useAuth';
+import { apiEndpoint } from '@/lib/config';
+import { usePortalI18n } from '@/hooks/usePortalI18n';
+
 
 interface Question {
   id: string;
@@ -21,8 +24,9 @@ interface RetakeAttempt {
 }
 
 export default function StudentRetakeAttempt() {
+  const { t } = usePortalI18n("common");
   const [location, setLocation] = useLocation();
-  const { user } = useAuth();
+  const { getAuthHeaders } = useAuth();
 
   // Extract retakeId from URL
   const retakeId = location.split('/').pop();
@@ -45,8 +49,8 @@ export default function StudentRetakeAttempt() {
   const fetchRetake = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/retakes/${retakeId}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` },
+      const response = await fetch(apiEndpoint(`/api/retakes/${retakeId}`), {
+        headers: getAuthHeaders(),
       });
 
       if (!response.ok) throw new Error('Failed to fetch retake');
@@ -87,11 +91,11 @@ export default function StudentRetakeAttempt() {
         answer,
       }));
 
-      const response = await fetch(`/api/retakes/${retakeId}/submit`, {
+      const response = await fetch(apiEndpoint(`/api/retakes/${retakeId}/submit`), {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+          ...getAuthHeaders(),
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           answers: formattedAnswers,
@@ -105,7 +109,13 @@ export default function StudentRetakeAttempt() {
       }
 
       const result = await response.json();
-      setLocation(`/student/exam-results/${result.attemptId}`);
+      const examId = result?.examId || attempt?.retake?.examId || attempt?.retake?.exam?.id;
+      const attemptId = result?.attemptId || result?.id;
+      if (examId && attemptId) {
+        setLocation(`/student/exams/${examId}/results/${attemptId}`);
+      } else {
+        setLocation('/student/exams');
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to submit retake');
     } finally {
@@ -115,24 +125,20 @@ export default function StudentRetakeAttempt() {
 
   if (loading) {
     return (
-      <StudentLayout>
-        <div className="w-full h-screen flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-        </div>
-      </StudentLayout>
+      <div className="w-full flex items-center justify-center min-h-[60vh]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
     );
   }
 
   if (error || !attempt) {
     return (
-      <StudentLayout>
-        <div className="w-full max-w-4xl mx-auto p-4 sm:p-8">
-          <div className="bg-red-500/10 border border-red-500/30 p-4 rounded-xl flex items-center gap-3 text-red-400">
-            <span className="material-symbols-outlined">error</span>
-            <p className="text-sm font-medium">{error || 'Failed to load retake'}</p>
-          </div>
+      <div className="w-full max-w-4xl mx-auto p-4 sm:p-8">
+        <div className="bg-red-500/10 border border-red-500/30 p-4 rounded-xl flex items-center gap-3 text-red-400">
+          <span className="material-symbols-outlined">error</span>
+          <p className="text-sm font-medium">{error || 'Failed to load retake'}</p>
         </div>
-      </StudentLayout>
+      </div>
     );
   }
 
@@ -140,7 +146,7 @@ export default function StudentRetakeAttempt() {
   const allAnswered = Object.values(answers).every((a) => a !== null);
 
   return (
-    <StudentLayout>
+    <>
       <div className="w-full max-w-4xl mx-auto p-4 sm:p-8">
         {/* Info Banner */}
         {showInfo && (
@@ -331,6 +337,6 @@ export default function StudentRetakeAttempt() {
           </button>
         </div>
       </div>
-    </StudentLayout>
+    </>
   );
 }

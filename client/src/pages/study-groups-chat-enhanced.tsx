@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import StudentLayout from "@/components/StudentLayout";
 import { useAuth } from "@/hooks/useAuth";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import { apiEndpoint } from "@/lib/config";
@@ -22,9 +21,14 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { format } from "date-fns";
+import { useTranslation } from "react-i18next";
 // import { StudentLayout } from "@/components/StudentLayout";
 // Emoji picker data (simple version)
-const EMOJIS = ["😀", "😃", "😄", "😁", "😅", "😂", "🤣", "😊", "😇", "🙂", "🙃", "😉", "😌", "😍", "🥰", "😘", "😗", "😙", "😚", "😋", "😛", "😝", "😜", "🤪", "🤨", "🧐", "🤓", "😎", "🤩", "🥳", "😏", "😒", "😞", "😔", "😟", "😕", "🙁", "☹️", "😣", "😖", "😫", "😩", "🥺", "😢", "😭", "😤", "😠", "😡", "🤬", "🤯", "😳", "🥵", "🥶", "😱", "😨", "😰", "😥", "😓", "🤗", "🤔", "🤭", "🤫", "🤥", "😶", "😐", "😑", "😬", "🙄", "😯", "😦", "😧", "😮", "😲", "🥱", "😴", "🤤", "😪", "😵", "🤐", "🥴", "🤢", "🤮", "🤧", "😷", "🤒", "🤕", "👍", "👎", "👊", "✊", "🤛", "🤜", "🤞", "✌️", "🤟", "🤘", "👌", "🤌", "🤏", "👈", "👉", "👆", "👇", "☝️", "👋", "🤚", "🖐️", "✋", "🖖", "👏", "🙌", "👐", "🤲", "🤝", "🙏", "💪", "❤️", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "🤎", "💔", "❤️‍🔥", "❤️‍🩹", "💕", "💞", "💓", "💗", "💖", "💘", "💝", "💟", "☮️", "✝️", "☪️", "🕉️", "☸️", "✡️", "🔯", "🕎", "☯️", "☦️", "🛐", "⛎", "♈", "♉", "♊", "♋", "♌", "♍", "♎", "♏", "♐", "♑", "♒", "♓", "🆔", "⚛️", "🉑", "☢️", "☣️", "📴", "📳", "🈶", "🈚", "🈸", "🈺", "🈷️", "✴️", "🆚", "💮", "🉐", "㊙️", "㊗️", "🈴", "🈵", "🈹", "🈲", "🅰️", "🅱️", "🆎", "🆑", "🅾️", "🆘", "❌", "⭕", "🛑", "⛔", "📛", "🚫", "💯", "💢", "♨️", "🚷", "🚯", "🚳", "🚱", "🔞", "📵", "🚭", "❗", "❕", "❓", "❔", "‼️", "⁉️", "🔅", "🔆", "〽️", "⚠️", "🚸", "🔱", "⚜️", "🔰", "♻️", "✅", "🈯", "💹", "❇️", "✳️", "❎", "🌐", "💠"];
+const EMOJIS = [
+  "??", "??", "??", "??", "??", "??", "??", "??", "??", "??",
+  "??", "??", "??", "??", "??", "??", "??", "??", "??", "??",
+  "??", "?", "??", "??", "??", "??", "??", "??", "??", "??"
+];
 
 // Add custom styles for animations
 const animationStyles = `
@@ -290,6 +294,7 @@ interface TypingUser {
 }
 
 export default function StudyGroupsChatPage() {
+  const { t } = useTranslation('dashboard');
   const { user, token, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   
@@ -516,9 +521,12 @@ export default function StudyGroupsChatPage() {
 
       if (response.ok) {
         const message = await response.json();
-        // Don't add message locally - let WebSocket handle it for consistency
-        
-        // Send WebSocket message for real-time delivery
+
+        // Add message to local state immediately for instant feedback
+        // (WebSocket echo is unreliable when WS keeps reconnecting)
+        setMessages(prev => [...prev, message]);
+
+        // Also send via WebSocket for real-time delivery to other participants
         wsSendMessage({
           type: 'message',
           conversationId: selectedConversation.conversationId,
@@ -549,8 +557,8 @@ export default function StudyGroupsChatPage() {
     } catch (error) {
       console.error("Failed to send message:", error);
       toast({
-        title: "Error",
-        description: "Failed to send message",
+        title: t('error'),
+        description: t('failedToSendMessage'),
         variant: "destructive",
       });
     } finally {
@@ -620,8 +628,8 @@ export default function StudyGroupsChatPage() {
             // Media files will be updated when WebSocket message arrives
             
             toast({
-              title: "Success",
-              description: "File uploaded successfully",
+              title: t('toast.success'),
+              description: t('fileUploadedSuccessfully'),
             });
           }
         }
@@ -629,8 +637,8 @@ export default function StudyGroupsChatPage() {
 
       xhr.addEventListener('error', () => {
         toast({
-          title: "Error",
-          description: "Failed to upload file",
+          title: t('error'),
+          description: t('failedToUploadFile'),
           variant: "destructive",
         });
       });
@@ -644,8 +652,8 @@ export default function StudyGroupsChatPage() {
     } catch (error) {
       console.error("Failed to upload file:", error);
       toast({
-        title: "Error",
-        description: "Failed to upload file",
+        title: t('error'),
+        description: t('failedToUploadFile'),
         variant: "destructive",
       });
     } finally {
@@ -710,8 +718,8 @@ export default function StudyGroupsChatPage() {
   const handleCreateGroup = async () => {
     if (!groupName.trim()) {
       toast({
-        title: "Error",
-        description: "Group name is required",
+        title: t('error'),
+        description: t('groupNameRequired'),
         variant: "destructive",
       });
       return;
@@ -741,15 +749,15 @@ export default function StudyGroupsChatPage() {
         setSelectedMembers([]);
         
         toast({
-          title: "Success",
-          description: "Group created successfully",
+          title: t('toast.success'),
+          description: t('groupCreatedSuccessfully'),
         });
       }
     } catch (error) {
       console.error("Failed to create group:", error);
       toast({
-        title: "Error",
-        description: "Failed to create group",
+        title: t('error'),
+        description: t('failedToCreateGroup'),
         variant: "destructive",
       });
     }
@@ -773,8 +781,8 @@ export default function StudyGroupsChatPage() {
 
       if (response.ok) {
         toast({
-          title: "Success",
-          description: "Members added successfully",
+          title: t('toast.success'),
+          description: t('membersAddedSuccessfully'),
         });
         setShowAddMembersDialog(false);
         setMembersToAdd([]);
@@ -787,8 +795,8 @@ export default function StudyGroupsChatPage() {
     } catch (error) {
       console.error("Failed to add members:", error);
       toast({
-        title: "Error",
-        description: "Failed to add members",
+        title: t('error'),
+        description: t('failedToAddMembers'),
         variant: "destructive",
       });
     }
@@ -834,8 +842,8 @@ export default function StudyGroupsChatPage() {
     } catch (error) {
       console.error("Failed to start direct message:", error);
       toast({
-        title: "Error",
-        description: "Failed to start conversation",
+        title: t('error'),
+        description: t('failedToStartConversation'),
         variant: "destructive",
       });
     }
@@ -1004,33 +1012,45 @@ export default function StudyGroupsChatPage() {
   // Show loading state while auth is loading
   if (authLoading || isLoading) {
     return (
-      <StudentLayout>
-        <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading...</p>
+      <div className="p-6 h-[calc(100vh-4rem)] bg-white dark:bg-background transition-colors duration-300">
+        <div className="grid gap-4 md:grid-cols-[340px_1fr_320px] h-full">
+          <div className="rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800 p-4 space-y-3">
+            <div className="h-8 w-40 rounded bg-slate-200 dark:bg-slate-700 animate-pulse" />
+            <div className="h-10 w-full rounded bg-slate-200 dark:bg-slate-700 animate-pulse" />
+            <div className="space-y-2">
+              <div className="h-16 w-full rounded bg-slate-200 dark:bg-slate-700 animate-pulse" />
+              <div className="h-16 w-full rounded bg-slate-200 dark:bg-slate-700 animate-pulse" />
+              <div className="h-16 w-full rounded bg-slate-200 dark:bg-slate-700 animate-pulse" />
+            </div>
+          </div>
+          <div className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 p-4 space-y-3">
+            <div className="h-10 w-full rounded bg-slate-100 dark:bg-slate-800 animate-pulse" />
+            <div className="h-full rounded bg-slate-100 dark:bg-slate-800 animate-pulse" />
+          </div>
+          <div className="hidden md:block rounded-2xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800 p-4 space-y-3">
+            <div className="h-6 w-28 rounded bg-slate-200 dark:bg-slate-700 animate-pulse" />
+            <div className="h-20 w-full rounded bg-slate-200 dark:bg-slate-700 animate-pulse" />
+            <div className="h-20 w-full rounded bg-slate-200 dark:bg-slate-700 animate-pulse" />
           </div>
         </div>
-      </StudentLayout>
+      </div>
     );
   }
 
   // Show error if not authenticated
   if (!token || !user) {
     return (
-      <StudentLayout>
-        <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
-          <div className="text-center">
-            <p className="text-gray-600 mb-4">Please log in to access study groups</p>
-            <Button onClick={() => window.location.href = '/login'}>Go to Login</Button>
-          </div>
+      <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
+        <div className="text-center">
+          <p className="text-gray-600 mb-4">{t('pleaseLoginToAccessStudyGroups')}</p>
+          <Button onClick={() => window.location.href = '/login'}>{t('goToLogin')}</Button>
         </div>
-      </StudentLayout>
+      </div>
     );
   }
 
   return (
-    <StudentLayout>
+    <div className="flex flex-col h-full">
       <style>{animationStyles}</style>
       <style>{`
         .material-symbols-outlined {
@@ -1059,39 +1079,39 @@ export default function StudyGroupsChatPage() {
           {/* Header & Search */}
           <div className="p-6 pb-2 flex flex-col gap-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white transition-colors duration-300">Messages</h2>
+              <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white transition-colors duration-300">{t('messages')}</h2>
               <div className="flex gap-2">
                 {/* Group creation disabled for students */}
                 {user?.role === 'teacher' && (
                   <Dialog open={showCreateGroupDialog} onOpenChange={setShowCreateGroupDialog}>
                     <DialogTrigger asChild>
-                      <button className="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-700/80 text-slate-900 dark:text-white rounded-full p-2 transition-colors duration-300" title="New Group">
+                      <button className="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-700/80 text-slate-900 dark:text-white rounded-full p-2 transition-colors duration-300" title={t('newGroup')}>
                         <Users className="h-5 w-5" />
                       </button>
                     </DialogTrigger>
                   <DialogContent className="bg-slate-800 border-white/10 text-white sm:max-w-[500px]">
                     <DialogHeader>
-                      <DialogTitle>Create New Group</DialogTitle>
+                      <DialogTitle>{t('createNewGroup')}</DialogTitle>
                       <DialogDescription className="text-slate-400">
-                        Create a new study group and invite members
+                        {t('createStudyGroupInviteMembers')}
                       </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                       <div className="space-y-2">
-                        <Label htmlFor="group-name" className="text-slate-300">Group Name</Label>
+                        <Label htmlFor="group-name" className="text-slate-300">{t('groupName')}</Label>
                         <Input
                           id="group-name"
-                          placeholder="Enter group name"
+                          placeholder={t('enterGroupName')}
                           value={groupName}
                           onChange={(e) => setGroupName(e.target.value)}
                           className="bg-slate-700 border-white/10 text-white placeholder:text-slate-500"
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="group-description" className="text-slate-300">Description</Label>
+                        <Label htmlFor="group-description" className="text-slate-300">{t('description')}</Label>
                         <Textarea
                           id="group-description"
-                          placeholder="Enter group description"
+                          placeholder={t('enterGroupDescription')}
                           value={groupDescription}
                           onChange={(e) => setGroupDescription(e.target.value)}
                           rows={3}
@@ -1099,7 +1119,7 @@ export default function StudyGroupsChatPage() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-slate-300">Select Members</Label>
+                        <Label className="text-slate-300">{t('selectMembers')}</Label>
                         <ScrollArea className="h-[200px] border border-white/10 rounded-lg p-2 bg-slate-700/30">
                           {availableUsers.map((user) => (
                             <div key={user.id} className="flex items-center space-x-2 py-2 hover:bg-white/5 rounded px-2">
@@ -1136,10 +1156,10 @@ export default function StudyGroupsChatPage() {
                     </div>
                     <DialogFooter>
                       <Button variant="ghost" onClick={() => setShowCreateGroupDialog(false)} className="text-slate-400 hover:text-white hover:bg-white/10">
-                        Cancel
+                        {t('cancel')}
                       </Button>
                       <Button onClick={handleCreateGroup} className="bg-primary text-black hover:bg-primary/90">
-                        Create Group
+                        {t('createGroup')}
                       </Button>
                     </DialogFooter>
                   </DialogContent>
@@ -1148,24 +1168,24 @@ export default function StudyGroupsChatPage() {
 
                 <Dialog open={showNewDMDialog} onOpenChange={setShowNewDMDialog}>
                   <DialogTrigger asChild>
-                    <button className="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-700/80 text-slate-900 dark:text-white rounded-full p-2 transition-colors duration-300" title="New Message">
+                    <button className="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-700/80 text-slate-900 dark:text-white rounded-full p-2 transition-colors duration-300" title={t('newMessage')}>
                       <MessageCircle className="h-5 w-5" />
                     </button>
                   </DialogTrigger>
                   <DialogContent className="bg-slate-800 border-white/10 text-white sm:max-w-[500px]">
                     <DialogHeader>
-                      <DialogTitle>Start a Direct Message</DialogTitle>
+                      <DialogTitle>{t('startDirectMessage')}</DialogTitle>
                       <DialogDescription className="text-slate-400">
-                        Select a user to start a conversation
+                        {t('selectUserToStartConversation')}
                       </DialogDescription>
                     </DialogHeader>
                     <div className="py-4">
                       <div className="space-y-2 mb-4">
-                        <Label className="text-slate-300">Search for a user</Label>
+                        <Label className="text-slate-300">{t('searchForUser')}</Label>
                         <div className="relative">
                           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                           <Input
-                            placeholder="Type a name or username..."
+                            placeholder={t('typeNameOrUsername')}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="pl-10 bg-slate-700 border-white/10 text-white placeholder:text-slate-500"
@@ -1201,7 +1221,7 @@ export default function StudyGroupsChatPage() {
                         setShowNewDMDialog(false);
                         setSearchQuery("");
                       }} className="text-slate-400 hover:text-white hover:bg-white/10">
-                        Cancel
+                        {t('cancel')}
                       </Button>
                     </DialogFooter>
                   </DialogContent>
@@ -1215,7 +1235,7 @@ export default function StudyGroupsChatPage() {
               </div>
               <input 
                 className="w-full bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 text-sm rounded-full py-3 pl-12 pr-4 focus:outline-none focus:ring-2 focus:ring-primary/50 border-none transition-colors duration-300" 
-                placeholder="Search messages..." 
+                placeholder={t('searchMessages')} 
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -1229,19 +1249,19 @@ export default function StudyGroupsChatPage() {
                   value="all" 
                   className="text-xs data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-slate-900 dark:data-[state=active]:text-white text-slate-500 dark:text-slate-400 transition-colors duration-300"
                 >
-                  All
+                  {t('allCategory')}
                 </TabsTrigger>
                 <TabsTrigger 
                   value="direct" 
                   className="text-xs data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-slate-900 dark:data-[state=active]:text-white text-slate-500 dark:text-slate-400 transition-colors duration-300"
                 >
-                  Direct
+                  {t('directMessagesTab')}
                 </TabsTrigger>
                 <TabsTrigger 
                   value="channels" 
                   className="text-xs data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:text-slate-900 dark:data-[state=active]:text-white text-slate-500 dark:text-slate-400 transition-colors duration-300"
                 >
-                  Groups
+                  {t('groupsTab')}
                 </TabsTrigger>
               </TabsList>
             </Tabs>
@@ -1284,7 +1304,7 @@ export default function StudyGroupsChatPage() {
                     </div>
                     <div className="flex justify-between items-center">
                       <p className="text-slate-400 text-sm truncate max-w-[140px]">
-                        {dm.lastMessage || 'No messages yet'}
+                        {dm.lastMessage || t('noMessagesYet')}
                       </p>
                       {(dm.unreadCount ?? 0) > 0 && (
                         <Badge className="bg-primary text-black text-[10px] h-5 min-w-[20px] flex items-center justify-center px-1">
@@ -1329,7 +1349,7 @@ export default function StudyGroupsChatPage() {
                     </div>
                     <div className="flex justify-between items-center">
                       <p className="text-slate-400 text-sm truncate max-w-[140px]">
-                        {group.lastMessage || group.description || 'No messages yet'}
+                        {group.lastMessage || group.description || t('noMessagesYet')}
                       </p>
                       {(group.unreadCount ?? 0) > 0 && (
                         <Badge className="bg-primary text-black text-[10px] h-5 min-w-[20px] flex items-center justify-center px-1">
@@ -1379,7 +1399,7 @@ export default function StudyGroupsChatPage() {
                       <div className="min-w-0">
                         <h2 className="font-bold text-slate-900 dark:text-white text-lg leading-tight truncate transition-colors duration-300">{selectedConversation.fullName}</h2>
                         <p className="text-primary text-xs font-medium">
-                          {selectedConversation.isOnline ? 'Online' : 'Offline'}
+                          {selectedConversation.isOnline ? t('online') : t('offline')}
                         </p>
                       </div>
                     </>
@@ -1394,7 +1414,7 @@ export default function StudyGroupsChatPage() {
                       </div>
                       <div className="min-w-0">
                         <h2 className="font-bold text-slate-900 dark:text-white text-lg leading-tight truncate transition-colors duration-300">{selectedConversation.name}</h2>
-                        <p className="text-primary text-xs font-medium">{selectedConversation.memberCount} members • Active</p>
+                        <p className="text-primary text-xs font-medium">{t('membersCount', { count: selectedConversation.memberCount })} - {t('active')}</p>
                       </div>
                     </>
                   )}
@@ -1496,7 +1516,7 @@ export default function StudyGroupsChatPage() {
                       <span className="w-1.5 h-1.5 bg-slate-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                     </div>
                     <span>
-                      {typingUsers.map(u => u.fullName).join(', ')} {typingUsers.length === 1 ? 'is' : 'are'} typing...
+                      {typingUsers.map(u => u.fullName).join(', ')} {typingUsers.length === 1 ? t('isTyping') : t('areTyping')}
                     </span>
                   </div>
                 )}
@@ -1540,7 +1560,7 @@ export default function StudyGroupsChatPage() {
                   <div className="flex-1 py-2 relative">
                     <Textarea
                       ref={messageInputRef}
-                      placeholder={`Message ${conversationType === 'dm' ? selectedConversation.fullName : selectedConversation.name}...`}
+                      placeholder={t('messagePlaceholderWithName', { name: conversationType === 'dm' ? selectedConversation.fullName : selectedConversation.name })}
                       value={newMessage}
                       onChange={handleMessageInputChange}
                       onKeyDown={(e) => {
@@ -1557,7 +1577,7 @@ export default function StudyGroupsChatPage() {
                     {showEmojiPicker && (
                       <div className="absolute bottom-full left-0 mb-4 bg-slate-800 border border-white/10 rounded-xl shadow-2xl p-3 w-[320px] max-h-[300px] overflow-y-auto z-50 animate-scale-in">
                         <div className="flex items-center justify-between mb-2 pb-2 border-b border-white/10">
-                          <span className="text-sm font-medium text-white">Emoji</span>
+                          <span className="text-sm font-medium text-white">{t('emoji')}</span>
                           <Button 
                             variant="ghost" 
                             size="icon" 
@@ -1603,15 +1623,15 @@ export default function StudyGroupsChatPage() {
                   </button>
                 </div>
                 <div className="text-center mt-2">
-                  <p className="text-[10px] text-slate-500">Press Enter to send</p>
+                  <p className="text-[10px] text-slate-500">{t('pressEnterToSend')}</p>
                 </div>
               </div>
             </>
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center text-slate-400 dark:text-slate-500">
               <MessageCircle className="h-16 w-16 mb-4 opacity-20" />
-              <p className="text-lg font-medium text-slate-600 dark:text-slate-400 transition-colors duration-300">Select a conversation</p>
-              <p className="text-sm text-slate-500 dark:text-slate-600 transition-colors duration-300">Choose a conversation from the sidebar to start chatting</p>
+              <p className="text-lg font-medium text-slate-600 dark:text-slate-400 transition-colors duration-300">{t('selectConversation')}</p>
+              <p className="text-sm text-slate-500 dark:text-slate-600 transition-colors duration-300">{t('chooseConversationFromSidebar')}</p>
             </div>
           )}
         </div>
@@ -1644,25 +1664,25 @@ export default function StudyGroupsChatPage() {
                   <p className="text-sm text-slate-400 mt-1">
                     {conversationType === 'dm' 
                       ? `@${selectedConversation.username}` 
-                      : `${selectedConversation.memberCount} members`}
+                      : t('membersCount', { count: selectedConversation.memberCount })}
                   </p>
                 </div>
 
                 {/* About */}
                 {conversationType === 'group' && (
                   <div>
-                    <h3 className="font-semibold text-white mb-2 text-sm">About</h3>
+                    <h3 className="font-semibold text-white mb-2 text-sm">{t('about')}</h3>
                     <div className="bg-surface-accent/30 rounded-lg p-4 border border-white/5">
-                      <p className="text-sm text-slate-400">{selectedConversation.description || 'No description'}</p>
+                      <p className="text-sm text-slate-400">{selectedConversation.description || t('noDescriptionAvailable')}</p>
                     </div>
                   </div>
                 )}
 
-                {/* Photos & Videos */}
+                {/* {t('photosAndVideos')} */}
                 <div>
                   <h3 className="font-semibold text-white mb-3 flex items-center gap-2 text-sm">
                     <ImageIcon className="h-4 w-4" />
-                    Photos & Videos
+                    {t('photosAndVideos')}
                   </h3>
                   {mediaFiles.length > 0 ? (
                     <div className="grid grid-cols-3 gap-2">
@@ -1685,15 +1705,15 @@ export default function StudyGroupsChatPage() {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm text-slate-500">No media files yet</p>
+                    <p className="text-sm text-slate-500">{t('noMediaFilesYet')}</p>
                   )}
                 </div>
 
-                {/* Shared Links */}
+                {/* {t('sharedLinks')} */}
                 <div>
                   <h3 className="font-semibold text-white mb-3 flex items-center gap-2 text-sm">
                     <LinkIcon className="h-4 w-4" />
-                    Shared Links
+                    {t('sharedLinks')}
                   </h3>
                   {sharedLinks.length > 0 ? (
                     <div className="space-y-2">
@@ -1710,7 +1730,7 @@ export default function StudyGroupsChatPage() {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm text-slate-500">No shared links yet</p>
+                    <p className="text-sm text-slate-500">{t('noSharedLinksYet')}</p>
                   )}
                 </div>
 
@@ -1720,7 +1740,7 @@ export default function StudyGroupsChatPage() {
                     <div className="flex items-center justify-between mb-3">
                       <h3 className="font-semibold text-white flex items-center gap-2 text-sm">
                         <Users className="h-4 w-4" />
-                        Members ({groupMembers.length})
+                        {t('membersCount', { count: groupMembers.length })}
                       </h3>
                       <Dialog open={showAddMembersDialog} onOpenChange={setShowAddMembersDialog}>
                         <DialogTrigger asChild>
@@ -1730,9 +1750,9 @@ export default function StudyGroupsChatPage() {
                         </DialogTrigger>
                         <DialogContent className="bg-slate-800 border-white/10 text-white">
                           <DialogHeader>
-                            <DialogTitle>Add Members</DialogTitle>
+                            <DialogTitle>{t('addMembers')}</DialogTitle>
                             <DialogDescription className="text-slate-400">
-                              Select users to add to this group
+                              {t('selectUsersToAddToGroup')}
                             </DialogDescription>
                           </DialogHeader>
                           <div className="py-4">
@@ -1773,10 +1793,10 @@ export default function StudyGroupsChatPage() {
                           </div>
                           <DialogFooter>
                             <Button variant="ghost" onClick={() => setShowAddMembersDialog(false)} className="text-slate-400 hover:text-white hover:bg-white/10">
-                              Cancel
+                              {t('cancel')}
                             </Button>
                             <Button onClick={handleAddMembers} disabled={membersToAdd.length === 0} className="bg-primary text-black hover:bg-primary/90">
-                              Add Members
+                              {t('addMembers')}
                             </Button>
                           </DialogFooter>
                         </DialogContent>
@@ -1799,7 +1819,7 @@ export default function StudyGroupsChatPage() {
                             <p className="text-sm font-medium text-white truncate">
                               {member.fullName}
                               {member.isAdmin && (
-                                <Badge variant="outline" className="ml-2 text-[10px] border-primary text-primary">Admin</Badge>
+                                  <Badge variant="outline" className="ml-2 text-[10px] border-primary text-primary">{t('roles.admin')}</Badge>
                               )}
                             </p>
                             <p className="text-xs text-slate-500 truncate">@{member.username}</p>
@@ -1814,6 +1834,6 @@ export default function StudyGroupsChatPage() {
           </div>
         )}
       </div>
-    </StudentLayout>
+    </div>
   );
 } 

@@ -3,11 +3,12 @@ import { useTranslation } from "react-i18next";
 import { useRoute, Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
+import { useBranding } from "@/contexts/BrandingContext";
 import LessonViewer from "@/components/LessonViewer";
 import StudyBuddyChat from "@/components/StudyBuddyChat";
 import NotificationBell from "@/components/NotificationBell";
 import { apiEndpoint } from "@/lib/config";
-import StudentLayout from "@/components/StudentLayout";
+
 import { 
   pageVariants, 
   staggerContainer,
@@ -35,10 +36,11 @@ interface Course {
 }
 
 export default function StudentCourseLessonsPage() {
-  const { t } = useTranslation(['dashboard', 'common', 'auth']);
+  const { t, i18n } = useTranslation(['dashboard', 'common', 'auth']);
   const [match, params] = useRoute("/student/courses/:courseId/lessons");
   const courseId = params?.courseId as string | undefined;
   const { getAuthHeaders, user } = useAuth();
+  const { features } = useBranding();
 
   const [course, setCourse] = useState<Course | null>(null);
   const [lessons, setLessons] = useState<Lesson[]>([]);
@@ -55,6 +57,8 @@ export default function StudentCourseLessonsPage() {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false);
   const [chatWidth, setChatWidth] = useState<number>(384); // 24rem = w-96
+  const locale = i18n.language?.startsWith('ar') ? 'ar-EG' : 'en-US';
+  const isRTL = i18n.dir() === 'rtl';
 
   const formatTime = useCallback((seconds: number) => {
     const m = Math.floor(seconds / 60);
@@ -83,16 +87,16 @@ export default function StudentCourseLessonsPage() {
     const name = fileName?.toLowerCase() || '';
     
     if (type.includes('video') || name.endsWith('.mp4') || name.endsWith('.webm')) {
-      return 'Video';
+      return t('fileTypeVideo');
     }
     if (type.includes('image') || name.endsWith('.png') || name.endsWith('.jpg') || name.endsWith('.jpeg')) {
-      return 'Image';
+      return t('fileTypeImage');
     }
     if (type.includes('pdf') || name.endsWith('.pdf')) {
       return 'PDF';
     }
-    return 'Document';
-  }, []);
+    return t('fileTypeDocument');
+  }, [t]);
 
   useEffect(() => {
     if (!courseId) return;
@@ -113,7 +117,7 @@ export default function StudentCourseLessonsPage() {
         
         // Fetch lessons
         const res = await fetch(apiEndpoint(`/api/lessons/course/${courseId}`), { headers });
-        if (!res.ok) throw new Error("Failed to load lessons");
+        if (!res.ok) throw new Error(t('failedToLoadLessons'));
         const data = await res.json();
         const items = data?.lessons || [];
         const lessonsWithUrls = items.map((lesson: Lesson) => ({
@@ -126,7 +130,7 @@ export default function StudentCourseLessonsPage() {
           setSelectedIndex(0);
         }
       } catch (err: any) {
-        setError(err?.message || "Unknown error");
+        setError(err?.message || t('unknownError'));
       } finally {
         setIsLoading(false);
       }
@@ -230,7 +234,6 @@ export default function StudentCourseLessonsPage() {
   }
 
   return (
-    <StudentLayout>
     <motion.div 
       className="font-display bg-slate-50 dark:bg-[#0a192f] text-slate-900 dark:text-white overflow-hidden h-screen flex flex-col"
       variants={pageVariants}
@@ -259,20 +262,20 @@ export default function StudentCourseLessonsPage() {
               whileHover="hover"
               whileTap="tap"
             >
-              <span className="material-symbols-outlined text-[20px]">arrow_back</span>
+              <span className="material-symbols-outlined text-[20px]">{isRTL ? 'arrow_forward' : 'arrow_back'}</span>
               <span className="font-medium">{t('dashboard:backToCourse')}</span>
             </motion.button>
           </Link>
           <div className="border-l border-slate-300 dark:border-white/20 pl-4">
             <h1 className="text-lg font-bold text-slate-900 dark:text-white">{course?.title || t('dashboard:courseLessons')}</h1>
-            <p className="text-xs text-slate-500 dark:text-slate-400">{lessons.length} {t('dashboard:lessons').toLowerCase()}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">{t('lessonCount', { count: lessons.length })}</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg">
             <span className="material-symbols-outlined text-primary text-[18px]">check_circle</span>
             <span className="text-sm text-slate-700 dark:text-slate-300">
-              <span className="font-bold text-primary">{progressPercentage}%</span> Complete
+              <span className="font-bold text-primary">{progressPercentage}%</span> {t('complete')}
             </span>
           </div>
         </div>
@@ -290,16 +293,18 @@ export default function StudentCourseLessonsPage() {
           <div className="p-4 border-b border-slate-200 dark:border-white/10 flex items-center justify-between">
             {!sidebarCollapsed && (
               <div>
-                <h3 className="font-bold text-lg text-slate-900 dark:text-white mb-1">{course?.title || 'Course Lessons'}</h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">{lessons.length} lesson{lessons.length !== 1 ? 's' : ''} available</p>
+                <h3 className="font-bold text-lg text-slate-900 dark:text-white mb-1">{course?.title || t('courseLessons')}</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">{t('lessonsAvailableCount', { count: lessons.length })}</p>
               </div>
             )}
             <button
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
               className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 text-slate-600 dark:text-slate-400 transition-all hover:scale-105"
-              title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              title={sidebarCollapsed ? t('expandSidebar') : t('collapseSidebar')}
             >
-              <span className="material-symbols-outlined text-xl">{sidebarCollapsed ? 'chevron_right' : 'chevron_left'}</span>
+              <span className="material-symbols-outlined text-xl">
+                {isRTL ? (sidebarCollapsed ? 'chevron_left' : 'chevron_right') : (sidebarCollapsed ? 'chevron_right' : 'chevron_left')}
+              </span>
             </button>
           </div>
           <motion.div 
@@ -324,7 +329,7 @@ export default function StudentCourseLessonsPage() {
                   variants={fadeInUpVariants}
                   whileHover={{ scale: 1.02, transition: springConfigs.snappy }}
                   whileTap={{ scale: 0.98 }}
-                  title={sidebarCollapsed ? (lesson.title || lesson.fileName || 'Lesson') : undefined}
+                  title={sidebarCollapsed ? (lesson.title || lesson.fileName || t('lesson')) : undefined}
                 >
                   <div className={`flex items-center gap-3 ${sidebarCollapsed ? 'p-2 justify-center' : 'p-3'}`}>
                     <div className="flex-shrink-0">
@@ -340,7 +345,7 @@ export default function StudentCourseLessonsPage() {
                       <>
                         <div className="flex-1">
                           <p className={`text-sm font-medium ${isSelected ? 'text-slate-900 dark:text-white' : 'text-slate-700 dark:text-slate-300'}`}>
-                            {lesson.title || lesson.fileName || 'Untitled'}
+                            {lesson.title || lesson.fileName || t('untitled')}
                           </p>
                           <div className="flex items-center gap-2 text-xs text-slate-500 mt-1">
                             <span className="material-symbols-outlined text-[14px]">
@@ -373,7 +378,7 @@ export default function StudentCourseLessonsPage() {
                   whileHover="hover"
                   whileTap="tap"
                 >
-                  <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+                  <span className="material-symbols-outlined text-[18px]">{isRTL ? 'arrow_forward' : 'arrow_back'}</span>
                   {t('backToCourse')}
                 </motion.button>
               </Link>
@@ -391,13 +396,13 @@ export default function StudentCourseLessonsPage() {
           <div className="px-8 py-5 flex items-center justify-between shrink-0">
             <div className="flex flex-wrap gap-2 items-center text-sm">
               <Link className="text-slate-500 dark:text-slate-400 hover:text-primary transition-colors" href={`/student/courses/${courseId}`}>
-                {course?.title || 'Course'}
+                {course?.title || t('course')}
               </Link>
               <span className="text-slate-300 dark:text-white/20">/</span>
-              <span className="text-slate-500 dark:text-slate-400 hover:text-primary transition-colors cursor-pointer">Lesson {selectedIndex + 1}</span>
+              <span className="text-slate-500 dark:text-slate-400 hover:text-primary transition-colors cursor-pointer">{t('lessonNumber', { number: selectedIndex + 1 })}</span>
               <span className="text-slate-300 dark:text-white/20">/</span>
               <span className="text-primary font-medium px-2 py-0.5 bg-primary/10 border border-primary/20 rounded text-xs uppercase tracking-wide">
-                {selectedLesson ? getFileTypeLabel(selectedLesson.fileType, selectedLesson.fileName) : 'Content'}
+                {selectedLesson ? getFileTypeLabel(selectedLesson.fileType, selectedLesson.fileName) : t('content')}
               </span>
             </div>
             <div className="flex gap-3">
@@ -412,7 +417,7 @@ export default function StudentCourseLessonsPage() {
                 <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: selectedLesson && bookmarkedLessons.has(selectedLesson.id) ? '"FILL" 1' : '"FILL" 0' }}>
                   bookmark
                 </span>
-                {selectedLesson && bookmarkedLessons.has(selectedLesson.id) ? 'Saved' : 'Save'}
+                {selectedLesson && bookmarkedLessons.has(selectedLesson.id) ? t('saved') : t('save')}
               </button>
               <button 
                 onClick={markAsComplete}
@@ -423,7 +428,7 @@ export default function StudentCourseLessonsPage() {
                     : 'bg-primary hover:bg-primary/90 text-black'
                 }`}
               >
-                {selectedLesson && viewedLessons.has(selectedLesson.id) ? 'Completed' : 'Mark as Complete'}
+                {selectedLesson && viewedLessons.has(selectedLesson.id) ? t('completed') : t('markAsComplete')}
                 <span className="material-symbols-outlined text-[20px]">check</span>
               </button>
             </div>
@@ -435,9 +440,9 @@ export default function StudentCourseLessonsPage() {
                 <>
                   <div className="space-y-2">
                     <h1 className="text-3xl font-bold text-white tracking-tight">
-                      {selectedLesson.title || selectedLesson.fileName || 'Lesson Content'}
+                      {selectedLesson.title || selectedLesson.fileName || t('lessonContent')}
                     </h1>
-                    <p className="text-slate-400 text-lg">Lesson {selectedIndex + 1} of {lessons.length}</p>
+                    <p className="text-slate-400 text-lg">{t('lessonOfTotal', { current: selectedIndex + 1, total: lessons.length })}</p>
                   </div>
 
                   {/* Lesson Viewer */}
@@ -461,7 +466,7 @@ export default function StudentCourseLessonsPage() {
                             : 'text-slate-300 hover:text-white hover:bg-white/5'
                         }`}
                       >
-                        Overview
+                        {t('overview')}
                       </button>
                       <button 
                         onClick={() => setActiveTab('resources')}
@@ -471,28 +476,30 @@ export default function StudentCourseLessonsPage() {
                             : 'text-slate-300 hover:text-white hover:bg-white/5'
                         }`}
                       >
-                        Resources
+                        {t('resources')}
                       </button>
-                      <button 
-                        onClick={() => setActiveTab('discussion')}
-                        className={`px-6 py-4 font-semibold text-sm whitespace-nowrap transition-all ${
-                          activeTab === 'discussion' 
-                            ? 'text-primary border-b-2 border-primary bg-primary/5' 
-                            : 'text-slate-300 hover:text-white hover:bg-white/5'
-                        }`}
-                      >
-                        Discussion
-                      </button>
+                      {features?.enableCourseDiscussions && (
+                        <button 
+                          onClick={() => setActiveTab('discussion')}
+                          className={`px-6 py-4 font-semibold text-sm whitespace-nowrap transition-all ${
+                            activeTab === 'discussion' 
+                              ? 'text-primary border-b-2 border-primary bg-primary/5' 
+                              : 'text-slate-300 hover:text-white hover:bg-white/5'
+                          }`}
+                        >
+                          {t('discussion')}
+                        </button>
+                      )}
                     </div>
                     <div className="p-6">
                       {/* Overview Tab */}
                       {activeTab === 'overview' && (
                         <>
-                          <h4 className="text-lg font-bold text-white mb-3">About this lesson</h4>
+                          <h4 className="text-lg font-bold text-white mb-3">{t('aboutThisLesson')}</h4>
                           <p className="text-slate-300 leading-relaxed mb-6">
-                            Learn key concepts and practical applications in this lesson. Take your time to review the material and use the AI Study Buddy for any questions.
+                            {t('aboutLessonDescription')}
                           </p>
-                          <h4 className="text-lg font-bold text-white mb-3">Quick Actions</h4>
+                          <h4 className="text-lg font-bold text-white mb-3">{t('quickActions')}</h4>
                           <div className="grid grid-cols-2 gap-3">
                         <button 
                           onClick={() => {
@@ -503,8 +510,8 @@ export default function StudentCourseLessonsPage() {
                           disabled={selectedIndex === 0}
                           className="flex items-center justify-center gap-2 p-3 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 text-sm text-slate-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         >
-                          <span className="material-symbols-outlined text-[20px]">arrow_back</span>
-                          Previous Lesson
+                          <span className="material-symbols-outlined text-[20px]">{isRTL ? 'arrow_forward' : 'arrow_back'}</span>
+                          {t('previousLesson')}
                         </button>
                         <button 
                           onClick={() => {
@@ -515,8 +522,8 @@ export default function StudentCourseLessonsPage() {
                           disabled={selectedIndex === lessons.length - 1}
                           className="flex items-center justify-center gap-2 p-3 rounded-lg bg-[#0a192f]/50 border border-white/10 hover:bg-[#1a2f4f] hover:border-white/20 text-sm text-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                         >
-                          Next Lesson
-                          <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
+                          {t('nextLesson')}
+                          <span className="material-symbols-outlined text-[20px]">{isRTL ? 'arrow_back' : 'arrow_forward'}</span>
                         </button>
                           </div>
                         </>
@@ -525,19 +532,19 @@ export default function StudentCourseLessonsPage() {
                       {/* Resources Tab */}
                       {activeTab === 'resources' && (
                         <>
-                          <h4 className="text-lg font-bold text-white mb-3">Lesson Resources</h4>
-                          <p className="text-slate-300 mb-4">Download and access additional materials for this lesson.</p>
+                          <h4 className="text-lg font-bold text-white mb-3">{t('lessonResources')}</h4>
+                          <p className="text-slate-300 mb-4">{t('lessonResourcesDescription')}</p>
                           <div className="space-y-3">
                             <div className="flex items-center justify-between p-4 bg-[#0a192f]/50 border border-white/10 rounded-lg hover:border-primary/30 transition-colors">
                               <div className="flex items-center gap-3">
                                 <span className="material-symbols-outlined text-primary text-2xl">description</span>
                                 <div>
-                                  <p className="font-medium text-white">{selectedLesson.fileName || 'Lesson File'}</p>
+                                  <p className="font-medium text-white">{selectedLesson.fileName || t('lessonFile')}</p>
                                   <p className="text-xs text-slate-400">{getFileTypeLabel(selectedLesson.fileType, selectedLesson.fileName)}</p>
                                 </div>
                               </div>
                               <a href={selectedLesson.fileUrl} download className="px-4 py-2 bg-primary/10 border border-primary/30 text-primary rounded-lg hover:bg-primary/20 transition-colors text-sm font-medium">
-                                Download
+                                {t('download')}
                               </a>
                             </div>
                           </div>
@@ -545,13 +552,13 @@ export default function StudentCourseLessonsPage() {
                       )}
 
                       {/* Discussion Tab */}
-                      {activeTab === 'discussion' && (
+                      {features?.enableCourseDiscussions && activeTab === 'discussion' && (
                         <>
-                          <h4 className="text-lg font-bold text-white mb-3">Discussion</h4>
+                          <h4 className="text-lg font-bold text-white mb-3">{t('discussion')}</h4>
                           <div className="text-center py-12">
                             <span className="material-symbols-outlined text-5xl text-slate-600 mb-3 block">forum</span>
-                            <p className="text-slate-400">Discussion feature coming soon!</p>
-                            <p className="text-xs text-slate-500 mt-2">Connect with classmates and instructors to discuss this lesson.</p>
+                            <p className="text-slate-400">{t('discussionComingSoon')}</p>
+                            <p className="text-xs text-slate-500 mt-2">{t('discussionComingSoonDesc')}</p>
                           </div>
                         </>
                       )}
@@ -577,14 +584,14 @@ export default function StudentCourseLessonsPage() {
           >
             {/* Resize Handle */}
             <div 
-              className="absolute left-0 top-0 bottom-0 w-1.5 cursor-col-resize hover:bg-purple-500/50 transition-colors group z-20"
+              className={`absolute ${isRTL ? 'right-0' : 'left-0'} top-0 bottom-0 w-1.5 cursor-col-resize hover:bg-purple-500/50 transition-colors group z-20`}
               onMouseDown={(e) => {
                 e.preventDefault();
                 const startX = e.clientX;
                 const startWidth = chatWidth;
                 
                 const onMouseMove = (moveEvent: MouseEvent) => {
-                  const delta = startX - moveEvent.clientX;
+                  const delta = isRTL ? moveEvent.clientX - startX : startX - moveEvent.clientX;
                   const newWidth = Math.min(600, Math.max(320, startWidth + delta));
                   setChatWidth(newWidth);
                 };
@@ -598,7 +605,7 @@ export default function StudentCourseLessonsPage() {
                 document.addEventListener('mouseup', onMouseUp);
               }}
             >
-              <div className="absolute left-0.5 top-1/2 -translate-y-1/2 w-0.5 h-12 bg-purple-500/30 rounded-full group-hover:bg-purple-400 transition-colors" />
+              <div className={`absolute ${isRTL ? 'right-0.5' : 'left-0.5'} top-1/2 -translate-y-1/2 w-0.5 h-12 bg-purple-500/30 rounded-full group-hover:bg-purple-400 transition-colors`} />
             </div>
             <div className="p-4 border-b border-white/10 flex items-center justify-between bg-gradient-to-r from-purple-900/30 via-pink-900/20 to-blue-900/30 backdrop-blur-sm">
               <div className="flex items-center gap-3">
@@ -619,7 +626,7 @@ export default function StudentCourseLessonsPage() {
                   </h3>
                   <div className="flex items-center gap-1.5 mt-0.5">
                     <div className="h-1.5 w-1.5 bg-green-400 rounded-full animate-pulse"></div>
-                    <p className="text-[10px] text-green-400 font-bold uppercase tracking-wider">Online & Ready</p>
+                    <p className="text-[10px] text-green-400 font-bold uppercase tracking-wider">{t('onlineAndReady')}</p>
                   </div>
                 </div>
               </div>
@@ -634,7 +641,7 @@ export default function StudentCourseLessonsPage() {
               <StudyBuddyChat 
                 key={selectedLesson.id}
                 lessonId={selectedLesson.id} 
-                lessonTitle={selectedLesson.title || selectedLesson.fileName || 'this lesson'} 
+                lessonTitle={selectedLesson.title || selectedLesson.fileName || t('thisLesson')} 
               />
             </div>
           </aside>
@@ -644,7 +651,7 @@ export default function StudentCourseLessonsPage() {
         {!showAIChat && (
           <motion.button
             onClick={() => setShowAIChat(true)}
-            className="group fixed bottom-6 right-6 z-50 transition-all hover:scale-110 active:scale-95"
+            className={`group fixed bottom-6 ${isRTL ? 'left-6' : 'right-6'} z-50 transition-all hover:scale-110 active:scale-95`}
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
@@ -667,13 +674,12 @@ export default function StudentCourseLessonsPage() {
             </div>
             
             {/* Versa label */}
-            <div className="absolute -left-2 -bottom-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow-lg uppercase tracking-wide">
+            <div className={`absolute ${isRTL ? '-right-2' : '-left-2'} -bottom-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow-lg uppercase tracking-wide`}>
               Versa
             </div>
           </motion.button>
         )}
       </main>
     </motion.div>
-    </StudentLayout>
   );
 }

@@ -8,7 +8,7 @@ import { queryClient } from "@/lib/queryClient";
 import NotificationBell from "@/components/NotificationBell";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import StudentLayout from "@/components/StudentLayout";
+import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -233,14 +233,16 @@ export default function StudentAssignments() {
 
   if (isLoading) {
     return (
-      <div className="font-display bg-slate-50 dark:bg-background text-white h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
+      <main className="flex-1 overflow-y-auto p-4 md:p-8 lg:p-10 bg-slate-50 dark:bg-background">
+        <div className="max-w-6xl mx-auto">
+          <ListSkeleton rows={6} />
+        </div>
+      </main>
     );
   }
 
   return (
-    <StudentLayout>
+    <>
       <style>{`
         .material-symbols-outlined {
           font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
@@ -494,7 +496,7 @@ export default function StudentAssignments() {
                           <span className="material-symbols-outlined">{getIcon(assignment.type)}</span>
                         </div>
                         <div>
-                          <p className="text-slate-600 dark:text-slate-400 text-xs font-bold uppercase tracking-wide">{assignment.courseTitle}</p>
+                          <p className="text-slate-600 dark:text-slate-300 text-xs font-bold uppercase tracking-wide">{assignment.courseTitle}</p>
                           <p className="text-secondary dark:text-white font-bold text-lg">{assignment.title}</p>
                         </div>
                       </div>
@@ -502,7 +504,7 @@ export default function StudentAssignments() {
                         <span className="material-symbols-outlined">more_vert</span>
                       </button>
                     </div>
-                    <p className="text-slate-700 dark:text-slate-300 text-sm mb-4 line-clamp-2 font-medium">{assignment.description}</p>
+                    <p className="text-slate-700 dark:text-slate-200 text-sm mb-4 line-clamp-2 font-medium">{assignment.description}</p>
                   </div>
                   <div className="pt-4 border-t border-slate-200 dark:border-slate-700/50">
                     <div className="flex items-center justify-between mb-3">
@@ -515,7 +517,7 @@ export default function StudentAssignments() {
                           ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800'
                           : assignment.submission
                           ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 border border-blue-200 dark:border-blue-800'
-                          : 'bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
+                          : 'bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-white border border-slate-200 dark:border-slate-500'
                       }`}>
                         {assignment.submission?.status === 'graded' ? t('done') : assignment.submission ? t('inProgress') : t('notStarted')}
                       </span>
@@ -729,7 +731,7 @@ export default function StudentAssignments() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </StudentLayout>
+    </>
   );
 }
 

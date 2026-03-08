@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from "framer-motion";
-import StudentLayout from "@/components/StudentLayout";
+
 import { useAuth } from '@/hooks/useAuth';
 import { 
   Download, 
@@ -157,7 +157,7 @@ export default function StudentReportCards() {
   });
 
   return (
-    <StudentLayout>
+    <>
       <div 
         className="space-y-6 ml-5 mr-10 mt-8 mb-16"
       > 
@@ -348,6 +348,6 @@ export default function StudentReportCards() {
         </Card>
         </div>
       </div>
-    </StudentLayout>
+    </>
   );
 }

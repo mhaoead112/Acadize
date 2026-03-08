@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useRoute, Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
-import StudentLayout from "@/components/StudentLayout";
+
 import { useToast } from "@/hooks/use-toast";
 import { apiEndpoint } from "@/lib/config";
 import {
@@ -66,7 +66,7 @@ interface Announcement {
 }
 
 export default function StudentCourseDetailPage() {
-  const { t } = useTranslation(['courses', 'dashboard', 'common']);
+  const { t, i18n } = useTranslation(['courses', 'dashboard', 'common']);
   const [match, params] = useRoute("/student/courses/:courseId");
   const courseId = params?.courseId;
   const [, setLocation] = useLocation();
@@ -87,6 +87,7 @@ export default function StudentCourseDetailPage() {
     { name: t('assignments'), key: 'assignments', icon: 'assignment' },
     { name: t('announcements'), key: 'announcements', icon: 'campaign' },
   ];
+  const locale = i18n.language?.startsWith('ar') ? 'ar-EG' : 'en-US';
 
   const getAuthHeaders = (): Record<string, string> => {
     return token ? { Authorization: `Bearer ${token}` } : {};
@@ -165,7 +166,7 @@ export default function StudentCourseDetailPage() {
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return t('tbd');
     const date = new Date(dateStr);
-    return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+    return date.toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
   const getTimeAgo = (dateStr: string) => {
@@ -183,30 +184,26 @@ export default function StudentCourseDetailPage() {
 
   if (isLoading) {
     return (
-      <StudentLayout>
-        <div className="flex flex-col items-center justify-center gap-4 min-h-screen bg-slate-50 dark:bg-transparent">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-          <p className="text-slate-600 dark:text-slate-400 text-sm">{t('common:common.loading')}</p>
-        </div>
-      </StudentLayout>
+      <div className="flex flex-col items-center justify-center gap-4 min-h-[60vh] bg-slate-50 dark:bg-transparent">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <p className="text-slate-600 dark:text-slate-400 text-sm">{t('common:common.loading')}</p>
+      </div>
     );
   }
 
   if (!course) {
     return (
-      <StudentLayout>
-        <div className="flex items-center justify-center min-h-screen bg-transparent">
-          <div className="text-center">
-            <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">{t('courseNotFound')}</h2>
-            <p className="text-slate-600 dark:text-slate-400 mb-4">{t('courseNotFoundDesc')}</p>
-            <Link href="/student/courses">
-              <button className="px-4 py-2 bg-primary text-white dark:text-black rounded-lg font-bold hover:bg-primary/90 transition-colors">
-                {t('browseCourses')}
-              </button>
-            </Link>
-          </div>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">{t('courseNotFound')}</h2>
+          <p className="text-slate-600 dark:text-slate-400 mb-4">{t('courseNotFoundDesc')}</p>
+          <Link href="/student/courses">
+            <button className="px-4 py-2 bg-primary text-white dark:text-black rounded-lg font-bold hover:bg-primary/90 transition-colors">
+              {t('browseCourses')}
+            </button>
+          </Link>
         </div>
-      </StudentLayout>
+      </div>
     );
   }
 
@@ -227,8 +224,13 @@ export default function StudentCourseDetailPage() {
       return;
     }
     
-    const subject = encodeURIComponent(`Question about ${course.title}`);
-    const body = encodeURIComponent(`Hello ${course.teacher?.fullName || 'Professor'},\n\nI have a question about ${course.title}.\n\n`);
+    const subject = encodeURIComponent(t('dashboard:questionAboutCourseSubject', { courseTitle: course.title }));
+    const body = encodeURIComponent(
+      t('dashboard:questionAboutCourseBody', {
+        teacherName: course.teacher?.fullName || t('dashboard:professor'),
+        courseTitle: course.title
+      })
+    );
     window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
   };
 
@@ -247,13 +249,13 @@ export default function StudentCourseDetailPage() {
         headers: getAuthHeaders()
       });
       
-      if (!response.ok) throw new Error('Download failed');
+      if (!response.ok) throw new Error(t('downloadFailed'));
       
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${course.title}-Syllabus.pdf`;
+      a.download = t('dashboard:syllabusFileName', { courseTitle: course.title });
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -266,7 +268,7 @@ export default function StudentCourseDetailPage() {
     } catch (error) {
       console.error('Download error:', error);
       toast({
-        title: t('downloadFailed'),
+        title: t('dashboard:downloadFailed'),
         description: t('downloadFailedDesc'),
         variant: "destructive"
       });
@@ -274,8 +276,7 @@ export default function StudentCourseDetailPage() {
   };
 
   return (
-    <StudentLayout>
-      <main className="flex-1 flex flex-col px-4 md:px-10 lg:px-40 py-8 w-full max-w-[1600px] mx-auto overflow-y-auto bg-slate-50 dark:bg-transparent">
+    <main className="flex-1 flex flex-col px-4 md:px-10 lg:px-40 py-8 w-full max-w-[1600px] mx-auto overflow-y-auto bg-slate-50 dark:bg-transparent">
         {/* Breadcrumbs */}
         <motion.div 
           initial={{ opacity: 0, y: -10 }}
@@ -358,7 +359,7 @@ export default function StudentCourseDetailPage() {
                 <div className="flex gap-6 justify-between items-center">
                   <div className="flex items-center gap-2">
                     <span className="material-symbols-outlined text-primary">trophy</span>
-                    <p className="text-slate-900 dark:text-white text-base font-bold">Course Progress</p>
+                    <p className="text-slate-900 dark:text-white text-base font-bold">{t('dashboard:courseProgress')}</p>
                   </div>
                   <motion.p 
                     className="text-primary text-lg font-bold"
@@ -383,7 +384,7 @@ export default function StudentCourseDetailPage() {
                   />
                 </motion.div>
                 <p className="text-xs text-slate-500 dark:text-slate-400 text-right mt-1">
-                  {lessons.length - Math.floor(lessons.length * progress / 100)} Lessons remaining
+                  {t('dashboard:lessonsRemainingCount', { count: lessons.length - Math.floor(lessons.length * progress / 100) })}
                 </p>
               </div>
             </motion.div>
@@ -446,28 +447,28 @@ export default function StudentCourseDetailPage() {
               {/* About Course */}
               <motion.div variants={fadeInUpVariants}>
                 <section className="flex flex-col gap-4 bg-white/80 dark:bg-card/80 backdrop-blur-sm p-6 sm:p-8 rounded-xl border border-slate-200 dark:border-white/10 shadow-sm">
-                  <h3 className="text-slate-900 dark:text-white text-xl font-bold">About this Course</h3>
+                  <h3 className="text-slate-900 dark:text-white text-xl font-bold">{t('dashboard:aboutThisCourse')}</h3>
                   <p className="text-slate-600 dark:text-slate-400 text-base leading-relaxed">
-                    {course.description || 'Explore key concepts and develop practical skills in this comprehensive course. Access lessons, complete assignments, and track your progress throughout the semester.'}
+                    {course.description || t('dashboard:courseDescriptionFallback')}
                   </p>
                   <div className="mt-4 pt-6 border-t border-slate-200 dark:border-white/10">
-                    <h4 className="text-slate-900 dark:text-white text-sm font-bold uppercase tracking-wider mb-4">What you'll learn</h4>
+                    <h4 className="text-slate-900 dark:text-white text-sm font-bold uppercase tracking-wider mb-4">{t('dashboard:whatYouWillLearn')}</h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div className="flex items-start gap-2">
                         <span className="material-symbols-outlined text-green-500 text-[20px]">check_circle</span>
-                        <span className="text-sm text-slate-600 dark:text-slate-400">Core Concepts & Fundamentals</span>
+                        <span className="text-sm text-slate-600 dark:text-slate-400">{t('dashboard:learningOutcomeCoreConcepts')}</span>
                       </div>
                       <div className="flex items-start gap-2">
                         <span className="material-symbols-outlined text-green-500 text-[20px]">check_circle</span>
-                        <span className="text-sm text-slate-600 dark:text-slate-400">Practical Applications</span>
+                        <span className="text-sm text-slate-600 dark:text-slate-400">{t('dashboard:learningOutcomePracticalApplications')}</span>
                       </div>
                       <div className="flex items-start gap-2">
                         <span className="material-symbols-outlined text-green-500 text-[20px]">check_circle</span>
-                        <span className="text-sm text-slate-600 dark:text-slate-400">Advanced Techniques</span>
+                        <span className="text-sm text-slate-600 dark:text-slate-400">{t('dashboard:learningOutcomeAdvancedTechniques')}</span>
                       </div>
                       <div className="flex items-start gap-2">
                         <span className="material-symbols-outlined text-green-500 text-[20px]">check_circle</span>
-                        <span className="text-sm text-slate-600 dark:text-slate-400">Real-World Projects</span>
+                        <span className="text-sm text-slate-600 dark:text-slate-400">{t('dashboard:learningOutcomeProjects')}</span>
                       </div>
                     </div>
                   </div>
@@ -477,7 +478,7 @@ export default function StudentCourseDetailPage() {
               {/* Instructor Card - Enhanced with Real Data */}
               <motion.div variants={fadeInUpVariants}>
                 <section className="bg-white/80 dark:bg-card/80 backdrop-blur-sm p-6 sm:p-8 rounded-xl border border-slate-200 dark:border-white/10 shadow-sm">
-                  <h3 className="text-slate-900 dark:text-white text-xl font-bold mb-6">Your Instructor</h3>
+                  <h3 className="text-slate-900 dark:text-white text-xl font-bold mb-6">{t('dashboard:yourInstructor')}</h3>
                   <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
                     {/* Profile Picture */}
                     {course.teacher?.profilePicture ? (
@@ -488,7 +489,7 @@ export default function StudentCourseDetailPage() {
                     ) : (
                       <div className="size-24 rounded-full border-4 border-slate-200 dark:border-white/10 shadow-lg bg-gradient-to-br from-primary/30 to-primary/50 flex items-center justify-center">
                         <span className="text-4xl font-bold text-white">
-                          {(course.teacher?.fullName || course.teacher?.username || course.teacherName || 'I')[0].toUpperCase()}
+                          {(course.teacher?.fullName || course.teacher?.username || course.teacherName || t('dashboard:instructorInitialFallback'))[0].toUpperCase()}
                         </span>
                       </div>
                     )}
@@ -497,10 +498,10 @@ export default function StudentCourseDetailPage() {
                     <div className="flex flex-col gap-3 flex-1">
                       <div>
                         <p className="text-slate-900 dark:text-white text-lg font-bold">
-                          {course.teacher?.fullName || course.teacher?.username || course.teacherName || 'Course Instructor'}
+                          {course.teacher?.fullName || course.teacher?.username || course.teacherName || t('dashboard:courseInstructor')}
                         </p>
                         <p className="text-primary text-sm font-medium">
-                          {course.teacher?.department || 'Course Instructor'}
+                          {course.teacher?.department || t('dashboard:courseInstructor')}
                         </p>
                       </div>
                       
@@ -524,7 +525,7 @@ export default function StudentCourseDetailPage() {
                       
                       {/* Bio */}
                       <p className="text-slate-600 dark:text-slate-400 text-sm max-w-lg leading-relaxed">
-                        {course.teacher?.bio || 'Questions about the course? Feel free to reach out during office hours or send a message through the platform.'}
+                          {course.teacher?.bio || t('dashboard:instructorBioFallback')}
                       </p>
                       
                       {/* Action Buttons */}
@@ -535,12 +536,12 @@ export default function StudentCourseDetailPage() {
                           className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 disabled:bg-slate-300 dark:disabled:bg-slate-700 disabled:cursor-not-allowed text-black disabled:text-slate-500 rounded-lg text-sm font-bold transition-colors shadow-md"
                         >
                           <span className="material-symbols-outlined text-[18px]">mail</span> 
-                          Contact
+                          {t('dashboard:contact')}
                         </motion.button>
                         {course.teacher?.officeHours && (
                           <motion.button variants={buttonVariants} whileHover="hover" whileTap="tap" className="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white rounded-lg text-sm font-medium transition-colors">
                             <span className="material-symbols-outlined text-[18px]">calendar_month</span> 
-                            Office Hours
+                            {t('dashboard:officeHours')}
                           </motion.button>
                         )}
                       </div>
@@ -560,16 +561,16 @@ export default function StudentCourseDetailPage() {
                       <div className="bg-amber-200 dark:bg-amber-900/30 p-1.5 rounded-lg text-amber-600 dark:text-amber-400">
                         <span className="material-symbols-outlined text-[20px]">timer</span>
                       </div>
-                      <span className="text-amber-700 dark:text-amber-500 text-xs font-bold uppercase tracking-wider">Upcoming Deadline</span>
+                      <span className="text-amber-700 dark:text-amber-500 text-xs font-bold uppercase tracking-wider">{t('dashboard:upcomingDeadline')}</span>
                     </div>
                     <h4 className="text-slate-900 dark:text-white text-lg font-bold mb-1">{nextAssignment.title}</h4>
-                    <p className="text-slate-600 dark:text-slate-400 text-sm mb-5">Due: {formatDate(nextAssignment.dueDate)}</p>
+                    <p className="text-slate-600 dark:text-slate-400 text-sm mb-5">{t('dashboard:dueDateLabel', { date: formatDate(nextAssignment.dueDate) })}</p>
                     <div className="flex items-center justify-between pt-4 border-t border-amber-300 dark:border-amber-800/30">
                       <span className="text-xs font-medium bg-card px-2 py-1 rounded border border-white/10 text-slate-400">
-                        {nextAssignment.maxScore || '100'} points
+                        {t('dashboard:pointsLabel', { count: nextAssignment.maxScore || '100' })}
                       </span>
-                      <Link href={`/student/assignments/${nextAssignment.id}`} className="text-primary text-sm font-bold hover:underline">
-                        View Details
+                      <Link href="/student/assignments" className="text-primary text-sm font-bold hover:underline">
+                        {t('dashboard:viewDetails')}
                       </Link>
                     </div>
                   </motion.div>
@@ -580,10 +581,10 @@ export default function StudentCourseDetailPage() {
               <motion.div variants={fadeInUpVariants}>
                 <div className="bg-white/80 dark:bg-card/80 backdrop-blur-sm p-6 rounded-xl border border-slate-200 dark:border-white/10 shadow-sm">
                   <div className="flex items-center justify-between mb-4">
-                    <h4 className="text-slate-900 dark:text-white text-base font-bold">Announcements</h4>
+                    <h4 className="text-slate-900 dark:text-white text-base font-bold">{t('announcements')}</h4>
                     {announcements.length > 0 && (
                       <span className="bg-red-100 dark:bg-red-100 text-red-600 dark:text-red-600 text-[10px] font-bold px-2 py-0.5 rounded-full">
-                        {announcements.length} NEW
+                        {t('dashboard:newCount', { count: announcements.length })}
                       </span>
                     )}
                   </div>
@@ -607,7 +608,7 @@ export default function StudentCourseDetailPage() {
                     onClick={() => setActiveTab('announcements')}
                     className="w-full mt-5 py-2 text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium border border-slate-200 dark:border-white/10 rounded-lg hover:bg-slate-50 dark:hover:bg-white/5 transition-colors"
                   >
-                    View All Announcements
+                    {t('dashboard:viewAllAnnouncements')}
                   </motion.button>
                 </div>
               </motion.div>
@@ -615,7 +616,7 @@ export default function StudentCourseDetailPage() {
               {/* Course Resources Widget */}
               <motion.div variants={fadeInUpVariants}>
                 <div className="bg-white/80 dark:bg-card/80 backdrop-blur-sm p-6 rounded-xl border border-slate-200 dark:border-white/10 shadow-sm">
-                  <h4 className="text-slate-900 dark:text-white text-base font-bold mb-4">Course Resources</h4>
+                  <h4 className="text-slate-900 dark:text-white text-base font-bold mb-4">{t('dashboard:courseResources')}</h4>
                   <ul className="flex flex-col gap-3">
                     {course.syllabusUrl ? (
                       <li>
@@ -626,7 +627,7 @@ export default function StudentCourseDetailPage() {
                           <div className="bg-slate-100 dark:bg-white/5 p-2 rounded text-slate-600 dark:text-slate-400 group-hover:bg-primary group-hover:text-black transition-colors">
                             <span className="material-symbols-outlined text-[20px]">picture_as_pdf</span>
                           </div>
-                          <span className="text-sm text-slate-600 dark:text-slate-400 font-medium group-hover:text-slate-900 dark:group-hover:text-white transition-colors text-left">Course Syllabus.pdf</span>
+                          <span className="text-sm text-slate-600 dark:text-slate-400 font-medium group-hover:text-slate-900 dark:group-hover:text-white transition-colors text-left">{t('dashboard:courseSyllabusPdf')}</span>
                         </button>
                       </li>
                     ) : null}
@@ -638,7 +639,7 @@ export default function StudentCourseDetailPage() {
                         <div className="bg-slate-100 dark:bg-white/5 p-2 rounded text-slate-600 dark:text-slate-400 group-hover:bg-primary group-hover:text-black transition-colors">
                           <span className="material-symbols-outlined text-[20px]">book_2</span>
                         </div>
-                        <span className="text-sm text-slate-600 dark:text-slate-400 font-medium group-hover:text-slate-900 dark:group-hover:text-white transition-colors text-left">Course Lessons ({lessons.length})</span>
+                        <span className="text-sm text-slate-600 dark:text-slate-400 font-medium group-hover:text-slate-900 dark:group-hover:text-white transition-colors text-left">{t('dashboard:courseLessonsCount', { count: lessons.length })}</span>
                       </button>
                     </li>
                     <li>
@@ -649,7 +650,7 @@ export default function StudentCourseDetailPage() {
                         <div className="bg-slate-100 dark:bg-white/5 p-2 rounded text-slate-600 dark:text-slate-400 group-hover:bg-primary group-hover:text-black transition-colors">
                           <span className="material-symbols-outlined text-[20px]">assignment</span>
                         </div>
-                        <span className="text-sm text-slate-600 dark:text-slate-400 font-medium group-hover:text-slate-900 dark:group-hover:text-white transition-colors text-left">Assignments ({assignments.length})</span>
+                        <span className="text-sm text-slate-600 dark:text-slate-400 font-medium group-hover:text-slate-900 dark:group-hover:text-white transition-colors text-left">{t('dashboard:assignmentsCount', { count: assignments.length })}</span>
                       </button>
                     </li>
                   </ul>
@@ -673,11 +674,11 @@ export default function StudentCourseDetailPage() {
           >
             <motion.div variants={fadeInUpVariants} className="bg-white/80 dark:bg-card/80 backdrop-blur-sm rounded-xl border border-slate-200 dark:border-white/10 shadow-sm p-6">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-slate-900 dark:text-white text-xl font-bold">Course Lessons</h3>
+                <h3 className="text-slate-900 dark:text-white text-xl font-bold">{t('courseLessons')}</h3>
                 <Link href={`/student/courses/${courseId}/lessons`}>
                   <motion.button variants={buttonVariants} whileHover="hover" whileTap="tap" className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 text-black rounded-lg font-bold transition-colors">
                     <span className="material-symbols-outlined text-[20px]">play_circle</span>
-                    Open Lesson Viewer
+                    {t('dashboard:openLessonViewer')}
                   </motion.button>
                 </Link>
               </div>
@@ -700,7 +701,7 @@ export default function StudentCourseDetailPage() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
                             <span className="text-xs font-medium text-slate-500 dark:text-slate-500">
-                              Lesson {String(index + 1).padStart(2, '0')}
+                              {t('dashboard:lessonNumberPadded', { number: String(index + 1).padStart(2, '0') })}
                             </span>
                           </div>
                           <h4 className="font-medium text-slate-900 dark:text-white truncate">
@@ -708,7 +709,7 @@ export default function StudentCourseDetailPage() {
                           </h4>
                           {lesson.createdAt && (
                             <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">
-                              Added {new Date(lesson.createdAt).toLocaleDateString()}
+                              {t('dashboard:addedOnDate', { date: new Date(lesson.createdAt).toLocaleDateString(locale) })}
                             </p>
                           )}
                         </div>
@@ -735,7 +736,7 @@ export default function StudentCourseDetailPage() {
             transition={springConfigs.gentle}
           >
             <motion.div variants={fadeInUpVariants} className="bg-white/80 dark:bg-card/80 backdrop-blur-sm rounded-xl border border-slate-200 dark:border-white/10 shadow-sm p-6">
-              <h3 className="text-slate-900 dark:text-white text-xl font-bold mb-6">Course Assignments</h3>
+              <h3 className="text-slate-900 dark:text-white text-xl font-bold mb-6">{t('dashboard:courseAssignments')}</h3>
               {assignments.length === 0 ? (
                 <div className="text-center py-16">
                   <span className="material-symbols-outlined text-slate-400 dark:text-slate-600 text-6xl mb-4 block">assignment</span>
@@ -760,20 +761,20 @@ export default function StudentCourseDetailPage() {
                             {assignment.dueDate && (
                               <span className="flex items-center gap-1">
                                 <span className="material-symbols-outlined text-[14px]">schedule</span>
-                                Due: {formatDate(assignment.dueDate)}
+                                {t('dashboard:dueDateLabel', { date: formatDate(assignment.dueDate) })}
                               </span>
                             )}
                             {assignment.maxScore && (
                               <span className="flex items-center gap-1">
                                 <span className="material-symbols-outlined text-[14px]">trophy</span>
-                                {assignment.maxScore} points
+                                {t('dashboard:pointsLabel', { count: assignment.maxScore })}
                               </span>
                             )}
                           </div>
                         </div>
                         <Link href="/student/assignments">
                           <motion.button variants={buttonVariants} whileHover="hover" whileTap="tap" className="px-4 py-2 bg-slate-100 dark:bg-white/5 hover:bg-primary hover:text-black text-slate-900 dark:text-white rounded-lg font-medium transition-colors border border-slate-200 dark:border-white/10">
-                            View
+                            {t('view')}
                           </motion.button>
                         </Link>
                       </motion.div>
@@ -798,7 +799,7 @@ export default function StudentCourseDetailPage() {
             transition={springConfigs.gentle}
           >
             <motion.div variants={fadeInUpVariants} className="bg-white/80 dark:bg-card/80 backdrop-blur-sm rounded-xl border border-slate-200 dark:border-white/10 shadow-sm p-6">
-              <h3 className="text-slate-900 dark:text-white text-xl font-bold mb-6">Course Announcements</h3>
+              <h3 className="text-slate-900 dark:text-white text-xl font-bold mb-6">{t('dashboard:courseAnnouncements')}</h3>
               {announcements.length === 0 ? (
                 <div className="text-center py-16">
                   <span className="material-symbols-outlined text-slate-400 dark:text-slate-600 text-6xl mb-4 block">campaign</span>
@@ -828,13 +829,13 @@ export default function StudentCourseDetailPage() {
                               <h4 className="font-bold text-slate-900 dark:text-white text-lg">{announcement.title}</h4>
                               {announcement.isPinned && (
                                 <span className="bg-amber-200 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-300 dark:border-amber-700/30">
-                                  PINNED
+                                  {t('dashboard:pinned')}
                                 </span>
                               )}
                             </div>
                             <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed mb-3">{announcement.content}</p>
                             <p className="text-xs text-slate-500">
-                              Posted {new Date(announcement.createdAt).toLocaleDateString()}
+                              {t('dashboard:postedOnDate', { date: new Date(announcement.createdAt).toLocaleDateString(locale) })}
                             </p>
                           </div>
                         </div>
@@ -847,8 +848,7 @@ export default function StudentCourseDetailPage() {
           </motion.div>
         )}
         </AnimatePresence>
-      </main>
-    </StudentLayout>
+    </main>
   );
 }
 

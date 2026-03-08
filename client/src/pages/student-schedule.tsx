@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { usePortalI18n } from '@/hooks/usePortalI18n';
+
 import {
   Calendar, Clock, MapPin, Users, Video, Bell,
   ChevronLeft, ChevronRight, Download, AlertCircle,
@@ -166,6 +168,7 @@ function DayView({ date, events, isToday }: { date: string; events: ScheduleEven
 }
 
 export default function StudentSchedule() {
+  const { t } = usePortalI18n("common");
   const { user, token, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   const [schedule, setSchedule] = useState<ScheduleEvent[]>([]);

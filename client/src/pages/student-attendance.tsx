@@ -9,7 +9,7 @@ import { useEffect, useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { apiEndpoint } from "@/lib/config";
-import StudentLayout from "@/components/StudentLayout";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -284,28 +284,24 @@ export default function StudentAttendancePage() {
 
   if (isLoading) {
     return (
-      <StudentLayout>
-        <div className="flex-1 overflow-y-auto p-4 md:p-8 bg-slate-50 dark:bg-background flex items-center justify-center min-h-[60vh]">
-          <Loader2 className="h-10 w-10 animate-spin text-[#FFD700]" />
-        </div>
-      </StudentLayout>
+      <div className="flex-1 overflow-y-auto p-4 md:p-8 bg-slate-50 dark:bg-background flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="h-10 w-10 animate-spin text-[#FFD700]" />
+      </div>
     );
   }
 
   if (error) {
     return (
-      <StudentLayout>
-        <div className="flex-1 overflow-y-auto p-4 md:p-8 bg-slate-50 dark:bg-background">
-          <div className="max-w-[1200px] mx-auto">
-            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-500/30 rounded-xl p-8 text-center">
-              <p className="text-red-600 dark:text-red-400">{error}</p>
-              <Button variant="outline" className="mt-4" onClick={() => window.location.reload()}>
-                {t("retry")}
-              </Button>
-            </div>
+      <div className="flex-1 overflow-y-auto p-4 md:p-8 bg-slate-50 dark:bg-background">
+        <div className="max-w-[1200px] mx-auto">
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-500/30 rounded-xl p-8 text-center">
+            <p className="text-red-600 dark:text-red-400">{error}</p>
+            <Button variant="outline" className="mt-4" onClick={() => window.location.reload()}>
+              {t("retry")}
+            </Button>
           </div>
         </div>
-      </StudentLayout>
+      </div>
     );
   }
 
@@ -313,7 +309,7 @@ export default function StudentAttendancePage() {
   const semesterLabel = new Date().getMonth() >= 7 ? t("fallSemester") : t("springSemester");
 
   return (
-    <StudentLayout>
+    <>
       <div className="flex-1 overflow-y-auto p-4 md:p-8 no-scrollbar bg-slate-50 dark:bg-background">
         <div className="max-w-[1200px] mx-auto flex flex-col gap-8">
           {/* Header */}
@@ -902,6 +898,6 @@ export default function StudentAttendancePage() {
           )}
         </div>
       </div>
-    </StudentLayout>
+    </>
   );
 }

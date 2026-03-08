@@ -1,13 +1,13 @@
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useDeferredValue, useEffect, useState, useMemo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { apiEndpoint } from "@/lib/config";
-import StudentLayout from "@/components/StudentLayout";
-import NotificationBell from "@/components/NotificationBell";
+
+import { CardSkeleton } from "@/components/skeletons/CardSkeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, BookOpen, ArrowRight, Search, GraduationCap, Link2 } from "lucide-react";
+import { Loader2, Search, Link2 } from "lucide-react";
 import { Link } from "wouter";
 
 interface Course {
@@ -28,7 +28,7 @@ interface Enrollment {
 
 export default function StudentCoursesPage() {
   const { t } = useTranslation('courses');
-  const { user, token } = useAuth();
+  const { token } = useAuth();
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,6 +39,7 @@ export default function StudentCoursesPage() {
   const [joinLoading, setJoinLoading] = useState(false);
   const [joinError, setJoinError] = useState<string | null>(null);
   const { toast } = useToast();
+  const deferredSearchQuery = useDeferredValue(searchQuery);
 
   useEffect(() => {
     // Read search query from URL on component mount
@@ -80,8 +81,8 @@ export default function StudentCoursesPage() {
     let filtered = enrollments;
 
     // Apply search filter
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
+    if (deferredSearchQuery.trim()) {
+      const query = deferredSearchQuery.toLowerCase();
       filtered = filtered.filter(enrollment => 
         enrollment.course.title.toLowerCase().includes(query) ||
         enrollment.course.description?.toLowerCase().includes(query)
@@ -100,7 +101,7 @@ export default function StudentCoursesPage() {
     }
 
     return sorted;
-  }, [enrollments, searchQuery, filterStatus, sortBy]);
+  }, [enrollments, deferredSearchQuery, filterStatus, sortBy]);
 
   const handleJoinCourse = async () => {
     const trimmed = joinInput.trim();
@@ -146,28 +147,28 @@ export default function StudentCoursesPage() {
   const getCourseStyle = useCallback((title: string) => {
     const lowerTitle = title.toLowerCase();
     if (lowerTitle.includes('math') || lowerTitle.includes('algebra') || lowerTitle.includes('geometry')) {
-      return { bg: 'bg-gradient-to-br from-amber-200 to-amber-300', icon: '📐' };
+      return { bg: 'bg-gradient-to-br from-amber-200 to-amber-300', icon: 'calculate' };
     }
     if (lowerTitle.includes('science') || lowerTitle.includes('physics') || lowerTitle.includes('chemistry') || lowerTitle.includes('biology')) {
-      return { bg: 'bg-gradient-to-br from-green-200 to-green-300', icon: '🔬' };
+      return { bg: 'bg-gradient-to-br from-green-200 to-green-300', icon: 'science' };
     }
     if (lowerTitle.includes('english') || lowerTitle.includes('writing') || lowerTitle.includes('literature')) {
-      return { bg: 'bg-gradient-to-br from-blue-200 to-blue-300', icon: '📚' };
+      return { bg: 'bg-gradient-to-br from-blue-200 to-blue-300', icon: 'menu_book' };
     }
     if (lowerTitle.includes('history') || lowerTitle.includes('social')) {
-      return { bg: 'bg-gradient-to-br from-orange-200 to-orange-300', icon: '🏛️' };
+      return { bg: 'bg-gradient-to-br from-orange-200 to-orange-300', icon: 'history_edu' };
     }
     if (lowerTitle.includes('art') || lowerTitle.includes('music') || lowerTitle.includes('drama')) {
-      return { bg: 'bg-gradient-to-br from-purple-200 to-purple-300', icon: '🎨' };
+      return { bg: 'bg-gradient-to-br from-purple-200 to-purple-300', icon: 'palette' };
     }
     if (lowerTitle.includes('computer') || lowerTitle.includes('programming') || lowerTitle.includes('coding')) {
-      return { bg: 'bg-gradient-to-br from-cyan-200 to-cyan-300', icon: '💻' };
+      return { bg: 'bg-gradient-to-br from-cyan-200 to-cyan-300', icon: 'computer' };
     }
-    return { bg: 'bg-gradient-to-br from-indigo-200 to-indigo-300', icon: '📖' };
+    return { bg: 'bg-gradient-to-br from-indigo-200 to-indigo-300', icon: 'book_2' };
   }, []);
 
   return (
-    <StudentLayout>
+    <>
       {/* Header */}
       {/* <header className="flex items-center justify-between px-8 py-5 border-b border-border bg-card backdrop-blur-sm z-20">
         <div className="flex-1 max-w-lg">
@@ -250,9 +251,7 @@ export default function StudentCoursesPage() {
           </div>
 
           {isLoading ? (
-            <div className="flex items-center justify-center h-64">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-            </div>
+            <CardSkeleton count={3} />
           ) : error ? (
             <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-500/30 rounded-xl p-8 text-center">
               <p className="text-red-600 dark:text-red-400">{error}</p>
@@ -277,7 +276,7 @@ export default function StudentCoursesPage() {
                       {!enrollment.course.imageUrl && (
                         <div className="absolute inset-0 flex items-center justify-center">
                           <div className="w-20 h-20 bg-white/40 dark:bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
-                            <span className="text-5xl">{courseStyle.icon}</span>
+                            <span className="material-symbols-outlined text-5xl">{courseStyle.icon}</span>
                           </div>
                         </div>
                       )}
@@ -349,6 +348,8 @@ export default function StudentCoursesPage() {
           )}
         </div>
       </div>
-    </StudentLayout>
+    </>
   );
 }
+
+

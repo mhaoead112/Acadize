@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { apiEndpoint } from "@/lib/config";
-import StudentLayout from "@/components/StudentLayout";
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, BookOpen, AlertCircle } from "lucide-react";
@@ -139,29 +139,27 @@ export default function StudentJoinCoursePage() {
 
   if (error && !preview) {
     return (
-      <StudentLayout>
-        <div className="container max-w-lg py-8">
-          <Card className="border-destructive/50">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-destructive">
-                <AlertCircle className="h-5 w-5" />
-                {t("joinError") ?? "Cannot join course"}
-              </CardTitle>
-              <CardDescription>{error}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Link href="/student/courses">
-                <Button variant="outline">{t("myClasses") ?? "My courses"}</Button>
-              </Link>
-            </CardContent>
-          </Card>
-        </div>
-      </StudentLayout>
+      <div className="container max-w-lg py-8">
+        <Card className="border-destructive/50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-destructive">
+              <AlertCircle className="h-5 w-5" />
+              {t("joinError") ?? "Cannot join course"}
+            </CardTitle>
+            <CardDescription>{error}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Link href="/student/courses">
+              <Button variant="outline">{t("myClasses") ?? "My courses"}</Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
   return (
-    <StudentLayout>
+    <>
       <div className="container max-w-lg py-8">
         <Card>
           <CardHeader>
@@ -209,6 +207,6 @@ export default function StudentJoinCoursePage() {
           </CardContent>
         </Card>
       </div>
-    </StudentLayout>
+    </>
   );
 }

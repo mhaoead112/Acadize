@@ -1,11 +1,15 @@
 ﻿import { useState, useEffect } from "react";
 import { useRoute } from "wouter";
-import { ArrowLeft, Megaphone, Pin, Loader2 } from "lucide-react";
+import { ArrowLeft, Megaphone, Pin } from "lucide-react";
+import { ListSkeleton } from "@/components/skeletons/ListSkeleton";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { apiEndpoint, assetUrl } from '@/lib/config';
+import { usePortalI18n } from '@/hooks/usePortalI18n';
+
 
 interface Announcement {
   id: string;
@@ -24,6 +28,7 @@ interface Course {
 }
 
 export default function StudentAnnouncementsPage() {
+  const { t } = usePortalI18n("common");
   const [, params] = useRoute("/student/courses/:courseId/announcements");
   const courseId = params?.courseId;
   const { toast } = useToast();
@@ -32,7 +37,7 @@ export default function StudentAnnouncementsPage() {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const getAuthHeaders = () => {
+  const getAuthHeaders = (): Record<string, string> => {
     const token = localStorage.getItem("auth_token") || localStorage.getItem("eduverse_token");
     if (!token) return {};
     return { Authorization: `Bearer ${token}` };
@@ -89,8 +94,8 @@ export default function StudentAnnouncementsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      <div className="container mx-auto p-6 max-w-5xl">
+        <ListSkeleton rows={4} />
       </div>
     );
   }

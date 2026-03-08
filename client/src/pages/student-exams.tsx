@@ -4,7 +4,7 @@ import { useLocation } from 'wouter';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { apiEndpoint } from '@/lib/config';
-import StudentLayout from '@/components/StudentLayout';
+import { CardSkeleton } from '@/components/skeletons/CardSkeleton';
 
 // ============================================================================
 // TYPES
@@ -300,6 +300,25 @@ const StudentExams: React.FC = () => {
     }
   };
 
+  const getAttemptStatusLabel = (status: ExamAttempt['status']) => {
+    switch (status) {
+      case 'in_progress':
+        return t('statusInProgress');
+      case 'submitted':
+        return t('statusSubmitted');
+      case 'graded':
+        return t('statusGraded');
+      case 'flagged':
+        return t('statusFlagged');
+      case 'under_review':
+        return t('statusUnderReview');
+      case 'invalidated':
+        return t('statusInvalidated');
+      default:
+        return status.replace('_', ' ');
+    }
+  };
+
   const formatDate = (dateString: string | null) => {
     if (!dateString) return t('noDate');
     return new Date(dateString).toLocaleDateString(undefined, {
@@ -373,11 +392,11 @@ const StudentExams: React.FC = () => {
           <div className="flex items-center gap-4 pt-2">
             <div className="flex items-center gap-1.5 dark:text-slate-500 text-slate-600">
               <span className="material-symbols-outlined text-[18px]">timer</span>
-              <span className="text-xs">{exam.duration}m</span>
+              <span className="text-xs">{t('minutesShort', { count: exam.duration })}</span>
             </div>
             <div className="flex items-center gap-1.5 dark:text-slate-500 text-slate-600">
               <span className="material-symbols-outlined text-[18px]">quiz</span>
-              <span className="text-xs">{getQuestionCount(exam)} Qs</span>
+              <span className="text-xs">{t('questionsShort', { count: getQuestionCount(exam) })}</span>
             </div>
             {exam.antiCheatEnabled && (
               <div className="flex items-center gap-1.5 text-orange-400">
@@ -423,7 +442,7 @@ const StudentExams: React.FC = () => {
         <div className="p-6 flex-1 space-y-4">
           <div className="flex justify-between items-start">
             <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider border ${getStatusStyle(attempt.status)}`}>
-              {attempt.status.replace('_', ' ')}
+              {getAttemptStatusLabel(attempt.status)}
             </span>
             <span className="text-xs dark:text-slate-500 text-slate-600 font-medium">
               {t('attemptNumber', { number: attempt.attemptNumber })}
@@ -466,7 +485,7 @@ const StudentExams: React.FC = () => {
               className="w-full py-2.5 dark:bg-green-500 dark:hover:bg-green-400 bg-green-400 hover:bg-green-500 dark:text-white text-slate-900 font-bold rounded-lg transition-all flex items-center justify-center gap-2"
             >
               <span className="material-symbols-outlined text-[18px]">play_arrow</span>
-              Resume Exam
+              {t('continueExam')}
             </button>
           ) : attempt.status === 'graded' ? (
             <button 
@@ -474,7 +493,7 @@ const StudentExams: React.FC = () => {
               className="w-full py-2.5 dark:bg-navy-lighter dark:text-slate-300 dark:border dark:border-navy-border bg-slate-200 text-slate-700 font-bold rounded-lg hover:dark:bg-navy-border hover:bg-slate-300 transition-all flex items-center justify-center gap-2"
             >
               <span className="material-symbols-outlined text-[18px]">analytics</span>
-              View Report
+              {t('viewResults')}
             </button>
           ) : (
             <button 
@@ -482,7 +501,7 @@ const StudentExams: React.FC = () => {
               className="w-full py-2.5 dark:bg-navy-dark dark:text-slate-600 bg-slate-200 text-slate-600 font-bold rounded-lg dark:border dark:border-navy-border cursor-not-allowed flex items-center justify-center gap-2"
             >
               <span className="material-symbols-outlined text-[18px]">pending</span>
-              Pending Review
+              {t('pendingReview')}
             </button>
           )}
         </div>
@@ -514,7 +533,7 @@ const StudentExams: React.FC = () => {
 
           <div className="flex items-center gap-2 px-3 py-2 dark:bg-blue-500/10 dark:border-blue-500/20 bg-blue-100 border border-blue-300 rounded-lg">
             <span className="material-symbols-outlined dark:text-blue-400 text-blue-600 text-[18px]">school</span>
-            <span className="text-xs dark:text-blue-400 text-blue-600 font-medium">Adaptive Learning Mode</span>
+            <span className="text-xs dark:text-blue-400 text-blue-600 font-medium">{t('adaptiveLearningMode')}</span>
           </div>
         </div>
 
@@ -539,41 +558,34 @@ const StudentExams: React.FC = () => {
 
   if (loading) {
     return (
-      <StudentLayout>
-        <div className="max-w-7xl mx-auto w-full p-4 sm:p-8 flex items-center justify-center min-h-screen">
-          <div className="text-center space-y-4">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-2 dark:border-primary border-yellow-400 mx-auto"></div>
-            <p className="dark:text-slate-400 text-slate-600">{t('loadingExams')}</p>
-          </div>
-        </div>
-      </StudentLayout>
+      <div className="max-w-7xl mx-auto w-full p-4 sm:p-8">
+        <CardSkeleton count={6} />
+      </div>
     );
   }
 
   if (error) {
     return (
-      <StudentLayout>
-        <div className="max-w-7xl mx-auto w-full p-4 sm:p-8">
-          <div className="dark:bg-red-500/10 dark:border-red-500/20 bg-red-100 border border-red-300 rounded-xl p-6 text-center">
-            <span className="material-symbols-outlined text-4xl dark:text-red-400 text-red-600 mb-2">error</span>
-            <p className="dark:text-red-400 text-red-600 font-medium">{error}</p>
-            <button 
-              onClick={fetchAllExamData}
-              className="mt-4 px-4 py-2 dark:bg-red-500/20 dark:hover:bg-red-500/30 dark:text-red-400 bg-red-200 hover:bg-red-300 text-red-700 rounded-lg transition-all"
-            >
-              Retry
-            </button>
-          </div>
+      <div className="max-w-7xl mx-auto w-full p-4 sm:p-8">
+        <div className="dark:bg-red-500/10 dark:border-red-500/20 bg-red-100 border border-red-300 rounded-xl p-6 text-center">
+          <span className="material-symbols-outlined text-4xl dark:text-red-400 text-red-600 mb-2">error</span>
+          <p className="dark:text-red-400 text-red-600 font-medium">{error}</p>
+          <button 
+            onClick={fetchAllExamData}
+            className="mt-4 px-4 py-2 dark:bg-red-500/20 dark:hover:bg-red-500/30 dark:text-red-400 bg-red-200 hover:bg-red-300 text-red-700 rounded-lg transition-all"
+          >
+            {t('retry')}
+          </button>
         </div>
-      </StudentLayout>
+      </div>
     );
   }
 
   const categoryLabels: Record<CategoryType, string> = {
-    'all': 'All Assessments',
-    'main': 'Main Assessments',
-    'mock': 'Mock Exams',
-    'practice': 'Practice Exams'
+            'all': t('allCategory'),
+            'main': t('mainCategory'),
+            'mock': t('mockCategory'),
+            'practice': t('practiceCategory')
   };
 
   const categoryIcons: Record<CategoryType, string> = {
@@ -584,18 +596,17 @@ const StudentExams: React.FC = () => {
   };
 
   return (
-    <StudentLayout>
-      <div className="max-w-7xl mx-auto w-full p-4 sm:p-8 space-y-10">
+    <div className="max-w-7xl mx-auto w-full p-4 sm:p-8 space-y-10">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="space-y-2">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full dark:bg-primary/10 dark:border-primary/20 dark:text-primary bg-yellow-200 border border-yellow-400 text-yellow-700 text-xs font-semibold uppercase tracking-wider">
               <span className="material-symbols-outlined text-[16px]">assignment</span>
-              Student Assessments
+              {t('studentAssessments')}
             </div>
-            <h2 className="text-3xl md:text-4xl font-bold dark:text-white text-slate-900 tracking-tight">Examination Center</h2>
+            <h2 className="text-3xl md:text-4xl font-bold dark:text-white text-slate-900 tracking-tight">{t('examinationCenter')}</h2>
             <p className="dark:text-slate-400 text-slate-600 max-w-2xl">
-              Access your scheduled proctored exams, practice simulations, and performance reviews.
+              {t('examCenterSubtitle')}
             </p>
           </div>
           
@@ -607,9 +618,9 @@ const StudentExams: React.FC = () => {
           <div className="dark:bg-yellow-500/10 dark:border-yellow-500/20 bg-yellow-100 border border-yellow-400 rounded-xl p-4 flex items-start gap-3">
             <span className="material-symbols-outlined dark:text-yellow-400 text-yellow-600 text-[24px]">warning</span>
             <div>
-              <p className="dark:text-yellow-400 text-yellow-700 font-bold">Exam Session Active</p>
+              <p className="dark:text-yellow-400 text-yellow-700 font-bold">{t('examSessionActive')}</p>
               <p className="dark:text-slate-400 text-slate-600 text-sm mt-1">
-                You have an active exam in progress. Complete or submit it before starting a new exam.
+                {t('examSessionActiveDesc')}
               </p>
             </div>
           </div>
@@ -624,7 +635,7 @@ const StudentExams: React.FC = () => {
               </div>
               <div>
                 <h3 className="text-xl font-bold dark:text-white text-slate-900">{t('inProgress')}</h3>
-                <p className="text-xs dark:text-slate-500 text-slate-600">{examData.inProgress.length} active session(s)</p>
+                <p className="text-xs dark:text-slate-500 text-slate-600">{t('activeSessionsCount', { count: examData.inProgress.length })}</p>
               </div>
             </div>
 
@@ -643,7 +654,7 @@ const StudentExams: React.FC = () => {
               </div>
               <div>
                 <h3 className="text-xl font-bold dark:text-white text-slate-900">{t('availableExams')}</h3>
-                <p className="text-xs dark:text-slate-500 text-slate-600">{examData.available.length} exam(s) available</p>
+                <p className="text-xs dark:text-slate-500 text-slate-600">{t('availableExamsCount', { count: examData.available.length })}</p>
               </div>
             </div>
 
@@ -659,7 +670,7 @@ const StudentExams: React.FC = () => {
                       : 'dark:bg-navy-darker dark:text-slate-400 dark:hover:bg-navy-dark bg-slate-200 text-slate-700 hover:bg-slate-300'
                   }`}
                 >
-                  {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                  {categoryLabels[cat]}
                 </button>
               ))}
             </div>
@@ -686,7 +697,7 @@ const StudentExams: React.FC = () => {
               </div>
               <div>
                 <h3 className="text-xl font-bold dark:text-white text-slate-900">{t('retakeOpportunities')}</h3>
-                <p className="text-xs dark:text-slate-500 text-slate-600">{examData.retakeEligible.length} retake(s) available</p>
+                <p className="text-xs dark:text-slate-500 text-slate-600">{t('retakeAvailableCount', { count: examData.retakeEligible.length })}</p>
               </div>
             </div>
 
@@ -705,7 +716,7 @@ const StudentExams: React.FC = () => {
               </div>
               <div>
                 <h3 className="text-xl font-bold dark:text-white text-slate-900">{t('completedExams')}</h3>
-                <p className="text-xs dark:text-slate-500 text-slate-600">{examData.completed.length} exam(s) completed</p>
+                <p className="text-xs dark:text-slate-500 text-slate-600">{t('completedExamsCount', { count: examData.completed.length })}</p>
               </div>
             </div>
 
@@ -714,8 +725,7 @@ const StudentExams: React.FC = () => {
             </div>
           </section>
         )}
-      </div>
-    </StudentLayout>
+    </div>
   );
 };
 
