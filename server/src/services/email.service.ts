@@ -2,6 +2,9 @@
 
 import nodemailer from 'nodemailer';
 import type { Transporter } from 'nodemailer';
+import { db } from '../db/index.js';
+import { users, organizations } from '../db/schema.js';
+import { eq } from 'drizzle-orm';
 import {
   welcomeEmailTemplate,
   emailVerificationTemplate,
@@ -72,6 +75,41 @@ export class EmailService {
   private static readonly DEFAULT_FROM = process.env.EMAIL_FROM || 'noreply@eduverse.com';
   private static readonly SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || 'support@eduverse.com';
 
+  private static async getBrandingForEmail(email: string): Promise<{ orgName?: string; logoUrl?: string; primaryColor?: string } | undefined> {
+    try {
+      const userResult = await db.select({
+        organizationId: users.organizationId
+      }).from(users).where(eq(users.email, email)).limit(1);
+
+      if (userResult.length > 0 && userResult[0].organizationId) {
+        const orgResult = await db.select({
+          name: organizations.name,
+          logoUrl: organizations.logoUrl,
+          primaryColor: organizations.primaryColor,
+          subdomain: organizations.subdomain,
+        }).from(organizations).where(eq(organizations.id, userResult[0].organizationId)).limit(1);
+
+        if (orgResult.length > 0) {
+          const org = orgResult[0];
+
+          // Exclude default Acadize organization from dynamic email branding replacements
+          if (org.subdomain === 'acadize' || org.subdomain === 'default') {
+            return undefined;
+          }
+
+          return {
+            orgName: org.name,
+            logoUrl: org.logoUrl || undefined,
+            primaryColor: org.primaryColor || undefined
+          };
+        }
+      }
+    } catch (error) {
+      console.error('[Email] Error fetching branding:', error);
+    }
+    return undefined;
+  }
+
   /**
    * Send a single email
    */
@@ -79,12 +117,45 @@ export class EmailService {
     try {
       const transport = getTransporter();
 
+      let html = options.html;
+      let text = options.text;
+      let subject = options.subject;
+      let fromField = options.from || this.DEFAULT_FROM;
+
+      // Attempt to fetch branding using the first recipient email
+      const firstEmail = Array.isArray(options.to) ? options.to[0] : options.to;
+      const branding = await this.getBrandingForEmail(firstEmail);
+
+      if (branding && branding.orgName) {
+        // Replace mentions of Eduverse with Org Name
+        if (branding.orgName) {
+          html = html?.replace(/Eduverse/g, branding.orgName);
+          text = text?.replace(/Eduverse/g, branding.orgName);
+          subject = subject.replace(/Eduverse/g, branding.orgName);
+          fromField = `"${branding.orgName}" <${this.DEFAULT_FROM}>`;
+        }
+
+        // Replace colors
+        if (branding.primaryColor && html) {
+          html = html.replace(/#f9d406/gi, branding.primaryColor);
+          html = html.replace(/#f5c400/gi, branding.primaryColor);
+        }
+
+        // Replace logo
+        if (branding.logoUrl && html) {
+          html = html.replace(
+            /<h1 class="logo">.*?<\/h1>/i,
+            `<div class="logo"><img src="${branding.logoUrl}" alt="${branding.orgName || 'Logo'}" style="max-height: 48px; object-fit: contain; vertical-align: middle;" /></div>`
+          );
+        }
+      }
+
       const mailOptions = {
-        from: options.from || this.DEFAULT_FROM,
+        from: fromField,
         to: options.to,
-        subject: options.subject,
-        text: options.text,
-        html: options.html,
+        subject: subject,
+        text: text,
+        html: html,
         replyTo: options.replyTo,
         attachments: options.attachments,
       };

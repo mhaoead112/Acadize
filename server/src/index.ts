@@ -99,6 +99,7 @@ import subscriptionRoutes from './api/subscription.routes.js';
 import webhookRoutes from './api/webhook.routes.js';
 import zoomWebhookRoutes from './api/zoom-webhook.routes.js';
 import registrationRoutes from './api/registration.routes.js';
+import orgBrandingRoutes from './api/org-branding.routes.js';
 import { tenantMiddleware, validateUserTenant } from './middleware/tenant.middleware.js';
 import { localeMiddleware } from './middleware/locale.middleware.js';
 import { requireSubscription } from './middleware/subscription.middleware.js';
@@ -465,6 +466,9 @@ app.use('/api/teacher', apiLimiter, teacherRoutes);
 // Recording uploads - handle auth internally
 app.use('/api/recordings', uploadLimiter, recordingUploadRoutes);
 
+
+// Org branding - public GET, admin PATCH
+app.use('/api/org/branding', apiLimiter, orgBrandingRoutes);
 
 // --- Tenant Info Endpoint ---
 app.get('/api/tenant/info', (req, res) => {

@@ -16,7 +16,7 @@ const router = Router();
  * POST /api/retakes
  * Generate a new retake exam from student's mistake pool
  */
-router.post('/retakes', ...requireAuth, async (req: Request, res: Response) => {
+router.post('/', ...requireAuth, async (req: Request, res: Response) => {
   try {
     const { topicNames, questionCount, difficulty } = req.body;
     const studentId = (req as any).user?.id;
@@ -55,7 +55,7 @@ router.post('/retakes', ...requireAuth, async (req: Request, res: Response) => {
  * GET /api/retakes/:retakeId
  * Fetch a specific retake exam with its questions
  */
-router.get('/retakes/:retakeId', ...requireAuth, async (req: Request, res: Response) => {
+router.get('/:retakeId', ...requireAuth, async (req: Request, res: Response) => {
   try {
     const { retakeId } = req.params;
     const studentId = (req as any).user?.id;
@@ -83,7 +83,7 @@ router.get('/retakes/:retakeId', ...requireAuth, async (req: Request, res: Respo
  * Submit retake exam answers and update mistake pool
  */
 router.post(
-  '/retakes/:retakeId/submit',
+  '/:retakeId/submit',
   ...requireAuth,
   async (req: Request, res: Response) => {
     try {

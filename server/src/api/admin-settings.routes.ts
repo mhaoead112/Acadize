@@ -199,9 +199,32 @@ router.get('/:category', isAuthenticated, isAdmin, async (req, res) => {
       return res.status(404).json({ error: `Settings category '${category}' not found` });
     }
 
-    res.json({ 
+    if (category === 'features') {
+      const tenant = (req as any).tenant;
+      if (tenant && tenant.organizationId) {
+        const [org] = await db
+          .select({ config: organizations.config })
+          .from(organizations)
+          .where(eq(organizations.id, tenant.organizationId))
+          .limit(1);
+
+        const orgFeatures = org?.config && typeof org.config === 'object' && 'features' in org.config
+          ? (org.config as any).features
+          : {};
+
+        return res.json({
+          category,
+          settings: {
+            ...settings.features,
+            ...orgFeatures
+          }
+        });
+      }
+    }
+
+    res.json({
       category,
-      settings: settings[category as keyof typeof settings] 
+      settings: settings[category as keyof typeof settings]
     });
   } catch (error) {
     console.error('Error fetching settings category:', error);
@@ -255,6 +278,42 @@ router.patch('/:category', isAuthenticated, isAdmin, async (req, res) => {
 
     const currentSettings = loadSettings();
 
+    if (category === 'features') {
+      const tenant = (req as any).tenant;
+      if (tenant && tenant.organizationId) {
+        const [org] = await db
+          .select({ config: organizations.config })
+          .from(organizations)
+          .where(eq(organizations.id, tenant.organizationId))
+          .limit(1);
+
+        if (org) {
+          const currentOrgConfig = org.config && typeof org.config === 'object' ? org.config : {};
+          const updatedConfig = {
+            ...currentOrgConfig,
+            features: {
+              ...(currentOrgConfig as any).features,
+              ...categorySettings
+            }
+          };
+
+          await db
+            .update(organizations)
+            .set({ config: updatedConfig })
+            .where(eq(organizations.id, tenant.organizationId));
+
+          const { clearTenantCache } = await import('../middleware/tenant.middleware.js');
+          clearTenantCache(tenant.subdomain);
+
+          return res.json({
+            message: `${category} settings updated successfully for organization`,
+            category,
+            settings: updatedConfig.features
+          });
+        }
+      }
+    }
+
     if (!(category in currentSettings)) {
       return res.status(404).json({ error: `Settings category '${category}' not found` });
     }
@@ -298,7 +357,7 @@ router.post('/reset', isAuthenticated, isAdmin, async (req, res) => {
         return res.status(404).json({ error: `Settings category '${category}' not found` });
       }
       (currentSettings as any)[category] = (defaultSettings as any)[category];
-      
+
       if (saveSettings(currentSettings)) {
         res.json({
           message: `${category} settings reset to defaults`,
@@ -335,7 +394,7 @@ router.post('/reset', isAuthenticated, isAdmin, async (req, res) => {
 router.get('/public/config', async (req, res) => {
   try {
     const settings = loadSettings();
-    
+
     // Only return public, non-sensitive settings
     const publicSettings = {
       siteName: settings.general.siteName,
@@ -361,7 +420,7 @@ router.get('/public/config', async (req, res) => {
 // Helper function for deep merge
 function deepMerge(target: any, source: any): any {
   const result = { ...target };
-  
+
   for (const key in source) {
     if (source[key] instanceof Object && key in target && target[key] instanceof Object) {
       result[key] = deepMerge(target[key], source[key]);
@@ -369,7 +428,7 @@ function deepMerge(target: any, source: any): any {
       result[key] = source[key];
     }
   }
-  
+
   return result;
 }
 
