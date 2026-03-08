@@ -1,4 +1,4 @@
-import { Variants } from "framer-motion";
+﻿import { Variants } from "framer-motion";
 
 // ============================================================
 // SPRING CONFIGURATIONS
@@ -85,9 +85,7 @@ export const cardVariants: Variants = {
   },
   hover: {
     y: -8,
-    scale: 1.02,
-    boxShadow: "0 20px 40px rgba(0, 0, 0, 0.15)",
-    transition: springConfigs.snappy,
+    scale: 1.02,    transition: springConfigs.snappy,
   },
   tap: {
     scale: 0.98,
@@ -109,10 +107,7 @@ export const glowCardVariants: Variants = {
   },
   hover: {
     y: -12,
-    scale: 1.03,
-    boxShadow: "0 25px 50px rgba(59, 130, 246, 0.25)",
-    filter: "brightness(1.1)",
-    transition: springConfigs.bouncy,
+    scale: 1.03,    transition: springConfigs.bouncy,
   },
   tap: {
     scale: 0.97,
@@ -376,9 +371,7 @@ export const listItemVariants: Variants = {
     transition: springConfigs.gentle,
   },
   hover: {
-    x: 8,
-    backgroundColor: "rgba(255, 255, 255, 0.05)",
-    transition: springConfigs.snappy,
+    x: 8,    transition: springConfigs.snappy,
   },
 };
 
@@ -472,3 +465,68 @@ export const createSpringTransition = (
 export const generateGlowEffect = (color: string = "59, 130, 246") => ({
   boxShadow: `0 0 20px rgba(${color}, 0.3), 0 0 40px rgba(${color}, 0.2)`,
 });
+
+// ============================================================
+// PREMIUM MOTION TOKENS (pilot production pages)
+// ============================================================
+
+export const premiumMotionDurations = {
+  quick: 0.14,
+  standard: 0.22,
+  emphasis: 0.3,
+} as const;
+
+export const premiumMotionSpring = {
+  type: "spring" as const,
+  stiffness: 320,
+  damping: 30,
+  mass: 0.8,
+};
+
+export const premiumMotionEase = [0.22, 1, 0.36, 1] as const;
+
+export const premiumEnterVariants: Variants = {
+  hidden: { opacity: 0, y: 16 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: premiumMotionDurations.standard,
+      ease: premiumMotionEase,
+    },
+  },
+};
+
+export const premiumStaggerVariants: Variants = {
+  hidden: {},
+  visible: {
+    transition: {
+      staggerChildren: 0.06,
+      delayChildren: 0.04,
+    },
+  },
+};
+
+export const premiumCardVariants: Variants = {
+  hidden: { opacity: 0, y: 12 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: premiumMotionDurations.standard,
+      ease: premiumMotionEase,
+    },
+  },
+  hover: {
+    y: -2,
+    transition: {
+      duration: premiumMotionDurations.quick,
+      ease: premiumMotionEase,
+    },
+  },
+  tap: {
+    scale: 0.99,
+    transition: premiumMotionSpring,
+  },
+};
+
