@@ -2,6 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { User, Mail, Phone, ArrowRight } from 'lucide-react';
 import { Link } from 'wouter';
+import { useBranding } from '@/contexts/BrandingContext';
 
 interface RegisterStep1Props {
   data: {
@@ -11,11 +12,11 @@ interface RegisterStep1Props {
   };
   updateData: (data: Partial<RegisterStep1Props['data']>) => void;
   onNext: () => void;
-  orgName?: string;
 }
 
-export function RegisterStep1({ data, updateData, onNext, orgName }: RegisterStep1Props) {
+export function RegisterStep1({ data, updateData, onNext }: RegisterStep1Props) {
   const { t } = useTranslation('auth');
+  const branding = useBranding();
   const [errors, setErrors] = React.useState<{ [key: string]: string }>({});
 
   const validate = () => {
@@ -40,8 +41,8 @@ export function RegisterStep1({ data, updateData, onNext, orgName }: RegisterSte
   return (
     <div className="w-full max-w-md mx-auto p-8 animate-fade-in">
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-primary via-gold to-primary bg-clip-text text-transparent mb-2">
-          {t('joinOrg', { org: orgName || 'Acadize' })}
+        <h1 className="text-3xl font-bold text-brand-primary mb-2">
+          {t('joinOrg', { org: branding.name !== 'Acadize' ? branding.name : 'Acadize' })}
         </h1>
         <p className="text-gray-500 dark:text-gray-400">{t('empowerFuture')}</p>
       </div>
@@ -49,8 +50,8 @@ export function RegisterStep1({ data, updateData, onNext, orgName }: RegisterSte
       {/* Step Indicator */}
       <div className="flex items-center justify-center mb-8 gap-2">
         <div className="flex items-center">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-r from-primary to-gold text-navy-900 flex items-center justify-center font-bold text-sm shadow-lg">1</div>
-          <span className="ml-2 text-sm font-medium text-primary hidden sm:block">{t('personalInfo')}</span>
+          <div className="w-8 h-8 rounded-full bg-brand-primary text-white flex items-center justify-center font-bold text-sm shadow-lg shadow-brand-primary/30">1</div>
+          <span className="ml-2 text-sm font-medium text-brand-primary hidden sm:block">{t('personalInfo')}</span>
         </div>
         <div className="h-1 w-12 bg-gray-200 dark:bg-navy-700 rounded-full mx-2"></div>
         <div className="flex items-center">
@@ -76,7 +77,7 @@ export function RegisterStep1({ data, updateData, onNext, orgName }: RegisterSte
               type="text"
               value={data.fullName}
               onChange={(e) => updateData({ fullName: e.target.value })}
-              className={`w-full pl-10 pr-4 py-3 rounded-xl border ${errors.fullName ? 'border-red-500 focus:ring-red-200' : 'border-gray-200 dark:border-navy-600 focus:border-primary focus:ring-primary/20'} focus:outline-none focus:ring-4 transition-all duration-200 bg-gray-50/50 dark:bg-navy-900/50 focus:bg-white dark:focus:bg-navy-900 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500`}
+              className={`w-full pl-10 pr-4 py-3 rounded-xl border ${errors.fullName ? 'border-red-500 focus:ring-red-200' : 'border-gray-200 dark:border-navy-600 focus:border-brand-primary focus:ring-brand-primary/20'} focus:outline-none focus:ring-4 transition-all duration-200 bg-gray-50/50 dark:bg-navy-900/50 focus:bg-white dark:focus:bg-navy-900 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500`}
               placeholder={t('placeholderFullName')}
             />
           </div>
@@ -94,7 +95,7 @@ export function RegisterStep1({ data, updateData, onNext, orgName }: RegisterSte
               type="email"
               value={data.email}
               onChange={(e) => updateData({ email: e.target.value })}
-              className={`w-full pl-10 pr-4 py-3 rounded-xl border ${errors.email ? 'border-red-500 focus:ring-red-200' : 'border-gray-200 dark:border-navy-600 focus:border-primary focus:ring-primary/20'} focus:outline-none focus:ring-4 transition-all duration-200 bg-gray-50/50 dark:bg-navy-900/50 focus:bg-white dark:focus:bg-navy-900 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500`}
+              className={`w-full pl-10 pr-4 py-3 rounded-xl border ${errors.email ? 'border-red-500 focus:ring-red-200' : 'border-gray-200 dark:border-navy-600 focus:border-brand-primary focus:ring-brand-primary/20'} focus:outline-none focus:ring-4 transition-all duration-200 bg-gray-50/50 dark:bg-navy-900/50 focus:bg-white dark:focus:bg-navy-900 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500`}
               placeholder={t('placeholderEmail')}
             />
           </div>
@@ -112,7 +113,7 @@ export function RegisterStep1({ data, updateData, onNext, orgName }: RegisterSte
               type="tel"
               value={data.phone}
               onChange={(e) => updateData({ phone: e.target.value })}
-              className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-navy-600 focus:border-primary focus:ring-primary/20 focus:outline-none focus:ring-4 transition-all duration-200 bg-gray-50/50 dark:bg-navy-900/50 focus:bg-white dark:focus:bg-navy-900 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+              className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-navy-600 focus:border-brand-primary focus:ring-brand-primary/20 focus:outline-none focus:ring-4 transition-all duration-200 bg-gray-50/50 dark:bg-navy-900/50 focus:bg-white dark:focus:bg-navy-900 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
               placeholder={t('placeholderPhone')}
             />
           </div>
@@ -120,7 +121,7 @@ export function RegisterStep1({ data, updateData, onNext, orgName }: RegisterSte
 
         <button
           type="submit"
-          className="w-full bg-gradient-to-r from-primary via-gold to-primary hover:from-primary-hover hover:via-gold hover:to-primary-hover text-navy-900 font-semibold py-3.5 rounded-xl shadow-lg hover:shadow-xl hover:translate-y-[-1px] transition-all duration-200 flex items-center justify-center gap-2 mt-4"
+          className="w-full bg-brand-primary hover:bg-brand-secondary text-white font-semibold py-3.5 rounded-xl shadow-lg hover:shadow-xl hover:translate-y-[-1px] transition-all duration-200 flex items-center justify-center gap-2 mt-4"
         >
           {t('nextStep')} <ArrowRight size={18} />
         </button>
@@ -128,7 +129,7 @@ export function RegisterStep1({ data, updateData, onNext, orgName }: RegisterSte
 
       <div className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
         {t('alreadyHaveAccount')}{' '}
-        <Link href="/login" className="text-primary hover:text-primary-hover font-semibold hover:underline">
+        <Link href="/login" className="text-brand-primary hover:text-brand-secondary font-semibold hover:underline">
           {t('signIn')}
         </Link>
       </div>

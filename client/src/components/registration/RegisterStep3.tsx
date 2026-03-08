@@ -65,18 +65,18 @@ export function RegisterStep3({ data, updateData, onSubmit, onBack, isLoading }:
       {/* Step Indicator */}
       <div className="flex items-center justify-center mb-8 gap-2">
         <div className="flex items-center">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-r from-primary to-gold text-navy-900 flex items-center justify-center font-bold text-sm shadow-md">✓</div>
-          <span className="ml-2 text-sm font-medium text-primary hidden sm:block">{t('personalInfo')}</span>
+          <div className="w-8 h-8 rounded-full bg-brand-primary text-white flex items-center justify-center font-bold text-sm shadow-md">✓</div>
+          <span className="ml-2 text-sm font-medium text-brand-primary hidden sm:block">{t('personalInfo')}</span>
         </div>
-        <div className="h-1 w-12 bg-gradient-to-r from-primary to-gold rounded-full mx-2"></div>
+        <div className="h-1 w-12 bg-brand-primary rounded-full mx-2"></div>
         <div className="flex items-center">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-r from-primary to-gold text-navy-900 flex items-center justify-center font-bold text-sm shadow-md">✓</div>
-          <span className="ml-2 text-sm font-medium text-primary hidden sm:block">{t('roleDetails')}</span>
+          <div className="w-8 h-8 rounded-full bg-brand-primary text-white flex items-center justify-center font-bold text-sm shadow-md">✓</div>
+          <span className="ml-2 text-sm font-medium text-brand-primary hidden sm:block">{t('roleDetails')}</span>
         </div>
-        <div className="h-1 w-12 bg-gradient-to-r from-primary to-gold rounded-full mx-2"></div>
+        <div className="h-1 w-12 bg-brand-primary rounded-full mx-2"></div>
         <div className="flex items-center">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-r from-primary to-gold text-navy-900 flex items-center justify-center font-bold text-sm shadow-md">3</div>
-          <span className="ml-2 text-sm font-medium text-primary hidden sm:block">{t('security')}</span>
+          <div className="w-8 h-8 rounded-full bg-brand-primary text-white flex items-center justify-center font-bold text-sm shadow-lg shadow-brand-primary/30">3</div>
+          <span className="ml-2 text-sm font-medium text-brand-primary hidden sm:block">{t('security')}</span>
         </div>
       </div>
 
@@ -91,7 +91,7 @@ export function RegisterStep3({ data, updateData, onSubmit, onBack, isLoading }:
               type={showPassword ? "text" : "password"}
               value={data.password}
               onChange={(e) => updateData({ password: e.target.value })}
-              className={`w-full pl-10 pr-10 py-3 rounded-xl border ${errors.password ? 'border-red-500 focus:ring-red-200' : 'border-gray-200 dark:border-navy-600 focus:border-primary focus:ring-primary/20'} focus:outline-none focus:ring-4 transition-all duration-200 bg-gray-50/50 dark:bg-navy-900/50 focus:bg-white dark:focus:bg-navy-900 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500`}
+              className={`w-full pl-10 pr-10 py-3 rounded-xl border ${errors.password ? 'border-red-500 focus:ring-red-200' : 'border-gray-200 dark:border-navy-600 focus:border-brand-primary focus:ring-brand-primary/20'} focus:outline-none focus:ring-4 transition-all duration-200 bg-gray-50/50 dark:bg-navy-900/50 focus:bg-white dark:focus:bg-navy-900 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500`}
               placeholder="••••••••••••"
             />
             <button
@@ -109,7 +109,7 @@ export function RegisterStep3({ data, updateData, onSubmit, onBack, isLoading }:
               {[1, 2, 3, 4].map((s) => (
                 <div 
                   key={s} 
-                  className={`flex-1 rounded-full transition-all duration-300 ${s <= strength ? (strength < 2 ? 'bg-red-400' : strength < 4 ? 'bg-yellow-400' : 'bg-primary') : 'bg-gray-200 dark:bg-navy-700'}`}
+                  className={`flex-1 rounded-full transition-all duration-300 ${s <= strength ? (strength < 2 ? 'bg-red-400' : strength < 4 ? 'bg-yellow-400' : 'bg-brand-primary') : 'bg-gray-200 dark:bg-navy-700'}`}
                 />
               ))}
             </div>
@@ -127,7 +127,7 @@ export function RegisterStep3({ data, updateData, onSubmit, onBack, isLoading }:
               type={showConfirmPassword ? "text" : "password"}
               value={data.confirmPassword}
               onChange={(e) => updateData({ confirmPassword: e.target.value })}
-              className={`w-full pl-10 pr-10 py-3 rounded-xl border ${errors.confirmPassword ? 'border-red-500 focus:ring-red-200' : 'border-gray-200 dark:border-navy-600 focus:border-primary focus:ring-primary/20'} focus:outline-none focus:ring-4 transition-all duration-200 bg-gray-50/50 dark:bg-navy-900/50 focus:bg-white dark:focus:bg-navy-900 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500`}
+              className={`w-full pl-10 pr-10 py-3 rounded-xl border ${errors.confirmPassword ? 'border-red-500 focus:ring-red-200' : 'border-gray-200 dark:border-navy-600 focus:border-brand-primary focus:ring-brand-primary/20'} focus:outline-none focus:ring-4 transition-all duration-200 bg-gray-50/50 dark:bg-navy-900/50 focus:bg-white dark:focus:bg-navy-900 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500`}
               placeholder="••••••••••••"
             />
             <button
@@ -139,24 +139,24 @@ export function RegisterStep3({ data, updateData, onSubmit, onBack, isLoading }:
             </button>
           </div>
           {data.confirmPassword && data.password === data.confirmPassword && (
-             <p className="text-primary text-xs ml-1 mt-1 flex items-center gap-1"><Check size={12} /> {t('passwordsMatch')}</p>
+             <p className="text-brand-primary text-xs ml-1 mt-1 flex items-center gap-1"><Check size={12} /> {t('passwordsMatch')}</p>
           )}
           {errors.confirmPassword && <p className="text-red-500 text-xs ml-1 mt-1">{errors.confirmPassword}</p>}
         </div>
 
-        <div className="bg-primary/10 dark:bg-primary/20 p-4 rounded-xl border border-primary/20 dark:border-primary/30">
+        <div className="bg-brand-primary/10 dark:bg-brand-primary/20 p-4 rounded-xl border border-brand-primary/20 dark:border-brand-primary/30">
           <label className="flex items-start gap-3 cursor-pointer">
             <div className="relative flex items-center mt-1">
               <input
                 type="checkbox"
                 checked={data.agreeTerms}
                 onChange={(e) => updateData({ agreeTerms: e.target.checked })}
-                className="peer h-5 w-5 cursor-pointer appearance-none rounded-md border border-gray-300 dark:border-navy-600 transition-all checked:border-primary checked:bg-primary"
+                className="peer h-5 w-5 cursor-pointer appearance-none rounded-md border border-gray-300 dark:border-navy-600 transition-all checked:border-brand-primary checked:bg-brand-primary"
               />
-              <Check className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-navy-900 opacity-0 peer-checked:opacity-100" size={14} strokeWidth={3} />
+              <Check className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-white opacity-0 peer-checked:opacity-100" size={14} strokeWidth={3} />
             </div>
             <span className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed select-none">
-              <Trans i18nKey="auth:agreeTermsAndPrivacy" components={{ 1: <Link href="/terms" className="text-primary font-semibold hover:underline" target="_blank" />, 2: <Link href="/privacy" className="text-primary font-semibold hover:underline" target="_blank" /> }} />
+              <Trans i18nKey="auth:agreeTermsAndPrivacy" components={{ 1: <Link href="/terms" className="text-brand-primary font-semibold hover:underline" target="_blank" />, 2: <Link href="/privacy" className="text-brand-primary font-semibold hover:underline" target="_blank" /> }} />
             </span>
           </label>
            {errors.agreeTerms && <p className="text-red-500 text-xs mt-2 ml-8">{errors.agreeTerms}</p>}
@@ -173,7 +173,7 @@ export function RegisterStep3({ data, updateData, onSubmit, onBack, isLoading }:
           <button
             type="submit"
             disabled={isLoading}
-            className={`flex-1 bg-gradient-to-r from-primary via-gold to-primary hover:from-primary-hover hover:via-gold hover:to-primary-hover text-navy-900 font-bold py-3.5 rounded-xl shadow-lg hover:shadow-xl hover:translate-y-[-1px] transition-all duration-200 flex items-center justify-center gap-2 ${isLoading ? 'opacity-70 cursor-wait' : ''}`}
+            className={`flex-1 bg-brand-primary hover:bg-brand-secondary text-white font-bold py-3.5 rounded-xl shadow-lg hover:shadow-xl hover:translate-y-[-1px] transition-all duration-200 flex items-center justify-center gap-2 ${isLoading ? 'opacity-70 cursor-wait' : ''}`}
           >
             {isLoading ? (
               <span className="animate-pulse">{t('creatingAccount')}</span>

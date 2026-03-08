@@ -68,13 +68,13 @@ export function RegisterStep2({ data, updateData, onNext, onBack }: RegisterStep
       {/* Step Indicator */}
       <div className="flex items-center justify-center mb-8 gap-2">
         <div className="flex items-center">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-r from-primary to-gold text-navy-900 flex items-center justify-center font-bold text-sm shadow-md">✓</div>
-          <span className="ml-2 text-sm font-medium text-primary hidden sm:block">{t('personalInfo')}</span>
+          <div className="w-8 h-8 rounded-full bg-brand-primary text-white flex items-center justify-center font-bold text-sm shadow-md">✓</div>
+          <span className="ml-2 text-sm font-medium text-brand-primary hidden sm:block">{t('personalInfo')}</span>
         </div>
-        <div className="h-1 w-12 bg-gradient-to-r from-primary to-gold rounded-full mx-2"></div>
+        <div className="h-1 w-12 bg-brand-primary rounded-full mx-2"></div>
         <div className="flex items-center">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-r from-primary to-gold text-navy-900 flex items-center justify-center font-bold text-sm shadow-md">2</div>
-          <span className="ml-2 text-sm font-medium text-primary hidden sm:block">{t('roleDetails')}</span>
+          <div className="w-8 h-8 rounded-full bg-brand-primary text-white flex items-center justify-center font-bold text-sm shadow-lg shadow-brand-primary/30">2</div>
+          <span className="ml-2 text-sm font-medium text-brand-primary hidden sm:block">{t('roleDetails')}</span>
         </div>
         <div className="h-1 w-12 bg-gray-200 dark:bg-navy-700 rounded-full mx-2"></div>
         <div className="flex items-center">
@@ -98,12 +98,12 @@ export function RegisterStep2({ data, updateData, onNext, onBack }: RegisterStep
                   onClick={() => updateData({ role: role.value })}
                   className={`p-4 rounded-xl border-2 transition-all duration-200 flex flex-col items-center gap-2 ${
                     isSelected
-                      ? 'border-primary bg-primary/10 dark:bg-primary/20 shadow-lg scale-105'
-                      : 'border-gray-200 dark:border-navy-600 hover:border-primary/50 dark:hover:border-primary/50 bg-white dark:bg-navy-900/50'
+                      ? 'border-brand-primary bg-brand-primary/10 dark:bg-brand-primary/20 shadow-lg scale-105'
+                      : 'border-gray-200 dark:border-navy-600 hover:border-brand-primary/50 dark:hover:border-brand-primary/50 bg-white dark:bg-navy-900/50'
                   }`}
                 >
-                  <Icon size={24} className={isSelected ? 'text-primary' : 'text-gray-400 dark:text-gray-500'} />
-                  <span className={`text-xs font-semibold ${isSelected ? 'text-primary' : 'text-gray-600 dark:text-gray-400'}`}>
+                  <Icon size={24} className={isSelected ? 'text-brand-primary' : 'text-gray-400 dark:text-gray-500'} />
+                  <span className={`text-xs font-semibold ${isSelected ? 'text-brand-primary' : 'text-gray-600 dark:text-gray-400'}`}>
                     {t(role.labelKey)}
                   </span>
                 </button>
@@ -121,7 +121,7 @@ export function RegisterStep2({ data, updateData, onNext, onBack }: RegisterStep
               <select
                 value={data.gradeLevel}
                 onChange={(e) => updateData({ gradeLevel: e.target.value })}
-                className={`w-full px-4 py-3 rounded-xl border ${errors.gradeLevel ? 'border-red-500' : 'border-gray-200 dark:border-navy-600'} focus:border-primary focus:ring-primary/20 focus:outline-none focus:ring-4 transition-all duration-200 bg-gray-50/50 dark:bg-navy-900/50 text-gray-900 dark:text-white`}
+                className={`w-full px-4 py-3 rounded-xl border ${errors.gradeLevel ? 'border-red-500' : 'border-gray-200 dark:border-navy-600'} focus:border-brand-primary focus:ring-brand-primary/20 focus:outline-none focus:ring-4 transition-all duration-200 bg-gray-50/50 dark:bg-navy-900/50 text-gray-900 dark:text-white`}
               >
                 <option value="">{t('selectGrade')}</option>
                 {GRADE_VALUES.map((grade, i) => (
@@ -141,7 +141,7 @@ export function RegisterStep2({ data, updateData, onNext, onBack }: RegisterStep
                   type="date"
                   value={data.dateOfBirth}
                   onChange={(e) => updateData({ dateOfBirth: e.target.value })}
-                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-navy-600 focus:border-primary focus:ring-primary/20 focus:outline-none focus:ring-4 transition-all duration-200 bg-gray-50/50 dark:bg-navy-900/50 text-gray-900 dark:text-white"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-navy-600 focus:border-brand-primary focus:ring-brand-primary/20 focus:outline-none focus:ring-4 transition-all duration-200 bg-gray-50/50 dark:bg-navy-900/50 text-gray-900 dark:text-white"
                 />
               </div>
             </div>
@@ -154,7 +154,7 @@ export function RegisterStep2({ data, updateData, onNext, onBack }: RegisterStep
             <select
               value={data.subject}
               onChange={(e) => updateData({ subject: e.target.value })}
-              className={`w-full px-4 py-3 rounded-xl border ${errors.subject ? 'border-red-500' : 'border-gray-200 dark:border-navy-600'} focus:border-primary focus:ring-primary/20 focus:outline-none focus:ring-4 transition-all duration-200 bg-gray-50/50 dark:bg-navy-900/50 text-gray-900 dark:text-white`}
+              className={`w-full px-4 py-3 rounded-xl border ${errors.subject ? 'border-red-500' : 'border-gray-200 dark:border-navy-600'} focus:border-brand-primary focus:ring-brand-primary/20 focus:outline-none focus:ring-4 transition-all duration-200 bg-gray-50/50 dark:bg-navy-900/50 text-gray-900 dark:text-white`}
             >
               <option value="">{t('selectSubject')}</option>
               {SUBJECT_VALUES.map((subject) => (
@@ -172,7 +172,7 @@ export function RegisterStep2({ data, updateData, onNext, onBack }: RegisterStep
               type="text"
               value={data.childName}
               onChange={(e) => updateData({ childName: e.target.value })}
-              className={`w-full px-4 py-3 rounded-xl border ${errors.childName ? 'border-red-500' : 'border-gray-200 dark:border-navy-600'} focus:border-primary focus:ring-primary/20 focus:outline-none focus:ring-4 transition-all duration-200 bg-gray-50/50 dark:bg-navy-900/50 focus:bg-white dark:focus:bg-navy-900 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500`}
+              className={`w-full px-4 py-3 rounded-xl border ${errors.childName ? 'border-red-500' : 'border-gray-200 dark:border-navy-600'} focus:border-brand-primary focus:ring-brand-primary/20 focus:outline-none focus:ring-4 transition-all duration-200 bg-gray-50/50 dark:bg-navy-900/50 focus:bg-white dark:focus:bg-navy-900 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500`}
               placeholder={t('placeholderChildName')}
             />
             {errors.childName && <p className="text-red-500 text-xs ml-1 mt-1">{errors.childName}</p>}
@@ -189,7 +189,7 @@ export function RegisterStep2({ data, updateData, onNext, onBack }: RegisterStep
           </button>
           <button
             type="submit"
-            className="flex-1 bg-gradient-to-r from-primary via-gold to-primary hover:from-primary-hover hover:via-gold hover:to-primary-hover text-navy-900 font-bold py-3.5 rounded-xl shadow-lg hover:shadow-xl hover:translate-y-[-1px] transition-all duration-200 flex items-center justify-center gap-2"
+            className="flex-1 bg-brand-primary hover:bg-brand-secondary text-white font-bold py-3.5 rounded-xl shadow-lg hover:shadow-xl hover:translate-y-[-1px] transition-all duration-200 flex items-center justify-center gap-2"
           >
             {t('nextStep')} <ArrowRight size={18} />
           </button>

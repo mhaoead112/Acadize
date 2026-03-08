@@ -285,14 +285,14 @@ export function RegisterStep4({
               onClick={() => setSelectedPlan('monthly')}
               className={`w-full text-left rounded-2xl border-2 p-4 transition-all duration-200 relative ${
                 selectedPlan === 'monthly'
-                  ? 'border-indigo-500 shadow-md shadow-indigo-500/10'
+                  ? 'border-brand-primary shadow-md shadow-brand-primary/10'
                   : isDark ? 'border-navy-600 hover:border-navy-500' : 'border-gray-200 hover:border-gray-300'
               } ${isDark ? 'bg-navy-800' : 'bg-white'}`}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${selectedPlan === 'monthly' ? 'bg-indigo-100 dark:bg-indigo-900/40' : isDark ? 'bg-navy-700' : 'bg-gray-100'}`}>
-                    <Calendar className={`w-4 h-4 ${selectedPlan === 'monthly' ? 'text-indigo-600' : isDark ? 'text-gray-400' : 'text-gray-500'}`} />
+                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${selectedPlan === 'monthly' ? 'bg-brand-primary/10 dark:bg-brand-primary/20' : isDark ? 'bg-navy-700' : 'bg-gray-100'}`}>
+                    <Calendar className={`w-4 h-4 ${selectedPlan === 'monthly' ? 'text-brand-primary' : isDark ? 'text-gray-400' : 'text-gray-500'}`} />
                   </div>
                   <div>
                     <div className={`font-semibold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('monthly')}</div>
@@ -304,7 +304,7 @@ export function RegisterStep4({
                     <div className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>EGP {monthlyEGP}</div>
                     <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('perMonth')}</div>
                   </div>
-                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${selectedPlan === 'monthly' ? 'border-indigo-500 bg-indigo-500' : isDark ? 'border-navy-500' : 'border-gray-300'}`}>
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${selectedPlan === 'monthly' ? 'border-brand-primary bg-brand-primary' : isDark ? 'border-navy-500' : 'border-gray-300'}`}>
                     {selectedPlan === 'monthly' && <Check className="w-3 h-3 text-white" />}
                   </div>
                 </div>
@@ -316,7 +316,7 @@ export function RegisterStep4({
               onClick={() => setSelectedPlan('annual')}
               className={`w-full text-left rounded-2xl border-2 p-4 transition-all duration-200 relative ${
                 selectedPlan === 'annual'
-                  ? 'border-amber-500 shadow-md shadow-amber-500/10'
+                  ? 'border-brand-secondary shadow-md shadow-brand-secondary/10'
                   : isDark ? 'border-navy-600 hover:border-navy-500' : 'border-gray-200 hover:border-gray-300'
               } ${isDark ? 'bg-navy-800' : 'bg-white'}`}
             >
@@ -327,8 +327,8 @@ export function RegisterStep4({
               </div>
               <div className="flex items-center justify-between mt-1">
                 <div className="flex items-center gap-3">
-                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${selectedPlan === 'annual' ? 'bg-amber-100 dark:bg-amber-900/40' : isDark ? 'bg-navy-700' : 'bg-gray-100'}`}>
-                    <Crown className={`w-4 h-4 ${selectedPlan === 'annual' ? 'text-amber-600' : isDark ? 'text-gray-400' : 'text-gray-500'}`} />
+                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${selectedPlan === 'annual' ? 'bg-brand-secondary/10 dark:bg-brand-secondary/20' : isDark ? 'bg-navy-700' : 'bg-gray-100'}`}>
+                    <Crown className={`w-4 h-4 ${selectedPlan === 'annual' ? 'text-brand-secondary' : isDark ? 'text-gray-400' : 'text-gray-500'}`} />
                   </div>
                   <div>
                     <div className={`font-semibold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>{t('annual')}</div>
@@ -340,7 +340,7 @@ export function RegisterStep4({
                     <div className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>EGP {annualMonthlyEGP}</div>
                     <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('perMonth')}</div>
                   </div>
-                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${selectedPlan === 'annual' ? 'border-amber-500 bg-amber-500' : isDark ? 'border-navy-500' : 'border-gray-300'}`}>
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${selectedPlan === 'annual' ? 'border-brand-secondary bg-brand-secondary' : isDark ? 'border-navy-500' : 'border-gray-300'}`}>
                     {selectedPlan === 'annual' && <Check className="w-3 h-3 text-white" />}
                   </div>
                 </div>
@@ -368,7 +368,7 @@ export function RegisterStep4({
             <p className={`text-xs font-semibold mb-2.5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t('acceptedPaymentMethods')}</p>
             <div className="flex gap-2">
               <div className={`flex items-center gap-2 flex-1 rounded-lg px-3 py-2 border ${isDark ? 'border-navy-600 bg-navy-700' : 'border-gray-200 bg-gray-50'}`}>
-                <CreditCard className={`w-4 h-4 ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`} />
+                <CreditCard className={`w-4 h-4 ${isDark ? 'text-brand-primary' : 'text-brand-primary'}`} />
                 <span className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{t('card')}</span>
               </div>
               <div className={`flex items-center gap-2 flex-1 rounded-lg px-3 py-2 border ${isDark ? 'border-navy-600 bg-navy-700' : 'border-gray-200 bg-gray-50'}`}>
@@ -443,7 +443,7 @@ export function RegisterStep4({
           {/* Promo Code */}
           <div className={`rounded-2xl border p-4 ${isDark ? 'border-navy-700 bg-navy-800' : 'border-gray-200 bg-white'}`}>
             <div className="flex items-center gap-2 mb-3">
-              <Tag className="w-4 h-4 text-indigo-500" />
+              <Tag className="w-4 h-4 text-brand-primary" />
               <span className={`text-sm font-semibold ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>{t('promoCode')}</span>
               {couponStatus === 'valid' && (
                 <span className="ml-auto text-xs text-emerald-500 font-medium flex items-center gap-1">
@@ -470,7 +470,7 @@ export function RegisterStep4({
               <button
                 onClick={handleValidateCoupon}
                 disabled={!couponInput.trim() || couponStatus === 'valid' || couponStatus === 'validating'}
-                className="px-4 py-2 rounded-xl text-sm font-semibold bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="px-4 py-2 rounded-xl text-sm font-semibold bg-brand-primary text-white hover:bg-brand-secondary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {couponStatus === 'validating' ? <Loader2 className="w-4 h-4 animate-spin" /> : t('apply')}
               </button>
@@ -486,7 +486,7 @@ export function RegisterStep4({
           <button
             onClick={handleProceedToPayment}
             disabled={isBusy}
-            className="w-full py-4 rounded-2xl font-bold text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 disabled:opacity-60 disabled:cursor-not-allowed transition-all shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2"
+            className="w-full py-4 rounded-2xl font-bold text-white bg-brand-primary hover:bg-brand-secondary disabled:opacity-60 disabled:cursor-not-allowed transition-all shadow-lg shadow-brand-primary/20 flex items-center justify-center gap-2"
           >
             {isBusy ? (
               <>

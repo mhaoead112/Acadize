@@ -9,9 +9,12 @@ import { RegisterStep4 } from './RegisterStep4';
 import { useTenant } from '@/hooks/useTenant';
 import { apiEndpoint, getTenantHeaders } from '@/lib/config';
 import { useToast } from '@/hooks/use-toast';
+import { useBranding } from '@/contexts/BrandingContext';
+import { AcadizeLogo } from '@/components/AcadizeLogo';
 
 export function RegisterWizard() {
   const { t } = useTranslation('auth');
+  const branding = useBranding();
   const [step, setStep] = useState(1);
   const [_, setLocation] = useLocation();
   const { data: tenant } = useTenant();
@@ -144,14 +147,24 @@ export function RegisterWizard() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:bg-none dark:bg-navy-950 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 font-sans relative">
-      <div className={`w-full ${step === 4 ? 'max-w-5xl' : 'max-w-md'} bg-white dark:bg-navy-900 rounded-3xl shadow-2xl overflow-hidden border border-gray-100 dark:border-navy-700 transition-all duration-300`}>
+    <div className="min-h-screen bg-slate-50 dark:bg-none dark:bg-[#0B1120] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 font-sans relative">
+      <div className={`w-full ${step === 4 ? 'max-w-5xl' : 'max-w-md'} bg-white dark:bg-white/5 backdrop-blur-2xl rounded-[2.5rem] shadow-2xl overflow-hidden border border-slate-200 dark:border-white/10 transition-all duration-300 relative`}>
+        {/* Persistent Logo Header */}
+        <div className="pt-8 pb-2 flex justify-center w-full z-10 relative">
+          <div className="flex items-center gap-3">
+            {branding.logoUrl ? (
+              <img src={branding.logoUrl} alt={branding.name} className="h-10 w-auto object-contain" />
+            ) : (
+              <AcadizeLogo variant="full" size="xl" />
+            )}
+          </div>
+        </div>
+        
         {step === 1 && (
           <RegisterStep1
             data={formData}
             updateData={updateData}
             onNext={handleNext}
-            orgName={tenant?.name}
           />
         )}
         {step === 2 && (
