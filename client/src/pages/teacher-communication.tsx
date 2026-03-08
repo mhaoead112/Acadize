@@ -43,6 +43,8 @@ import {
   Paperclip
 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { usePortalI18n } from '@/hooks/usePortalI18n';
+
 
 // Form schemas
 const forumPostSchema = z.object({
@@ -123,6 +125,7 @@ interface Message {
 }
 
 export default function TeacherCommunication() {
+  const { t } = usePortalI18n("common");
   const [activeTab, setActiveTab] = useState("forums");
   const [isForumPostDialogOpen, setIsForumPostDialogOpen] = useState(false);
   const [isSupportDialogOpen, setIsSupportDialogOpen] = useState(false);

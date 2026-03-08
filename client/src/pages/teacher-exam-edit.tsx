@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useRoute, useLocation } from 'wouter';
 import TeacherLayout from '../components/TeacherLayout';
+import { ListSkeleton } from '../components/skeletons/ListSkeleton';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '@/contexts/ThemeContext';
 import { apiEndpoint } from '../lib/config';
@@ -246,11 +247,8 @@ export default function TeacherExamEdit() {
   if (loading) {
     return (
       <TeacherLayout>
-        <div className="flex items-center justify-center h-[60vh]">
-          <div className="text-center space-y-4">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto"></div>
-            <p className="text-text-muted">Loading exam...</p>
-          </div>
+        <div className="max-w-5xl mx-auto p-6 space-y-6">
+          <ListSkeleton rows={8} />
         </div>
       </TeacherLayout>
     );

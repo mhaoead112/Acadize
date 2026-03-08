@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -42,7 +42,7 @@ interface CalendarDay {
 }
 
 export default function TeacherCalendar() {
-  const { t } = useTranslation('teacher');
+  const { t, i18n } = useTranslation('teacher');
   const { token } = useAuth();
   const { toast } = useToast();
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -130,7 +130,7 @@ export default function TeacherCalendar() {
         // API not available - use empty state
         setEvents([]);
         toast({
-          title: "Info",
+          title: t("common:toast.success"),
           description: t('calendarEmptyToast'),
         });
       }
@@ -145,8 +145,8 @@ export default function TeacherCalendar() {
   const handleCreateEvent = async () => {
     if (!newEvent.title || !newEvent.date) {
       toast({
-        title: "Error",
-        description: "Please fill in title and date",
+        title: t("error"),
+        description: t("teacherCalendar.fillTitleAndDate"),
         variant: "destructive"
       });
       return;
@@ -190,20 +190,20 @@ export default function TeacherCalendar() {
           courseName: newEvent.courseName
         };
         setEvents([...events, savedEvent]);
-        toast({ title: "Success", description: "Event created and saved successfully" });
+        toast({ title: t("common:toast.success"), description: t("teacherCalendar.eventCreated") });
       } else {
         const errorData = await response.json().catch(() => ({}));
         toast({ 
-          title: "Error", 
-          description: errorData.error || "Failed to save event",
+          title: t("error"), 
+          description: errorData.error || t("teacherCalendar.failedToSaveEvent"),
           variant: "destructive"
         });
         return;
       }
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Network error - could not save event",
+        title: t("error"),
+        description: t("teacherCalendar.networkSaveError"),
         variant: "destructive"
       });
       return;
@@ -236,19 +236,19 @@ export default function TeacherCalendar() {
 
       if (response.ok) {
         setEvents(events.filter(e => e.id !== eventId));
-        toast({ title: "Success", description: "Event deleted successfully" });
+        toast({ title: t("common:toast.success"), description: t("teacherCalendar.eventDeleted") });
       } else {
         const errorData = await response.json().catch(() => ({}));
         toast({ 
-          title: "Error", 
-          description: errorData.error || "Failed to delete event",
+          title: t("error"), 
+          description: errorData.error || t("teacherCalendar.failedToDeleteEvent"),
           variant: "destructive"
         });
       }
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Network error - could not delete event",
+        title: t("error"),
+        description: t("teacherCalendar.networkDeleteError"),
         variant: "destructive"
       });
     } finally {
@@ -290,21 +290,21 @@ export default function TeacherCalendar() {
         setEvents(events.map(e => 
           e.id === editingEvent.id ? editingEvent : e
         ));
-        toast({ title: "Success", description: "Event updated successfully" });
+        toast({ title: t("common:toast.success"), description: t("teacherCalendar.eventUpdated") });
         setEditDialogOpen(false);
         setEditingEvent(null);
       } else {
         const errorData = await response.json().catch(() => ({}));
         toast({ 
-          title: "Error", 
-          description: errorData.error || "Failed to update event",
+          title: t("error"), 
+          description: errorData.error || t("teacherCalendar.failedToUpdateEvent"),
           variant: "destructive"
         });
       }
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Network error - could not update event",
+        title: t("error"),
+        description: t("teacherCalendar.networkUpdateError"),
         variant: "destructive"
       });
     } finally {
@@ -381,8 +381,9 @@ export default function TeacherCalendar() {
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
     .slice(0, 2);
 
-  const monthName = currentDate.toLocaleString('default', { month: 'long', year: 'numeric' });
-  const miniMonthName = miniCalendarDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+  const locale = i18n.language?.startsWith("ar") ? "ar-EG" : "en-US";
+  const monthName = currentDate.toLocaleString(locale, { month: 'long', year: 'numeric' });
+  const miniMonthName = miniCalendarDate.toLocaleString(locale, { month: 'long', year: 'numeric' });
   const calendarDays = generateCalendarDays();
   const miniCalendarDays = generateMiniCalendarDays();
   const today = new Date();
@@ -457,7 +458,7 @@ export default function TeacherCalendar() {
           <div>
             <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-3">{t('myCalendars')}</h3>
             <div className="flex flex-col gap-2">
-              {['Math 101 - Algebra', 'Homeroom 4B', 'Staff Meetings'].map((cal, idx) => (
+              {[t("teacherCalendar.mathAlgebra"), t("teacherCalendar.homeroom"), t("teacherCalendar.staffMeetings")].map((cal, idx) => (
                 <label key={idx} className="flex items-center gap-3 cursor-pointer group">
                   <input
                     type="checkbox"
@@ -475,9 +476,9 @@ export default function TeacherCalendar() {
             </div>
           </div>
           <div>
-            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-3">Event Types</h3>
+            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-3">{t("teacherCalendar.eventTypes")}</h3>
             <div className="flex flex-col gap-2">
-              {['Assignments', 'Exams'].map((type, idx) => (
+              {[t("assignments"), t("exams")].map((type, idx) => (
                 <label key={idx} className="flex items-center gap-3 cursor-pointer group">
                   <input
                     type="checkbox"
@@ -500,10 +501,10 @@ export default function TeacherCalendar() {
 
         {/* Upcoming Agenda */}
         <div className="mt-auto p-6 border-t border-slate-200 dark:border-slate-800 bg-slate-100/50 dark:bg-navy/10">
-          <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-4">Upcoming Deadlines</h3>
+          <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-4">{t("teacherCalendar.upcomingDeadlines")}</h3>
           <div className="flex flex-col gap-4">
             {upcomingDeadlines.length === 0 ? (
-              <p className="text-xs text-slate-500">No upcoming deadlines</p>
+              <p className="text-xs text-slate-500">{t("teacherCalendar.noUpcomingDeadlines")}</p>
             ) : (
               upcomingDeadlines.map((event) => (
                 <div key={event.id} className="flex gap-3 items-start">
@@ -513,7 +514,7 @@ export default function TeacherCalendar() {
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-slate-800 dark:text-white leading-tight">{event.title}</p>
-                    <p className="text-xs text-slate-500 mt-1">{event.startTime} {event.location ? '• ' + event.location : ''}</p>
+                    <p className="text-xs text-slate-500 mt-1">{event.startTime} {event.location ? ` • ${event.location}` : ""}</p>
                   </div>
                 </div>
               ))
@@ -532,7 +533,7 @@ export default function TeacherCalendar() {
               <button onClick={() => navigateMonth(-1)} className="px-2 py-1 hover:text-gold transition-colors">
                 <ChevronLeft className="h-5 w-5" />
               </button>
-              <button onClick={() => setCurrentDate(new Date())} className="px-3 py-1 text-sm font-bold hover:text-gold transition-colors">Today</button>
+              <button onClick={() => setCurrentDate(new Date())} className="px-3 py-1 text-sm font-bold hover:text-gold transition-colors">{t("teacherCalendar.today")}</button>
               <button onClick={() => navigateMonth(1)} className="px-2 py-1 hover:text-gold transition-colors">
                 <ChevronRight className="h-5 w-5" />
               </button>
@@ -560,41 +561,41 @@ export default function TeacherCalendar() {
               <DialogTrigger asChild>
                 <button className="flex items-center gap-2 bg-gold hover:bg-yellow-500 text-navy px-4 py-2 rounded-lg font-black text-sm shadow-lg shadow-gold/20 transition-all active:scale-95">
                   <Plus className="h-5 w-5" />
-                  <span>Add Event</span>
+                  <span>{t("teacherCalendar.addEvent")}</span>
                 </button>
               </DialogTrigger>
               <DialogContent className="max-w-md">
                 <DialogHeader>
-                  <DialogTitle>Create Event</DialogTitle>
-                  <DialogDescription>Add a new event to your calendar.</DialogDescription>
+                  <DialogTitle>{t("teacherCalendar.createEvent")}</DialogTitle>
+                  <DialogDescription>{t("teacherCalendar.createEventDesc")}</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
                   <div>
-                    <Label htmlFor="title">Event Title</Label>
+                    <Label htmlFor="title">{t("teacherCalendar.eventTitle")}</Label>
                     <Input
                       id="title"
                       value={newEvent.title}
                       onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
-                      placeholder="Enter event title"
+                      placeholder={t("teacherCalendar.enterEventTitle")}
                     />
                   </div>
                   <div>
-                    <Label htmlFor="type">Event Type</Label>
+                    <Label htmlFor="type">{t("teacherCalendar.eventType")}</Label>
                     <Select value={newEvent.type} onValueChange={(v) => setNewEvent({ ...newEvent, type: v as any })}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="class">Class</SelectItem>
-                        <SelectItem value="meeting">Meeting</SelectItem>
-                        <SelectItem value="exam">Exam</SelectItem>
-                        <SelectItem value="announcement">Announcement</SelectItem>
-                        <SelectItem value="holiday">Holiday</SelectItem>
+                        <SelectItem value="class">{t("teacherCalendar.class")}</SelectItem>
+                        <SelectItem value="meeting">{t("teacherCalendar.meeting")}</SelectItem>
+                        <SelectItem value="exam">{t("teacherCalendar.exam")}</SelectItem>
+                        <SelectItem value="announcement">{t("teacherCalendar.announcement")}</SelectItem>
+                        <SelectItem value="holiday">{t("teacherCalendar.holiday")}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div>
-                    <Label htmlFor="date">Date</Label>
+                    <Label htmlFor="date">{t("teacherCalendar.date")}</Label>
                     <Input
                       id="date"
                       type="date"
@@ -604,7 +605,7 @@ export default function TeacherCalendar() {
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="startTime">Start Time</Label>
+                      <Label htmlFor="startTime">{t("teacherCalendar.startTime")}</Label>
                       <Input
                         id="startTime"
                         type="time"
@@ -613,7 +614,7 @@ export default function TeacherCalendar() {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="endTime">End Time</Label>
+                      <Label htmlFor="endTime">{t("teacherCalendar.endTime")}</Label>
                       <Input
                         id="endTime"
                         type="time"
@@ -623,29 +624,29 @@ export default function TeacherCalendar() {
                     </div>
                   </div>
                   <div>
-                    <Label htmlFor="location">Location (Optional)</Label>
+                    <Label htmlFor="location">{t("teacherCalendar.locationOptional")}</Label>
                     <Input
                       id="location"
                       value={newEvent.location}
                       onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
-                      placeholder="Room number or location"
+                      placeholder={t("teacherCalendar.roomOrLocation")}
                     />
                   </div>
                   <div>
-                    <Label htmlFor="description">Description (Optional)</Label>
+                    <Label htmlFor="description">{t("teacherCalendar.descriptionOptional")}</Label>
                     <Textarea
                       id="description"
                       value={newEvent.description}
                       onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
-                      placeholder="Add notes or details"
+                      placeholder={t("teacherCalendar.addNotes")}
                     />
                   </div>
                 </div>
                 <DialogFooter>
                   <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>
-                    Cancel
+                    {t("common:actions.cancel")}
                   </Button>
-                  <Button onClick={handleCreateEvent}>Create Event</Button>
+                  <Button onClick={handleCreateEvent}>{t("teacherCalendar.createEvent")}</Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
@@ -655,7 +656,7 @@ export default function TeacherCalendar() {
         <div className="flex-1 flex flex-col overflow-y-auto">
           {/* Days Header */}
           <div className="grid grid-cols-7 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-navy-dark flex-shrink-0">
-            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+            {[t("teacherCalendar.sun"), t("teacherCalendar.mon"), t("teacherCalendar.tue"), t("teacherCalendar.wed"), t("teacherCalendar.thu"), t("teacherCalendar.fri"), t("teacherCalendar.sat")].map(day => (
               <div key={day} className="py-3 text-center text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">{day}</div>
             ))}
           </div>
@@ -697,7 +698,7 @@ export default function TeacherCalendar() {
                   );
                 })}
                 {day.events.length > 2 && (
-                  <div className="text-xs text-slate-500 px-2">+{day.events.length - 2} more</div>
+                  <div className="text-xs text-slate-500 px-2">+{day.events.length - 2} {t("teacherCalendar.more")}</div>
                 )}
               </div>
             ))}
@@ -709,32 +710,32 @@ export default function TeacherCalendar() {
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Edit Event</DialogTitle>
-            <DialogDescription>Update the event details</DialogDescription>
+            <DialogTitle>{t("teacherCalendar.editEvent")}</DialogTitle>
+            <DialogDescription>{t("teacherCalendar.updateEventDetails")}</DialogDescription>
           </DialogHeader>
           {editingEvent && (
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="edit-title">Title</Label>
+                <Label htmlFor="edit-title">{t("teacherCalendar.title")}</Label>
                 <Input
                   id="edit-title"
                   value={editingEvent.title}
                   onChange={(e) => setEditingEvent({ ...editingEvent, title: e.target.value })}
-                  placeholder="Event title"
+                  placeholder={t("teacherCalendar.eventTitle")}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="edit-description">Description</Label>
+                <Label htmlFor="edit-description">{t("teacherCalendar.description")}</Label>
                 <Textarea
                   id="edit-description"
                   value={editingEvent.description || ''}
                   onChange={(e) => setEditingEvent({ ...editingEvent, description: e.target.value })}
-                  placeholder="Event description"
+                  placeholder={t("teacherCalendar.eventDescription")}
                   rows={2}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="edit-type">Event Type</Label>
+                <Label htmlFor="edit-type">{t("teacherCalendar.eventType")}</Label>
                 <Select
                   value={editingEvent.type}
                   onValueChange={(value: any) => setEditingEvent({ ...editingEvent, type: value })}
@@ -743,16 +744,16 @@ export default function TeacherCalendar() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="class">Class</SelectItem>
-                    <SelectItem value="meeting">Meeting</SelectItem>
-                    <SelectItem value="exam">Exam</SelectItem>
-                    <SelectItem value="announcement">Announcement</SelectItem>
-                    <SelectItem value="holiday">Holiday</SelectItem>
+                    <SelectItem value="class">{t("teacherCalendar.class")}</SelectItem>
+                    <SelectItem value="meeting">{t("teacherCalendar.meeting")}</SelectItem>
+                    <SelectItem value="exam">{t("teacherCalendar.exam")}</SelectItem>
+                    <SelectItem value="announcement">{t("teacherCalendar.announcement")}</SelectItem>
+                    <SelectItem value="holiday">{t("teacherCalendar.holiday")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="edit-date">Date</Label>
+                <Label htmlFor="edit-date">{t("teacherCalendar.date")}</Label>
                 <Input
                   id="edit-date"
                   type="date"
@@ -762,7 +763,7 @@ export default function TeacherCalendar() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="edit-start">Start Time</Label>
+                  <Label htmlFor="edit-start">{t("teacherCalendar.startTime")}</Label>
                   <Input
                     id="edit-start"
                     type="time"
@@ -771,7 +772,7 @@ export default function TeacherCalendar() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="edit-end">End Time</Label>
+                  <Label htmlFor="edit-end">{t("teacherCalendar.endTime")}</Label>
                   <Input
                     id="edit-end"
                     type="time"
@@ -781,26 +782,26 @@ export default function TeacherCalendar() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="edit-location">Location</Label>
+                <Label htmlFor="edit-location">{t("teacherCalendar.location")}</Label>
                 <Input
                   id="edit-location"
                   value={editingEvent.location || ''}
                   onChange={(e) => setEditingEvent({ ...editingEvent, location: e.target.value })}
-                  placeholder="Room or location"
+                  placeholder={t("teacherCalendar.roomOrLocation")}
                 />
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
-                  Cancel
+                  {t("common:actions.cancel")}
                 </Button>
                 <Button onClick={handleEditEvent} disabled={isSaving}>
                   {isSaving ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Saving...
+                      {t("teacherCalendar.saving")}
                     </>
                   ) : (
-                    'Save Changes'
+                    t("common:actions.save")
                   )}
                 </Button>
               </DialogFooter>
@@ -812,3 +813,4 @@ export default function TeacherCalendar() {
           </TeacherLayout>
   );
 }
+

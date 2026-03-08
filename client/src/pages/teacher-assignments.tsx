@@ -36,14 +36,7 @@ import {
 import { Loader2, Plus } from "lucide-react";
 import TeacherLayout from "@/components/TeacherLayout";
 
-const assignmentTypes = [
-  { value: 'homework', label: 'Homework' },
-  { value: 'quiz', label: 'Quiz' },
-  { value: 'exam', label: 'Exam' },
-  { value: 'project', label: 'Project' },
-  { value: 'presentation', label: 'Presentation' },
-  { value: 'essay', label: 'Essay' },
-];
+const assignmentTypes = ['homework', 'quiz', 'exam', 'project', 'presentation', 'essay'];
 
 interface Assignment {
   id: string;
@@ -147,8 +140,8 @@ export default function TeacherAssignmentsPage() {
       console.error("Failed to fetch assignments:", err);
       setError(err?.message || "Unknown error");
       toast({
-        title: "Error",
-        description: "Failed to load assignments. Please try again.",
+        title: t("error"),
+        description: t("teacherAssignments.failedToLoadAssignments"),
         variant: "destructive"
       });
     } finally {
@@ -227,14 +220,14 @@ export default function TeacherAssignmentsPage() {
       setAssignments(assignments.map(a => a.id === assignmentId ? { ...a, ...assignment } : a));
 
       toast({
-        title: "Success",
-        description: `Assignment ${assignment.isPublished ? 'published' : 'unpublished'} successfully`,
+        title: t("common:toast.success"),
+        description: assignment.isPublished ? t("teacherAssignments.assignmentPublished") : t("teacherAssignments.assignmentUnpublished"),
         variant: "default"
       });
     } catch (err: any) {
       toast({
-        title: "Error",
-        description: err?.message || "Failed to update assignment status",
+        title: t("error"),
+        description: err?.message || t("teacherAssignments.failedToUpdateStatus"),
         variant: "destructive"
       });
     } finally {
@@ -260,14 +253,14 @@ export default function TeacherAssignmentsPage() {
       setAssignments(assignments.filter(a => a.id !== assignmentToDelete.id));
 
       toast({
-        title: "Success",
-        description: "Assignment deleted successfully",
+        title: t("common:toast.success"),
+        description: t("teacherAssignments.assignmentDeleted"),
         variant: "default"
       });
     } catch (err: any) {
       toast({
-        title: "Error",
-        description: err?.message || "Failed to delete assignment",
+        title: t("error"),
+        description: err?.message || t("teacherAssignments.failedToDeleteAssignment"),
         variant: "destructive"
       });
     } finally {
@@ -322,8 +315,8 @@ export default function TeacherAssignmentsPage() {
       ));
 
       toast({
-        title: "Success",
-        description: "Assignment updated successfully",
+        title: t("common:toast.success"),
+        description: t("teacherAssignments.assignmentUpdated"),
         variant: "default"
       });
 
@@ -331,8 +324,8 @@ export default function TeacherAssignmentsPage() {
       setEditingAssignment(null);
     } catch (err: any) {
       toast({
-        title: "Error",
-        description: err?.message || "Failed to update assignment",
+        title: t("error"),
+        description: err?.message || t("teacherAssignments.failedToUpdateAssignment"),
         variant: "destructive"
       });
     } finally {
@@ -340,10 +333,7 @@ export default function TeacherAssignmentsPage() {
     }
   };
 
-  const getTypeLabel = (type: string) => {
-    const typeConfig = assignmentTypes.find(t => t.value === type);
-    return typeConfig ? typeConfig.label : type;
-  };
+  const getTypeLabel = (type: string) => t(`teacherAssignments.types.${type}`);
 
   return (
     <TeacherLayout>
@@ -353,14 +343,14 @@ export default function TeacherAssignmentsPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h2 className="text-3xl font-black tracking-tight text-navy dark:text-white mb-1">{t('assignments')}</h2>
-            <p className="text-slate-500 dark:text-slate-400">Manage coursework, track submissions, and grade papers.</p>
+            <p className="text-slate-500 dark:text-slate-400">{t("teacherAssignments.manageCoursework")}</p>
           </div>
           <Button 
             onClick={() => setLocation("/teacher/create-assignment")}
             className="flex items-center justify-center gap-2 bg-gold dark:bg-gold hover:bg-[#001845] text-white font-bold py-2.5 px-5 rounded-lg transition-colors shadow-lg shadow-navy/20"
           >
             <span className="material-symbols-outlined text-[20px] text-gold">add</span>
-            <span>Create Assignment</span>
+            <span>{t("createAssignment")}</span>
           </Button>
         </div>
 
@@ -373,7 +363,7 @@ export default function TeacherAssignmentsPage() {
               </div>
             </div>
             <div>
-              <p className="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">To Grade</p>
+              <p className="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">{t("teacherAssignments.toGrade")}</p>
               <h3 className="text-3xl font-bold text-slate-900 dark:text-white">{toGradeCount}</h3>
             </div>
           </div>
@@ -385,7 +375,7 @@ export default function TeacherAssignmentsPage() {
               </div>
             </div>
             <div>
-              <p className="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">Due This Week</p>
+              <p className="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">{t("teacherAssignments.dueThisWeek")}</p>
               <h3 className="text-3xl font-bold text-slate-900 dark:text-white">{dueSoonCount}</h3>
             </div>
           </div>
@@ -397,7 +387,7 @@ export default function TeacherAssignmentsPage() {
               </div>
             </div>
             <div>
-              <p className="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">Missing Submissions</p>
+              <p className="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">{t("teacherAssignments.missingSubmissions")}</p>
               <h3 className="text-3xl font-bold text-slate-900 dark:text-white">{missingCount}</h3>
             </div>
           </div>
@@ -417,7 +407,7 @@ export default function TeacherAssignmentsPage() {
                   }}
                   className="appearance-none bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 py-2 pl-3 pr-8 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-navy/50 dark:focus:ring-gold/50 cursor-pointer"
                 >
-                  <option value="all">All Courses</option>
+                  <option value="all">{t("teacherAssignments.allCourses")}</option>
                   {courses.map(course => (
                     <option key={course.id} value={course.id}>{course.title}</option>
                   ))}
@@ -436,9 +426,9 @@ export default function TeacherAssignmentsPage() {
                   }}
                   className="appearance-none bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 py-2 pl-3 pr-8 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-navy/50 dark:focus:ring-gold/50 cursor-pointer"
                 >
-                  <option value="all">All Statuses</option>
-                  <option value="to-grade">To Grade</option>
-                  <option value="due-soon">Due Soon</option>
+                  <option value="all">{t("teacherAssignments.allStatuses")}</option>
+                  <option value="to-grade">{t("teacherAssignments.toGrade")}</option>
+                  <option value="due-soon">{t("teacherAssignments.dueSoon")}</option>
                 </select>
                 <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500">
                   <span className="material-symbols-outlined text-sm">expand_more</span>
@@ -447,12 +437,12 @@ export default function TeacherAssignmentsPage() {
 
               <button className="flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 py-2 px-3 rounded-lg text-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
                 <span className="material-symbols-outlined text-sm text-gold">calendar_today</span>
-                <span>Date Range</span>
+                <span>{t("teacherAssignments.dateRange")}</span>
               </button>
             </div>
 
             <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-              <span className="text-xs text-slate-500 uppercase font-semibold tracking-wider">Sort by:</span>
+              <span className="text-xs text-slate-500 uppercase font-semibold tracking-wider">{t("teacherAssignments.sortBy")}</span>
               <button 
                 onClick={() => {
                   setSortBy('dueDate');
@@ -460,7 +450,7 @@ export default function TeacherAssignmentsPage() {
                 }}
                 className={`text-sm font-medium transition-colors ${sortBy === 'dueDate' ? 'text-navy dark:text-gold underline' : 'text-slate-600 dark:text-slate-400 hover:text-navy dark:hover:text-gold'}`}
               >
-                Due Date
+                {t("teacherAssignments.dueDate")}
               </button>
             </div>
           </div>
@@ -469,7 +459,7 @@ export default function TeacherAssignmentsPage() {
           {isLoading ? (
             <div className="flex items-center justify-center h-64 text-slate-500">
               <Loader2 className="mr-2 h-6 w-6 animate-spin" />
-              Loading assignments...
+              {t("teacherAssignments.loadingAssignments")}
             </div>
           ) : error ? (
             <div className="bg-red-50 dark:bg-red-900/30 border-t border-red-200 dark:border-red-800 p-6">
@@ -481,14 +471,14 @@ export default function TeacherAssignmentsPage() {
             <div className="py-12 text-center bg-white dark:bg-slate-800">
               <span className="material-symbols-outlined text-6xl mx-auto text-slate-400 mb-4 block">assignment</span>
               <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
-                No assignments yet
+                {t("teacherAssignments.noAssignmentsYet")}
               </h3>
               <p className="text-slate-600 dark:text-slate-400 mb-6">
-                Create your first assignment to get started
+                {t("teacherAssignments.createFirstAssignment")}
               </p>
               <Button onClick={() => setLocation("/teacher/create-assignment")}>
                 <Plus className="h-4 w-4 mr-2" />
-                Create Assignment
+                {t("createAssignment")}
               </Button>
             </div>
           ) : (
@@ -497,12 +487,12 @@ export default function TeacherAssignmentsPage() {
                 <table className="w-full text-left text-sm text-slate-600 dark:text-slate-400">
                   <thead className="bg-slate-50 dark:bg-slate-800/50 text-xs uppercase font-semibold text-navy/70 dark:text-slate-400">
                     <tr>
-                      <th className="px-6 py-4">Assignment Name</th>
-                      <th className="px-6 py-4">Course</th>
-                      <th className="px-6 py-4">Status</th>
-                      <th className="px-6 py-4">Submissions</th>
-                      <th className="px-6 py-4">Due Date</th>
-                      <th className="px-6 py-4 text-right">Actions</th>
+                      <th className="px-6 py-4">{t("teacherAssignments.assignmentName")}</th>
+                      <th className="px-6 py-4">{t("teacherAssignments.course")}</th>
+                      <th className="px-6 py-4">{t("teacherAssignments.status")}</th>
+                      <th className="px-6 py-4">{t("teacherAssignments.submissions")}</th>
+                      <th className="px-6 py-4">{t("teacherAssignments.dueDate")}</th>
+                      <th className="px-6 py-4 text-right">{t("teacherAssignments.actions")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
@@ -531,7 +521,7 @@ export default function TeacherAssignmentsPage() {
                               : 'bg-gray-50 text-gray-700 dark:bg-gray-900/30 dark:text-gray-300 border-gray-100 dark:border-gray-800'
                           }`}>
                             <span className={`size-1.5 rounded-full ${assignment.isPublished ? 'bg-blue-600 dark:bg-blue-400' : 'bg-gray-600 dark:bg-gray-400'}`}></span>
-                            {assignment.isPublished ? 'Published' : 'Draft'}
+                            {assignment.isPublished ? t("published") : t("draft")}
                           </span>
                         </td>
                         <td className="px-6 py-4 min-w-[140px]">
@@ -553,10 +543,10 @@ export default function TeacherAssignmentsPage() {
                         <td className="px-6 py-4">
                           <div className="flex flex-col">
                             <span className="text-slate-900 dark:text-white font-medium">
-                              {new Date(assignment.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                              {new Date(assignment.dueDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                             </span>
                             <span className="text-xs text-slate-500">
-                              {new Date(assignment.dueDate).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                              {new Date(assignment.dueDate).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
                             </span>
                           </div>
                         </td>
@@ -565,14 +555,14 @@ export default function TeacherAssignmentsPage() {
                             <button 
                               onClick={() => openEditDialog(assignment)}
                               className="text-slate-400 hover:text-navy dark:hover:text-gold transition-colors p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700"
-                              title="Edit assignment"
+                              title={t("teacherAssignments.editAssignment")}
                             >
                               <span className="material-symbols-outlined">edit</span>
                             </button>
                             <button 
                               onClick={() => setAssignmentToDelete(assignment)}
                               className="text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700"
-                              title="Delete assignment"
+                              title={t("teacherAssignments.deleteAssignment")}
                             >
                               <span className="material-symbols-outlined">delete</span>
                             </button>
@@ -587,7 +577,7 @@ export default function TeacherAssignmentsPage() {
               {/* Pagination */}
               <div className="bg-slate-50 dark:bg-slate-800 px-6 py-4 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between">
                 <span className="text-sm text-slate-500 dark:text-slate-400">
-                  Showing <span className="font-bold text-slate-900 dark:text-white">{(currentPage - 1) * itemsPerPage + 1}-{Math.min(currentPage * itemsPerPage, filteredAssignments.length)}</span> of <span className="font-bold text-slate-900 dark:text-white">{filteredAssignments.length}</span> assignments
+                  {t("teacherAssignments.showing")} <span className="font-bold text-slate-900 dark:text-white">{(currentPage - 1) * itemsPerPage + 1}-{Math.min(currentPage * itemsPerPage, filteredAssignments.length)}</span> {t("teacherAssignments.of")} <span className="font-bold text-slate-900 dark:text-white">{filteredAssignments.length}</span> {t("assignments")}
                 </span>
                 <div className="flex gap-2">
                   <button 
@@ -595,14 +585,14 @@ export default function TeacherAssignmentsPage() {
                     disabled={currentPage === 1}
                     className="px-3 py-1 border border-slate-300 dark:border-slate-700 rounded bg-white dark:bg-slate-800 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
-                    Previous
+                    {t("teacherAssignments.previous")}
                   </button>
                   <button 
                     onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                     disabled={currentPage === totalPages}
                     className="px-3 py-1 border border-slate-300 dark:border-slate-700 rounded bg-white dark:bg-slate-800 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
-                    Next
+                    {t("teacherAssignments.next")}
                   </button>
                 </div>
               </div>
@@ -615,18 +605,18 @@ export default function TeacherAssignmentsPage() {
       <AlertDialog open={!!assignmentToDelete} onOpenChange={(open) => !open && setAssignmentToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogTitle>{t("teacherAssignments.areYouSure")}</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete the assignment "{assignmentToDelete?.title}" and all associated submissions and grades. This action cannot be undone.
+              {t("teacherAssignments.deleteAssignmentConfirm", { title: assignmentToDelete?.title })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common:actions.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteAssignment}
               className="bg-red-600 hover:bg-red-700"
             >
-              Delete Assignment
+              {t("teacherAssignments.deleteAssignment")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -636,48 +626,48 @@ export default function TeacherAssignmentsPage() {
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Edit Assignment</DialogTitle>
+            <DialogTitle>{t("teacherAssignments.editAssignment")}</DialogTitle>
             <DialogDescription>
-              Update the assignment details
+              {t("teacherAssignments.updateAssignmentDetails")}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleEditAssignment} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="edit-title">Title *</Label>
+              <Label htmlFor="edit-title">{t("teacherAssignments.titleRequired")}</Label>
               <Input
                 id="edit-title"
                 value={editFormData.title}
                 onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
-                placeholder="Assignment title"
+                placeholder={t("teacherAssignments.assignmentTitle")}
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="edit-description">Description</Label>
+              <Label htmlFor="edit-description">{t("teacherAssignments.description")}</Label>
               <Textarea
                 id="edit-description"
                 value={editFormData.description}
                 onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
-                placeholder="Add instructions or details"
+                placeholder={t("teacherAssignments.addInstructions")}
                 rows={3}
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="edit-type">Type *</Label>
+                <Label htmlFor="edit-type">{t("teacherAssignments.typeRequired")}</Label>
                 <Select
                   value={editFormData.type}
                   onValueChange={(value) => setEditFormData({ ...editFormData, type: value })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select type" />
+                    <SelectValue placeholder={t("teacherAssignments.selectType")} />
                   </SelectTrigger>
                   <SelectContent>
                     {assignmentTypes.map(type => (
-                      <SelectItem key={type.value} value={type.value}>
-                        {type.label}
+                      <SelectItem key={type} value={type}>
+                        {getTypeLabel(type)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -685,7 +675,7 @@ export default function TeacherAssignmentsPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="edit-maxScore">Max Score *</Label>
+                <Label htmlFor="edit-maxScore">{t("teacherAssignments.maxScoreRequired")}</Label>
                 <Input
                   id="edit-maxScore"
                   type="number"
@@ -698,7 +688,7 @@ export default function TeacherAssignmentsPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="edit-dueDate">Due Date *</Label>
+              <Label htmlFor="edit-dueDate">{t("teacherAssignments.dueDateRequired")}</Label>
               <Input
                 id="edit-dueDate"
                 type="datetime-local"
@@ -710,16 +700,16 @@ export default function TeacherAssignmentsPage() {
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-                Cancel
+                {t("common:actions.cancel")}
               </Button>
               <Button type="submit" disabled={isEditing}>
                 {isEditing ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Saving...
+                    {t("teacherAssignments.saving")}
                   </>
                 ) : (
-                  'Save Changes'
+                  t("common:actions.save")
                 )}
               </Button>
             </DialogFooter>

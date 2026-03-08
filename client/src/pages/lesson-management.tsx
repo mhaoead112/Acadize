@@ -166,7 +166,7 @@ export default function LessonManagementPage() {
       setUploadedFiles([]);
       
       // Navigate back to dashboard
-      navigate("/teacher-dashboard");
+      navigate("/teacher/dashboard");
       
     } catch (error) {
       console.error('Error publishing lesson:', error);
@@ -181,7 +181,7 @@ export default function LessonManagementPage() {
   };
 
   const handleCancel = () => {
-    navigate("/teacher-dashboard");
+      navigate("/teacher/dashboard");
   };
 
   if (!user || (user.role !== "teacher" && user.role !== "admin")) {
@@ -217,7 +217,7 @@ export default function LessonManagementPage() {
       {/* Sticky Header */}
       <header className="sticky top-0 z-50 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3 text-sm">
-          <Link href="/teacher-dashboard" className="text-slate-500 hover:text-gold transition-colors">
+              <Link href="/teacher/dashboard" className="text-slate-500 hover:text-gold transition-colors">
             Dashboard
           </Link>
           <span className="material-symbols-outlined text-[16px] text-slate-300">chevron_right</span>

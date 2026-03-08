@@ -12,6 +12,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { apiEndpoint } from '@/lib/config';
 import TeacherLayout from '@/components/TeacherLayout';
+import { TableSkeleton } from '@/components/skeletons/TableSkeleton';
 
 // The project uses Material Symbols via <span className="material-symbols-outlined">
 // No need for @mui/icons-material package
@@ -177,8 +178,8 @@ export default function TeacherExams() {
   };
 
   const formatDate = (dateString: string | null) => {
-    if (!dateString) return 'Not scheduled';
-    return new Date(dateString).toLocaleDateString('en-US', {
+    if (!dateString) return t("teacherExams.notScheduled");
+    return new Date(dateString).toLocaleDateString(undefined, {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
@@ -192,21 +193,16 @@ export default function TeacherExams() {
       .filter(e => e.scheduledStart && e.status === 'scheduled')
       .sort((a, b) => new Date(a.scheduledStart!).getTime() - new Date(b.scheduledStart!).getTime());
     
-    if (scheduled.length === 0) return 'None';
+    if (scheduled.length === 0) return t("teacherExams.none");
     const nextDate = new Date(scheduled[0].scheduledStart!);
-    return nextDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    return nextDate.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
   };
 
   if (loading) {
     return (
       <TeacherLayout>
-        <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
-          <motion.div 
-            className="size-16 border-4 border-gold/20 border-t-gold rounded-full"
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          />
-          <p className="text-slate-500 dark:text-slate-400 font-medium animate-pulse">Loading exam intelligence...</p>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+          <TableSkeleton rows={6} columns={5} />
         </div>
       </TeacherLayout>
     );
@@ -222,13 +218,13 @@ export default function TeacherExams() {
             className="bg-red-500/10 border border-red-500/20 rounded-2xl p-8 text-center backdrop-blur-md"
           >
             <span className="material-symbols-outlined text-5xl text-red-500 mb-4 block">error</span>
-            <p className="text-red-500 font-bold text-xl mb-2">Sync Error</p>
+            <p className="text-red-500 font-bold text-xl mb-2">{t("teacherExams.syncError")}</p>
             <p className="text-red-600/80 dark:text-red-400/80 mb-6 max-w-md mx-auto">{error}</p>
             <button
               onClick={handleRefresh}
               className="px-8 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl transition-all font-bold shadow-lg shadow-red-500/20"
             >
-              Retry Connection
+              {t("teacherExams.retryConnection")}
             </button>
           </motion.div>
         </div>
@@ -254,7 +250,7 @@ export default function TeacherExams() {
                 {t('examIntelligence')}
               </h1>
               <p className="text-slate-600 dark:text-slate-400 text-lg lg:text-xl max-w-2xl leading-relaxed">
-                Empower your classroom with data-driven assessments. Monitor live sessions and review flagged activities in real-time.
+                {t("teacherExams.headerDescription")}
               </p>
             </motion.div>
             
@@ -269,7 +265,7 @@ export default function TeacherExams() {
                 <span className={`material-symbols-outlined text-[20px] ${refreshing ? 'animate-spin' : ''}`}>
                   refresh
                 </span>
-                {refreshing ? 'Syncing...' : 'Sync Data'}
+                {refreshing ? t("syncing") : t("teacherExams.syncData")}
               </motion.button>
               
               <motion.button
@@ -279,7 +275,7 @@ export default function TeacherExams() {
                 className="flex items-center gap-2 px-8 py-3.5 rounded-xl bg-gold hover:bg-gold-light text-navy text-base font-black shadow-[0_8px_20px_-4px_rgba(234,179,8,0.4)] hover:shadow-[0_12px_24px_-4px_rgba(234,179,8,0.5)] transition-all transform"
               >
                 <span className="material-symbols-outlined text-[22px] font-bold">add_circle</span>
-                New Assessment
+                {t("newAssessment")}
               </motion.button>
             </motion.div>
           </motion.div>
@@ -292,10 +288,10 @@ export default function TeacherExams() {
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6"
           >
             {[
-              { label: 'Active Sessions', value: activeExams, icon: 'timer', color: 'green', suffix: 'Live' },
-              { label: 'Review Required', value: totalFlagged, icon: 'security', color: 'orange', suffix: 'Alert' },
-              { label: 'Class Average', value: `${avgClassScore}%`, icon: 'analytics', color: 'blue', suffix: 'Score' },
-              { label: 'Upcoming', value: scheduledExams, icon: 'calendar_today', color: 'purple', suffix: getNextScheduledExam() }
+              { label: t("teacherExams.activeSessions"), value: activeExams, icon: 'timer', color: 'green', suffix: t("teacherExams.live") },
+              { label: t("teacherExams.reviewRequired"), value: totalFlagged, icon: 'security', color: 'orange', suffix: t("teacherExams.alert") },
+              { label: t("teacherExams.classAverage"), value: `${avgClassScore}%`, icon: 'analytics', color: 'blue', suffix: t("teacherExams.score") },
+              { label: t("teacherExams.upcoming"), value: scheduledExams, icon: 'calendar_today', color: 'purple', suffix: getNextScheduledExam() }
             ].map((kpi, idx) => (
               <motion.div
                 key={kpi.label}
@@ -344,7 +340,7 @@ export default function TeacherExams() {
                       <div className="size-10 rounded-xl bg-gold/10 flex items-center justify-center text-gold">
                         <span className="material-symbols-outlined">quiz</span>
                       </div>
-                      Assessment List
+                      {t("teacherExams.assessmentList")}
                     </h3>
                   </div>
                   
@@ -354,7 +350,7 @@ export default function TeacherExams() {
                     </span>
                     <input
                       className="bg-slate-100/50 dark:bg-navy-dark/50 border border-slate-200 dark:border-white/10 rounded-2xl text-sm py-3 pl-12 pr-6 w-full sm:w-64 focus:ring-4 focus:ring-gold/10 focus:border-gold focus:bg-white dark:focus:bg-navy-dark transition-all outline-none text-navy dark:text-white font-medium"
-                      placeholder="Locate an exam..."
+                      placeholder={t("teacherExams.locateExam")}
                       type="text"
                     />
                   </div>
@@ -364,11 +360,11 @@ export default function TeacherExams() {
                   <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="bg-slate-50/50 dark:bg-white/5 text-slate-500 dark:text-slate-400 text-[10px] uppercase font-black tracking-[0.15em] border-b border-slate-100 dark:border-white/5">
-                        <th className="px-8 py-5">Assessment</th>
-                        <th className="px-6 py-5">Course</th>
-                        <th className="px-6 py-5">Status</th>
-                        <th className="px-6 py-5">Volume</th>
-                        <th className="px-8 py-5 text-right">Control</th>
+                        <th className="px-8 py-5">{t("teacherExams.assessment")}</th>
+                        <th className="px-6 py-5">{t("teacherExams.course")}</th>
+                        <th className="px-6 py-5">{t("teacherExams.status")}</th>
+                        <th className="px-6 py-5">{t("teacherExams.volume")}</th>
+                        <th className="px-8 py-5 text-right">{t("teacherExams.control")}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-white/5">
@@ -383,15 +379,15 @@ export default function TeacherExams() {
                               <div className="size-24 rounded-full bg-slate-50 dark:bg-navy-dark flex items-center justify-center mb-6 shadow-inner">
                                 <span className="material-symbols-outlined text-6xl text-slate-300 dark:text-navy/50">inbox</span>
                               </div>
-                              <h4 className="text-xl font-black text-navy dark:text-white mb-2">No Assessments Yet</h4>
+                              <h4 className="text-xl font-black text-navy dark:text-white mb-2">{t("teacherExams.noAssessmentsYet")}</h4>
                               <p className="text-slate-500 dark:text-slate-400 text-sm mb-8 leading-relaxed">
-                                Ready to challenge your students? Design your first innovative assessment in seconds.
+                                {t("teacherExams.noAssessmentsDescription")}
                               </p>
                               <button
                                 onClick={() => setLocation('/teacher/exams/create')}
                                 className="w-full py-4 bg-gold hover:bg-gold-light text-navy font-black rounded-2xl shadow-xl shadow-gold/20 transition-all"
                               >
-                                Draft New Exam
+                                {t("teacherExams.draftNewExam")}
                               </button>
                             </motion.div>
                           </td>
@@ -411,11 +407,11 @@ export default function TeacherExams() {
                                 <div className="flex items-center gap-4 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tight">
                                   <span className="flex items-center gap-1.5 p-1 rounded-md bg-slate-100 dark:bg-white/5">
                                     <span className="material-symbols-outlined text-[14px]">timer</span>
-                                    {exam.duration} Min
+                                    {exam.duration} {t("teacherExams.min")}
                                   </span>
                                   <span className="flex items-center gap-1.5 p-1 rounded-md bg-slate-100 dark:bg-white/5">
                                     <span className="material-symbols-outlined text-[14px]">stars</span>
-                                    {exam.totalPoints} Pts
+                                    {exam.totalPoints} {t("teacherExams.pts")}
                                   </span>
                                 </div>
                               </div>
@@ -432,7 +428,7 @@ export default function TeacherExams() {
                                   exam.status === 'scheduled' ? 'bg-blue-500' :
                                   exam.status === 'completed' ? 'bg-purple-500' : 'bg-slate-500'
                                 }`} />
-                                {exam.status}
+                                {t(`teacherExams.statuses.${exam.status}`)}
                               </div>
                             </td>
                             <td className="px-6 py-6">
@@ -440,13 +436,13 @@ export default function TeacherExams() {
                                 <div className="flex items-center gap-2 text-[11px] font-bold text-slate-500 dark:text-slate-400">
                                   <span className="material-symbols-outlined text-[16px]">groups</span>
                                   <span className="text-navy dark:text-white font-black">{exam.stats.totalAttempts}</span>
-                                  <span>Attempts</span>
+                                  <span>{t("teacherExams.attempts")}</span>
                                 </div>
                                 {exam.stats.averageScore !== null && (
                                   <div className="flex items-center gap-2 text-[11px] font-bold text-slate-500 dark:text-slate-400">
                                     <span className="material-symbols-outlined text-[16px] text-green-500">trending_up</span>
                                     <span className="text-navy dark:text-white font-black">{exam.stats.averageScore}%</span>
-                                    <span>Average</span>
+                                    <span>{t("teacherExams.average")}</span>
                                   </div>
                                 )}
                               </div>
@@ -481,13 +477,13 @@ export default function TeacherExams() {
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
                     <h3 className="text-xl lg:text-2xl font-black text-navy dark:text-white flex items-center gap-3">
-                      Risk Monitor
+                      {t("teacherExams.riskMonitor")}
                       <span className="relative flex h-3 w-3">
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
                         <span className="relative inline-flex rounded-full h-3 w-3 bg-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.5)]"></span>
                       </span>
                     </h3>
-                    <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Live Security Feed</p>
+                    <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">{t("teacherExams.liveSecurityFeed")}</p>
                   </div>
                   <div className="size-12 rounded-2xl bg-orange-500 text-navy font-black flex items-center justify-center shadow-lg shadow-orange-500/20">
                     {flaggedAttempts.length}
@@ -505,8 +501,8 @@ export default function TeacherExams() {
                         <div className="size-20 rounded-full bg-green-500 shadow-[0_0_30px_rgba(34,197,94,0.3)] flex items-center justify-center mx-auto mb-6">
                           <span className="material-symbols-outlined text-4xl text-navy font-black">verified</span>
                         </div>
-                        <h4 className="text-lg font-black text-green-700 dark:text-green-400 mb-2">Zero Intrusions</h4>
-                        <p className="text-sm font-bold text-green-600/60 dark:text-green-500/50 uppercase tracking-tighter">System integrity confirmed</p>
+                        <h4 className="text-lg font-black text-green-700 dark:text-green-400 mb-2">{t("teacherExams.zeroIntrusions")}</h4>
+                        <p className="text-sm font-bold text-green-600/60 dark:text-green-500/50 uppercase tracking-tighter">{t("teacherExams.systemIntegrityConfirmed")}</p>
                       </motion.div>
                     ) : (
                       flaggedAttempts.map((attempt, idx) => (
@@ -534,7 +530,7 @@ export default function TeacherExams() {
                           <div className="flex items-center gap-4 mb-6">
                             <div className="flex-1 space-y-2">
                               <div className="flex justify-between text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase">
-                                <span>Risk Level</span>
+                                <span>{t("teacherExams.riskLevel")}</span>
                                 <span className={getRiskLevelColor(attempt.riskLevel)}>{attempt.riskScore}%</span>
                               </div>
                               <div className="h-2 w-full bg-slate-200 dark:bg-white/5 rounded-full overflow-hidden">
@@ -555,10 +551,10 @@ export default function TeacherExams() {
                           <motion.button
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
-                            onClick={() => setLocation(`/teacher/review/${attempt.id}`)}
+                            onClick={() => setLocation(`/teacher/attempts/${attempt.id}/review`)}
                             className="w-full py-4 rounded-2xl bg-navy dark:bg-gold text-white dark:text-navy text-xs font-black uppercase tracking-widest hover:shadow-xl transition-all shadow-lg shadow-black/5"
                           >
-                            Review Analytics
+                            {t("teacherExams.reviewAnalytics")}
                           </motion.button>
                         </motion.div>
                       ))
@@ -579,18 +575,18 @@ export default function TeacherExams() {
                       <span className="material-symbols-outlined text-[24px]">analytics</span>
                     </div>
                     <div>
-                      <h4 className="text-xl font-black italic tracking-tight">System Health</h4>
-                      <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Real-time status</p>
+                      <h4 className="text-xl font-black italic tracking-tight">{t("teacherExams.systemHealth")}</h4>
+                      <p className="text-[10px] font-black uppercase tracking-widest opacity-60">{t("teacherExams.realtimeStatus")}</p>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="p-4 bg-white/10 dark:bg-navy/5 rounded-3xl">
                       <div className="text-2xl font-black">99.8%</div>
-                      <div className="text-[9px] font-black uppercase opacity-60">Integrity</div>
+                      <div className="text-[9px] font-black uppercase opacity-60">{t("teacherExams.integrity")}</div>
                     </div>
                     <div className="p-4 bg-white/10 dark:bg-navy/5 rounded-3xl">
                       <div className="text-2xl font-black">12ms</div>
-                      <div className="text-[9px] font-black uppercase opacity-60">Latency</div>
+                      <div className="text-[9px] font-black uppercase opacity-60">{t("teacherExams.latency")}</div>
                     </div>
                   </div>
                 </div>

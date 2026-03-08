@@ -41,6 +41,8 @@ import {
   MoreVertical
 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { usePortalI18n } from '@/hooks/usePortalI18n';
+
 
 // Form schemas
 const uploadFormSchema = z.object({
@@ -92,6 +94,7 @@ interface Folder {
 }
 
 export default function TeacherContent() {
+  const { t } = usePortalI18n("common");
   const [activeTab, setActiveTab] = useState("my-content");
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [isFolderDialogOpen, setIsFolderDialogOpen] = useState(false);

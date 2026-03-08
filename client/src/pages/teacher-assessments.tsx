@@ -15,6 +15,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
+import { usePortalI18n } from '@/hooks/usePortalI18n';
+
 import { 
   FileText, 
   Plus, 
@@ -90,6 +92,7 @@ interface Submission {
 }
 
 export default function TeacherAssessments() {
+  const { t } = usePortalI18n("common");
   const [activeTab, setActiveTab] = useState("overview");
   const [isQuizDialogOpen, setIsQuizDialogOpen] = useState(false);
   const [isAssignmentDialogOpen, setIsAssignmentDialogOpen] = useState(false);

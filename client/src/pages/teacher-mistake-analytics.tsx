@@ -4,6 +4,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { apiEndpoint } from '@/lib/config';
 import { Loader2 } from 'lucide-react';
+import { usePortalI18n } from '@/hooks/usePortalI18n';
+
 
 interface Exam {
   id: string;
@@ -36,6 +38,7 @@ interface MistakeAnalyticsData {
 }
 
 const TeacherMistakeAnalytics: React.FC = () => {
+  const { t } = usePortalI18n("common");
   const { toast } = useToast();
   const { token, isLoading: authLoading, getAuthHeaders } = useAuth();
   const [data, setData] = useState<MistakeAnalyticsData | null>(null);

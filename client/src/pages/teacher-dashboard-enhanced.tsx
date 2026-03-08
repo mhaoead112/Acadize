@@ -31,6 +31,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
 import { Link } from "wouter";
+import { usePortalI18n } from '@/hooks/usePortalI18n';
+
 
 // Mock data for demonstration - in real app this would come from API
 const mockTeacherData = {
@@ -449,6 +451,7 @@ function StudentProgressCard({ student }: { student: typeof mockTeacherData.rece
 }
 
 export default function EnhancedTeacherDashboard() {
+  const { t } = usePortalI18n("common");
   const { user } = useAuth();
   const [selectedDate, setSelectedDate] = useState(new Date().toLocaleDateString());
 

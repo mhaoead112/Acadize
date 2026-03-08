@@ -1,19 +1,21 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { useTranslation } from "react-i18next";
-import { useLocation, Link, useRoute } from "wouter";
+import { useLocation, Link } from "wouter";
 import { 
   BookOpen, Clock, Users, FileText, Calendar,
-  Loader2, TrendingUp, Bell, GraduationCap, Plus, MessageSquare
+  TrendingUp, Bell, Plus
 } from "lucide-react";
 import TeacherLayout from "@/components/TeacherLayout";
+import { DashboardStatsSkeleton } from "@/components/skeletons/DashboardStatsSkeleton";
+import { CardSkeleton } from "@/components/skeletons/CardSkeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import VersaFloatingChat from "@/components/VersaFloatingChat";
 import { apiEndpoint } from "@/lib/config";
+
+const VersaFloatingChat = lazy(() => import("@/components/VersaFloatingChat"));
 
 interface Course {
   id: string;
@@ -197,8 +199,16 @@ export default function TeacherDashboard() {
   if (loading) {
     return (
       <TeacherLayout>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
+        <div className="flex-1 overflow-y-auto px-6 md:px-10 pb-10 pt-4 bg-slate-50 dark:bg-navy-dark">
+          <div className="max-w-6xl mx-auto space-y-8">
+            <DashboardStatsSkeleton />
+            <section className="space-y-4">
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+                {t('myCourses')}
+              </h2>
+              <CardSkeleton count={3} />
+            </section>
+          </div>
         </div>
       </TeacherLayout>
     );
@@ -498,7 +508,8 @@ export default function TeacherDashboard() {
         </div>
       </div>
 
-      <VersaFloatingChat />
+      <Suspense fallback={null}><VersaFloatingChat /></Suspense>
     </TeacherLayout>
   );
 }
+

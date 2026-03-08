@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import { useLocation } from 'wouter';
 import { useToast } from '@/hooks/use-toast';
@@ -10,6 +11,7 @@ import {
 } from 'lucide-react';
 
 export default function CreateCoursePage() {
+  const { t } = useTranslation('teacher');
   const { isAuthenticated, user, isLoading: authLoading, token, getAuthHeaders } = useAuth();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -35,7 +37,7 @@ export default function CreateCoursePage() {
       <div className="min-h-screen bg-[#f6f6f8] dark:bg-navy-dark flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-12 h-12 text-gold animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground font-medium">Preparing your workspace...</p>
+          <p className="text-muted-foreground font-medium">{t('teacherCreateCourse.preparingWorkspace')}</p>
         </div>
       </div>
     );
@@ -49,15 +51,15 @@ export default function CreateCoursePage() {
           <div className="w-20 h-20 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-6">
             <Lock className="w-10 h-10 text-red-400" />
           </div>
-          <h1 className="text-3xl font-bold text-white mb-3">Access Denied</h1>
+          <h1 className="text-3xl font-bold text-white mb-3">{t('teacherCreateCourse.accessDenied')}</h1>
           <p className="text-gray-400 mb-8">
-            You must be logged in as a teacher or administrator to create a course.
+            {t('teacherCreateCourse.accessDeniedDesc')}
           </p>
           <Button
             onClick={() => setLocation('/demo')}
             className="w-full bg-gold hover:bg-yellow-500 text-navy font-semibold py-6 rounded-xl"
           >
-            Go to Login
+            {t('teacherCreateCourse.goToLogin')}
           </Button>
         </div>
       </div>
@@ -72,18 +74,18 @@ export default function CreateCoursePage() {
           <div className="w-20 h-20 rounded-full bg-amber-500/20 flex items-center justify-center mx-auto mb-6">
             <ShieldAlert className="w-10 h-10 text-amber-400" />
           </div>
-          <h1 className="text-3xl font-bold text-white mb-3">Insufficient Permissions</h1>
+          <h1 className="text-3xl font-bold text-white mb-3">{t('teacherCreateCourse.insufficientPermissions')}</h1>
           <p className="text-gray-400 mb-2">
-            Only teachers and administrators can create classes.
+            {t('teacherCreateCourse.insufficientPermissionsDesc')}
           </p>
           <p className="text-sm text-muted-foreground mb-8">
-            Your current role: <span className="font-semibold text-amber-400 capitalize">{user?.role}</span>
+            {t('teacherCreateCourse.currentRole')}: <span className="font-semibold text-amber-400 capitalize">{user?.role}</span>
           </p>
           <Button
             onClick={() => setLocation('/teacher')}
             className="w-full bg-gold hover:bg-yellow-500 text-navy font-semibold py-6 rounded-xl"
           >
-            Go to Dashboard
+            {t('teacherCreateCourse.goToDashboard')}
           </Button>
         </div>
       </div>
@@ -120,8 +122,8 @@ export default function CreateCoursePage() {
     
     if (!formData.title.trim() || !formData.courseCode.trim()) {
       toast({
-        title: 'Validation Error',
-        description: 'Course title and code are required',
+        title: t('toast.validationError'),
+        description: t('teacherCreateCourse.validationCourseTitleAndCode'),
         variant: 'destructive'
       });
       return;
@@ -156,18 +158,18 @@ export default function CreateCoursePage() {
                   if (uploadedPath) {
                     resolve(uploadedPath);
                   } else {
-                    reject(new Error('Upload succeeded but no file path was returned'));
+                    reject(new Error(t('teacherCreateCourse.uploadSucceededNoFilePath')));
                   }
                 } catch (parseError) {
-                  reject(new Error('Invalid response from upload server'));
+                  reject(new Error(t('teacherCreateCourse.invalidUploadResponse')));
                 }
               } else {
-                reject(new Error(`Upload failed with status ${xhr.status}`));
+                reject(new Error(`${t('teacherCreateCourse.uploadFailedWithStatus')} ${xhr.status}`));
               }
             });
             
             xhr.addEventListener('error', () => {
-              reject(new Error('Network error during upload'));
+              reject(new Error(t('teacherCreateCourse.networkErrorDuringUpload')));
             });
             
             xhr.open('POST', apiEndpoint('/api/upload'));
@@ -179,8 +181,8 @@ export default function CreateCoursePage() {
         } catch (uploadError) {
           console.error('Image upload error:', uploadError);
           toast({
-            title: 'Image Upload Failed',
-            description: uploadError instanceof Error ? uploadError.message : 'Failed to upload course image',
+            title: t('teacherCreateCourse.imageUploadFailed'),
+            description: uploadError instanceof Error ? uploadError.message : t('teacherCreateCourse.failedToUploadCourseImage'),
             variant: 'destructive'
           });
           imageUrl = null;
@@ -190,7 +192,7 @@ export default function CreateCoursePage() {
       const courseData = {
         title: formData.title.trim(),
         courseCode: formData.courseCode.trim(),
-        description: formData.description.trim() || 'No description provided',
+        description: formData.description.trim() || t('teacherCourses.noDescriptionProvided'),
         department: formData.department || null,
         semesterStart: formData.semesterStart || null,
         semesterEnd: formData.semesterEnd || null,
@@ -206,14 +208,14 @@ export default function CreateCoursePage() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to create course');
+        throw new Error(errorData.message || t('teacherCreateCourse.failedToCreateCourse'));
       }
 
       const result = await response.json();
       
       toast({
-        title: 'Success',
-        description: isDraft ? 'Course saved as draft!' : 'Course published successfully!',
+        title: t('common:toast.success'),
+        description: isDraft ? t('teacherCreateCourse.courseSavedAsDraft') : t('teacherCreateCourse.coursePublishedSuccessfully'),
         variant: 'default'
       });
 
@@ -221,9 +223,9 @@ export default function CreateCoursePage() {
         setLocation('/teacher/courses');
       }, 1500);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Network error occurred';
+      const errorMessage = error instanceof Error ? error.message : t('teacherCreateCourse.networkErrorOccurred');
       toast({
-        title: 'Error',
+        title: t('error'),
         description: errorMessage,
         variant: 'destructive'
       });
@@ -245,8 +247,8 @@ export default function CreateCoursePage() {
               <span className="material-symbols-outlined">arrow_back</span>
             </button>
             <div className="flex flex-col">
-              <h2 className="text-slate-900 dark:text-white text-lg font-bold leading-tight">Create New Course</h2>
-              <p className="text-slate-500 dark:text-slate-400 text-xs">Set up your semester curriculum</p>
+              <h2 className="text-slate-900 dark:text-white text-lg font-bold leading-tight">{t('teacherCreateCourse.createNewCourse')}</h2>
+              <p className="text-slate-500 dark:text-slate-400 text-xs">{t('teacherCreateCourse.setupSemesterCurriculum')}</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -255,7 +257,7 @@ export default function CreateCoursePage() {
               className="hidden sm:block px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
               disabled={isLoading}
             >
-              Cancel
+              {t('common:actions.cancel')}
             </button>
             <button 
               onClick={() => handleSubmit(undefined, false)}
@@ -263,7 +265,7 @@ export default function CreateCoursePage() {
               className="px-5 py-2 bg-gold text-navy font-bold rounded-lg text-sm hover:bg-yellow-500 transition-all shadow-md shadow-gold/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-              {isLoading ? 'Publishing...' : 'Publish Course'}
+              {isLoading ? t('teacherCreateCourse.publishing') : t('teacherCreateCourse.publishCourse')}
             </button>
           </div>
         </header>
@@ -271,9 +273,9 @@ export default function CreateCoursePage() {
         <div className="p-6 md:p-10 max-w-6xl mx-auto w-full">
           {/* Breadcrumbs */}
           <div className="flex items-center gap-2 mb-8 text-sm text-slate-500 dark:text-slate-400">
-            <button onClick={() => setLocation('/teacher/courses')} className="hover:text-gold transition-colors">Courses</button>
+            <button onClick={() => setLocation('/teacher/courses')} className="hover:text-gold transition-colors">{t('courses')}</button>
             <span className="material-symbols-outlined text-[16px]">chevron_right</span>
-            <span className="text-slate-900 dark:text-white font-medium">Create New</span>
+            <span className="text-slate-900 dark:text-white font-medium">{t('teacherCreateCourse.createNew')}</span>
           </div>
 
           <form onSubmit={(e) => handleSubmit(e, false)} className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -283,15 +285,15 @@ export default function CreateCoursePage() {
               <section className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm">
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
                   <span className="material-symbols-outlined text-gold">edit_document</span>
-                  General Information
+                  {t('teacherCreateCourse.generalInformation')}
                 </h3>
                 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div className="md:col-span-2 flex flex-col gap-2">
-                    <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Course Title <span className="text-red-500">*</span></label>
+                    <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">{t('teacherCreateCourse.courseTitle')} <span className="text-red-500">*</span></label>
                     <input 
                       className="w-full bg-slate-50 dark:bg-navy-dark border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:ring-2 focus:ring-gold/50 outline-none transition-all"
-                      placeholder="e.g. Introduction to Physics"
+                      placeholder={t('teacherCreateCourse.courseTitlePlaceholder')}
                       type="text"
                       name="title"
                       value={formData.title}
@@ -300,10 +302,10 @@ export default function CreateCoursePage() {
                     />
                   </div>
                   <div className="flex flex-col gap-2">
-                    <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Course Code <span className="text-red-500">*</span></label>
+                    <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">{t('teacherCreateCourse.courseCode')} <span className="text-red-500">*</span></label>
                     <input 
                       className="w-full bg-slate-50 dark:bg-navy-dark border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:ring-2 focus:ring-gold/50 outline-none transition-all" 
-                      placeholder="e.g. PHYS-101"
+                      placeholder={t('teacherCreateCourse.courseCodePlaceholder')}
                       type="text"
                       name="courseCode"
                       value={formData.courseCode}
@@ -314,11 +316,11 @@ export default function CreateCoursePage() {
                 </div>
 
                 <div className="mt-6 flex flex-col gap-2">
-                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Description</label>
+                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">{t('teacherCreateCourse.description')}</label>
                   <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-navy-dark overflow-hidden">
                     <textarea 
                       className="w-full bg-transparent border-none text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 p-4 min-h-[160px] focus:ring-0 resize-y outline-none" 
-                      placeholder="Provide a comprehensive overview of the course content..."
+                      placeholder={t('teacherCreateCourse.descriptionPlaceholder')}
                       name="description"
                       value={formData.description}
                       onChange={handleInputChange}
@@ -331,14 +333,14 @@ export default function CreateCoursePage() {
               <section className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm">
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
                   <span className="material-symbols-outlined text-gold">image</span>
-                  Course Media
+                  {t('teacherCreateCourse.courseMedia')}
                 </h3>
                 <div className="flex flex-col gap-2">
-                  <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">Course Thumbnail</p>
+                  <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">{t('teacherCreateCourse.courseThumbnail')}</p>
                   
                   {coverImagePreview ? (
                     <div className="relative border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-4 overflow-hidden">
-                      <img src={coverImagePreview} alt="Course thumbnail preview" className="w-full h-48 object-cover rounded-lg" />
+                      <img src={coverImagePreview} alt={t('teacherCreateCourse.courseThumbnailPreview')} className="w-full h-48 object-cover rounded-lg" />
                       <button
                         type="button"
                         onClick={handleRemoveImage}
@@ -362,8 +364,8 @@ export default function CreateCoursePage() {
                       <div className="size-12 rounded-full bg-gold/10 text-gold flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                         <Upload className="w-6 h-6" />
                       </div>
-                      <p className="text-slate-900 dark:text-white font-bold">Click to upload or drag and drop</p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">SVG, PNG, JPG (Recommended: 800x400px)</p>
+                      <p className="text-slate-900 dark:text-white font-bold">{t('teacherCreateCourse.uploadOrDrag')}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{t('teacherCreateCourse.thumbnailFormat')}</p>
                     </div>
                   )}
                   <input 
@@ -382,30 +384,30 @@ export default function CreateCoursePage() {
               <section className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm sticky top-24">
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
                   <span className="material-symbols-outlined text-gold">settings</span>
-                  Course Settings
+                  {t('teacherCreateCourse.courseSettings')}
                 </h3>
                 
                 <div className="flex flex-col gap-6">
                   <div className="flex flex-col gap-2">
-                    <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Department <span className="text-red-500">*</span></label>
+                    <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">{t('teacherCreateCourse.department')} <span className="text-red-500">*</span></label>
                     <select 
                       className="w-full bg-slate-50 dark:bg-navy-dark border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-slate-900 dark:text-white focus:ring-2 focus:ring-gold/50 outline-none"
                       name="department"
                       value={formData.department}
                       onChange={handleInputChange}
                     >
-                      <option value="">Select Department</option>
-                      <option value="Science">Science</option>
-                      <option value="Mathematics">Mathematics</option>
-                      <option value="Computer Science">Computer Science</option>
-                      <option value="English">English</option>
-                      <option value="History">History</option>
-                      <option value="Arts">Arts</option>
+                      <option value="">{t('teacherCreateCourse.selectDepartment')}</option>
+                      <option value="Science">{t('teacherCreateCourse.departments.science')}</option>
+                      <option value="Mathematics">{t('teacherCreateCourse.departments.mathematics')}</option>
+                      <option value="Computer Science">{t('teacherCreateCourse.departments.computerScience')}</option>
+                      <option value="English">{t('teacherCreateCourse.departments.english')}</option>
+                      <option value="History">{t('teacherCreateCourse.departments.history')}</option>
+                      <option value="Arts">{t('teacherCreateCourse.departments.arts')}</option>
                     </select>
                   </div>
 
                   <div className="flex flex-col gap-2">
-                    <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Semester Duration</label>
+                    <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">{t('teacherCreateCourse.semesterDuration')}</label>
                     <div className="grid grid-cols-2 gap-3">
                       <input 
                         type="date" 
@@ -425,18 +427,18 @@ export default function CreateCoursePage() {
                   </div>
 
                   <div className="flex flex-col gap-2">
-                    <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Co-Instructors</label>
+                    <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">{t('teacherCreateCourse.coInstructors')}</label>
                     <div className="relative">
                       <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
                       <input 
                         className="w-full bg-slate-50 dark:bg-navy-dark border border-slate-200 dark:border-slate-700 rounded-lg pl-9 pr-4 py-2 text-sm text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:ring-2 focus:ring-gold/50 outline-none" 
-                        placeholder="Find colleagues..." 
+                        placeholder={t('teacherCreateCourse.findColleagues')} 
                       />
                     </div>
                     <div className="flex flex-wrap gap-2 mt-2">
                       <div className="bg-gold/10 text-gold text-xs px-2.5 py-1 rounded-full border border-gold/20 flex items-center gap-2">
                         <div className="size-4 rounded-full bg-gradient-to-br from-gold to-yellow-500"></div>
-                        You
+                        {t('teacherCreateCourse.you')}
                       </div>
                     </div>
                   </div>
@@ -449,9 +451,9 @@ export default function CreateCoursePage() {
                       className="w-full py-3 bg-gold text-navy font-bold rounded-lg hover:shadow-lg hover:shadow-gold/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
                       {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-                      {isLoading ? 'Saving...' : 'Save Draft & Continue'}
+                      {isLoading ? t('teacherCreateCourse.saving') : t('teacherCreateCourse.saveDraftAndContinue')}
                     </button>
-                    <p className="text-center text-[11px] text-slate-400">Changes are saved automatically.</p>
+                    <p className="text-center text-[11px] text-slate-400">{t('teacherCreateCourse.autoSaveNotice')}</p>
                   </div>
                 </div>
               </section>

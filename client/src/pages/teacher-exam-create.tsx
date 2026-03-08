@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useLocation } from 'wouter';
 import { motion, AnimatePresence } from 'framer-motion';
 import TeacherLayout from '../components/TeacherLayout';
+import { CardSkeleton } from '../components/skeletons/CardSkeleton';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '@/contexts/ThemeContext';
 import { apiEndpoint } from '../lib/config';
@@ -122,7 +123,7 @@ export default function TeacherExamCreate() {
       setCourses(teacherCourses);
     } catch (err: any) {
       console.error('Error fetching courses:', err);
-      setErrors(['Failed to load courses. Please refresh the page.']);
+      setErrors([t('teacherExamCreate.failedToLoadCourses')]);
     } finally {
       setLoading(false);
     }
@@ -132,61 +133,61 @@ export default function TeacherExamCreate() {
     const newErrors: ValidationError[] = [];
     
     if (!formData.courseId) {
-      newErrors.push({ field: 'courseId', message: 'Please select a course' });
+      newErrors.push({ field: 'courseId', message: t('teacherExamCreate.validation.selectCourse') });
     }
     
     if (!formData.title.trim()) {
-      newErrors.push({ field: 'title', message: 'Exam title is required' });
+      newErrors.push({ field: 'title', message: t('teacherExamCreate.validation.examTitleRequired') });
     }
     
     if (formData.duration <= 0) {
-      newErrors.push({ field: 'duration', message: 'Duration must be greater than 0' });
+      newErrors.push({ field: 'duration', message: t('teacherExamCreate.validation.durationPositive') });
     }
     
     if (formData.timeLimit <= 0) {
-      newErrors.push({ field: 'timeLimit', message: 'Time limit must be greater than 0' });
+      newErrors.push({ field: 'timeLimit', message: t('teacherExamCreate.validation.timeLimitPositive') });
     }
     
     if (formData.totalPoints < 0) {
-      newErrors.push({ field: 'totalPoints', message: 'Total points cannot be negative' });
+      newErrors.push({ field: 'totalPoints', message: t('teacherExamCreate.validation.totalPointsNonNegative') });
     }
     
     if (formData.passingScore < 0 || formData.passingScore > formData.totalPoints) {
-      newErrors.push({ field: 'passingScore', message: 'Passing score must be between 0 and total points' });
+      newErrors.push({ field: 'passingScore', message: t('teacherExamCreate.validation.passingScoreRange') });
     }
     
     if (formData.attemptsAllowed < 1) {
-      newErrors.push({ field: 'attemptsAllowed', message: 'At least 1 attempt must be allowed' });
+      newErrors.push({ field: 'attemptsAllowed', message: t('teacherExamCreate.validation.atLeastOneAttempt') });
     }
     
     if (!formData.scheduledStartAt) {
-      newErrors.push({ field: 'scheduledStartAt', message: 'Start date/time is required' });
+      newErrors.push({ field: 'scheduledStartAt', message: t('teacherExamCreate.validation.startDateRequired') });
     }
     if (!formData.scheduledEndAt) {
-      newErrors.push({ field: 'scheduledEndAt', message: 'End date/time is required' });
+      newErrors.push({ field: 'scheduledEndAt', message: t('teacherExamCreate.validation.endDateRequired') });
     }
     if (formData.scheduledStartAt && formData.scheduledEndAt) {
       const start = new Date(formData.scheduledStartAt);
       const end = new Date(formData.scheduledEndAt);
       if (start >= end) {
-        newErrors.push({ field: 'scheduledEndAt', message: 'End date must be after start date' });
+        newErrors.push({ field: 'scheduledEndAt', message: t('teacherExamCreate.validation.endAfterStart') });
       }
     }
     
     if (formData.lateSubmissionPenalty < 0 || formData.lateSubmissionPenalty > 100) {
-      newErrors.push({ field: 'lateSubmissionPenalty', message: 'Penalty must be between 0 and 100%' });
+      newErrors.push({ field: 'lateSubmissionPenalty', message: t('teacherExamCreate.validation.penaltyRange') });
     }
     
     if (formData.tabSwitchLimit < 0) {
-      newErrors.push({ field: 'tabSwitchLimit', message: 'Tab switch limit cannot be negative' });
+      newErrors.push({ field: 'tabSwitchLimit', message: t('teacherExamCreate.validation.tabSwitchNonNegative') });
     }
     
     if (formData.retakeDelay < 0) {
-      newErrors.push({ field: 'retakeDelay', message: 'Retake delay cannot be negative' });
+      newErrors.push({ field: 'retakeDelay', message: t('teacherExamCreate.validation.retakeDelayNonNegative') });
     }
     
     if (formData.dataRetentionDays < 1) {
-      newErrors.push({ field: 'dataRetentionDays', message: 'Data retention must be at least 1 day' });
+      newErrors.push({ field: 'dataRetentionDays', message: t('teacherExamCreate.validation.dataRetentionMin') });
     }
     
     setValidationErrors(newErrors);
@@ -197,7 +198,7 @@ export default function TeacherExamCreate() {
     e.preventDefault();
     
     if (!validateForm()) {
-      setErrors(['Please fix the validation errors below']);
+      setErrors([t('teacherExamCreate.validation.fixErrors')]);
       return;
     }
     
@@ -256,7 +257,7 @@ export default function TeacherExamCreate() {
         if (errorData.errors && Array.isArray(errorData.errors)) {
           setErrors(errorData.errors);
         } else {
-          setErrors([errorData.message || 'Failed to create exam']);
+          setErrors([errorData.message || t('teacherExamCreate.failedToCreateExam')]);
         }
         return;
       }
@@ -267,7 +268,7 @@ export default function TeacherExamCreate() {
       setLocation(`/teacher/exams`);
     } catch (err: any) {
       console.error('Error creating exam:', err);
-      setErrors([err.message || 'An unexpected error occurred']);
+      setErrors([err.message || t('teacherExamCreate.unexpectedError')]);
     } finally {
       setSubmitting(false);
     }
@@ -286,13 +287,8 @@ export default function TeacherExamCreate() {
   if (loading) {
     return (
       <TeacherLayout>
-        <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
-          <motion.div 
-            className="size-16 border-4 border-gold/20 border-t-gold rounded-full"
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          />
-          <p className="text-slate-500 dark:text-slate-400 font-medium animate-pulse font-sans tracking-wide">Initializing engine...</p>
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6">
+          <CardSkeleton count={3} />
         </div>
       </TeacherLayout>
     );
@@ -348,7 +344,7 @@ export default function TeacherExamCreate() {
                     <span className="material-symbols-outlined">security</span>
                   </div>
                   <div>
-                    <h4 className="text-red-500 font-black text-lg mb-1 uppercase tracking-tight">Configuration Error</h4>
+                    <h4 className="text-red-500 font-black text-lg mb-1 uppercase tracking-tight">{t('teacherExamCreate.configurationError')}</h4>
                     <ul className="space-y-1">
                       {errors.map((error, idx) => (
                         <li key={idx} className="text-red-600/80 dark:text-red-400/80 text-sm font-bold flex items-center gap-2">
@@ -375,8 +371,8 @@ export default function TeacherExamCreate() {
                 <span className="material-symbols-outlined text-[32px]">edit_note</span>
               </div>
               <div>
-                <h3 className="text-2xl lg:text-3xl font-black text-navy dark:text-white tracking-tight italic">Metadata & Timing</h3>
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 opacity-60">General configuration</p>
+                <h3 className="text-2xl lg:text-3xl font-black text-navy dark:text-white tracking-tight italic">{t('teacherExamCreate.metadataAndTiming')}</h3>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 opacity-60">{t('teacherExamCreate.generalConfiguration')}</p>
               </div>
             </div>
             
@@ -384,7 +380,7 @@ export default function TeacherExamCreate() {
               {/* Course Selection */}
               <div className="space-y-3 md:col-span-2">
                 <label className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 ml-1">
-                  Target Course <span className="text-gold">*</span>
+                  {t('teacherExamCreate.targetCourse')} <span className="text-gold">*</span>
                 </label>
                 <div className="relative group">
                   <select
@@ -393,7 +389,7 @@ export default function TeacherExamCreate() {
                     onChange={(e) => handleInputChange('courseId', e.target.value)}
                     required
                   >
-                    <option value="" className="dark:bg-navy">Select the objective...</option>
+                    <option value="" className="dark:bg-navy">{t('teacherExamCreate.selectObjective')}</option>
                     {courses.map(course => (
                       <option key={course.id} value={course.id} className="dark:bg-navy">{course.title}</option>
                     ))}
@@ -412,7 +408,7 @@ export default function TeacherExamCreate() {
               <div className="space-y-3">
                 <label className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 ml-1 flex items-center gap-2">
                   <span className="material-symbols-outlined text-[16px]">timer</span>
-                  Time Limit (Min) <span className="text-gold">*</span>
+                  {t('teacherExamCreate.timeLimitMin')} <span className="text-gold">*</span>
                 </label>
                 <input
                   type="number"
@@ -434,7 +430,7 @@ export default function TeacherExamCreate() {
               <div className="space-y-3">
                 <label className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 ml-1 flex items-center gap-2">
                   <span className="material-symbols-outlined text-[16px]">grade</span>
-                  Total Points <span className="text-gold">*</span>
+                  {t('teacherExamCreate.totalPoints')} <span className="text-gold">*</span>
                 </label>
                 <input
                   type="number"
@@ -450,7 +446,7 @@ export default function TeacherExamCreate() {
               <div className="space-y-3">
                 <label className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 ml-1 flex items-center gap-2">
                   <span className="material-symbols-outlined text-[16px]">verified</span>
-                  Passing Score <span className="text-gold">*</span>
+                  {t('teacherExamCreate.passingScore')} <span className="text-gold">*</span>
                 </label>
                 <input
                   type="number"
@@ -467,7 +463,7 @@ export default function TeacherExamCreate() {
               <div className="space-y-3">
                 <label className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 ml-1 flex items-center gap-2">
                   <span className="material-symbols-outlined text-[16px]">replay</span>
-                  Max Attempts <span className="text-gold">*</span>
+                  {t('teacherExamCreate.maxAttempts')} <span className="text-gold">*</span>
                 </label>
                 <input
                   type="number"
@@ -491,14 +487,14 @@ export default function TeacherExamCreate() {
                 <span className="material-symbols-outlined text-[32px]">event_available</span>
               </div>
               <div>
-                <h3 className="text-2xl lg:text-3xl font-black text-navy dark:text-white tracking-tight italic">Deployment Window</h3>
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 opacity-60">Scheduling protocols</p>
+                <h3 className="text-2xl lg:text-3xl font-black text-navy dark:text-white tracking-tight italic">{t('teacherExamCreate.deploymentWindow')}</h3>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 opacity-60">{t('teacherExamCreate.schedulingProtocols')}</p>
               </div>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="space-y-3">
-                <label className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 ml-1">Window Open Date/Time</label>
+                <label className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 ml-1">{t('teacherExamCreate.windowOpenDateTime')}</label>
                 <input
                   type="datetime-local"
                   className="w-full bg-slate-50 dark:bg-navy/60 border-2 border-slate-200 dark:border-white/5 text-navy dark:text-white rounded-[1.5rem] px-6 py-5 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none font-bold"
@@ -507,7 +503,7 @@ export default function TeacherExamCreate() {
                 />
               </div>
               <div className="space-y-3">
-                <label className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 ml-1">Window Close Date/Time</label>
+                <label className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 ml-1">{t('teacherExamCreate.windowCloseDateTime')}</label>
                 <input
                   type="datetime-local"
                   className="w-full bg-slate-50 dark:bg-navy/60 border-2 border-slate-200 dark:border-white/5 text-navy dark:text-white rounded-[1.5rem] px-6 py-5 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none font-bold"
@@ -528,19 +524,19 @@ export default function TeacherExamCreate() {
                 <span className="material-symbols-outlined text-[32px]">terminal</span>
               </div>
               <div>
-                <h3 className="text-2xl lg:text-3xl font-black text-navy dark:text-white tracking-tight italic">Engine Logic</h3>
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 opacity-60">Execution & feedback settings</p>
+                <h3 className="text-2xl lg:text-3xl font-black text-navy dark:text-white tracking-tight italic">{t('teacherExamCreate.engineLogic')}</h3>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 opacity-60">{t('teacherExamCreate.executionAndFeedbackSettings')}</p>
               </div>
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {[
-                { key: 'shuffleQuestions', label: 'Randomize Order', desc: 'Secure question sequence', icon: 'shuffle' },
-                { key: 'shuffleOptions', label: 'Shuffle Options', desc: 'Answer choice randomization', icon: 'list' },
-                { key: 'showResults', label: 'Publish Results', desc: 'Control visibility', icon: 'visibility' },
-                { key: 'showCorrectAnswers', label: 'Reveal Keys', desc: 'Show correct solutions', icon: 'key' },
-                { key: 'allowBacktracking', label: 'Allow Return', desc: 'Linear or flexible path', icon: 'undo' },
-                { key: 'lateSubmissionAllowed', label: 'Late Grace', desc: 'Post-deadline submissions', icon: 'history' },
+                { key: 'shuffleQuestions', label: t('teacherExamCreate.logic.randomizeOrder'), desc: t('teacherExamCreate.logic.randomizeOrderDesc'), icon: 'shuffle' },
+                { key: 'shuffleOptions', label: t('teacherExamCreate.logic.shuffleOptions'), desc: t('teacherExamCreate.logic.shuffleOptionsDesc'), icon: 'list' },
+                { key: 'showResults', label: t('teacherExamCreate.logic.publishResults'), desc: t('teacherExamCreate.logic.publishResultsDesc'), icon: 'visibility' },
+                { key: 'showCorrectAnswers', label: t('teacherExamCreate.logic.revealKeys'), desc: t('teacherExamCreate.logic.revealKeysDesc'), icon: 'key' },
+                { key: 'allowBacktracking', label: t('teacherExamCreate.logic.allowReturn'), desc: t('teacherExamCreate.logic.allowReturnDesc'), icon: 'undo' },
+                { key: 'lateSubmissionAllowed', label: t('teacherExamCreate.logic.lateGrace'), desc: t('teacherExamCreate.logic.lateGraceDesc'), icon: 'history' },
               ].map(item => (
                 <motion.label 
                   key={item.key} 
@@ -586,7 +582,7 @@ export default function TeacherExamCreate() {
                     <span className="material-symbols-outlined text-[32px]">history_toggle_off</span>
                   </div>
                   <div className="flex-1 space-y-3">
-                    <label className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 ml-1">Late Submission Penalty (%)</label>
+                    <label className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 ml-1">{t('teacherExamCreate.lateSubmissionPenalty')}</label>
                     <div className="relative">
                       <input
                         type="number"
@@ -596,7 +592,7 @@ export default function TeacherExamCreate() {
                         value={formData.lateSubmissionPenalty}
                         onChange={(e) => handleInputChange('lateSubmissionPenalty', parseInt(e.target.value) || 0)}
                       />
-                      <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 font-bold px-6">% penalty</div>
+                      <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 font-bold px-6">{t('teacherExamCreate.penaltySuffix')}</div>
                     </div>
                   </div>
                 </div>
@@ -616,8 +612,8 @@ export default function TeacherExamCreate() {
                 <span className="material-symbols-outlined text-[32px]">security</span>
               </div>
               <div>
-                <h3 className="text-2xl lg:text-3xl font-black text-navy dark:text-white tracking-tight italic">Security protocols</h3>
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 opacity-60">Anti-cheat & proctoring</p>
+                <h3 className="text-2xl lg:text-3xl font-black text-navy dark:text-white tracking-tight italic">{t('teacherExamCreate.securityProtocols')}</h3>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 opacity-60">{t('teacherExamCreate.antiCheatAndProctoring')}</p>
               </div>
             </div>
             
@@ -636,8 +632,8 @@ export default function TeacherExamCreate() {
                     <span className="material-symbols-outlined text-[28px]">verified_user</span>
                   </div>
                   <div>
-                    <span className="font-black text-xl text-navy dark:text-white tracking-tight uppercase italic underline decoration-red-500/30">Activate Iron-Clad Security</span>
-                    <p className="text-xs font-bold text-slate-500 mt-1">Enable comprehensive proctoring and biometric analysis.</p>
+                    <span className="font-black text-xl text-navy dark:text-white tracking-tight uppercase italic underline decoration-red-500/30">{t('teacherExamCreate.activateSecurity')}</span>
+                    <p className="text-xs font-bold text-slate-500 mt-1">{t('teacherExamCreate.activateSecurityDesc')}</p>
                   </div>
                 </div>
                 <div className={`h-8 w-14 rounded-full p-1.5 transition-colors ${
@@ -658,12 +654,12 @@ export default function TeacherExamCreate() {
               {formData.antiCheatEnabled && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in">
                   {[
-                    { key: 'requireWebcam', label: 'Biometrics', desc: 'Webcam verification', icon: 'videocam' },
-                    { key: 'requireScreenShare', label: 'Stream Feed', desc: 'Live screen monitoring', icon: 'screen_share' },
-                    { key: 'requireFullscreen', label: 'Lock Frame', desc: 'Strict fullscreen mode', icon: 'fullscreen' },
-                    { key: 'requireLockdownBrowser', label: 'Isolation', desc: 'Lockdown protocols', icon: 'lock' },
-                    { key: 'copyPasteAllowed', label: 'Clipboard Lock', desc: 'Disable copy/paste', icon: 'content_paste_off' },
-                    { key: 'rightClickAllowed', label: 'Menu Lock', desc: 'Disable context menus', icon: 'mouse' },
+                    { key: 'requireWebcam', label: t('teacherExamCreate.security.biometrics'), desc: t('teacherExamCreate.security.biometricsDesc'), icon: 'videocam' },
+                    { key: 'requireScreenShare', label: t('teacherExamCreate.security.streamFeed'), desc: t('teacherExamCreate.security.streamFeedDesc'), icon: 'screen_share' },
+                    { key: 'requireFullscreen', label: t('teacherExamCreate.security.lockFrame'), desc: t('teacherExamCreate.security.lockFrameDesc'), icon: 'fullscreen' },
+                    { key: 'requireLockdownBrowser', label: t('teacherExamCreate.security.isolation'), desc: t('teacherExamCreate.security.isolationDesc'), icon: 'lock' },
+                    { key: 'copyPasteAllowed', label: t('teacherExamCreate.security.clipboardLock'), desc: t('teacherExamCreate.security.clipboardLockDesc'), icon: 'content_paste_off' },
+                    { key: 'rightClickAllowed', label: t('teacherExamCreate.security.menuLock'), desc: t('teacherExamCreate.security.menuLockDesc'), icon: 'mouse' },
                   ].map(item => (
                     <motion.label 
                       key={item.key} 
@@ -710,25 +706,25 @@ export default function TeacherExamCreate() {
                 <span className="material-symbols-outlined text-[32px]">verified_user</span>
               </div>
               <div>
-                <h3 className="text-2xl lg:text-3xl font-black text-navy dark:text-white tracking-tight italic">Compliance & Retake</h3>
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 opacity-60">Legal & maintenance settings</p>
+                <h3 className="text-2xl lg:text-3xl font-black text-navy dark:text-white tracking-tight italic">{t('teacherExamCreate.complianceAndRetake')}</h3>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 opacity-60">{t('teacherExamCreate.legalAndMaintenanceSettings')}</p>
               </div>
             </div>
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
               <div className="space-y-6">
                 <div className="space-y-3">
-                  <label className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 ml-1">Privacy Disclosure</label>
+                  <label className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 ml-1">{t('teacherExamCreate.privacyDisclosure')}</label>
                   <textarea
                     className="w-full bg-slate-50 dark:bg-navy/60 border-2 border-slate-200 dark:border-white/5 text-navy dark:text-white rounded-[1.5rem] px-6 py-5 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 transition-all outline-none min-h-[140px] font-medium placeholder:text-slate-400/40 leading-relaxed resize-none"
-                    placeholder="Inform students about data usage and GDPR/FERPA protocols..."
+                    placeholder={t('teacherExamCreate.privacyDisclosurePlaceholder')}
                     value={formData.recordingDisclosure}
                     onChange={(e) => handleInputChange('recordingDisclosure', e.target.value)}
                   />
                 </div>
                 
                 <div className="space-y-3">
-                  <label className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 ml-1">Archive Duration (Days)</label>
+                  <label className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 ml-1">{t('teacherExamCreate.archiveDurationDays')}</label>
                   <div className="relative group">
                     <input
                       type="number"
@@ -738,7 +734,7 @@ export default function TeacherExamCreate() {
                       onChange={(e) => handleInputChange('dataRetentionDays', parseInt(e.target.value) || 365)}
                     />
                     <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                      <span className="text-xs font-black uppercase tracking-widest">Days Archive</span>
+                      <span className="text-xs font-black uppercase tracking-widest">{t('teacherExamCreate.daysArchive')}</span>
                     </div>
                   </div>
                 </div>
@@ -759,8 +755,8 @@ export default function TeacherExamCreate() {
                       <span className="material-symbols-outlined text-[24px]">replay_circle_filled</span>
                     </div>
                     <div>
-                      <span className="font-black text-navy dark:text-white tracking-tight uppercase italic underline decoration-purple-500/30">Allow Retakes</span>
-                      <p className="text-[10px] font-bold text-slate-500 mt-0.5">Permit retry-based learning.</p>
+                      <span className="font-black text-navy dark:text-white tracking-tight uppercase italic underline decoration-purple-500/30">{t('teacherExamCreate.allowRetakes')}</span>
+                      <p className="text-[10px] font-bold text-slate-500 mt-0.5">{t('teacherExamCreate.allowRetakesDesc')}</p>
                     </div>
                   </div>
                   <input
@@ -774,7 +770,7 @@ export default function TeacherExamCreate() {
                 {formData.retakeEnabled && (
                   <div className="space-y-6 animate-fade-in p-8 rounded-[2.5rem] bg-purple-500/5 border border-purple-500/20 backdrop-blur-sm">
                     <div className="space-y-3">
-                      <label className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 ml-1">Retake Cooldown (Hours)</label>
+                      <label className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 ml-1">{t('teacherExamCreate.retakeCooldownHours')}</label>
                       <input
                         type="number"
                         className="w-full bg-slate-50 dark:bg-navy/60 border-2 border-slate-200 dark:border-white/5 text-navy dark:text-white rounded-[1.5rem] px-6 py-5 focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 transition-all outline-none font-black text-xl text-center"
@@ -797,7 +793,7 @@ export default function TeacherExamCreate() {
                         }`}>
                           <span className="material-symbols-outlined text-[20px]">psychology</span>
                         </div>
-                        <span className={`font-black text-sm tracking-tight ${formData.adaptiveRetake ? 'text-navy' : 'text-slate-500 dark:text-slate-400'}`}>Adaptive Engine</span>
+                        <span className={`font-black text-sm tracking-tight ${formData.adaptiveRetake ? 'text-navy' : 'text-slate-500 dark:text-slate-400'}`}>{t('teacherExamCreate.adaptiveEngine')}</span>
                       </div>
                       <input
                         type="checkbox"
@@ -825,7 +821,7 @@ export default function TeacherExamCreate() {
               className="order-2 sm:order-1 px-10 py-5 rounded-[2rem] font-black uppercase tracking-widest text-xs bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-white/40 hover:bg-slate-200 dark:hover:bg-white/10 transition-all flex items-center justify-center gap-3"
             >
               <span className="material-symbols-outlined text-[18px]">close</span>
-              Abort Deployment
+              {t('teacherExamCreate.abortDeployment')}
             </motion.button>
             
             <motion.button
@@ -841,7 +837,7 @@ export default function TeacherExamCreate() {
               ) : (
                 <span className="material-symbols-outlined text-[20px] group-hover:rotate-12 transition-transform">rocket_launch</span>
               )}
-              {submitting ? 'Initializing...' : 'Deploy Assessment'}
+              {submitting ? t('teacherExamCreate.initializing') : t('teacherExamCreate.deployAssessment')}
             </motion.button>
           </motion.div>
         </form>

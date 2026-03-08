@@ -22,6 +22,7 @@ import {
   MoreVertical
 } from "lucide-react";
 import TeacherLayout from "@/components/TeacherLayout";
+import { TableSkeleton } from "@/components/skeletons/TableSkeleton";
 
 interface Student {
   id: string;
@@ -74,8 +75,8 @@ export default function TeacherStudents() {
     } catch (error) {
       console.error("Failed to fetch students:", error);
       toast({
-        title: "Error",
-        description: "Failed to load students",
+        title: t("error"),
+        description: t("teacherStudents.failedToLoadStudents"),
         variant: "destructive",
       });
     } finally {
@@ -128,11 +129,9 @@ export default function TeacherStudents() {
   if (loading) {
     return (
       <TeacherLayout>
-      <div className="flex-1 overflow-y-auto px-6 md:px-10 pb-10 pt-4 bg-slate-50 dark:bg-navy-dark">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        <div className="flex-1 overflow-y-auto px-6 md:px-10 pb-10 pt-4 bg-slate-50 dark:bg-navy-dark">
+          <TableSkeleton rows={6} columns={5} />
         </div>
-      </div>
       </TeacherLayout>
     );
   }
@@ -170,7 +169,7 @@ export default function TeacherStudents() {
         </div>
         <div className="bg-white dark:bg-slate-800 rounded-xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-1">
           <div className="flex justify-between items-start">
-            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Average Grade</p>
+            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{t("teacherStudents.averageGrade")}</p>
             <span className="material-symbols-outlined text-gold opacity-50">grade</span>
           </div>
           <div className="flex items-end gap-2">
@@ -182,7 +181,7 @@ export default function TeacherStudents() {
         </div>
         <div className="bg-white dark:bg-slate-800 rounded-xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-1">
           <div className="flex justify-between items-start">
-            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Assignments Due</p>
+            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{t("teacherStudents.assignmentsDue")}</p>
             <span className="material-symbols-outlined text-gold opacity-50">assignment_late</span>
           </div>
           <div className="flex items-end gap-2">
@@ -194,7 +193,7 @@ export default function TeacherStudents() {
         </div>
         <div className="bg-white dark:bg-slate-800 rounded-xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-1 ring-1 ring-red-500/20">
           <div className="flex justify-between items-start">
-            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">At Risk</p>
+            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{t("teacherStudents.atRisk")}</p>
             <span className="material-symbols-outlined text-red-500 opacity-50">warning</span>
           </div>
           <div className="flex items-end gap-2">
@@ -213,7 +212,7 @@ export default function TeacherStudents() {
             <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-gold transition-colors">search</span>
             <input 
               className="w-full h-12 pl-12 pr-4 bg-slate-50 dark:bg-navy-dark border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-gold/50 text-navy dark:text-white placeholder:text-slate-400 transition-shadow outline-none" 
-              placeholder="Search by name, ID, or email..." 
+              placeholder={t("teacherStudents.searchPlaceholder")}
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -226,10 +225,10 @@ export default function TeacherStudents() {
               value={filterClass}
               onChange={(e) => setFilterClass(e.target.value)}
             >
-              <option value="All">All Classes</option>
-              <option value="Class A">Class A</option>
-              <option value="Class B">Class B</option>
-              <option value="Class C">Class C</option>
+              <option value="All">{t("teacherStudents.allClasses")}</option>
+              <option value="Class A">{t("teacherStudents.classA")}</option>
+              <option value="Class B">{t("teacherStudents.classB")}</option>
+              <option value="Class C">{t("teacherStudents.classC")}</option>
             </select>
           </div>
         </div>
@@ -238,25 +237,25 @@ export default function TeacherStudents() {
             onClick={() => setFilterStatus('All')}
             className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${filterStatus === 'All' ? 'bg-gold text-navy font-bold' : 'bg-slate-100 dark:bg-navy-dark text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'}`}
           >
-            All Students
+            {t("teacherStudents.allStudents")}
           </button>
           <button 
             onClick={() => setFilterStatus('Active')}
             className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${filterStatus === 'Active' ? 'bg-gold text-navy font-bold' : 'bg-slate-100 dark:bg-navy-dark text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'}`}
           >
-            Active ({activeStudents})
+            {t("teacherStudents.active")} ({activeStudents})
           </button>
           <button 
             onClick={() => setFilterStatus('At Risk')}
             className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${filterStatus === 'At Risk' ? 'bg-red-500 text-white font-bold' : 'bg-slate-100 dark:bg-navy-dark text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'}`}
           >
-            <span className="material-symbols-outlined text-[18px]">warning</span> At Risk ({atRiskCount})
+            <span className="material-symbols-outlined text-[18px]">warning</span> {t("teacherStudents.atRisk")} ({atRiskCount})
           </button>
           <button 
             onClick={() => setFilterStatus('Honors')}
             className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${filterStatus === 'Honors' ? 'bg-blue-600 text-white font-bold' : 'bg-slate-100 dark:bg-navy-dark text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'}`}
           >
-            <span className="material-symbols-outlined text-[18px]">auto_awesome</span> Honors (45)
+            <span className="material-symbols-outlined text-[18px]">auto_awesome</span> {t("teacherStudents.honors")} (45)
           </button>
         </div>
       </div>
@@ -267,11 +266,11 @@ export default function TeacherStudents() {
           <table className="w-full min-w-[800px] text-left border-collapse">
             <thead>
               <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 text-navy dark:text-gold uppercase text-xs font-bold tracking-wider">
-                <th className="p-5 pl-6">Student Name</th>
-                <th className="p-5">Grade</th>
-                <th className="p-5">Attendance</th>
-                <th className="p-5">Courses</th>
-                <th className="p-5 pr-6 text-right">Actions</th>
+                <th className="p-5 pl-6">{t("teacherStudents.studentName")}</th>
+                <th className="p-5">{t("teacherStudents.grade")}</th>
+                <th className="p-5">{t("teacherStudents.attendance")}</th>
+                <th className="p-5">{t("teacherStudents.courses")}</th>
+                <th className="p-5 pr-6 text-right">{t("teacherStudents.actions")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -301,38 +300,46 @@ export default function TeacherStudents() {
                         gradeNum >= 70 ? 'bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-700' :
                         'bg-red-50 text-red-700 border-red-100 dark:bg-red-900/30 dark:text-red-400 dark:border-red-700'
                       }`}>
-                        {student.grade || 'N/A'}% ({letterGrade})
+                        {student.grade || t("teacherStudents.notAvailable")}% ({letterGrade})
                       </span>
                     </td>
                     <td className="p-5">
                       <div className="flex items-center gap-1.5">
                         <div className={`size-2 rounded-full ${student.status === 'Present' ? 'bg-emerald-500' : student.status === 'Late' ? 'bg-gold' : 'bg-slate-400'}`}></div>
-                        <span className="text-slate-700 dark:text-slate-300 text-sm font-medium">{student.status || 'Present'}</span>
+                        <span className="text-slate-700 dark:text-slate-300 text-sm font-medium">
+                          {student.status === "Absent"
+                            ? t("teacherStudents.absent")
+                            : student.status === "Late"
+                              ? t("teacherStudents.late")
+                              : t("teacherStudents.present")}
+                        </span>
                       </div>
                     </td>
                     <td className="p-5">
-                      <Badge variant="secondary" className="text-xs">{student.enrollmentCount} {student.enrollmentCount === 1 ? 'Class' : 'Classes'}</Badge>
+                      <Badge variant="secondary" className="text-xs">
+                        {student.enrollmentCount} {student.enrollmentCount === 1 ? t("teacherStudents.class") : t("teacherStudents.classes")}
+                      </Badge>
                     </td>
                     <td className="p-5 pr-6 text-right">
                       <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
                         <button 
                           onClick={(e) => { e.stopPropagation(); /* TODO: handle chat */ }}
                           className="p-2 rounded-lg text-slate-400 hover:text-gold hover:bg-gold/10 transition-colors" 
-                          title="Message"
+                          title={t("teacherStudents.message")}
                         >
                           <span className="material-symbols-outlined text-[20px]">chat</span>
                         </button>
                         <button 
                           onClick={(e) => { e.stopPropagation(); setLocation(`/teacher/students/${student.id}`); }}
                           className="p-2 rounded-lg text-slate-400 hover:text-navy dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors" 
-                          title="View Profile"
+                          title={t("teacherStudents.viewProfile")}
                         >
                           <span className="material-symbols-outlined text-[20px]">visibility</span>
                         </button>
                         <button 
                           onClick={(e) => e.stopPropagation()}
                           className="p-2 rounded-lg text-slate-400 hover:text-navy dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-                          title="More options"
+                          title={t("teacherStudents.moreOptions")}
                         >
                           <span className="material-symbols-outlined text-[20px]">more_vert</span>
                         </button>
@@ -342,21 +349,23 @@ export default function TeacherStudents() {
                 );
               }) : (
                 <tr>
-                  <td colSpan={5} className="p-20 text-center text-slate-500 dark:text-slate-400 italic">No students found matching your criteria.</td>
+                  <td colSpan={5} className="p-20 text-center text-slate-500 dark:text-slate-400 italic">{t("teacherStudents.noStudentsFound")}</td>
                 </tr>
               )}
             </tbody>
           </table>
         </div>
         <div className="p-4 flex flex-col sm:flex-row items-center justify-between border-t border-slate-100 dark:border-slate-800 gap-4 bg-slate-50/50 dark:bg-slate-900/10">
-          <p className="text-sm text-slate-500 dark:text-slate-400">Showing <span className="font-bold text-navy dark:text-white">{paginatedStudents.length}</span> students</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            {t("teacherStudents.showing")} <span className="font-bold text-navy dark:text-white">{paginatedStudents.length}</span> {t("teacherStudents.students")}
+          </p>
           <div className="flex items-center gap-2">
             <button 
               onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
               disabled={currentPage === 1}
               className="px-4 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-50 transition-colors"
             >
-              Previous
+              {t("teacherStudents.previous")}
             </button>
             {Array.from({ length: Math.min(5, totalPages) }, (_, i) => i + 1).map((page) => (
               <button 
@@ -376,7 +385,7 @@ export default function TeacherStudents() {
               disabled={currentPage === totalPages}
               className="px-4 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-50 transition-colors"
             >
-              Next
+              {t("teacherStudents.next")}
             </button>
           </div>
         </div>

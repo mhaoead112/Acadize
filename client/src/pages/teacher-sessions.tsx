@@ -11,6 +11,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { apiEndpoint } from '@/lib/config';
 import TeacherLayout from '@/components/TeacherLayout';
 import CreateSessionModal from '@/components/attendance/CreateSessionModal';
+import { CardSkeleton } from '@/components/skeletons/CardSkeleton';
 
 // ============================================================================
 // TYPES
@@ -549,13 +550,8 @@ export default function TeacherSessions() {
   if (loading) {
     return (
       <TeacherLayout>
-        <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
-          <motion.div
-            className="size-16 border-4 border-amber-500/20 border-t-amber-500 rounded-full"
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-          />
-          <p className="text-slate-500 dark:text-slate-400 font-medium animate-pulse">{t('loadingSessions')}</p>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+          <CardSkeleton count={6} />
         </div>
       </TeacherLayout>
     );
@@ -799,7 +795,7 @@ export default function TeacherSessions() {
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <EmptyState onCreate={() => setLocation('/teacher/sessions/create')} />
+                  <EmptyState onCreate={() => setModalOpen(true)} />
                 </motion.div>
               ) : (
                 filtered.map((session, idx) => (
@@ -815,7 +811,7 @@ export default function TeacherSessions() {
                       session={session}
                       index={idx}
                       onView={() => setLocation(`/teacher/sessions/${session.id}/live`)}
-                      onEdit={() => setLocation(`/teacher/sessions/${session.id}/edit`)}
+                      onEdit={() => setModalOpen(true)}
                       onStart={() => handleStart(session)}
                       onDelete={() => setConfirmDelete(session)}
                     />

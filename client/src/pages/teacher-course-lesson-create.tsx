@@ -66,8 +66,8 @@ export default function TeacherCourseLessonCreate() {
   const handleSubmit = async () => {
     if (!title.trim()) {
       toast({
-        title: "Validation Error",
-        description: "Please provide a lesson title",
+        title: t("toast.validationError"),
+        description: t("toast.provideLessonTitle"),
         variant: "destructive",
       });
       return;
@@ -75,8 +75,8 @@ export default function TeacherCourseLessonCreate() {
 
     if (!file) {
       toast({
-        title: "Validation Error",
-        description: "Please upload a lesson file",
+        title: t("toast.validationError"),
+        description: t("toast.uploadLessonFile"),
         variant: "destructive",
       });
       return;
@@ -110,20 +110,20 @@ export default function TeacherCourseLessonCreate() {
 
       if (response.ok) {
         toast({
-          title: "Success",
-          description: "Lesson created successfully",
+          title: t("common:toast.success"),
+          description: t("toast.lessonCreated"),
         });
         // Redirect to course page
         setLocation(`/teacher/courses/${courseId}`);
       } else {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to create lesson");
+        throw new Error(errorData.message || t("teacherCreateLesson.failedToCreateLesson"));
       }
     } catch (error) {
       console.error('Lesson creation error:', error);
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to create lesson",
+        title: t("error"),
+        description: error instanceof Error ? error.message : t("teacherCreateLesson.failedToCreateLesson"),
         variant: "destructive",
       });
     } finally {
@@ -141,16 +141,16 @@ export default function TeacherCourseLessonCreate() {
       {/* Sticky Header */}
       <header className="sticky top-0 z-50 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3 text-sm">
-          <Link href="/teacher-dashboard" className="text-slate-500 hover:text-gold transition-colors">
-            Dashboard
+              <Link href="/teacher/dashboard" className="text-slate-500 hover:text-gold transition-colors">
+            {t("common:portal.dashboard")}
           </Link>
           <span className="material-symbols-outlined text-[16px] text-slate-300">chevron_right</span>
-          <span className="text-slate-900 dark:text-white font-medium">New Lesson</span>
+          <span className="text-slate-900 dark:text-white font-medium">{t("teacherCreateLesson.newLesson")}</span>
         </div>
         <div className="flex items-center gap-4">
           <span className="text-xs text-slate-400 hidden sm:flex items-center gap-1">
             <span className="material-symbols-outlined text-[14px]">cloud_done</span>
-            Draft saved just now
+            {t("teacherCreateLesson.draftSaved")}
           </span>
           <div className="h-8 w-8 rounded-full bg-slate-200 border border-slate-300 dark:border-slate-700"></div>
         </div>
@@ -162,7 +162,7 @@ export default function TeacherCourseLessonCreate() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">{t('addNewLesson')}</h1>
-            <p className="text-slate-500 dark:text-slate-400 mt-1">Creating content for your course</p>
+            <p className="text-slate-500 dark:text-slate-400 mt-1">{t("teacherCreateLesson.creatingContentForCourse")}</p>
           </div>
           <div className="flex items-center gap-3">
             <button 
@@ -170,7 +170,7 @@ export default function TeacherCourseLessonCreate() {
               className="px-4 py-2 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 font-medium rounded-lg text-sm hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               disabled={isSubmitting}
             >
-              Cancel
+              {t("common:actions.cancel")}
             </button>
             <button 
               onClick={handleSubmit}
@@ -180,12 +180,12 @@ export default function TeacherCourseLessonCreate() {
               {isSubmitting ? (
                 <>
                   <Loader2 className="h-5 w-5 animate-spin" />
-                  Publishing...
+                  {t("teacherCreateLesson.publishing")}
                 </>
               ) : (
                 <>
                   <span className="material-symbols-outlined text-[20px]">rocket_launch</span>
-                  Publish Lesson
+                  {t("teacherCreateLesson.publishLesson")}
                 </>
               )}
             </button>
@@ -198,13 +198,13 @@ export default function TeacherCourseLessonCreate() {
           <div className="lg:col-span-2 flex flex-col gap-6">
             {/* Lesson Title Input */}
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-semibold text-slate-500">Lesson Title</label>
+              <label className="text-sm font-semibold text-slate-500">{t("teacherCreateLesson.lessonTitle")}</label>
               <input 
                 type="text" 
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 className="w-full bg-transparent border-0 border-b-2 border-slate-200 dark:border-slate-700 focus:border-gold focus:ring-0 px-0 py-3 text-2xl font-bold text-slate-900 dark:text-white placeholder-slate-300 transition-colors"
-                placeholder="e.g. Introduction to Thermodynamics"
+                placeholder={t("teacherCreateLesson.lessonTitlePlaceholder")}
                 disabled={isSubmitting}
               />
             </div>
@@ -232,7 +232,7 @@ export default function TeacherCourseLessonCreate() {
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 className="flex-1 w-full bg-transparent border-none p-6 text-slate-800 dark:text-slate-200 focus:ring-0 resize-none text-base leading-relaxed"
-                placeholder="Describe the lesson content, goals, and key learning outcomes..."
+                placeholder={t("teacherCreateLesson.contentPlaceholder")}
                 disabled={isSubmitting}
               ></textarea>
             </div>
@@ -241,7 +241,7 @@ export default function TeacherCourseLessonCreate() {
             <div className="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
               <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
                 <span className="material-symbols-outlined text-gold">folder_open</span>
-                Lesson Materials
+                {t("teacherCreateLesson.lessonMaterials")}
               </h3>
               
               {/* Upload Area */}
@@ -259,8 +259,8 @@ export default function TeacherCourseLessonCreate() {
                 <div className="size-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                   <span className="material-symbols-outlined text-slate-500">cloud_upload</span>
                 </div>
-                <p className="font-bold text-slate-900 dark:text-white">Click to upload or drag files</p>
-                <p className="text-xs text-slate-400 mt-1">PDF, DOC, PPT, MP4, MP3 (Max 50MB) - Required</p>
+                <p className="font-bold text-slate-900 dark:text-white">{t("teacherCreateLesson.uploadOrDrag")}</p>
+                <p className="text-xs text-slate-400 mt-1">{t("teacherCreateLesson.supportedFileTypes")}</p>
               </div>
 
               {/* Hidden File Input */}
@@ -277,7 +277,7 @@ export default function TeacherCourseLessonCreate() {
               {file && (
                 <div className="mt-4">
                   <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                    Uploaded File
+                    {t("teacherCreateLesson.uploadedFile")}
                   </p>
                   <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
                     <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -311,11 +311,11 @@ export default function TeacherCourseLessonCreate() {
           <div className="space-y-6">
             {/* Publishing Section */}
             <section className="bg-white dark:bg-slate-800 rounded-xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-4">Publishing</h3>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-4">{t("teacherCreateLesson.publishingSection")}</h3>
               
               {/* Visibility Indicator */}
               <div className="flex items-center justify-between mb-4">
-                <span className="text-slate-900 dark:text-white font-semibold">Visibility</span>
+                <span className="text-slate-900 dark:text-white font-semibold">{t("teacherCreateLesson.visibility")}</span>
                 <div className="size-10 flex items-center justify-center bg-green-500/10 text-green-500 rounded-full">
                   <span className="material-symbols-outlined">visibility</span>
                 </div>
@@ -324,7 +324,7 @@ export default function TeacherCourseLessonCreate() {
               <div className="space-y-4">
                 {/* Release Date */}
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 mb-1">Release Date</label>
+                  <label className="block text-xs font-bold text-slate-500 mb-1">{t("teacherCreateLesson.releaseDate")}</label>
                   <input 
                     type="date" 
                     value={releaseDate}
@@ -336,17 +336,17 @@ export default function TeacherCourseLessonCreate() {
 
                 {/* Estimated Duration */}
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 mb-1">Estimated Duration</label>
+                  <label className="block text-xs font-bold text-slate-500 mb-1">{t("teacherCreateLesson.estimatedDuration")}</label>
                   <div className="flex items-center bg-slate-50 dark:bg-navy-dark border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
                     <input 
                       type="number" 
                       value={estimatedDuration}
                       onChange={(e) => setEstimatedDuration(e.target.value)}
                       className="flex-1 bg-transparent border-none p-2.5 text-sm text-center text-slate-900 dark:text-white focus:ring-0" 
-                      placeholder="45" 
+                      placeholder={t("teacherCreateLesson.estimatedDurationPlaceholder")} 
                       disabled={isSubmitting}
                     />
-                    <span className="px-3 text-xs font-bold text-slate-400">MINS</span>
+                    <span className="px-3 text-xs font-bold text-slate-400">{t("teacherCreateLesson.minutes")}</span>
                   </div>
                 </div>
               </div>
@@ -354,32 +354,32 @@ export default function TeacherCourseLessonCreate() {
 
             {/* Meta Data Section */}
             <section className="bg-white dark:bg-slate-800 rounded-xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-4">Meta Data</h3>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-4">{t("teacherCreateLesson.metaData")}</h3>
               <div className="space-y-4">
                 {/* Prerequisite Lesson */}
                 <div className="flex flex-col gap-2">
-                  <label className="text-xs font-bold text-slate-500">Prerequisite Lesson</label>
+                  <label className="text-xs font-bold text-slate-500">{t("teacherCreateLesson.prerequisiteLesson")}</label>
                   <select 
                     value={prerequisiteLesson}
                     onChange={(e) => setPrerequisiteLesson(e.target.value)}
                     className="w-full bg-slate-50 dark:bg-navy-dark border border-slate-200 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-900 dark:text-white"
                     disabled={isSubmitting}
                   >
-                    <option value="none">None</option>
-                    <option value="basic-algebra">Basic Algebra</option>
+                    <option value="none">{t("teacherCreateLesson.none")}</option>
+                    <option value="basic-algebra">{t("teacherCreateLesson.basicAlgebra")}</option>
                     {/* TODO: Populate from actual lessons when available */}
                   </select>
                 </div>
 
                 {/* Tags */}
                 <div className="flex flex-col gap-2">
-                  <label className="text-xs font-bold text-slate-500">Tags</label>
+                  <label className="text-xs font-bold text-slate-500">{t("teacherCreateLesson.tags")}</label>
                   <input 
                     type="text" 
                     value={tags}
                     onChange={(e) => setTags(e.target.value)}
                     className="w-full bg-slate-50 dark:bg-navy-dark border border-slate-200 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-900 dark:text-white" 
-                    placeholder="Add keywords..." 
+                    placeholder={t("teacherCreateLesson.tagsPlaceholder")} 
                     disabled={isSubmitting}
                   />
                 </div>

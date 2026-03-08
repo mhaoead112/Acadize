@@ -998,7 +998,7 @@ export default function TeacherCourseManage() {
                 className="flex items-center justify-center gap-2 h-10 px-4 rounded-lg bg-gold text-navy text-sm font-bold hover:bg-yellow-500 transition-colors shadow-lg shadow-gold/20"
               >
                 <Plus className="h-4 w-4" />
-                Create New
+                {t('teacherCreateCourse.createNew')}
               </Button>
             </div>
           </div>

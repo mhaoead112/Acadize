@@ -59,8 +59,8 @@ export default function TeacherCreateAssignment() {
   const handleSaveDraft = async () => {
     if (!assignmentName.trim()) {
       toast({
-        title: "Validation Error",
-        description: "Assignment name is required",
+        title: t("toast.validationError"),
+        description: t("toast.assignmentNameRequired"),
         variant: "destructive",
       });
       return;
@@ -68,8 +68,8 @@ export default function TeacherCreateAssignment() {
 
     if (!selectedCourse) {
       toast({
-        title: "Validation Error",
-        description: "Please select a course",
+        title: t("toast.validationError"),
+        description: t("toast.pleaseSelectCourse"),
         variant: "destructive",
       });
       return;
@@ -94,18 +94,18 @@ export default function TeacherCreateAssignment() {
         }),
       });
 
-      if (!response.ok) throw new Error("Failed to save draft");
+      if (!response.ok) throw new Error(t("teacherCreateAssignment.failedToSaveDraft"));
 
       toast({
-        title: "Success",
-        description: "Assignment saved as draft",
+        title: t("common:toast.success"),
+        description: t("toast.assignmentSavedAsDraft"),
       });
 
       setLocation("/teacher/assignments");
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to save draft",
+        title: t("error"),
+        description: t("toast.failedToSaveDraft"),
         variant: "destructive",
       });
     } finally {
@@ -116,8 +116,8 @@ export default function TeacherCreateAssignment() {
   const handlePublish = async () => {
     if (!assignmentName.trim()) {
       toast({
-        title: "Validation Error",
-        description: "Assignment name is required",
+        title: t("toast.validationError"),
+        description: t("toast.assignmentNameRequired"),
         variant: "destructive",
       });
       return;
@@ -125,8 +125,8 @@ export default function TeacherCreateAssignment() {
 
     if (!selectedCourse) {
       toast({
-        title: "Validation Error",
-        description: "Please select a course",
+        title: t("toast.validationError"),
+        description: t("toast.pleaseSelectCourse"),
         variant: "destructive",
       });
       return;
@@ -151,7 +151,7 @@ export default function TeacherCreateAssignment() {
         }),
       });
 
-      if (!response.ok) throw new Error("Failed to create assignment");
+      if (!response.ok) throw new Error(t("teacherCreateAssignment.failedToCreateAssignment"));
       const created = await response.json();
 
       // Immediately publish using the dedicated endpoint
@@ -164,19 +164,19 @@ export default function TeacherCreateAssignment() {
           },
           body: JSON.stringify({ isPublished: true }),
         });
-        if (!publishRes.ok) throw new Error("Failed to publish assignment");
+        if (!publishRes.ok) throw new Error(t("teacherCreateAssignment.failedToPublishAssignment"));
       }
 
       toast({
-        title: "Success",
-        description: "Assignment published successfully",
+        title: t("common:toast.success"),
+        description: t("teacherCreateAssignment.assignmentPublishedSuccessfully"),
       });
 
       setLocation("/teacher/assignments");
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to publish assignment",
+        title: t("error"),
+        description: t("teacherCreateAssignment.failedToPublishAssignment"),
         variant: "destructive",
       });
     } finally {
@@ -202,7 +202,7 @@ export default function TeacherCreateAssignment() {
             disabled={isSavingDraft}
             className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors disabled:opacity-50"
           >
-            {isSavingDraft ? "Saving..." : "Save Draft"}
+            {isSavingDraft ? t("teacherCreateAssignment.saving") : t("teacherCreateAssignment.saveDraft")}
           </button>
           <button 
             onClick={handlePublish}
@@ -210,7 +210,7 @@ export default function TeacherCreateAssignment() {
             className="px-5 py-2 bg-gold text-navy font-bold rounded-lg text-sm hover:shadow-lg hover:shadow-gold/20 flex items-center gap-2 transition-all disabled:opacity-50"
           >
             <span className="material-symbols-outlined text-[20px]">publish</span>
-            {isLoading ? "Publishing..." : "Assign Now"}
+            {isLoading ? t("teacherCreateAssignment.publishing") : t("teacherCreateAssignment.assignNow")}
           </button>
         </div>
       </header>
@@ -222,12 +222,12 @@ export default function TeacherCreateAssignment() {
               onClick={() => setLocation("/teacher/assignments")}
               className="hover:text-gold transition-colors"
             >
-              Assignments
+              {t("assignments")}
             </button>
             <span className="material-symbols-outlined text-[16px]">chevron_right</span>
-            <span className="text-slate-900 dark:text-white font-medium">New Assignment</span>
+            <span className="text-slate-900 dark:text-white font-medium">{t("teacherCreateAssignment.newAssignment")}</span>
           </div>
-          <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Assignment Details</h2>
+          <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">{t("teacherCreateAssignment.assignmentDetails")}</h2>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -236,13 +236,13 @@ export default function TeacherCreateAssignment() {
             {/* Course Selection */}
             <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm">
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Select Course</label>
+                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">{t("teacherCreateAssignment.selectCourse")}</label>
                 <select
                   value={selectedCourse}
                   onChange={(e) => setSelectedCourse(e.target.value)}
                   className="w-full bg-slate-50 dark:bg-navy-dark border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-3 text-slate-900 dark:text-white font-medium focus:ring-2 focus:ring-gold/50 outline-none"
                 >
-                  <option value="">Select a course...</option>
+                  <option value="">{t("teacherCreateAssignment.selectCoursePlaceholder")}</option>
                   {courses.map((course) => (
                     <option key={course.id} value={course.id}>
                       {course.title}
@@ -256,17 +256,17 @@ export default function TeacherCreateAssignment() {
             <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm">
               <div className="flex flex-col gap-6">
                 <div className="flex flex-col gap-2">
-                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Assignment Name</label>
+                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">{t("teacherCreateAssignment.assignmentName")}</label>
                   <input 
                     type="text" 
                     value={assignmentName}
                     onChange={(e) => setAssignmentName(e.target.value)}
                     className="w-full bg-slate-50 dark:bg-navy-dark border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-3 text-slate-900 dark:text-white font-bold focus:ring-2 focus:ring-gold/50 outline-none" 
-                    placeholder="e.g. Midterm Problem Set"
+                    placeholder={t("teacherCreateAssignment.assignmentNamePlaceholder")}
                   />
                 </div>
                 <div className="flex flex-col gap-2">
-                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Instructions</label>
+                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">{t("teacherCreateAssignment.instructions")}</label>
                   <div className="rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden bg-slate-50 dark:bg-navy-dark">
                     <div className="p-2 border-b border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800/50 flex gap-2">
                       <button type="button" className="p-1 text-slate-500 hover:text-gold transition-colors">
@@ -283,7 +283,7 @@ export default function TeacherCreateAssignment() {
                       value={instructions}
                       onChange={(e) => setInstructions(e.target.value)}
                       className="w-full bg-transparent border-none p-4 min-h-[250px] text-slate-900 dark:text-white focus:ring-0 outline-none resize-none" 
-                      placeholder="Enter detailed instructions for your students..."
+                      placeholder={t("teacherCreateAssignment.instructionsPlaceholder")}
                     />
                   </div>
                 </div>
@@ -292,7 +292,7 @@ export default function TeacherCreateAssignment() {
 
             {/* Submission Type */}
             <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm">
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6">Submission Type</h3>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6">{t("teacherCreateAssignment.submissionType")}</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div 
                   onClick={() => setSubmissionType("online")}
@@ -310,8 +310,8 @@ export default function TeacherCreateAssignment() {
                     <span className="material-symbols-outlined">cloud_upload</span>
                   </div>
                   <div>
-                    <h4 className="font-bold text-slate-900 dark:text-white">Online Submission</h4>
-                    <p className="text-xs text-slate-500">File uploads, URLs, or text entries</p>
+                    <h4 className="font-bold text-slate-900 dark:text-white">{t("teacherCreateAssignment.onlineSubmission")}</h4>
+                    <p className="text-xs text-slate-500">{t("teacherCreateAssignment.onlineSubmissionDesc")}</p>
                   </div>
                 </div>
                 <div 
@@ -330,8 +330,8 @@ export default function TeacherCreateAssignment() {
                     <span className="material-symbols-outlined">description</span>
                   </div>
                   <div>
-                    <h4 className="font-bold text-slate-900 dark:text-white">On Paper</h4>
-                    <p className="text-xs text-slate-500">Handed in physically in class</p>
+                    <h4 className="font-bold text-slate-900 dark:text-white">{t("teacherCreateAssignment.onPaper")}</h4>
+                    <p className="text-xs text-slate-500">{t("teacherCreateAssignment.onPaperDesc")}</p>
                   </div>
                 </div>
               </div>
@@ -344,12 +344,12 @@ export default function TeacherCreateAssignment() {
             <section className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm">
               <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-6 flex items-center gap-2">
                 <span className="material-symbols-outlined text-gold">leaderboard</span>
-                Grading
+                {t("teacherCreateAssignment.grading")}
               </h3>
               <div className="space-y-6">
                 <div className="flex gap-4">
                   <div className="flex-1 flex flex-col gap-2">
-                    <label className="text-xs font-bold text-slate-600 dark:text-slate-400">Total Points</label>
+                    <label className="text-xs font-bold text-slate-600 dark:text-slate-400">{t("teacherCreateAssignment.totalPoints")}</label>
                     <input 
                       type="number" 
                       value={totalPoints}
@@ -358,29 +358,29 @@ export default function TeacherCreateAssignment() {
                     />
                   </div>
                   <div className="flex-1 flex flex-col gap-2">
-                    <label className="text-xs font-bold text-slate-600 dark:text-slate-400">Display As</label>
+                    <label className="text-xs font-bold text-slate-600 dark:text-slate-400">{t("teacherCreateAssignment.displayAs")}</label>
                     <select 
                       value={displayAs}
                       onChange={(e) => setDisplayAs(e.target.value as "points" | "percentage")}
                       className="w-full bg-slate-50 dark:bg-navy-dark border border-slate-200 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-gold/50 outline-none"
                     >
-                      <option value="points">Points</option>
-                      <option value="percentage">Percentage</option>
+                      <option value="points">{t("teacherCreateAssignment.points")}</option>
+                      <option value="percentage">{t("teacherCreateAssignment.percentage")}</option>
                     </select>
                   </div>
                 </div>
                 <div className="flex flex-col gap-2">
-                  <label className="text-xs font-bold text-slate-600 dark:text-slate-400">Assignment Group</label>
+                  <label className="text-xs font-bold text-slate-600 dark:text-slate-400">{t("teacherCreateAssignment.assignmentGroup")}</label>
                   <select 
                     value={assignmentGroup}
                     onChange={(e) => setAssignmentGroup(e.target.value)}
                     className="w-full bg-slate-50 dark:bg-navy-dark border border-slate-200 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-gold/50 outline-none"
                   >
-                    <option value="homework">Homework</option>
-                    <option value="exam">Exams</option>
-                    <option value="quiz">Quizzes</option>
-                    <option value="project">Project</option>
-                    <option value="presentation">Presentation</option>
+                    <option value="homework">{t("teacherAssignments.types.homework")}</option>
+                    <option value="exam">{t("teacherAssignments.types.exam")}</option>
+                    <option value="quiz">{t("teacherAssignments.types.quiz")}</option>
+                    <option value="project">{t("teacherAssignments.types.project")}</option>
+                    <option value="presentation">{t("teacherAssignments.types.presentation")}</option>
                   </select>
                 </div>
               </div>
@@ -390,17 +390,17 @@ export default function TeacherCreateAssignment() {
             <section className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm">
               <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-6 flex items-center gap-2">
                 <span className="material-symbols-outlined text-gold">event_available</span>
-                Availability
+                {t("teacherCreateAssignment.availability")}
               </h3>
               <div className="space-y-6">
                 <div className="flex flex-col gap-2">
-                  <label className="text-xs font-bold text-slate-600 dark:text-slate-400">Assign To</label>
+                  <label className="text-xs font-bold text-slate-600 dark:text-slate-400">{t("teacherCreateAssignment.assignTo")}</label>
                   <div className="w-full bg-slate-50 dark:bg-navy-dark border border-slate-200 dark:border-slate-700 rounded-lg p-2 flex flex-wrap gap-2">
-                    <span className="bg-gold/10 text-gold text-[10px] font-black px-2 py-1 rounded-md uppercase tracking-wide">All Students</span>
+                    <span className="bg-gold/10 text-gold text-[10px] font-black px-2 py-1 rounded-md uppercase tracking-wide">{t("teacherCreateAssignment.allStudents")}</span>
                   </div>
                 </div>
                 <div className="flex flex-col gap-2">
-                  <label className="text-xs font-bold text-slate-600 dark:text-slate-400">Due Date</label>
+                  <label className="text-xs font-bold text-slate-600 dark:text-slate-400">{t("teacherCreateAssignment.dueDate")}</label>
                   <input 
                     type="datetime-local" 
                     value={dueDate}
@@ -410,7 +410,7 @@ export default function TeacherCreateAssignment() {
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="flex flex-col gap-2">
-                    <label className="text-xs font-bold text-slate-600 dark:text-slate-400">From</label>
+                    <label className="text-xs font-bold text-slate-600 dark:text-slate-400">{t("teacherCreateAssignment.from")}</label>
                     <input 
                       type="date" 
                       value={fromDate}
@@ -419,7 +419,7 @@ export default function TeacherCreateAssignment() {
                     />
                   </div>
                   <div className="flex flex-col gap-2">
-                    <label className="text-xs font-bold text-slate-600 dark:text-slate-400">Until</label>
+                    <label className="text-xs font-bold text-slate-600 dark:text-slate-400">{t("teacherCreateAssignment.until")}</label>
                     <input 
                       type="date" 
                       value={untilDate}
@@ -434,16 +434,16 @@ export default function TeacherCreateAssignment() {
             {/* Publish Card */}
             <div className="p-4 bg-navy-light dark:bg-navy text-white rounded-xl shadow-lg shadow-navy-light/20 dark:shadow-navy/20 flex flex-col gap-4">
               <div className="flex items-center justify-between">
-                <p className="text-xs font-bold uppercase tracking-widest opacity-70">Ready to Publish?</p>
+                <p className="text-xs font-bold uppercase tracking-widest opacity-70">{t("teacherCreateAssignment.readyToPublish")}</p>
                 <span className="material-symbols-outlined text-gold">info</span>
               </div>
-              <p className="text-sm font-medium">Publishing will instantly notify all assigned students and add this to their calendars.</p>
+              <p className="text-sm font-medium">{t("teacherCreateAssignment.publishNotice")}</p>
               <button 
                 onClick={handlePublish}
                 disabled={isLoading}
                 className="w-full py-2 bg-gold text-navy font-black rounded-lg text-sm hover:bg-yellow-500 transition-colors disabled:opacity-50"
               >
-                {isLoading ? "Publishing..." : "Publish & Notify"}
+                {isLoading ? t("teacherCreateAssignment.publishing") : t("teacherCreateAssignment.publishAndNotify")}
               </button>
             </div>
           </div>

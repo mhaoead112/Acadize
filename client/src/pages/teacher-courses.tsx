@@ -2,18 +2,18 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/hooks/useAuth";
 import TeacherLayout from "@/components/TeacherLayout";
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiEndpoint } from "@/lib/config";
 import { 
-  Loader2, BookOpen, Plus, Eye, EyeOff, Edit, Trash2, 
-  CheckCircle2, XCircle, Globe, Lock, Search, Filter
+  BookOpen, Plus, Eye, EyeOff,
+  CheckCircle2, XCircle, Lock, Search
 } from "lucide-react";
-import { Link, useLocation } from "wouter";
+import { useLocation } from "wouter";
+import { CardSkeleton } from "@/components/skeletons/CardSkeleton";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -120,10 +120,10 @@ export default function TeacherCoursesPage() {
       setCourses(coursesWithCounts);
     } catch (err: any) {
       console.error("Failed to fetch courses:", err);
-      setError(err?.message || "Unknown error");
+      setError(err?.message || t("teacherCourses.unknownError", { defaultValue: "Unknown error" }));
       toast({
-        title: "Error",
-        description: "Failed to load your courses. Please try again.",
+        title: t("error"),
+        description: t("teacherCourses.failedToLoadCourses", { defaultValue: "Failed to load your courses. Please try again." }),
         variant: "destructive"
       });
     } finally {
@@ -158,14 +158,16 @@ export default function TeacherCoursesPage() {
       setCourses(courses.map(c => c.id === courseId ? course : c));
       
       toast({
-        title: "Success",
-        description: `Course ${course.isPublished ? 'published' : 'unpublished'} successfully`,
+        title: t("common.toast.success", { ns: "common", defaultValue: "Success" }),
+        description: course.isPublished
+          ? t("teacherCourses.coursePublishedSuccessfully", { defaultValue: "Course published successfully" })
+          : t("teacherCourses.courseUnpublishedSuccessfully", { defaultValue: "Course unpublished successfully" }),
         variant: "default"
       });
     } catch (err: any) {
       toast({
-        title: "Error",
-        description: err?.message || "Failed to update course status",
+        title: t("error"),
+        description: err?.message || t("teacherCourses.failedToUpdateCourseStatus", { defaultValue: "Failed to update course status" }),
         variant: "destructive"
       });
     } finally {
@@ -191,28 +193,20 @@ export default function TeacherCoursesPage() {
       setCourses(courses.filter(c => c.id !== courseToDelete.id));
       
       toast({
-        title: "Success",
-        description: "Course deleted successfully",
+        title: t("common.toast.success", { ns: "common", defaultValue: "Success" }),
+        description: t("teacherCourses.courseDeletedSuccessfully", { defaultValue: "Course deleted successfully" }),
         variant: "default"
       });
     } catch (err: any) {
       toast({
-        title: "Error",
-        description: err?.message || "Failed to delete course",
+        title: t("error"),
+        description: err?.message || t("teacherCourses.failedToDeleteCourse", { defaultValue: "Failed to delete course" }),
         variant: "destructive"
       });
     } finally {
       setDeletingId(null);
       setCourseToDelete(null);
     }
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
   };
 
   // Filter courses based on search and status
@@ -236,7 +230,7 @@ export default function TeacherCoursesPage() {
                 {t('myClasses')}
               </h2>
               <p className="text-muted-foreground text-base font-normal leading-normal">
-                Manage your active courses for Fall 2023.
+                {t("teacherCourses.manageActiveCourses", { defaultValue: "Manage your active courses." })}
               </p>
             </div>
             <Button 
@@ -244,30 +238,30 @@ export default function TeacherCoursesPage() {
               className="flex shrink-0 cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-lg h-12 px-6 bg-gold text-navy font-bold leading-normal tracking-[0.015em] hover:bg-gold-light transition-colors shadow-sm hover:shadow-md"
             >
               <Plus className="h-5 w-5" />
-              <span className="truncate">Create New Class</span>
+              <span className="truncate">{t("teacherCourses.createNewClass", { defaultValue: "Create New Class" })}</span>
             </Button>
           </div>
 
           {/* Search and Filters */}
-          <div className="flex flex-col gap-4 bg-card dark:bg-surface-card p-4 rounded-xl shadow-sm border border-border dark:border-slate-700">
+          <div className="flex flex-col gap-4 bg-white dark:bg-slate-900/70 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
             <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1 relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <Input 
-                  className="w-full h-12 pl-11 pr-4 rounded-lg bg-input border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-shadow" 
-                  placeholder="Search by course name or code..."
+                  className="w-full h-12 pl-11 pr-4 rounded-lg bg-input border border-border text-foreground placeholder:text-muted-foreground transition-shadow"
+                  placeholder={t("teacherCourses.searchByCourseNameOrCode", { defaultValue: "Search by course name or code..." })}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-full md:w-[200px] h-12 bg-input border-border">
-                  <SelectValue placeholder="Filter by status" />
+                  <SelectValue placeholder={t("common.placeholders.filterByStatus", { ns: "common", defaultValue: "Filter by status" })} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Courses</SelectItem>
-                  <SelectItem value="published">Published</SelectItem>
-                  <SelectItem value="draft">Drafts</SelectItem>
+                  <SelectItem value="all">{t("teacherCourses.allCourses", { defaultValue: "All Courses" })}</SelectItem>
+                  <SelectItem value="published">{t("published")}</SelectItem>
+                  <SelectItem value="draft">{t("teacherCourses.drafts", { defaultValue: "Drafts" })}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -280,7 +274,7 @@ export default function TeacherCoursesPage() {
                 onClick={() => setStatusFilter("all")}
                 className="rounded-full px-4 whitespace-nowrap"
               >
-                All ({courses.length})
+                {t("teacherCourses.all", { defaultValue: "All" })} ({courses.length})
               </Button>
               <Button 
                 variant={statusFilter === "published" ? "default" : "outline"}
@@ -288,7 +282,7 @@ export default function TeacherCoursesPage() {
                 onClick={() => setStatusFilter("published")}
                 className="rounded-full px-4 whitespace-nowrap"
               >
-                Published ({courses.filter(c => c.isPublished).length})
+                {t("published")} ({courses.filter(c => c.isPublished).length})
               </Button>
               <Button 
                 variant={statusFilter === "draft" ? "default" : "outline"}
@@ -296,17 +290,14 @@ export default function TeacherCoursesPage() {
                 onClick={() => setStatusFilter("draft")}
                 className="rounded-full px-4 whitespace-nowrap"
               >
-                Drafts ({courses.filter(c => !c.isPublished).length})
+                {t("teacherCourses.drafts", { defaultValue: "Drafts" })} ({courses.filter(c => !c.isPublished).length})
               </Button>
             </div>
           </div>
 
           {/* Courses Grid */}
           {isLoading ? (
-            <div className="flex items-center justify-center h-64 text-gray-500">
-              <Loader2 className="mr-2 h-8 w-8 animate-spin" />
-              <span>Loading your courses...</span>
-            </div>
+            <CardSkeleton count={3} />
           ) : error ? (
             <Card className="border-border bg-destructive/10 shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
               <CardContent className="py-8 text-center">
@@ -321,12 +312,14 @@ export default function TeacherCoursesPage() {
               <CardContent className="py-16 text-center">
                 <BookOpen className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
                 <h3 className="text-lg font-semibold text-foreground mb-2">
-                  {searchTerm || statusFilter !== "all" ? "No courses found" : "No courses yet"}
+                  {searchTerm || statusFilter !== "all"
+                    ? t("teacherCourses.noCoursesFound", { defaultValue: "No courses found" })
+                    : t("teacherCourses.noCoursesYet", { defaultValue: "No courses yet" })}
                 </h3>
                 <p className="text-muted-foreground mb-6">
                   {searchTerm || statusFilter !== "all" 
-                    ? "Try adjusting your search or filters" 
-                    : "Get started by creating your first course"
+                    ? t("teacherCourses.adjustSearchOrFilters", { defaultValue: "Try adjusting your search or filters" })
+                    : t("teacherCourses.getStartedByCreatingFirstCourse", { defaultValue: "Get started by creating your first course" })
                   }
                 </p>
                 {!searchTerm && statusFilter === "all" && (
@@ -335,7 +328,7 @@ export default function TeacherCoursesPage() {
                     className="bg-blue-600 hover:bg-blue-700 gap-2"
                   >
                     <Plus className="h-4 w-4" />
-                    Create Your First Course
+                    {t("teacherCourses.createYourFirstCourse", { defaultValue: "Create Your First Course" })}
                   </Button>
                 )}
               </CardContent>
@@ -349,7 +342,7 @@ export default function TeacherCoursesPage() {
                   <article
   key={course.id}
   onClick={() => setLocation(`/teacher/courses/${course.id}`)}
-  className="group flex flex-col bg-card border border-border rounded-xl overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer"
+  className="group flex flex-col bg-white dark:bg-slate-900/70 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer"
 >
   {/* Image Header */}
   <div
@@ -367,7 +360,7 @@ export default function TeacherCoursesPage() {
     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
 
     {/* Course Code */}
-    <div className="absolute top-4 right-4 bg-card/90 dark:bg-surface-card/90 backdrop-blur px-2.5 py-1 rounded-md text-xs font-bold text-foreground dark:text-white shadow-sm">
+    <div className="absolute top-4 right-4 bg-white/90 dark:bg-slate-900/85 backdrop-blur px-2.5 py-1 rounded-md text-xs font-bold text-slate-900 dark:text-white shadow-sm">
       {course.id}
     </div>
 
@@ -382,7 +375,7 @@ export default function TeacherCoursesPage() {
   {/* Content */}
   <div className="p-5 flex flex-col gap-4 flex-1">
     <p className="text-sm font-medium text-muted-foreground dark:text-slate-400 line-clamp-2">
-      {course.description || "No description provided"}
+      {course.description || t("teacherCourses.noDescriptionProvided", { defaultValue: "No description provided" })}
     </p>
 
     <div className="h-px w-full bg-border dark:bg-slate-700" />
@@ -392,7 +385,7 @@ export default function TeacherCoursesPage() {
       <div className="flex items-center gap-2">
         <BookOpen className="h-5 w-5 text-muted-foreground dark:text-slate-400" />
         <span className="text-sm font-medium text-foreground dark:text-slate-200">
-          {course.studentCount || 0} Students
+          {course.studentCount || 0} {t("students")}
         </span>
       </div>
 
@@ -401,14 +394,14 @@ export default function TeacherCoursesPage() {
           <>
             <CheckCircle2 className="h-5 w-5 text-green-500" />
             <span className="text-sm font-bold text-green-600 dark:text-green-400">
-              Published
+              {t("published")}
             </span>
           </>
         ) : (
           <>
             <Lock className="h-5 w-5 text-gold" />
             <span className="text-sm font-bold text-gold">
-              Draft
+              {t("draft")}
             </span>
           </>
         )}
@@ -425,7 +418,7 @@ export default function TeacherCoursesPage() {
         }}
         className="flex-1 h-9 rounded-lg bg-gold/10 hover:bg-gold hover:text-navy-dark text-gold font-bold transition-all"
       >
-        View Class
+        {t("teacherCourses.viewClass", { defaultValue: "View Class" })}
       </Button>
 
       <Button
@@ -454,18 +447,21 @@ export default function TeacherCoursesPage() {
       <AlertDialog open={!!courseToDelete} onOpenChange={(open) => !open && setCourseToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogTitle>{t("teacherCourses.deleteDialogTitle", { defaultValue: "Are you sure?" })}</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete the course "{courseToDelete?.title}" and all its associated lessons and enrollments. This action cannot be undone.
+              {t("teacherCourses.deleteDialogDescription", {
+                defaultValue: "This will permanently delete the course \"{{title}}\" and all its associated lessons and enrollments. This action cannot be undone.",
+                title: courseToDelete?.title ?? "",
+              })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.actions.cancel", { ns: "common", defaultValue: "Cancel" })}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteCourse}
               className="bg-red-600 hover:bg-red-700"
             >
-              Delete Course
+              {t("teacherCourses.deleteCourse", { defaultValue: "Delete Course" })}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

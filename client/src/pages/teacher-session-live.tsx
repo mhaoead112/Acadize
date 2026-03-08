@@ -1,12 +1,12 @@
-/**
+﻿/**
  * teacher-session-live.tsx
- * ─────────────────────────────────────────────────────────────────────────
- * Live Session Attendance & QR Hub — pixel-perfect replica of Stitch design.
+ * â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+ * Live Session Attendance & QR Hub â€” pixel-perfect replica of Stitch design.
  *
  * Route: /teacher/sessions/:sessionId/live
  * Layout: TeacherLayout wrapper, two-column split (responsive).
  * Data: polling-based (5 s attendance, QR rotation on configured interval).
- * ─────────────────────────────────────────────────────────────────────────
+ * â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -17,10 +17,11 @@ import { QRCodeCanvas } from 'qrcode.react';
 import { useAuth } from '@/hooks/useAuth';
 import { apiEndpoint } from '@/lib/config';
 import TeacherLayout from '@/components/TeacherLayout';
+import { useTheme } from '@/contexts/ThemeContext';
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Types
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 type SessionType   = 'physical' | 'online';
 type SessionStatus = 'scheduled' | 'active' | 'completed' | 'cancelled';
@@ -71,11 +72,11 @@ interface QrData {
   qrPayload:  string;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Helpers
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-/** Format seconds → HH:MM:SS */
+/** Format seconds â†’ HH:MM:SS */
 function fmtElapsed(totalSec: number): string {
   const h = Math.floor(totalSec / 3600);
   const m = Math.floor((totalSec % 3600) / 60);
@@ -83,9 +84,9 @@ function fmtElapsed(totalSec: number): string {
   return [h, m, s].map(n => String(n).padStart(2, '0')).join(':');
 }
 
-function fmtTime(iso: string | null): string {
+function fmtTime(iso: string | null, locale = 'en-US'): string {
   if (!iso) return '--:--';
-  return new Date(iso).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  return new Date(iso).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
 }
 
 function statusColor(s: AttendStatus): string {
@@ -97,22 +98,27 @@ function statusColor(s: AttendStatus): string {
   }
 }
 
+function displayStatus(s: AttendStatus, t: (key: string) => string): string {
+  return t(`teacherSessionLive.statuses.${s}`);
+}
+
 function initials(name: string): string {
   return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // Main component
-// ─────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export default function TeacherSessionLive() {
-  const { t } = useTranslation('teacher');
+  const { t, i18n } = useTranslation('teacher');
+  const { theme } = useTheme();
   const params = useParams<{ sessionId: string }>();
   const sessionId = params.sessionId ?? '';
   const [, setLocation] = useLocation();
   const { getAuthHeaders } = useAuth();
 
-  // ── State ──────────────────────────────────────────────────────────────
+  // â”€â”€ State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const [session,   setSession]   = useState<SessionDetail | null>(null);
   const [records,   setRecords]   = useState<AttendanceRecord[]>([]);
   const [summary,   setSummary]   = useState<AttendanceSummary>({ total: 0, present: 0, late: 0, absent: 0 });
@@ -135,13 +141,13 @@ export default function TeacherSessionLive() {
 
   const headers = getAuthHeaders();
 
-  // ── Fetch session detail ────────────────────────────────────────────────
+  // â”€â”€ Fetch session detail â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const fetchSession = useCallback(async () => {
     try {
       const res = await fetch(apiEndpoint(`/api/sessions/${sessionId}`), {
         headers, credentials: 'include',
       });
-      if (!res.ok) throw new Error('Session not found');
+      if (!res.ok) throw new Error(t('teacherSessionLive.sessionNotFound'));
       const data = await res.json();
       // The API may return { ...session } or { session: ... }
       const s = data.session ?? data;
@@ -151,9 +157,9 @@ export default function TeacherSessionLive() {
       setError(err.message);
       return null;
     }
-  }, [sessionId, headers]);
+  }, [sessionId, headers, t]);
 
-  // ── Fetch attendance records ────────────────────────────────────────────
+  // â”€â”€ Fetch attendance records â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const fetchAttendance = useCallback(async () => {
     try {
       const res = await fetch(apiEndpoint(`/api/attendance/session/${sessionId}`), {
@@ -167,7 +173,7 @@ export default function TeacherSessionLive() {
     } catch {/* ignore */}
   }, [sessionId, headers]);
 
-  // ── Fetch QR data ──────────────────────────────────────────────────────
+  // â”€â”€ Fetch QR data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const fetchQr = useCallback(async () => {
     try {
       const res = await fetch(apiEndpoint(`/api/sessions/${sessionId}/qr`), {
@@ -183,7 +189,7 @@ export default function TeacherSessionLive() {
     } catch {/* ignore */}
   }, [sessionId, headers]);
 
-  // ── Rotate QR ──────────────────────────────────────────────────────────
+  // â”€â”€ Rotate QR â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const rotateQr = useCallback(async () => {
     setRotating(true);
     try {
@@ -205,7 +211,7 @@ export default function TeacherSessionLive() {
     setRotating(false);
   }, [sessionId, headers, session]);
 
-  // ── Mark student present / excused ─────────────────────────────────────
+  // â”€â”€ Mark student present / excused â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const markStudent = useCallback(async (userId: string, status: 'present' | 'excused') => {
     setMarking(userId);
     try {
@@ -220,7 +226,7 @@ export default function TeacherSessionLive() {
     setMarking(null);
   }, [sessionId, headers, fetchAttendance]);
 
-  // ── Start session ──────────────────────────────────────────────────────
+  // â”€â”€ Start session â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleStartSession = async () => {
     setStarting(true);
     try {
@@ -252,7 +258,7 @@ export default function TeacherSessionLive() {
     setStarting(false);
   };
 
-  // ── End session ────────────────────────────────────────────────────────
+  // â”€â”€ End session â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleEndSession = async () => {
     setEnding(true);
     try {
@@ -267,7 +273,7 @@ export default function TeacherSessionLive() {
     setEndModal(false);
   };
 
-  // ── Download QR as PNG ─────────────────────────────────────────────────
+  // â”€â”€ Download QR as PNG â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const downloadQrPng = () => {
     const canvas = qrRef.current?.querySelector('canvas');
     if (!canvas) return;
@@ -278,7 +284,7 @@ export default function TeacherSessionLive() {
     a.click();
   };
 
-  // ── Fullscreen toggle ─────────────────────────────────────────────────
+  // â”€â”€ Fullscreen toggle â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
       qrRef.current?.requestFullscreen?.();
@@ -289,7 +295,7 @@ export default function TeacherSessionLive() {
     }
   };
 
-  // ── Keyboard shortcut (F for fullscreen) ───────────────────────────────
+  // â”€â”€ Keyboard shortcut (F for fullscreen) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'f' || e.key === 'F') {
@@ -310,7 +316,7 @@ export default function TeacherSessionLive() {
     return () => document.removeEventListener('fullscreenchange', handler);
   }, []);
 
-  // ── Initial load ──────────────────────────────────────────────────────
+  // â”€â”€ Initial load â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   useEffect(() => {
     (async () => {
       const s = await fetchSession();
@@ -327,7 +333,7 @@ export default function TeacherSessionLive() {
     })();
   }, [sessionId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Polling: attendance every 5s ──────────────────────────────────────
+  // â”€â”€ Polling: attendance every 5s â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   useEffect(() => {
     if (!session || session.status !== 'active') return;
     const id = setInterval(() => {
@@ -336,13 +342,13 @@ export default function TeacherSessionLive() {
     return () => clearInterval(id);
   }, [session?.status, fetchAttendance]);
 
-  // ── Last-sync counter (ticks every 1s) ─────────────────────────────────
+  // â”€â”€ Last-sync counter (ticks every 1s) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   useEffect(() => {
     const id = setInterval(() => setLastSync(p => p + 1), 1000);
     return () => clearInterval(id);
   }, []);
 
-  // ── Elapsed timer (counts up from session start) ──────────────────────
+  // â”€â”€ Elapsed timer (counts up from session start) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   useEffect(() => {
     if (!session?.startTime) return;
     const start = new Date(session.startTime).getTime();
@@ -352,7 +358,7 @@ export default function TeacherSessionLive() {
     return () => clearInterval(id);
   }, [session?.startTime]);
 
-  // ── QR rotation countdown ─────────────────────────────────────────────
+  // â”€â”€ QR rotation countdown â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   useEffect(() => {
     if (!session?.qrRotationEnabled || session.status !== 'active') return;
     if (rotationTimerRef.current) clearInterval(rotationTimerRef.current);
@@ -370,7 +376,7 @@ export default function TeacherSessionLive() {
     return () => { if (rotationTimerRef.current) clearInterval(rotationTimerRef.current); };
   }, [session?.qrRotationEnabled, session?.status, session?.qrRotationIntervalSeconds, rotateQr]);
 
-  // ── Derived ────────────────────────────────────────────────────────────
+  // â”€â”€ Derived â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const attPct = summary.total > 0
     ? Math.round(((summary.present + summary.late) / summary.total) * 100)
     : 0;
@@ -389,7 +395,7 @@ export default function TeacherSessionLive() {
     ? ((rotationCountdown / (session.qrRotationIntervalSeconds || 30)) * 100)
     : 0;
 
-  // ── Loading / Error ────────────────────────────────────────────────────
+  // â”€â”€ Loading / Error â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   if (loading) {
     return (
       <TeacherLayout>
@@ -407,41 +413,40 @@ export default function TeacherSessionLive() {
   if (error || !session) {
     return (
       <TeacherLayout>
-        <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
+        <div className="flex flex-col items-center justify-center h-[60vh] gap-4 bg-slate-50 dark:bg-[#0d1117]">
           <span className="material-symbols-outlined text-6xl text-red-500">error</span>
-          <p className="text-red-400 font-bold text-lg">{error || 'Session not found'}</p>
+          <p className="text-red-500 dark:text-red-400 font-bold text-lg">{error || t('teacherSessionLive.sessionNotFound')}</p>
           <button
             onClick={() => setLocation('/teacher/sessions')}
-            className="px-6 py-3 rounded-xl bg-white/10 text-white font-bold hover:bg-white/20 transition-all"
+            className="px-6 py-3 rounded-xl bg-slate-200 text-slate-900 dark:bg-white/10 dark:text-white font-bold hover:bg-slate-300 dark:hover:bg-white/20 transition-all"
           >
-            Back to Sessions
+            {t('teacherSessionLive.backToSessions')}
           </button>
         </div>
       </TeacherLayout>
     );
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // RENDER
-  // ─────────────────────────────────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   return (
     <TeacherLayout>
-      <div className="w-full min-h-screen" style={{ background: '#0d1117' }}>
+      <div className="w-full min-h-screen bg-slate-50 dark:bg-[#0d1117]">
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
 
-          {/* ═══════════════════════════════════════════════════════════════
+          {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
               TWO-COLUMN LAYOUT
-          ═══════════════════════════════════════════════════════════════ */}
+          â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
           <div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] xl:grid-cols-[420px_1fr] gap-6">
 
-            {/* ════════════════════════════════════════════════════════════
-                LEFT PANEL — Session Control & QR
-            ════════════════════════════════════════════════════════════ */}
+            {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+                LEFT PANEL â€” Session Control & QR
+            â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
             <div className="space-y-5">
 
-              {/* ── Session info header ── */}
-              <div className="rounded-2xl p-5 space-y-4"
-                style={{ background: '#141928', border: '1px solid rgba(255,255,255,0.06)' }}>
+              {/* â”€â”€ Session info header â”€â”€ */}
+              <div className="rounded-2xl p-5 space-y-4 bg-white dark:bg-[#141928] border border-slate-200 dark:border-white/10">
                 <div className="flex items-start justify-between">
                   <div className="space-y-2 flex-1">
                     {/* Type badge */}
@@ -452,33 +457,32 @@ export default function TeacherSessionLive() {
                       }`}
                     >
                       <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                      {session.sessionType} {t('sessionLabel')}
+                      {t(`teacherSessionLive.sessionTypes.${session.sessionType}`)} {t('sessionLabel')}
                     </span>
-                    <h1 className="text-xl font-black text-white leading-tight">{session.title}</h1>
-                    <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                    <h1 className="text-xl font-black text-slate-900 dark:text-white leading-tight">{session.title}</h1>
+                    <p className="text-xs text-slate-500 dark:text-white/40">
                       {session.courseTitle}
                     </p>
                   </div>
                   {/* Elapsed timer */}
                   <div className="text-right flex-shrink-0">
-                    <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/35">
                       {t('elapsedTime')}
                     </p>
-                    <p className="text-2xl font-black text-white font-mono tracking-wider mt-1">
+                    <p className="text-2xl font-black text-slate-900 dark:text-white font-mono tracking-wider mt-1">
                       {fmtElapsed(elapsed)}
                     </p>
                   </div>
                 </div>
               </div>
 
-              {/* ── QR Code display (physical only) ── */}
+              {/* â”€â”€ QR Code display (physical only) â”€â”€ */}
               {session.sessionType === 'physical' && session.status !== 'active' && (
-                <div className="rounded-2xl p-6 flex flex-col items-center gap-4 text-center"
-                  style={{ background: '#141928', border: '1px solid rgba(245,158,11,0.2)' }}>
+                <div className="rounded-2xl p-6 flex flex-col items-center gap-4 text-center bg-white dark:bg-[#141928] border border-amber-300 dark:border-amber-500/20">
                   <span className="material-symbols-outlined text-4xl text-amber-400">play_circle</span>
                   <div>
-                    <p className="text-sm font-black text-white">Session Not Started</p>
-                    <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>Start the session to activate the QR code and begin attendance tracking.</p>
+                    <p className="text-sm font-black text-slate-900 dark:text-white">{t('teacherSessionLive.sessionNotStarted')}</p>
+                    <p className="text-xs mt-1 text-slate-500 dark:text-white/40">{t('teacherSessionLive.sessionNotStartedDesc')}</p>
                   </div>
                   <motion.button
                     whileHover={{ scale: 1.04 }}
@@ -491,29 +495,27 @@ export default function TeacherSessionLive() {
                     <span className={`material-symbols-outlined text-[18px] ${starting ? 'animate-spin' : ''}`}>
                       {starting ? 'refresh' : 'play_arrow'}
                     </span>
-                    {starting ? 'Starting…' : 'Start Session'}
+                    {starting ? t('teacherSessionLive.starting') : t('teacherSessionLive.startSession')}
                   </motion.button>
                 </div>
               )}
 
-              {/* ── QR Code display (physical + active only) ── */}
+              {/* â”€â”€ QR Code display (physical + active only) â”€â”€ */}
               {session.sessionType === 'physical' && session.status === 'active' && (
-                <div className="rounded-2xl p-5 space-y-4"
-                  style={{ background: '#141928', border: '1px solid rgba(255,255,255,0.06)' }}>
+                <div className="rounded-2xl p-5 space-y-4 bg-white dark:bg-[#141928] border border-slate-200 dark:border-white/10">
 
                   {/* QR image */}
                   <div
                     ref={qrRef}
-                    className={`flex items-center justify-center rounded-xl p-6 mx-auto
-                      ${isFullscreen ? 'fixed inset-0 z-[999] bg-black flex items-center justify-center' : ''}`}
-                    style={!isFullscreen ? { background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.15)' } : {}}
+                    className={`flex items-center justify-center rounded-xl p-6 mx-auto bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20
+                      ${isFullscreen ? 'fixed inset-0 z-[999] bg-black border-none flex items-center justify-center' : ''}`}
                   >
                     {qrData ? (
                       <QRCodeCanvas
                         value={qrData.qrPayload}
                         size={isFullscreen ? 500 : 220}
                         bgColor="transparent"
-                        fgColor="#f5f5f5"
+                        fgColor={theme === 'dark' ? '#f5f5f5' : '#0f172a'}
                         level="M"
                         includeMargin={false}
                         imageSettings={{
@@ -525,8 +527,8 @@ export default function TeacherSessionLive() {
                       />
                     ) : (
                       <div className="text-center space-y-2 py-8">
-                        <span className="material-symbols-outlined text-4xl" style={{ color: 'rgba(255,255,255,0.2)' }}>qr_code_2</span>
-                        <p className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>No QR token active</p>
+                        <span className="material-symbols-outlined text-4xl text-slate-400 dark:text-white/20">qr_code_2</span>
+                        <p className="text-xs text-slate-500 dark:text-white/30">{t('teacherSessionLive.noQrToken')}</p>
                       </div>
                     )}
                     {isFullscreen && (
@@ -543,13 +545,12 @@ export default function TeacherSessionLive() {
                   {session.qrRotationEnabled && (
                     <div className="space-y-1.5">
                       <div className="flex justify-between items-center">
-                        <span className="text-[10px] font-black uppercase tracking-widest"
-                          style={{ color: 'rgba(255,255,255,0.35)' }}>
-                          Rotation Countdown
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/35">
+                          {t('teacherSessionLive.rotationCountdown')}
                         </span>
                         <span className="text-sm font-bold text-amber-400">{rotationCountdown}s</span>
                       </div>
-                      <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.08)' }}>
+                      <div className="h-1.5 rounded-full overflow-hidden bg-slate-200 dark:bg-white/10">
                         <motion.div
                           className="h-full rounded-full bg-amber-500"
                           animate={{ width: `${rotPct}%` }}
@@ -570,21 +571,19 @@ export default function TeacherSessionLive() {
                       style={{ background: '#f59e0b' }}
                     >
                       <span className={`material-symbols-outlined text-[18px] ${rotating ? 'animate-spin' : ''}`}>refresh</span>
-                      Regenerate
+                      {t('teacherSessionLive.regenerate')}
                     </motion.button>
                     <button
                       onClick={downloadQrPng}
-                      className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all"
-                      style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)' }}
+                      className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all bg-slate-100 dark:bg-white/10 border border-slate-300 dark:border-white/10 text-slate-700 dark:text-white/70"
                     >
                       <span className="material-symbols-outlined text-[18px]">download</span>
                       PNG
                     </button>
                     <button
                       onClick={toggleFullscreen}
-                      className="p-2.5 rounded-xl transition-all"
-                      style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)' }}
-                      title="Fullscreen (F)"
+                      className="p-2.5 rounded-xl transition-all bg-slate-100 dark:bg-white/10 border border-slate-300 dark:border-white/10 text-slate-600 dark:text-white/50"
+                      title={t('teacherSessionLive.fullscreenTitle')}
                     >
                       <span className="material-symbols-outlined text-[18px]">open_in_full</span>
                     </button>
@@ -592,18 +591,17 @@ export default function TeacherSessionLive() {
                 </div>
               )}
 
-              {/* ── Session Security & End ── */}
-              <div className="rounded-2xl p-5 flex items-center justify-between"
-                style={{ background: '#141928', border: '1px solid rgba(255,255,255,0.06)' }}>
+              {/* â”€â”€ Session Security & End â”€â”€ */}
+              <div className="rounded-2xl p-5 flex items-center justify-between bg-white dark:bg-[#141928] border border-slate-200 dark:border-white/10">
                 <div className="flex items-center gap-3">
-                  <span className="material-symbols-outlined text-[22px]" style={{ color: 'rgba(255,255,255,0.3)' }}>settings</span>
+                  <span className="material-symbols-outlined text-[22px] text-slate-500 dark:text-white/30">settings</span>
                   <div>
-                    <p className="text-sm font-bold text-white">Session Security</p>
-                    <p className="text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                    <p className="text-sm font-bold text-slate-900 dark:text-white">{t('teacherSessionLive.sessionSecurity')}</p>
+                    <p className="text-xs text-slate-500 dark:text-white/35">
                       {[
-                        session.gpsRequired && 'GPS',
-                        session.qrExpiryMinutes < 9999 && 'Expiry',
-                      ].filter(Boolean).join(' & ') || 'Standard'} Active
+                        session.gpsRequired && t('teacherSessionLive.security.gps'),
+                        session.qrExpiryMinutes < 9999 && t('teacherSessionLive.security.expiry'),
+                      ].filter(Boolean).join(' & ') || t('teacherSessionLive.security.standard')} {t('teacherSessionLive.security.active')}
                     </p>
                   </div>
                 </div>
@@ -614,41 +612,38 @@ export default function TeacherSessionLive() {
                   className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-white text-sm font-bold transition-all shadow-lg shadow-red-500/20"
                 >
                   <span className="material-symbols-outlined text-[18px]">stop_circle</span>
-                  End Session
+                  {t('teacherSessionLive.endSession')}
                 </motion.button>
               </div>
             </div>
 
-            {/* ════════════════════════════════════════════════════════════
-                RIGHT PANEL — Live Attendance
-            ════════════════════════════════════════════════════════════ */}
+            {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+                RIGHT PANEL â€” Live Attendance
+            â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
             <div className="space-y-5">
 
-              {/* ── 3 KPI cards ── */}
+              {/* â”€â”€ 3 KPI cards â”€â”€ */}
               <div className="grid grid-cols-3 gap-4">
                 {/* Enrolled */}
-                <div className="rounded-2xl p-5"
-                  style={{ background: '#141928', border: '1px solid rgba(255,255,255,0.06)' }}>
-                  <p className="text-[10px] font-black uppercase tracking-widest mb-3"
-                    style={{ color: 'rgba(255,255,255,0.35)' }}>Enrolled</p>
-                  <p className="text-3xl font-black text-white">
+                <div className="rounded-2xl p-5 bg-white dark:bg-[#141928] border border-slate-200 dark:border-white/10">
+                  <p className="text-[10px] font-black uppercase tracking-widest mb-3 text-slate-500 dark:text-white/35">{t('teacherSessionLive.enrolled')}</p>
+                  <p className="text-3xl font-black text-slate-900 dark:text-white">
                     {summary.total}
-                    <span className="text-sm font-bold ml-2" style={{ color: 'rgba(255,255,255,0.4)' }}>Students</span>
+                    <span className="text-sm font-bold ml-2 text-slate-500 dark:text-white/40">{t('teacherSessionLive.students')}</span>
                   </p>
                 </div>
 
                 {/* Checked In */}
-                <div className="rounded-2xl p-5"
-                  style={{ background: '#141928', border: '1px solid rgba(245,158,11,0.2)' }}>
+                <div className="rounded-2xl p-5 bg-white dark:bg-[#141928] border border-amber-300 dark:border-amber-500/20">
                   <p className="text-[10px] font-black uppercase tracking-widest mb-3 text-amber-400">
-                    Checked In
+                    {t('teacherSessionLive.checkedIn')}
                   </p>
                   <div className="flex items-center gap-2">
                     <motion.p
                       key={summary.present + summary.late}
                       initial={{ scale: 1.2, color: '#fbbf24' }}
-                      animate={{ scale: 1, color: '#ffffff' }}
-                      className="text-3xl font-black"
+                      animate={{ scale: 1 }}
+                      className="text-3xl font-black text-slate-900 dark:text-white"
                     >
                       {summary.present + summary.late}
                     </motion.p>
@@ -657,15 +652,13 @@ export default function TeacherSessionLive() {
                 </div>
 
                 {/* Attendance % */}
-                <div className="rounded-2xl p-5"
-                  style={{ background: '#141928', border: '1px solid rgba(255,255,255,0.06)' }}>
-                  <p className="text-[10px] font-black uppercase tracking-widest mb-3"
-                    style={{ color: 'rgba(255,255,255,0.35)' }}>Attendance %</p>
+                <div className="rounded-2xl p-5 bg-white dark:bg-[#141928] border border-slate-200 dark:border-white/10">
+                  <p className="text-[10px] font-black uppercase tracking-widest mb-3 text-slate-500 dark:text-white/35">{t('teacherSessionLive.attendancePct')}</p>
                   <div className="flex items-center gap-3">
-                    <p className="text-3xl font-black text-white">{attPct}%</p>
+                    <p className="text-3xl font-black text-slate-900 dark:text-white">{attPct}%</p>
                     {/* Mini ring gauge */}
                     <svg width="36" height="36" viewBox="0 0 36 36" className="flex-shrink-0">
-                      <circle cx="18" cy="18" r="14" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="3" />
+                      <circle cx="18" cy="18" r="14" fill="none" stroke="rgba(148,163,184,0.35)" strokeWidth="3" />
                       <circle
                         cx="18" cy="18" r="14" fill="none"
                         stroke="#f59e0b"
@@ -680,41 +673,37 @@ export default function TeacherSessionLive() {
                 </div>
               </div>
 
-              {/* ── Search + filter ── */}
+              {/* â”€â”€ Search + filter â”€â”€ */}
               <div className="flex items-center gap-3">
                 <div className="relative flex-1">
                   <span className="absolute inset-y-0 left-3.5 flex items-center pointer-events-none">
-                    <span className="material-symbols-outlined text-[18px]" style={{ color: 'rgba(255,255,255,0.3)' }}>search</span>
+                    <span className="material-symbols-outlined text-[18px] text-slate-400 dark:text-white/30">search</span>
                   </span>
                   <input
                     type="text"
                     value={searchQ}
                     onChange={e => setSearchQ(e.target.value)}
-                    placeholder="Search students..."
-                    className="w-full rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-white/25 outline-none transition-all focus:ring-1 focus:ring-amber-500/40"
-                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}
+                    placeholder={t('teacherSessionLive.searchStudents')}
+                    className="w-full rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-white/25 outline-none transition-all focus:ring-1 focus:ring-amber-500/40 bg-white dark:bg-white/5 border border-slate-300 dark:border-white/10"
                   />
                 </div>
                 <button
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all"
-                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.6)' }}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all bg-slate-100 dark:bg-white/10 border border-slate-300 dark:border-white/10 text-slate-700 dark:text-white/60"
                 >
                   <span className="material-symbols-outlined text-[16px]">filter_list</span>
-                  Filter
+                  {t('teacherSessionLive.filter')}
                 </button>
               </div>
 
-              {/* ── Student table ── */}
-              <div className="rounded-2xl overflow-hidden"
-                style={{ background: '#141928', border: '1px solid rgba(255,255,255,0.06)' }}>
+              {/* â”€â”€ Student table â”€â”€ */}
+              <div className="rounded-2xl overflow-hidden bg-white dark:bg-[#141928] border border-slate-200 dark:border-white/10">
 
                 {/* Header row */}
-                <div className="grid grid-cols-[1fr_100px_110px_140px] gap-2 px-5 py-3 text-[10px] font-black uppercase tracking-widest"
-                  style={{ color: 'rgba(255,255,255,0.35)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                  <span>Student</span>
-                  <span>Time</span>
-                  <span>Status</span>
-                  <span className="text-right">Actions</span>
+                <div className="grid grid-cols-[1fr_100px_110px_140px] gap-2 px-5 py-3 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/35 border-b border-slate-200 dark:border-white/10">
+                  <span>{t('teacherSessionLive.table.student')}</span>
+                  <span>{t('teacherSessionLive.table.time')}</span>
+                  <span>{t('teacherSessionLive.table.status')}</span>
+                  <span className="text-right">{t('teacherSessionLive.table.actions')}</span>
                 </div>
 
                 {/* Rows */}
@@ -722,8 +711,8 @@ export default function TeacherSessionLive() {
                   <AnimatePresence>
                     {filteredRecords.length === 0 ? (
                       <div className="flex flex-col items-center justify-center py-16 gap-3">
-                        <span className="material-symbols-outlined text-4xl" style={{ color: 'rgba(255,255,255,0.15)' }}>groups</span>
-                        <p className="text-sm" style={{ color: 'rgba(255,255,255,0.3)' }}>No students found</p>
+                        <span className="material-symbols-outlined text-4xl text-slate-300 dark:text-white/15">groups</span>
+                        <p className="text-sm text-slate-500 dark:text-white/30">{t('teacherSessionLive.noStudentsFound')}</p>
                       </div>
                     ) : (
                       filteredRecords.map((r, idx) => (
@@ -732,8 +721,7 @@ export default function TeacherSessionLive() {
                           initial={{ opacity: 0, y: 8 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: idx * 0.02 }}
-                          className="grid grid-cols-[1fr_100px_110px_140px] gap-2 items-center px-5 py-3.5 hover:bg-white/[0.02] transition-colors"
-                          style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}
+                          className="grid grid-cols-[1fr_100px_110px_140px] gap-2 items-center px-5 py-3.5 hover:bg-slate-100 dark:hover:bg-white/[0.02] transition-colors border-b border-slate-100 dark:border-white/[0.04]"
                         >
                           {/* Student name + email */}
                           <div className="flex items-center gap-3 min-w-0">
@@ -741,19 +729,19 @@ export default function TeacherSessionLive() {
                               {initials(r.studentName)}
                             </div>
                             <div className="min-w-0">
-                              <p className="text-sm font-bold text-white truncate">{r.studentName}</p>
-                              <p className="text-[11px] truncate" style={{ color: 'rgba(255,255,255,0.35)' }}>{r.studentEmail}</p>
+                              <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{r.studentName}</p>
+                              <p className="text-[11px] truncate text-slate-500 dark:text-white/35">{r.studentEmail}</p>
                             </div>
                           </div>
 
                           {/* Time */}
-                          <span className="text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                            {fmtTime(r.joinTime)}
+                          <span className="text-sm text-slate-600 dark:text-white/60">
+                            {fmtTime(r.joinTime, i18n.language.startsWith('ar') ? 'ar-EG' : 'en-US')}
                           </span>
 
                           {/* Status badge */}
                           <span className={`inline-flex items-center justify-center px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wide border ${statusColor(r.status)}`}>
-                            {r.status}
+                            {displayStatus(r.status, t)}
                           </span>
 
                           {/* Actions */}
@@ -767,22 +755,20 @@ export default function TeacherSessionLive() {
                                 className="px-3 py-1.5 rounded-lg text-[11px] font-bold border transition-all disabled:opacity-50"
                                 style={{ background: 'rgba(245,158,11,0.1)', borderColor: 'rgba(245,158,11,0.3)', color: '#f59e0b' }}
                               >
-                                {marking === r.userId ? '...' : 'Mark Present'}
+                                {marking === r.userId ? t('teacherSessionLive.marking') : t('teacherSessionLive.markPresent')}
                               </motion.button>
                             )}
                             {(r.status === 'present' || r.status === 'late') && (
                               <>
                                 <button
-                                  className="p-1.5 rounded-lg transition-all hover:bg-white/5"
-                                  style={{ color: 'rgba(255,255,255,0.3)' }}
-                                  title="Export record"
+                                  className="p-1.5 rounded-lg transition-all hover:bg-slate-100 dark:hover:bg-white/5 text-slate-500 dark:text-white/30"
+                                  title={t('teacherSessionLive.exportRecord')}
                                 >
                                   <span className="material-symbols-outlined text-[18px]">download</span>
                                 </button>
                                 <button
-                                  className="p-1.5 rounded-lg transition-all hover:bg-white/5"
-                                  style={{ color: 'rgba(255,255,255,0.3)' }}
-                                  title="View details"
+                                  className="p-1.5 rounded-lg transition-all hover:bg-slate-100 dark:hover:bg-white/5 text-slate-500 dark:text-white/30"
+                                  title={t('teacherSessionLive.viewDetails')}
                                 >
                                   <span className="material-symbols-outlined text-[18px]">info</span>
                                 </button>
@@ -798,26 +784,25 @@ export default function TeacherSessionLive() {
             </div>
           </div>
 
-          {/* ═══════════════════════════════════════════════════════════════
+          {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
               BOTTOM BAR
-          ═══════════════════════════════════════════════════════════════ */}
+          â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
           <div className="mt-6 flex items-center justify-between px-2">
-            <p className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>
-              Last auto-sync: {lastSync} second{lastSync !== 1 ? 's' : ''} ago
+            <p className="text-xs text-slate-500 dark:text-white/30">
+              {t('teacherSessionLive.lastAutoSync', { count: lastSync })}
             </p>
             <div className="flex items-center gap-3">
               <button
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all"
-                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)' }}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all bg-slate-100 dark:bg-white/10 border border-slate-300 dark:border-white/10 text-slate-700 dark:text-white/70"
               >
                 <span className="material-symbols-outlined text-[18px]">mail</span>
-                Send Absence Alerts
+                {t('teacherSessionLive.sendAbsenceAlerts')}
               </button>
               <div className="flex items-center gap-2 px-4 py-2 rounded-xl"
                 style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.2)' }}>
                 <span className="material-symbols-outlined text-[14px] text-amber-400">info</span>
                 <span className="text-xs font-bold text-amber-400">
-                  Press <kbd className="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-mono text-[10px] mx-0.5">F</kbd> for Fullscreen Projection
+                  {t('teacherSessionLive.pressForFullscreen', { key: 'F' })}
                 </span>
               </div>
             </div>
@@ -825,9 +810,9 @@ export default function TeacherSessionLive() {
         </div>
       </div>
 
-      {/* ═══════════════════════════════════════════════════════════════
+      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
           END SESSION CONFIRMATION MODAL
-      ═══════════════════════════════════════════════════════════════ */}
+      â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       <AnimatePresence>
         {endModal && (
           <motion.div
@@ -843,31 +828,28 @@ export default function TeacherSessionLive() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               onClick={e => e.stopPropagation()}
-              className="rounded-2xl p-8 max-w-md w-full space-y-6"
-              style={{ background: '#141928', border: '1px solid rgba(255,255,255,0.08)' }}
+              className="rounded-2xl p-8 max-w-md w-full space-y-6 bg-white dark:bg-[#141928] border border-slate-200 dark:border-white/10"
             >
               <div className="flex items-center gap-4">
                 <div className="size-14 rounded-2xl bg-red-500/10 flex items-center justify-center border border-red-500/20">
                   <span className="material-symbols-outlined text-red-400 text-[28px]">stop_circle</span>
                 </div>
                 <div>
-                  <h3 className="text-xl font-black text-white">End Session?</h3>
-                  <p className="text-sm mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                    This will finalize all attendance records.
+                  <h3 className="text-xl font-black text-slate-900 dark:text-white">{t('teacherSessionLive.endSessionTitle')}</h3>
+                  <p className="text-sm mt-0.5 text-slate-500 dark:text-white/40">
+                    {t('teacherSessionLive.endSessionDesc')}
                   </p>
                 </div>
               </div>
-              <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                Students who haven't checked in will be marked as <strong className="text-red-400">absent</strong>.
-                This action cannot be undone.
+              <p className="text-sm leading-relaxed text-slate-600 dark:text-white/60">
+                {t('teacherSessionLive.endSessionWarning', { status: t('teacherSessionLive.statuses.absent') })}
               </p>
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => setEndModal(false)}
-                  className="flex-1 py-3 rounded-xl font-bold text-sm transition-all"
-                  style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.7)' }}
+                  className="flex-1 py-3 rounded-xl font-bold text-sm transition-all bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-white/70"
                 >
-                  Cancel
+                  {t('teacherSessionLive.cancel')}
                 </button>
                 <motion.button
                   whileTap={{ scale: 0.96 }}
@@ -875,7 +857,7 @@ export default function TeacherSessionLive() {
                   disabled={ending}
                   className="flex-1 py-3 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold text-sm transition-all shadow-lg shadow-red-500/20 disabled:opacity-60"
                 >
-                  {ending ? 'Ending…' : 'End Session'}
+                  {ending ? t('teacherSessionLive.ending') : t('teacherSessionLive.endSession')}
                 </motion.button>
               </div>
             </motion.div>
@@ -885,3 +867,4 @@ export default function TeacherSessionLive() {
     </TeacherLayout>
   );
 }
+

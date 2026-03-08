@@ -22,6 +22,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { usePortalI18n } from '@/hooks/usePortalI18n';
+
 
 interface Lesson {
   id: string;
@@ -39,6 +41,7 @@ interface Lesson {
 }
 
 export default function TeacherLessonView() {
+  const { t } = usePortalI18n("common");
   const [, params] = useRoute("/teacher/courses/:courseId/lessons/:lessonId");
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -209,7 +212,7 @@ export default function TeacherLessonView() {
       <DashboardLayout>
         <div className="text-center py-12">
           <p className="text-gray-600">Lesson not found</p>
-          <Button onClick={() => setLocation(`/teacher/courses/${courseId}/manage`)} className="mt-4">
+          <Button onClick={() => setLocation(`/teacher/courses/${courseId}`)} className="mt-4">
             Back to Course
           </Button>
         </div>
@@ -227,7 +230,7 @@ export default function TeacherLessonView() {
               <Button 
                 variant="ghost" 
                 size="icon"
-                onClick={() => setLocation(`/teacher/courses/${courseId}/manage`)}
+                onClick={() => setLocation(`/teacher/courses/${courseId}`)}
                 className="hover:bg-white"
               >
                 <ArrowLeft className="h-5 w-5" />

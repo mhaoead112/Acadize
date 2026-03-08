@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useRoute } from 'wouter';
 import TeacherLayout from '../components/TeacherLayout';
+import { DashboardStatsSkeleton } from '../components/skeletons/DashboardStatsSkeleton';
+import { TableSkeleton } from '../components/skeletons/TableSkeleton';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '@/contexts/ThemeContext';
 import { apiEndpoint } from '../lib/config';
@@ -405,8 +407,9 @@ export default function TeacherExamManage() {
   if (loading) {
     return (
       <TeacherLayout>
-        <div className="flex items-center justify-center py-20">
-          <div className={`h-10 w-10 animate-spin rounded-full border-4 border-t-transparent ${isDark ? 'border-primary' : 'border-primary'}`}></div>
+        <div className="space-y-6 p-5">
+          <DashboardStatsSkeleton />
+          <TableSkeleton rows={5} columns={3} />
         </div>
       </TeacherLayout>
     );

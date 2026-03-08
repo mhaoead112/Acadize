@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { apiEndpoint, assetUrl } from "@/lib/config";
+import { usePortalI18n } from '@/hooks/usePortalI18n';
+
 import {
   Loader2,
   User,
@@ -77,6 +79,7 @@ interface RecentActivity {
 }
 
 export default function StudentProfilePage() {
+  const { t } = usePortalI18n("common");
   const [match, params] = useRoute("/teacher/students/:studentId");
   const studentId = params?.studentId;
   const [, setLocation] = useLocation();

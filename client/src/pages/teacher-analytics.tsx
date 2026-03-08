@@ -62,7 +62,7 @@ export default function TeacherAnalytics() {
   const { token, isLoading: authLoading, getAuthHeaders } = useAuth();
   const [loading, setLoading] = useState(true);
   const [selectedCourse, setSelectedCourse] = useState<string>("all");
-  const [timeframe, setTimeframe] = useState<string>("Last 30 Days");
+  const [timeframe, setTimeframe] = useState<string>("30d");
   const [courses, setCourses] = useState<Course[]>([]);
   const [students, setStudents] = useState<StudentAnalytics[]>([]);
   const [courseAnalytics, setCourseAnalytics] = useState<CourseAnalytics[]>([]);
@@ -85,9 +85,9 @@ export default function TeacherAnalytics() {
   });
 
   const timeframeDaysMap: Record<string, number> = {
-    "Last 30 Days": 30,
-    "This Semester": 120,
-    "This Year": 365,
+    "30d": 30,
+    "semester": 120,
+    "year": 365,
   };
 
   // Export analytics to CSV (preserved API-independent behavior)
@@ -95,21 +95,32 @@ export default function TeacherAnalytics() {
     try {
       if (!students || students.length === 0) {
         toast({
-          title: "No Data",
-          description: "No student data available to export",
+          title: t("teacherAnalytics.noData"),
+          description: t("teacherAnalytics.noStudentDataToExport"),
           variant: "destructive",
         });
         return;
       }
 
-      const headers = ['Student Name', 'Email', 'Average Score', 'Assignments Completed', 'Completion Rate', 'Status'];
+      const headers = [
+        t("teacherAnalytics.studentName"),
+        t("teacherAnalytics.email"),
+        t("teacherAnalytics.averageScore"),
+        t("teacherAnalytics.assignmentsCompleted"),
+        t("teacherAnalytics.completionRate"),
+        t("teacherAnalytics.status"),
+      ];
       const rows = students.map(student => [
         student.fullName || student.username || 'N/A',
         student.email || 'N/A',
         student.averageScore ? `${student.averageScore.toFixed(1)}%` : '0%',
         student.completedAssignments || 0,
         student.totalAssignments > 0 ? `${((student.completedAssignments / student.totalAssignments) * 100).toFixed(1)}%` : '0%',
-        (student.averageScore || 0) >= 70 ? 'Good Standing' : (student.averageScore || 0) >= 60 ? 'At Risk' : 'Needs Attention'
+        (student.averageScore || 0) >= 70
+          ? t("teacherAnalytics.goodStanding")
+          : (student.averageScore || 0) >= 60
+            ? t("teacherAnalytics.atRisk")
+            : t("teacherAnalytics.needsAttention")
       ]);
 
       const csvContent = [
@@ -126,14 +137,14 @@ export default function TeacherAnalytics() {
       URL.revokeObjectURL(url);
 
       toast({
-        title: "Success",
+        title: t("common:toast.success"),
         description: t('analyticsExported'),
       });
     } catch (error) {
       console.error('Export error:', error);
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to export analytics",
+        title: t("error"),
+        description: error instanceof Error ? error.message : t("teacherAnalytics.failedToExport"),
         variant: "destructive",
       });
     }
@@ -222,7 +233,7 @@ export default function TeacherAnalytics() {
     } catch (error) {
       console.error("Failed to fetch analytics:", error);
       toast({
-        title: "Error",
+        title: t("error"),
         description: t('failedToLoadAnalytics'),
         variant: "destructive",
       });
@@ -255,17 +266,17 @@ export default function TeacherAnalytics() {
     const total = submissionStatus.onTime + submissionStatus.late + submissionStatus.missing + submissionStatus.pending;
     if (total > 0) {
       return [
-        { name: 'On Time', value: Math.round((submissionStatus.onTime / total) * 100), color: '#EAB308' },
-        { name: 'Late', value: Math.round((submissionStatus.late / total) * 100), color: '#1e3a8a' },
-        { name: 'Missing', value: Math.round((submissionStatus.missing / total) * 100), color: '#ef4444' },
-        { name: 'Pending', value: Math.round((submissionStatus.pending / total) * 100), color: '#94a3b8' },
+        { name: t("teacherAnalytics.onTime"), value: Math.round((submissionStatus.onTime / total) * 100), color: '#EAB308' },
+        { name: t("teacherAnalytics.late"), value: Math.round((submissionStatus.late / total) * 100), color: '#1e3a8a' },
+        { name: t("teacherAnalytics.missing"), value: Math.round((submissionStatus.missing / total) * 100), color: '#ef4444' },
+        { name: t("teacherAnalytics.pending"), value: Math.round((submissionStatus.pending / total) * 100), color: '#94a3b8' },
       ];
     }
     return [
-      { name: 'On Time', value: 0, color: '#EAB308' },
-      { name: 'Late', value: 0, color: '#1e3a8a' },
-      { name: 'Missing', value: 0, color: '#ef4444' },
-      { name: 'Pending', value: 0, color: '#94a3b8' },
+      { name: t("teacherAnalytics.onTime"), value: 0, color: '#EAB308' },
+      { name: t("teacherAnalytics.late"), value: 0, color: '#1e3a8a' },
+      { name: t("teacherAnalytics.missing"), value: 0, color: '#ef4444' },
+      { name: t("teacherAnalytics.pending"), value: 0, color: '#94a3b8' },
     ];
   }, [submissionStatus]);
 
@@ -300,13 +311,13 @@ export default function TeacherAnalytics() {
           </button>
           <div className="flex flex-col">
             <h2 className="text-slate-900 dark:text-white text-lg font-bold leading-tight">{t('analyticsDashboard')}</h2>
-            <p className="text-slate-500 dark:text-slate-400 text-xs">Overview for Spring Semester 2024</p>
+            <p className="text-slate-500 dark:text-slate-400 text-xs">{t("teacherAnalytics.overviewSubtitle")}</p>
           </div>
         </div>
         <div className="flex items-center gap-4">
           <div className="relative hidden sm:block">
             <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">search</span>
-            <input className="h-10 pl-10 pr-4 bg-slate-100 dark:bg-slate-800 border-none rounded-lg text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-gold/50 w-64 transition-all" placeholder="Search data..." type="text"/>
+            <input className="h-10 pl-10 pr-4 bg-slate-100 dark:bg-slate-800 border-none rounded-lg text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-gold/50 w-64 transition-all" placeholder={t("teacherAnalytics.searchData")} type="text"/>
           </div>
           <button className="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full relative">
             <span className="material-symbols-outlined">notifications</span>
@@ -323,13 +334,13 @@ export default function TeacherAnalytics() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3">
             <div className="relative min-w-[200px]">
-              <label className="block text-xs font-semibold text-slate-500 mb-1 ml-1">Select Class</label>
+              <label className="block text-xs font-semibold text-slate-500 mb-1 ml-1">{t("teacherAnalytics.selectClass")}</label>
               <select
                 className="w-full appearance-none bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-sm rounded-lg focus:ring-gold focus:border-gold block p-2.5 pr-8"
                 value={selectedCourse}
                 onChange={(e) => setSelectedCourse(e.target.value)}
               >
-                <option value="all">All Classes</option>
+                <option value="all">{t("teacherAnalytics.allClasses")}</option>
                 {courses.map((c) => (
                   <option key={c.id} value={c.id}>{c.title}</option>
                 ))}
@@ -337,22 +348,22 @@ export default function TeacherAnalytics() {
               <span className="material-symbols-outlined absolute right-2 bottom-2.5 text-slate-400 pointer-events-none text-xl">expand_more</span>
             </div>
             <div className="relative min-w-[160px]">
-              <label className="block text-xs font-semibold text-slate-500 mb-1 ml-1">Timeframe</label>
+              <label className="block text-xs font-semibold text-slate-500 mb-1 ml-1">{t("teacherAnalytics.timeframe")}</label>
               <select
                 className="w-full appearance-none bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-sm rounded-lg focus:ring-gold focus:border-gold block p-2.5 pr-8"
                 value={timeframe}
                 onChange={(e) => setTimeframe(e.target.value)}
               >
-                <option>Last 30 Days</option>
-                <option>This Semester</option>
-                <option>This Year</option>
+                <option value="30d">{t("teacherAnalytics.last30Days")}</option>
+                <option value="semester">{t("teacherAnalytics.thisSemester")}</option>
+                <option value="year">{t("teacherAnalytics.thisYear")}</option>
               </select>
               <span className="material-symbols-outlined absolute right-2 bottom-2.5 text-slate-400 pointer-events-none text-xl">expand_more</span>
             </div>
           </div>
           <button onClick={handleExportAnalytics} className="flex items-center justify-center gap-2 bg-white dark:bg-navy-light border border-slate-200 dark:border-transparent text-slate-700 dark:text-white font-medium py-2.5 px-4 rounded-lg hover:bg-slate-50 dark:hover:bg-blue-800 transition-colors shadow-sm">
             <span className="material-symbols-outlined text-[20px]">download</span>
-            <span>Export Report</span>
+            <span>{t("teacherAnalytics.exportReport")}</span>
           </button>
         </div>
 
@@ -366,9 +377,9 @@ export default function TeacherAnalytics() {
               </div>
               <span className="text-xs font-medium text-emerald-600 bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 px-2 py-1 rounded-full">+2.4%</span>
             </div>
-            <h3 className="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">Average Grade</h3>
+            <h3 className="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">{t("teacherAnalytics.averageGrade")}</h3>
             <p className="text-3xl font-bold text-slate-900 dark:text-white">{avgGrade}%</p>
-            <p className="text-xs text-slate-400 mt-2">Class average is rising</p>
+            <p className="text-xs text-slate-400 mt-2">{t("teacherAnalytics.classAverageRising")}</p>
           </div>
           <div className="bg-white dark:bg-slate-800 rounded-xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden">
             <div className="absolute right-0 top-0 h-full w-1 bg-navy-light"></div>
@@ -378,9 +389,9 @@ export default function TeacherAnalytics() {
               </div>
               <span className="text-xs font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded-full">Stable</span>
             </div>
-            <h3 className="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">Assignment Completion</h3>
+            <h3 className="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">{t("teacherAnalytics.assignmentCompletion")}</h3>
             <p className="text-3xl font-bold text-slate-900 dark:text-white">{completionRate}%</p>
-            <p className="text-xs text-slate-400 mt-2">{missingOrLatePct}% Missing or Late</p>
+            <p className="text-xs text-slate-400 mt-2">{missingOrLatePct}% {t("teacherAnalytics.missingOrLate")}</p>
           </div>
           <div className="bg-white dark:bg-slate-800 rounded-xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden">
             <div className="absolute right-0 top-0 h-full w-1 bg-red-500"></div>
@@ -388,11 +399,11 @@ export default function TeacherAnalytics() {
               <div className="p-2 bg-gold/10 dark:bg-gold/20 rounded-lg">
                 <span className="material-symbols-outlined text-gold dark:text-gold-light">warning</span>
               </div>
-              <span className="text-xs font-medium text-gold bg-gold/10 dark:bg-gold/20 dark:text-gold-light px-2 py-1 rounded-full">Action Needed</span>
+              <span className="text-xs font-medium text-gold bg-gold/10 dark:bg-gold/20 dark:text-gold-light px-2 py-1 rounded-full">{t("teacherAnalytics.actionNeeded")}</span>
             </div>
-            <h3 className="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">At-Risk Students</h3>
+            <h3 className="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">{t("teacherAnalytics.atRiskStudents")}</h3>
             <p className="text-3xl font-bold text-slate-900 dark:text-white">{studentsAtRisk}</p>
-            <p className="text-xs text-slate-400 mt-2">Students below 65%</p>
+            <p className="text-xs text-slate-400 mt-2">{t("teacherAnalytics.studentsBelow65")}</p>
           </div>
           <div className="bg-white dark:bg-slate-800 rounded-xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm relative overflow-hidden">
             <div className="absolute right-0 top-0 h-full w-1 bg-emerald-500"></div>
@@ -402,9 +413,9 @@ export default function TeacherAnalytics() {
               </div>
               <span className="text-xs font-medium text-emerald-600 bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 px-2 py-1 rounded-full">{attendanceAvg}%</span>
             </div>
-            <h3 className="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">Attendance Rate</h3>
+            <h3 className="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">{t("teacherAnalytics.attendanceRate")}</h3>
             <p className="text-3xl font-bold text-slate-900 dark:text-white">{Math.round((attendanceAvg/100) * (overviewStats.totalStudents || 0))}/{overviewStats.totalStudents}</p>
-            <p className="text-xs text-slate-400 mt-2">Present today</p>
+            <p className="text-xs text-slate-400 mt-2">{t("teacherAnalytics.presentToday")}</p>
           </div>
         </div>
 
@@ -412,17 +423,17 @@ export default function TeacherAnalytics() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-auto">
           <div className="lg:col-span-2 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-slate-900 dark:text-white font-bold text-lg">Class Performance Trend</h3>
+              <h3 className="text-slate-900 dark:text-white font-bold text-lg">{t("teacherAnalytics.classPerformanceTrend")}</h3>
               <div className="flex items-center gap-2">
                 <span className="flex items-center gap-1 text-xs text-slate-500">
-                  <span className="block size-2 rounded-full bg-gold"></span> Class Avg
+                  <span className="block size-2 rounded-full bg-gold"></span> {t("teacherAnalytics.classAverage")}
                 </span>
               </div>
             </div>
             <div className="w-full h-[300px]">
               {areaData.length === 0 ? (
                 <div className="flex items-center justify-center h-full text-sm text-slate-500 dark:text-slate-400">
-                  No performance data yet for this range.
+                  {t("teacherAnalytics.noPerformanceData")}
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
@@ -452,7 +463,7 @@ export default function TeacherAnalytics() {
           </div>
 
           <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm flex flex-col">
-            <h3 className="text-slate-900 dark:text-white font-bold text-lg mb-6">Submission Status</h3>
+            <h3 className="text-slate-900 dark:text-white font-bold text-lg mb-6">{t("teacherAnalytics.submissionStatus")}</h3>
             <div className="flex-1 flex flex-col justify-center items-center gap-6 relative">
               <div className="w-[200px] h-[200px] relative">
                 <ResponsiveContainer width="100%" height="100%">
@@ -474,7 +485,7 @@ export default function TeacherAnalytics() {
                 </ResponsiveContainer>
                 <div className="absolute inset-0 m-auto w-32 h-32 flex flex-col items-center justify-center pointer-events-none">
                   <span className="text-3xl font-bold text-slate-900 dark:text-white">{submissionStatus.totalAssignments || 0}</span>
-                  <span className="text-xs text-slate-500">Total Assignments</span>
+                  <span className="text-xs text-slate-500">{t("teacherAnalytics.totalAssignments")}</span>
                 </div>
               </div>
               
@@ -500,18 +511,18 @@ export default function TeacherAnalytics() {
             <div className="p-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-gold/5 dark:bg-gold/10">
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-gold">warning</span>
-                <h3 className="text-slate-900 dark:text-white font-bold text-lg">Needs Attention</h3>
+                <h3 className="text-slate-900 dark:text-white font-bold text-lg">{t("teacherAnalytics.needsAttention")}</h3>
               </div>
-              <button className="text-xs text-gold font-medium hover:underline">View All</button>
+              <button className="text-xs text-gold font-medium hover:underline">{t("viewAll")}</button>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-left">
                 <thead className="text-xs text-slate-500 uppercase bg-slate-50 dark:bg-slate-700/50">
                   <tr>
-                    <th className="px-6 py-3">Student</th>
-                    <th className="px-6 py-3">Grade</th>
-                    <th className="px-6 py-3">Missing</th>
-                    <th className="px-6 py-3 text-right">Action</th>
+                    <th className="px-6 py-3">{t("teacherAnalytics.student")}</th>
+                    <th className="px-6 py-3">{t("teacherAnalytics.grade")}</th>
+                    <th className="px-6 py-3">{t("teacherAnalytics.missing")}</th>
+                    <th className="px-6 py-3 text-right">{t("teacherAnalytics.action")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
@@ -526,13 +537,13 @@ export default function TeacherAnalytics() {
                       <td className="px-6 py-4 text-gold font-bold">{s.averageScore}%</td>
                       <td className="px-6 py-4 text-slate-500">{s.pendingAssignments ?? 0}</td>
                       <td className="px-6 py-4 text-right">
-                        <button className="text-gold hover:text-gold-light font-medium text-xs">Message</button>
+                        <button className="text-gold hover:text-gold-light font-medium text-xs">{t("teacherAnalytics.message")}</button>
                       </td>
                     </tr>
                   ))}
                   {needsAttention.length === 0 && (
                     <tr>
-                      <td className="px-6 py-8 text-center text-slate-500" colSpan={4}>No students need attention.</td>
+                      <td className="px-6 py-8 text-center text-slate-500" colSpan={4}>{t("teacherAnalytics.noStudentsNeedAttention")}</td>
                     </tr>
                   )}
                 </tbody>
@@ -543,7 +554,7 @@ export default function TeacherAnalytics() {
           {/* Topic Mastery */}
           <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-6 flex flex-col">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-slate-900 dark:text-white font-bold text-lg">Topic Mastery</h3>
+              <h3 className="text-slate-900 dark:text-white font-bold text-lg">{t("teacherAnalytics.topicMastery")}</h3>
               <button className="p-1 hover:bg-slate-100 rounded">
                 <span className="material-symbols-outlined text-slate-400">more_horiz</span>
               </button>
@@ -551,7 +562,7 @@ export default function TeacherAnalytics() {
             <div className="flex flex-col gap-4">
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="font-medium text-slate-700 dark:text-slate-200">Cell Structure</span>
+                  <span className="font-medium text-slate-700 dark:text-slate-200">{t("teacherAnalytics.cellStructure")}</span>
                   <span className="font-bold text-slate-900 dark:text-white">92%</span>
                 </div>
                 <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2.5">
@@ -560,7 +571,7 @@ export default function TeacherAnalytics() {
               </div>
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="font-medium text-slate-700 dark:text-slate-200">Photosynthesis</span>
+                  <span className="font-medium text-slate-700 dark:text-slate-200">{t("teacherAnalytics.photosynthesis")}</span>
                   <span className="font-bold text-slate-900 dark:text-white">85%</span>
                 </div>
                 <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2.5">
@@ -569,7 +580,7 @@ export default function TeacherAnalytics() {
               </div>
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="font-medium text-slate-700 dark:text-slate-200">Ecosystems</span>
+                  <span className="font-medium text-slate-700 dark:text-slate-200">{t("teacherAnalytics.ecosystems")}</span>
                   <span className="font-bold text-slate-900 dark:text-white">61%</span>
                 </div>
                 <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2.5">
@@ -577,7 +588,7 @@ export default function TeacherAnalytics() {
                 </div>
                 <p className="text-xs text-gold font-medium mt-1 flex items-center gap-1">
                   <span className="material-symbols-outlined text-[14px]">info</span>
-                  Needs review in next class
+                  {t("teacherAnalytics.needsReviewNextClass")}
                 </p>
               </div>
             </div>

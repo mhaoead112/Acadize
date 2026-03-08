@@ -29,6 +29,8 @@ import {
   MoreVertical
 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { usePortalI18n } from '@/hooks/usePortalI18n';
+
 
 // Form schema for creating/editing classes
 const classFormSchema = z.object({
@@ -62,6 +64,7 @@ interface Class {
 }
 
 export default function TeacherClasses() {
+  const { t } = usePortalI18n("common");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingClass, setEditingClass] = useState<Class | null>(null);
   const { toast } = useToast();
