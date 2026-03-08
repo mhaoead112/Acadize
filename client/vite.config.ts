@@ -16,7 +16,7 @@ export default defineConfig({
     dedupe: ["react", "react-dom"],
   },
   optimizeDeps: {
-    exclude: ["date-fns"],
+    include: ["recharts", "d3-shape", "d3-scale", "d3-color"],
   },
   build: {
     outDir: path.resolve(__dirname, "dist"),
@@ -43,9 +43,10 @@ export default defineConfig({
           if (id.includes("@monaco-editor") || id.includes("monaco-editor")) {
             return "vendor-editor-code";
           }
-          if (id.includes("recharts") || id.includes("d3-")) {
-            return "vendor-charts";
-          }
+          // ⚠️ recharts + d3 removed from manualChunks:
+          // D3 has internal circular ES module refs that cause TDZ errors
+          // ("Cannot access 'X' before initialization") when Rollup splits
+          // them into an isolated chunk. Let Rollup resolve them naturally.
           if (id.includes("framer-motion")) {
             return "vendor-motion";
           }
