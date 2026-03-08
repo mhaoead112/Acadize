@@ -1,18 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, Link } from 'wouter';
-import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useBranding } from '@/contexts/BrandingContext';
+import { usePortalI18n } from '@/hooks/usePortalI18n';
 import NotificationBell from './NotificationBell';
-import ParallaxBackground from './ParallaxBackground';
 import {
   sidebarVariants, 
   navItemVariants, 
   buttonVariants,
   iconButtonVariants,
   fadeInVariants,
-  pulseVariants,
   springConfigs
 } from '@/lib/animations';
 import { AcadizeLogo } from './AcadizeLogo';
@@ -42,33 +41,46 @@ interface StudentLayoutProps {
 }
 
 export default function StudentLayout({ children }: StudentLayoutProps) {
-  const { t } = useTranslation('common');
+  const { t, isRTL, dir } = usePortalI18n("common");
   const [location, setLocation] = useLocation();
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const branding = useBranding();
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isDesktopHeader, setIsDesktopHeader] = useState(() => typeof window !== 'undefined' ? window.innerWidth >= 1024 : false);
   // Initialize from URL if available
   const [searchQuery, setSearchQuery] = useState(() => {
     const params = new URLSearchParams(window.location.search);
     return params.get('q') || '';
   });
 
-  // Debounced live search
   useEffect(() => {
+    const mediaQuery = window.matchMedia('(min-width: 1024px)');
+    const onChange = (event: MediaQueryListEvent) => setIsDesktopHeader(event.matches);
+
+    setIsDesktopHeader(mediaQuery.matches);
+    mediaQuery.addEventListener('change', onChange);
+
+    return () => mediaQuery.removeEventListener('change', onChange);
+  }, []);
+
+  // Debounced live search on the search page only to avoid route churn while typing on other screens
+  useEffect(() => {
+    if (!location.startsWith('/student/search')) return;
+
     const timer = setTimeout(() => {
-      if (searchQuery.trim()) {
-        const params = new URLSearchParams(window.location.search);
-        const currentQ = params.get('q');
-        
-        // Only navigate if query changed
-        if (currentQ !== searchQuery.trim()) {
-          setLocation(`/student/search?q=${encodeURIComponent(searchQuery.trim())}`);
-        }
+      const params = new URLSearchParams(window.location.search);
+      const currentQ = params.get('q') || '';
+      const nextQ = searchQuery.trim();
+
+      if (nextQ && currentQ !== nextQ) {
+        setLocation(`/student/search?q=${encodeURIComponent(nextQ)}`);
       }
-    }, 500); // 500ms debounce
+    }, 500);
 
     return () => clearTimeout(timer);
-  }, [searchQuery, setLocation]);
+  }, [location, searchQuery, setLocation]);
 
   const handleLogout = () => {
     logout();
@@ -83,13 +95,10 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
   };
 
   return (
-    <div className="flex h-screen w-full bg-slate-50 dark:bg-[#0a192f] overflow-x-hidden font-sans transition-colors duration-300 relative">
-      {/* Parallax Background */}
-      <ParallaxBackground />
-      
-      {/* Sidebar */}
+    <div dir={dir} className="flex h-screen w-full bg-slate-50 dark:bg-[#0a192f] overflow-x-hidden font-sans transition-colors duration-300 relative">
+{/* Sidebar */}
       <motion.aside 
-        className="hidden lg:flex w-72 h-full flex-col border-r border-slate-200 dark:border-white/10 bg-white/80 dark:bg-[#0a192f]/80 backdrop-blur-xl shadow-xl dark:shadow-none z-30 transition-colors duration-300 relative"
+        className={`hidden lg:flex flex-col border-r border-slate-200 dark:border-white/10 bg-white/80 dark:bg-[#0a192f]/80 backdrop-blur-xl shadow-xl dark:shadow-none z-30 transition-all duration-300 relative ${isSidebarCollapsed ? 'w-20' : 'w-72'}`}
         initial="initial"
         animate="animate"
         variants={sidebarVariants}
@@ -97,31 +106,46 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
           boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
         }}
       >
-        <div className="p-6 pb-2">
+        {/* Collapse Toggle */}
+        <button
+          onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+          className={`absolute ${isRTL ? '-left-3' : '-right-3'} top-8 bg-white dark:bg-[#112240] border border-slate-200 dark:border-white/10 rounded-full p-1 text-slate-500 hover:text-brand-primary transition-colors z-40`}
+        >
+          <span className="material-symbols-outlined text-sm">
+            {isRTL
+              ? (isSidebarCollapsed ? 'chevron_left' : 'chevron_right')
+              : (isSidebarCollapsed ? 'chevron_right' : 'chevron_left')}
+          </span>
+        </button>
+
+        <div className={`p-6 pb-2 ${isSidebarCollapsed ? 'px-4' : ''}`}>
           {/* Logo */}
           <motion.div 
-            className="flex items-center gap-4 mb-8"
+            className={`flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-4'} mb-8 transition-all`}
             variants={fadeInVariants}
           >
-            <AcadizeLogo variant="icon" size="md" />
-            <div className="flex flex-col">
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white">Acadize</h2>
-              <div className="flex items-center gap-2">
-                <p className="text-xs text-slate-500 dark:text-slate-400">{t('studentPortal')}</p>
-                <motion.div 
-                  className="w-2 h-2 rounded-full bg-green-500"
-                  variants={pulseVariants}
-                  initial="initial"
-                  animate="animate"
-                />
-              </div>
-            </div>
+            {branding.logoUrl ? (
+              <img src={branding.logoUrl} alt={branding.name} className={`${isSidebarCollapsed ? 'h-8' : 'h-10'} w-auto object-contain transition-all`} />
+            ) : (
+              <>
+                <AcadizeLogo variant="icon" size={isSidebarCollapsed ? "sm" : "md"} />
+                {!isSidebarCollapsed && (
+                  <div className="flex flex-col overflow-hidden">
+                    <h2 className="text-lg font-bold text-slate-900 dark:text-white truncate">{branding.name}</h2>
+                    <div className="flex items-center gap-2">
+                      <p className="text-xs text-slate-500 dark:text-slate-400">{t('studentPortal')}</p>
+                      <div className="w-2 h-2 rounded-full bg-green-500" />
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
           </motion.div>
 
           {/* User Profile Card */}
           <Link to="/student/profile">
             <motion.div 
-              className="flex gap-3 mb-6 p-3 bg-slate-50/80 dark:bg-[#112240]/80 backdrop-blur-md rounded-xl items-center border border-slate-100 dark:border-white/10 cursor-pointer group relative overflow-hidden"
+              className={`flex mb-6 p-3 bg-slate-50/80 dark:bg-[#112240]/80 backdrop-blur-md rounded-xl items-center border border-slate-100 dark:border-white/10 cursor-pointer group relative overflow-hidden ${isSidebarCollapsed ? 'justify-center mx-1' : 'gap-3'}`}
               variants={fadeInVariants}
               whileHover={{ 
                 scale: 1.02,
@@ -154,8 +178,12 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
                 </motion.div>
               )}
               <div className="flex-1 min-w-0 relative z-10">
-                <div className="text-sm font-semibold text-slate-900 dark:text-white truncate">{user?.fullName || 'Student'}</div>
-                <div className="text-xs text-slate-500 dark:text-slate-400 group-hover:text-[#FFD700] transition-colors">{t('viewProfile')}</div>
+                {!isSidebarCollapsed && (
+                  <>
+                    <div className="text-sm font-semibold text-slate-900 dark:text-white truncate">{user?.fullName || t("roles.student")}</div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400 group-hover:text-[#FFD700] transition-colors">{t('viewProfile')}</div>
+                  </>
+                )}
               </div>
             </motion.div>
           </Link>
@@ -168,7 +196,8 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
             return (
               <Link key={item.path} to={item.path}>
                 <motion.div
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer group relative overflow-hidden ${
+                  title={isSidebarCollapsed ? t(item.label) : undefined}
+                  className={`flex items-center ${isSidebarCollapsed ? 'justify-center mx-1 text-xl' : 'gap-3 px-4'} py-3 rounded-lg cursor-pointer group relative overflow-hidden ${
                     isActive
                       ? 'bg-[#FFD700] text-slate-900 shadow-lg shadow-[#FFD700]/30'
                       : 'text-slate-600 dark:text-slate-400'
@@ -199,17 +228,21 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
                   >
                     {item.icon}
                   </motion.span>
-                  <span className="font-medium text-sm flex-1 relative z-10">{t(item.label)}</span>
-                  {item.badge && (
-                    <motion.span 
-                      className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full relative z-10"
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      whileHover={{ scale: 1.1 }}
-                      transition={springConfigs.bouncy}
-                    >
-                      {item.badge}
-                    </motion.span>
+                  {!isSidebarCollapsed && (
+                    <>
+                      <span className="font-medium text-sm flex-1 relative z-10">{t(item.label)}</span>
+                      {item.badge && (
+                        <motion.span 
+                          className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full relative z-10"
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          whileHover={{ scale: 1.1 }}
+                          transition={springConfigs.bouncy}
+                        >
+                          {item.badge}
+                        </motion.span>
+                      )}
+                    </>
                   )}
                 </motion.div>
               </Link>
@@ -218,10 +251,11 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
         </nav>
 
         {/* Logout */}
-        <div className="p-6 border-t border-slate-200 dark:border-white/10">
+        <div className={`p-6 border-t border-slate-200 dark:border-white/10 ${isSidebarCollapsed ? 'px-4' : ''}`}>
           <motion.button 
             onClick={handleLogout}
-            className="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-white/5 transition-colors w-full group relative overflow-hidden"
+            title={isSidebarCollapsed ? t('nav.logout') : undefined}
+            className={`flex items-center ${isSidebarCollapsed ? 'justify-center mx-1 w-auto text-xl' : 'gap-3 px-4 w-full'} py-3 rounded-lg text-slate-600 dark:text-slate-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-white/5 transition-colors group relative overflow-hidden`}
             whileHover={{ scale: 1.02, x: 4 }}
             whileTap={{ scale: 0.98 }}
             transition={springConfigs.snappy}
@@ -237,7 +271,7 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
             >
               logout
             </motion.span>
-            <span className="font-medium relative z-10">{t('nav.logout')}</span>
+            {!isSidebarCollapsed && <span className="font-medium relative z-10">{t('nav.logout')}</span>}
           </motion.button>
         </div>
       </motion.aside>
@@ -260,21 +294,27 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
       <AnimatePresence>
         {isMobileSidebarOpen && (
           <motion.aside 
-            className="fixed top-0 left-0 h-full w-72 bg-white/95 dark:bg-[#0a192f]/95 backdrop-blur-xl z-50 lg:hidden border-r border-slate-200 dark:border-white/10"
-            initial={{ x: -280, opacity: 0 }}
+            className={`fixed top-0 ${isRTL ? 'right-0 border-l' : 'left-0 border-r'} h-full w-72 bg-white/95 dark:bg-[#0a192f]/95 backdrop-blur-xl z-50 lg:hidden border-slate-200 dark:border-white/10`}
+            initial={{ x: isRTL ? 280 : -280, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            exit={{ x: -280, opacity: 0 }}
+            exit={{ x: isRTL ? 280 : -280, opacity: 0 }}
             transition={springConfigs.gentle}
           >
         {/* Same content as desktop sidebar */}
         <div className="p-6 pb-2">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-4">
-              <AcadizeLogo variant="icon" size="md" />
-              <div className="flex flex-col">
-                <h2 className="text-lg font-bold text-slate-900 dark:text-white">Acadize</h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400">{t('studentPortal')}</p>
-              </div>
+              {branding.logoUrl ? (
+                <img src={branding.logoUrl} alt={branding.name} className="h-10 w-auto object-contain" />
+              ) : (
+                <>
+                  <AcadizeLogo variant="icon" size="md" />
+                  <div className="flex flex-col">
+                    <h2 className="text-lg font-bold text-slate-900 dark:text-white">{branding.name}</h2>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">{t('studentPortal')}</p>
+                  </div>
+                </>
+              )}
             </div>
             <motion.button 
               onClick={() => setIsMobileSidebarOpen(false)}
@@ -300,7 +340,7 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
                 </div>
               )}
               <div className="flex-1 min-w-0">
-                <div className="text-sm font-semibold text-slate-900 dark:text-white truncate">{user?.fullName || 'Student'}</div>
+                <div className="text-sm font-semibold text-slate-900 dark:text-white truncate">{user?.fullName || t("roles.student")}</div>
                 <div className="text-xs text-slate-500 dark:text-slate-400">{t('viewProfile')}</div>
               </div>
             </div>
@@ -384,32 +424,18 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
             <motion.button
               onClick={toggleTheme}
               className="p-2 rounded-full bg-slate-100 dark:bg-[#112240] border border-slate-200 dark:border-white/10"
-              aria-label="Toggle theme"
+              aria-label={t("aria.toggleTheme")}
               variants={iconButtonVariants}
               whileHover="hover"
               whileTap="tap"
             >
               {theme === 'dark' ? (
-                <motion.span 
-                  className="material-symbols-outlined text-[#FFD700] text-lg"
-                  initial={{ rotate: 0, scale: 0 }}
-                  animate={{ rotate: 360, scale: 1 }}
-                  transition={springConfigs.bouncy}
-                >
-                  light_mode
-                </motion.span>
+                <span className="material-symbols-outlined text-[#FFD700] text-lg">light_mode</span>
               ) : (
-                <motion.span 
-                  className="material-symbols-outlined text-slate-700 text-lg"
-                  initial={{ rotate: 0, scale: 0 }}
-                  animate={{ rotate: 360, scale: 1 }}
-                  transition={springConfigs.bouncy}
-                >
-                  dark_mode
-                </motion.span>
+                <span className="material-symbols-outlined text-slate-700 text-lg">dark_mode</span>
               )}
             </motion.button>
-            <NotificationBell />
+            {!isDesktopHeader && <NotificationBell />}
             <motion.div 
               className="bg-gradient-to-br from-[#FFD700] to-yellow-600 rounded-full size-8 flex items-center justify-center text-sm font-bold text-slate-900"
               whileHover={{ scale: 1.1, rotate: 5 }}
@@ -435,17 +461,11 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
               animate={{ scale: 1, opacity: 1 }}
               transition={{ ...springConfigs.gentle, delay: 0.2 }}
             >
-              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <motion.span 
-                  className="material-symbols-outlined text-slate-400 dark:text-slate-500"
-                  animate={{ scale: [1, 1.1, 1] }}
-                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                >
-                  search
-                </motion.span>
+              <div className={`absolute inset-y-0 ${isRTL ? 'right-0 pr-4' : 'left-0 pl-4'} flex items-center pointer-events-none`}>
+                <span className="material-symbols-outlined text-slate-400 dark:text-slate-500">search</span>
               </div>
               <motion.input 
-                className="block w-full pl-12 pr-4 py-3 bg-slate-50/80 dark:bg-[#112240]/80 backdrop-blur-md border-none rounded-full text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-[#FFD700] focus:bg-white/90 dark:focus:bg-[#112240]/90 transition-all shadow-inner" 
+                className={`block w-full ${isRTL ? 'pr-12 pl-4' : 'pl-12 pr-4'} py-3 bg-slate-50/80 dark:bg-[#112240]/80 backdrop-blur-md border-none rounded-full text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-[#FFD700] focus:bg-white/90 dark:focus:bg-[#112240]/90 transition-all shadow-inner`} 
                 placeholder={t('searchPlaceholderStudent')} 
                 type="text"
                 value={searchQuery}
@@ -455,47 +475,33 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
               />
             </motion.form>
           </div>
-          <div className="flex items-center gap-6 ml-6">
+          <div className="flex items-center gap-6 ms-6">
             {/* Theme Toggle */}
             <motion.button
               onClick={toggleTheme}
               className="p-2.5 rounded-full bg-slate-100/80 dark:bg-[#112240]/80 backdrop-blur-md border border-slate-200 dark:border-white/10 group"
-              aria-label="Toggle theme"
+              aria-label={t("aria.toggleTheme")}
               variants={iconButtonVariants}
               whileHover="hover"
               whileTap="tap"
             >
               {theme === 'dark' ? (
-                <motion.span 
-                  className="material-symbols-outlined text-[#FFD700] text-xl"
-                  initial={{ rotate: 0 }}
-                  animate={{ rotate: 360 }}
-                  transition={springConfigs.bouncy}
-                >
-                  light_mode
-                </motion.span>
+                <span className="material-symbols-outlined text-[#FFD700] text-xl">light_mode</span>
               ) : (
-                <motion.span 
-                  className="material-symbols-outlined text-slate-700 text-xl"
-                  initial={{ rotate: 0 }}
-                  animate={{ rotate: 360 }}
-                  transition={springConfigs.bouncy}
-                >
-                  dark_mode
-                </motion.span>
+                <span className="material-symbols-outlined text-slate-700 text-xl">dark_mode</span>
               )}
             </motion.button>
             <LanguageSwitcher />
-            <NotificationBell />
+            {isDesktopHeader && <NotificationBell />}
             <motion.div 
-              className="flex items-center gap-3 pl-6 border-l border-slate-200 dark:border-slate-700"
+              className={`flex items-center gap-3 ${isRTL ? 'pe-6 border-r' : 'ps-6 border-l'} border-slate-200 dark:border-slate-700`}
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ ...springConfigs.gentle, delay: 0.3 }}
             >
-              <div className="text-right hidden sm:block">
-                <div className="text-sm font-semibold text-slate-900 dark:text-white">{user?.fullName || user?.username || 'Student'}</div>
-                <div className="text-xs text-slate-500 dark:text-slate-400">Student</div>
+              <div className={`hidden sm:block ${isRTL ? 'text-left' : 'text-right'}`}>
+                <div className="text-sm font-semibold text-slate-900 dark:text-white">{user?.fullName || user?.username || t("roles.student")}</div>
+                <div className="text-xs text-slate-500 dark:text-slate-400">{t("roles.student")}</div>
               </div>
               {user?.profilePicture ? (
                 <motion.div 
@@ -522,3 +528,4 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
     </div>
   );
 }
+
