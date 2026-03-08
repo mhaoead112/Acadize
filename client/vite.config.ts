@@ -16,7 +16,14 @@ export default defineConfig({
     dedupe: ["react", "react-dom"],
   },
   optimizeDeps: {
-    include: ["recharts", "d3-shape", "d3-scale", "d3-color"],
+    include: [
+      "recharts",
+      "d3-shape",
+      "d3-scale",
+      "d3-color",
+      "quill",
+      "react-quill",
+    ],
   },
   build: {
     outDir: path.resolve(__dirname, "dist"),
@@ -37,9 +44,10 @@ export default defineConfig({
           if (id.includes("katex") || id.includes("remark-math") || id.includes("rehype-katex")) {
             return "vendor-math";
           }
-          if (id.includes("quill") || id.includes("react-quill")) {
-            return "vendor-editor-richtext";
-          }
+          // ⚠️ quill + react-quill removed from manualChunks:
+          // react-quill accesses React.Component on init; when isolated in its
+          // own chunk it executes before vendor-react-core, causing
+          // "Cannot read properties of undefined (reading 'Component')".
           if (id.includes("@monaco-editor") || id.includes("monaco-editor")) {
             return "vendor-editor-code";
           }
