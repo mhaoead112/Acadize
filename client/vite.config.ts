@@ -30,55 +30,43 @@ export default defineConfig({
     emptyOutDir: true,
     rollupOptions: {
       output: {
+        // ────────────────────────────────────────────────────────────────
+        // MANUAL CHUNKS — Only isolate libraries with ZERO React dependency.
+        //
+        // Any library that internally imports React (createContext, Component,
+        // hooks, JSX runtime) MUST NOT be in its own manualChunk, because
+        // Rollup cannot guarantee vendor-react-core executes first.
+        // Symptoms: "Cannot read properties of undefined (reading 'Component')"
+        //           "Cannot access 'X' before initialization" (TDZ)
+        //
+        // SAFE to isolate  → pure libs with no React import chain
+        // UNSAFE to isolate → recharts, d3, quill, react-quill, monaco,
+        //   framer-motion, react-query, radix-ui, react-i18next, lucide-react
+        // ────────────────────────────────────────────────────────────────
         manualChunks(id) {
           if (!id.includes("node_modules")) {
             return undefined;
           }
 
+          // ✅ SAFE: TensorFlow / face-api — zero React dependency
           if (id.includes("face-api.js") || id.includes("@tensorflow")) {
             return "vendor-face-proctoring";
           }
+
+          // ✅ SAFE: QR scanning — pure WASM / canvas library
           if (id.includes("html5-qrcode") || id.includes("@zxing")) {
             return "vendor-qr-scanner";
           }
+
+          // ✅ SAFE: KaTeX math rendering — pure library
           if (id.includes("katex") || id.includes("remark-math") || id.includes("rehype-katex")) {
             return "vendor-math";
           }
-          // ⚠️ quill + react-quill removed from manualChunks:
-          // react-quill accesses React.Component on init; when isolated in its
-          // own chunk it executes before vendor-react-core, causing
-          // "Cannot read properties of undefined (reading 'Component')".
-          if (id.includes("@monaco-editor") || id.includes("monaco-editor")) {
-            return "vendor-editor-code";
-          }
-          // ⚠️ recharts + d3 removed from manualChunks:
-          // D3 has internal circular ES module refs that cause TDZ errors
-          // ("Cannot access 'X' before initialization") when Rollup splits
-          // them into an isolated chunk. Let Rollup resolve them naturally.
-          if (id.includes("framer-motion")) {
-            return "vendor-motion";
-          }
-          if (id.includes("@tanstack/react-query")) {
-            return "vendor-query";
-          }
-          if (
-            id.includes("/react/") ||
-            id.includes("/react-dom/") ||
-            id.includes("/scheduler/") ||
-            id.includes("/wouter/")
-          ) {
-            return "vendor-react-core";
-          }
-          if (id.includes("@radix-ui/")) {
-            return "vendor-ui-radix";
-          }
-          if (id.includes("i18next") || id.includes("react-i18next")) {
-            return "vendor-i18n";
-          }
-          if (id.includes("lucide-react")) {
-            return "vendor-icons";
-          }
 
+          // Everything else (React, React-DOM, i18next, recharts, d3, quill,
+          // monaco, framer-motion, radix, lucide, tanstack, etc.) is left
+          // for Rollup to resolve naturally — it will produce correct chunk
+          // execution order automatically.
           return undefined;
         },
       },
