@@ -22,6 +22,13 @@ const config: Config = {
           hover: "#E5C50C",
           foreground: "#0F172A",
         },
+        // ── Academy brand colors (driven by BrandingContext CSS vars) ──
+        brand: {
+          DEFAULT: "hsl(var(--brand-primary))",
+          primary: "hsl(var(--brand-primary))",
+          secondary: "hsl(var(--brand-secondary))",
+          foreground: "hsl(var(--background))", // text on brand bg
+        },
         gold: "#FFD700",
         navy: {
           50: '#f0f4f8',

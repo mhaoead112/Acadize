@@ -5,7 +5,13 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "perf:bundle-budget": "node ./scripts/check-bundle-budget.mjs",
+    "perf:ci": "npm run build && npm run perf:bundle-budget",
+    "i18n:check:parity": "node ./scripts/check-locale-parity.mjs",
+    "i18n:check:literals": "node ./scripts/check-portal-hardcoded-literals.mjs",
+    "i18n:check:literals:baseline": "node ./scripts/check-portal-hardcoded-literals.mjs --write-baseline",
+    "i18n:ci": "npm run i18n:check:parity && npm run i18n:check:literals"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

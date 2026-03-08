@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Suspense } from "react";
 import { Switch, Route, useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import { HreflangLinks } from "@/components/HreflangLinks";
@@ -6,6 +6,7 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { StatePanel } from "@/components/ui/state-panel";
 import { Navigation } from "@/components/navigation";
 import Navbar from "@/components/landing/Navbar";
 import { Footer } from "@/components/landing/Footer";
@@ -17,140 +18,18 @@ import {
   MultiRoleRoute,
   ProtectedRoute 
 } from "@/components/ProtectedRoute";
-import Home from "@/pages/home";
-import About from "@/pages/about";
-import Programs from "@/pages/programs";
-import Subjects from "@/pages/subjects";
-import Admissions from "@/pages/admissions";
-import Contact from "@/pages/contact";
-import AiChat from "@/pages/ai-chat";
-import GroupChat from "@/pages/group-chat";
-import ARLearning from "@/pages/ar-learning";
-import EmotionalLearning from "@/pages/emotional-learning";
-import Avatars from "@/pages/avatars";
-import LMSStructure from "@/pages/lms-structure";
-import TeacherDashboard from "@/pages/teacher-dashboard";
-import TeacherClasses from "@/pages/teacher-classes";
-import TeacherCourses from "@/pages/teacher-courses";
-import TeacherStudents from "@/pages/teacher-students";
-import TeacherStudentProfile from "@/pages/teacher-student-profile";
-import TeacherAssessments from "@/pages/teacher-assessments";
-import TeacherContent from "@/pages/teacher-content";
-import TeacherAnalytics from "@/pages/teacher-analytics";
-import TeacherMistakeAnalytics from "@/pages/teacher-mistake-analytics";
-import TeacherCommunication from "@/pages/teacher-communication";
-import TeacherProfile from "@/pages/teacher-profile";
-import PortalLanding from "@/pages/portal-landing";
-import News from "@/pages/news";
-import Events from "@/pages/events";
-import StaffDirectory from "@/pages/staff";
-import NotFound from "@/pages/not-found";
 import DemoLogin from "@/components/DemoLogin";
 // Import new dashboard pages
-import StudentDashboard from "@/pages/student-dashboard";
-import StudentCoursesPage from "@/pages/student-courses";
-import StudentJoinCoursePage from "@/pages/student-join-course";
-import StudentSearchResultsPage from "@/pages/student-search-results";
-import StudentCourseDetailPage from "@/pages/student-course-detail";
-import StudentProgressPage from "@/pages/student-progress";
-import StudentCalendar from "@/pages/student-calendar";
-import TeacherDashboardEnhanced from "@/pages/teacher-dashboard-enhanced";
-import AdminDashboard from "@/pages/admin-dashboard";
-import AdminAnalytics from "@/pages/admin-analytics";
-import AdminAttendance from "@/pages/admin-attendance";
-import AdminReports from "@/pages/admin-reports";
-import AdminSettings from "@/pages/admin-settings";
-import AdminOrganizations from "@/pages/admin-organizations";
-import LessonManagement from "@/pages/lesson-management";
-import CreateCoursePage from "@/pages/create-course";
-import TeacherCourseManage from "@/pages/teacher-course-manage";
-import TeacherCourseLessonCreate from "@/pages/teacher-course-lesson-create";
-import StudentCourseLessons from "@/pages/student-course-lessons";
-import StudentReportCards from "@/pages/student-report-cards";
-import TeacherReportCards from "@/pages/teacher-report-cards";
-import AIStudyBuddy from "@/pages/ai-study-buddy";
-import StudentAssignments from "@/pages/student-assignments";
-import StudentGrades from "@/pages/student-grades";
-import StudentSchedule from "@/pages/student-schedule";
-import StudentExams from "@/pages/student-exams";
-import StudentMistakes from "@/pages/student-mistakes";
-import StudentRetakeConfig from "@/pages/student-retake-config";
-import StudentRetakeAttempt from "@/pages/student-retake-attempt";
-import ExamInstructions from "@/pages/exam-instructions";
-import StudentExamAttempt from "@/pages/student-exam-attempt";
-import StudentExamResults from "@/pages/student-exam-results";
-import AnnouncementsPage from "@/pages/announcements";
-import StudentAnnouncementsPage from "@/pages/student-announcements";
-import StudentAllAnnouncementsPage from "@/pages/student-all-announcements";
-import TeacherAssignments from "@/pages/teacher-assignments";
-import TeacherCreateAssignment from "@/pages/teacher-create-assignment";
-import TeacherAssignmentSubmissions from "@/pages/teacher-assignment-submissions";
-import Login from "@/pages/login";
-import Register from "@/pages/register";
-import ChangePassword from "@/pages/change-password";
-import Activate from "@/pages/activate";
-import ActivateFreeTrial from "@/pages/activate-free-trial";
-import SubscriptionRequired from "@/pages/subscription-required";
-import CheckoutSuccess from "@/pages/checkout-success";
-import CheckoutFailed from "@/pages/checkout-failed";
-import StudyGroupsChatPage from "@/pages/study-groups-chat-enhanced";
-import ProfilePage from "@/pages/student-profile";
-import StudentAttendanceScan from "@/pages/student-attendance-scan";
-import StudentAttendance from "@/pages/student-attendance";
-import Settings from "@/pages/settings";
-import TeacherAssignmentDetail from "@/pages/teacher-assignment-detail";
-import TeacherLessonView from "@/pages/teacher-lesson-view";
-// New pages for complete LMS
-import TeacherMessages from "@/pages/teacher-messages";
-import TeacherCalendar from "@/pages/teacher-calendar";
-import TeacherExams from "@/pages/teacher-exams";
-import TeacherExamCreate from "@/pages/teacher-exam-create";
-import TeacherExamManage from "@/pages/teacher-exam-manage";
-import TeacherAttemptReview from "@/pages/teacher-attempt-review";
-import TeacherExamEdit from "@/pages/teacher-exam-edit";
-import TeacherExamQuestions from "@/pages/teacher-exam-questions";
-import StudentExamPreview from "@/pages/student-exam-preview"; // Imported
-import AdminUsers from "@/pages/admin-users";
-import AdminStudentParentLink from "@/pages/admin-student-parent-link";
-import AdminCalendar from "@/pages/admin-calendar";
-import AdminAnnouncements from "@/pages/admin-announcements";
-import ParentDashboard from "@/pages/parent-dashboard";
-import ParentDashboardEnhanced from "@/pages/parent-dashboard-enhanced";
-import ParentDashboardModern from "@/pages/parent-dashboard-modern";
-import ParentChildren from "@/pages/parent-children";
-import ParentGrades from "@/pages/parent-grades";
-import ParentAttendance from "@/pages/parent-attendance";
-import ParentAttendanceHistory from "@/pages/parent-attendance-history";
-import ParentMessages from "@/pages/parent-messages";
-import ParentCalendar from "@/pages/parent-calendar";
-import ParentAssignments from "@/pages/parent-assignments";
-import ParentAnalytics from "@/pages/parent-analytics";
-import ParentCourses from "@/pages/parent-courses";
-import ParentLessons from "@/pages/parent-lessons";
-import ParentProgress from "@/pages/parent-progress";
-import ParentReports from "@/pages/parent-reports";
-import TeacherSearchResultsPage from "@/pages/teacher-search-results";
-import AdminSearchResultsPage from "@/pages/admin-search-results";
-import ParentSearchResultsPage from "@/pages/parent-search-results";
-import TeacherSessionDetail from "@/pages/teacher-session-live";
-// New landing pages
-import Pricing from "@/pages/pricing";
-import Integrations from "@/pages/integrations";
-import Blog from "@/pages/blog";
-import BlogPostDetail from "@/pages/blog-post";
-import Community from "@/pages/community";
-import Docs from "@/pages/docs";
-import HelpCenter from "@/pages/help-center";
-import Privacy from "@/pages/privacy";
-import Terms from "@/pages/terms";
-
-// Parent route protection component
 function ParentRoute({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth();
   const [, setLocation] = useLocation();
   
   if (isLoading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+    return (
+      <div className="flex min-h-screen items-center justify-center p-4">
+        <StatePanel variant="loading" title="Loading portal" description="Checking your account access..." className="w-full max-w-sm" />
+      </div>
+    );
   }
   
   if (!user || user.role !== 'parent') {
@@ -164,8 +43,131 @@ function ParentRoute({ children }: { children: React.ReactNode }) {
 import { useAuth, AuthProvider } from "@/hooks/useAuth";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { StudentNotificationProvider } from "@/contexts/StudentNotificationContext";
-import TeacherSessions from "./pages/teacher-sessions";
-import TeacherSessionLive from "@/pages/teacher-session-live";
+const Home = React.lazy(() => import("@/pages/home"));
+const About = React.lazy(() => import("@/pages/about"));
+const Programs = React.lazy(() => import("@/pages/programs"));
+const Subjects = React.lazy(() => import("@/pages/subjects"));
+const Admissions = React.lazy(() => import("@/pages/admissions"));
+const Contact = React.lazy(() => import("@/pages/contact"));
+const AiChat = React.lazy(() => import("@/pages/ai-chat"));
+const GroupChat = React.lazy(() => import("@/pages/group-chat"));
+const ARLearning = React.lazy(() => import("@/pages/ar-learning"));
+const EmotionalLearning = React.lazy(() => import("@/pages/emotional-learning"));
+const Avatars = React.lazy(() => import("@/pages/avatars"));
+const LMSStructure = React.lazy(() => import("@/pages/lms-structure"));
+const TeacherDashboard = React.lazy(() => import("@/pages/teacher-dashboard"));
+const TeacherClasses = React.lazy(() => import("@/pages/teacher-classes"));
+const TeacherCourses = React.lazy(() => import("@/pages/teacher-courses"));
+const TeacherStudents = React.lazy(() => import("@/pages/teacher-students"));
+const TeacherStudentProfile = React.lazy(() => import("@/pages/teacher-student-profile"));
+const TeacherAssessments = React.lazy(() => import("@/pages/teacher-assessments"));
+const TeacherContent = React.lazy(() => import("@/pages/teacher-content"));
+const TeacherAnalytics = React.lazy(() => import("@/pages/teacher-analytics"));
+const TeacherMistakeAnalytics = React.lazy(() => import("@/pages/teacher-mistake-analytics"));
+const TeacherCommunication = React.lazy(() => import("@/pages/teacher-communication"));
+const TeacherProfile = React.lazy(() => import("@/pages/teacher-profile"));
+const PortalLanding = React.lazy(() => import("@/pages/portal-landing"));
+const News = React.lazy(() => import("@/pages/news"));
+const Events = React.lazy(() => import("@/pages/events"));
+const StaffDirectory = React.lazy(() => import("@/pages/staff"));
+const NotFound = React.lazy(() => import("@/pages/not-found"));
+const StudentDashboard = React.lazy(() => import("@/pages/student-dashboard"));
+const StudentCoursesPage = React.lazy(() => import("@/pages/student-courses"));
+const StudentJoinCoursePage = React.lazy(() => import("@/pages/student-join-course"));
+const StudentSearchResultsPage = React.lazy(() => import("@/pages/student-search-results"));
+const StudentCourseDetailPage = React.lazy(() => import("@/pages/student-course-detail"));
+const StudentProgressPage = React.lazy(() => import("@/pages/student-progress"));
+const StudentCalendar = React.lazy(() => import("@/pages/student-calendar"));
+const TeacherDashboardEnhanced = React.lazy(() => import("@/pages/teacher-dashboard-enhanced"));
+const AdminDashboard = React.lazy(() => import("@/pages/admin-dashboard"));
+const AdminAnalytics = React.lazy(() => import("@/pages/admin-analytics"));
+const AdminAttendance = React.lazy(() => import("@/pages/admin-attendance"));
+const AdminReports = React.lazy(() => import("@/pages/admin-reports"));
+const AdminSettings = React.lazy(() => import("@/pages/admin-settings"));
+const AdminOrganizations = React.lazy(() => import("@/pages/admin-organizations"));
+const LessonManagement = React.lazy(() => import("@/pages/lesson-management"));
+const CreateCoursePage = React.lazy(() => import("@/pages/create-course"));
+const TeacherCourseManage = React.lazy(() => import("@/pages/teacher-course-manage"));
+const TeacherCourseLessonCreate = React.lazy(() => import("@/pages/teacher-course-lesson-create"));
+const StudentCourseLessons = React.lazy(() => import("@/pages/student-course-lessons"));
+const StudentReportCards = React.lazy(() => import("@/pages/student-report-cards"));
+const TeacherReportCards = React.lazy(() => import("@/pages/teacher-report-cards"));
+const AIStudyBuddy = React.lazy(() => import("@/pages/ai-study-buddy"));
+const StudentAssignments = React.lazy(() => import("@/pages/student-assignments"));
+const StudentGrades = React.lazy(() => import("@/pages/student-grades"));
+const StudentSchedule = React.lazy(() => import("@/pages/student-schedule"));
+const StudentExams = React.lazy(() => import("@/pages/student-exams"));
+const StudentMistakes = React.lazy(() => import("@/pages/student-mistakes"));
+const StudentRetakeConfig = React.lazy(() => import("@/pages/student-retake-config"));
+const StudentRetakeAttempt = React.lazy(() => import("@/pages/student-retake-attempt"));
+const ExamInstructions = React.lazy(() => import("@/pages/exam-instructions"));
+const StudentExamAttempt = React.lazy(() => import("@/pages/student-exam-attempt"));
+const StudentExamResults = React.lazy(() => import("@/pages/student-exam-results"));
+const AnnouncementsPage = React.lazy(() => import("@/pages/announcements"));
+const StudentAnnouncementsPage = React.lazy(() => import("@/pages/student-announcements"));
+const StudentAllAnnouncementsPage = React.lazy(() => import("@/pages/student-all-announcements"));
+const TeacherAssignments = React.lazy(() => import("@/pages/teacher-assignments"));
+const TeacherCreateAssignment = React.lazy(() => import("@/pages/teacher-create-assignment"));
+const TeacherAssignmentSubmissions = React.lazy(() => import("@/pages/teacher-assignment-submissions"));
+const Login = React.lazy(() => import("@/pages/login"));
+const Register = React.lazy(() => import("@/pages/register"));
+const ChangePassword = React.lazy(() => import("@/pages/change-password"));
+const Activate = React.lazy(() => import("@/pages/activate"));
+const ActivateFreeTrial = React.lazy(() => import("@/pages/activate-free-trial"));
+const SubscriptionRequired = React.lazy(() => import("@/pages/subscription-required"));
+const CheckoutSuccess = React.lazy(() => import("@/pages/checkout-success"));
+const CheckoutFailed = React.lazy(() => import("@/pages/checkout-failed"));
+const StudyGroupsChatPage = React.lazy(() => import("@/pages/study-groups-chat-enhanced"));
+const ProfilePage = React.lazy(() => import("@/pages/student-profile"));
+const StudentAttendanceScan = React.lazy(() => import("@/pages/student-attendance-scan"));
+const StudentAttendance = React.lazy(() => import("@/pages/student-attendance"));
+const Settings = React.lazy(() => import("@/pages/settings"));
+const TeacherAssignmentDetail = React.lazy(() => import("@/pages/teacher-assignment-detail"));
+const TeacherLessonView = React.lazy(() => import("@/pages/teacher-lesson-view"));
+const TeacherMessages = React.lazy(() => import("@/pages/teacher-messages"));
+const TeacherCalendar = React.lazy(() => import("@/pages/teacher-calendar"));
+const TeacherExams = React.lazy(() => import("@/pages/teacher-exams"));
+const TeacherExamCreate = React.lazy(() => import("@/pages/teacher-exam-create"));
+const TeacherExamManage = React.lazy(() => import("@/pages/teacher-exam-manage"));
+const TeacherAttemptReview = React.lazy(() => import("@/pages/teacher-attempt-review"));
+const TeacherExamEdit = React.lazy(() => import("@/pages/teacher-exam-edit"));
+const TeacherExamQuestions = React.lazy(() => import("@/pages/teacher-exam-questions"));
+const StudentExamPreview = React.lazy(() => import("@/pages/student-exam-preview"));
+const AdminUsers = React.lazy(() => import("@/pages/admin-users"));
+const AdminStudentParentLink = React.lazy(() => import("@/pages/admin-student-parent-link"));
+const AdminCalendar = React.lazy(() => import("@/pages/admin-calendar"));
+const AdminAnnouncements = React.lazy(() => import("@/pages/admin-announcements"));
+const ParentDashboard = React.lazy(() => import("@/pages/parent-dashboard"));
+const ParentDashboardEnhanced = React.lazy(() => import("@/pages/parent-dashboard-enhanced"));
+const ParentDashboardModern = React.lazy(() => import("@/pages/parent-dashboard-modern"));
+const ParentChildren = React.lazy(() => import("@/pages/parent-children"));
+const ParentGrades = React.lazy(() => import("@/pages/parent-grades"));
+const ParentAttendance = React.lazy(() => import("@/pages/parent-attendance"));
+const ParentAttendanceHistory = React.lazy(() => import("@/pages/parent-attendance-history"));
+const ParentMessages = React.lazy(() => import("@/pages/parent-messages"));
+const ParentCalendar = React.lazy(() => import("@/pages/parent-calendar"));
+const ParentAssignments = React.lazy(() => import("@/pages/parent-assignments"));
+const ParentAnalytics = React.lazy(() => import("@/pages/parent-analytics"));
+const ParentCourses = React.lazy(() => import("@/pages/parent-courses"));
+const ParentLessons = React.lazy(() => import("@/pages/parent-lessons"));
+const ParentProgress = React.lazy(() => import("@/pages/parent-progress"));
+const ParentReports = React.lazy(() => import("@/pages/parent-reports"));
+const TeacherSearchResultsPage = React.lazy(() => import("@/pages/teacher-search-results"));
+const AdminSearchResultsPage = React.lazy(() => import("@/pages/admin-search-results"));
+const ParentSearchResultsPage = React.lazy(() => import("@/pages/parent-search-results"));
+const TeacherSessionDetail = React.lazy(() => import("@/pages/teacher-session-live"));
+const Pricing = React.lazy(() => import("@/pages/pricing"));
+const Integrations = React.lazy(() => import("@/pages/integrations"));
+const Blog = React.lazy(() => import("@/pages/blog"));
+const BlogPostDetail = React.lazy(() => import("@/pages/blog-post"));
+const Community = React.lazy(() => import("@/pages/community"));
+const Docs = React.lazy(() => import("@/pages/docs"));
+const HelpCenter = React.lazy(() => import("@/pages/help-center"));
+const Privacy = React.lazy(() => import("@/pages/privacy"));
+const Terms = React.lazy(() => import("@/pages/terms"));
+const TeacherSessions = React.lazy(() => import("./pages/teacher-sessions"));
+const StudentPortal = React.lazy(() => import("@/portals/StudentPortal").then((mod) => ({ default: mod.StudentPortal })));
+
 
 function SyncLocaleFromPath({ locale, children }: { locale: string; children: React.ReactNode }) {
   const { i18n } = useTranslation();
@@ -173,6 +175,14 @@ function SyncLocaleFromPath({ locale, children }: { locale: string; children: Re
     if (locale && locale !== i18n.language) i18n.changeLanguage(locale);
   }, [locale, i18n]);
   return <>{children}</>;
+}
+
+function RouteFallback() {
+  return (
+    <div className="flex min-h-[40vh] items-center justify-center p-4">
+      <StatePanel variant="loading" title="Loading page" description="Preparing content..." className="w-full max-w-sm" />
+    </div>
+  );
 }
 
 function Router() {
@@ -191,7 +201,8 @@ function Router() {
       <HreflangLinks />
       {!isDashboardRoute && <Navbar />}
       <main className="flex-1">
-        <Switch>
+        <Suspense fallback={<RouteFallback />}>
+          <Switch>
           {/* Authentication routes */}
           <Route path="/login">
             <PublicOnlyRoute>
@@ -258,166 +269,13 @@ function Router() {
           {/* Redirect root to home page - no login required */}
           <Route path="/" component={Home} />
           
-          {/* Role-based dashboard routes */}
+          {/* Student portal: single prefix route. Layout and nav mount once. */}
+          {/* wouter wildcard syntax is /student/* for nested student paths */}
+          <Route path="/student/*">
+            <StudentPortal />
+          </Route>
           <Route path="/student">
-            <StudentRoute>
-              <StudentDashboard />
-            </StudentRoute>
-          </Route>
-
-          {/* Alias for /student/dashboard */}
-          <Route path="/student/dashboard">
-            <StudentRoute>
-              <StudentDashboard />
-            </StudentRoute>
-          </Route>
-
-          <Route path="/student/attendance/scan">
-            <StudentRoute>
-              <StudentAttendanceScan />
-            </StudentRoute>
-          </Route>
-
-          <Route path="/student/attendance">
-            <StudentRoute>
-              <StudentAttendance />
-            </StudentRoute>
-          </Route>
-
-          <Route path="/student/progress">
-            <StudentRoute>
-              <StudentProgressPage />
-            </StudentRoute>
-          </Route>
-
-          <Route path="/student/search">
-            <StudentRoute>
-              <StudentSearchResultsPage />
-            </StudentRoute>
-          </Route>
-
-          <Route path="/student/join">
-            <StudentJoinCoursePage />
-          </Route>
-
-          <Route path="/student/courses">
-            <StudentRoute>
-              <StudentCoursesPage />
-            </StudentRoute>
-          </Route>
-
-          <Route path="/student/courses/:courseId">
-            <StudentRoute>
-              <StudentCourseDetailPage />
-            </StudentRoute>
-          </Route>
-
-          <Route path="/student/courses/:courseId/lessons">
-            <StudentRoute>
-              <StudentCourseLessons />
-            </StudentRoute>
-          </Route>
-
-          <Route path="/student/assignments">
-            <StudentRoute>
-              <StudentAssignments />
-            </StudentRoute>
-          </Route>
-
-          <Route path="/student/exams">
-            <StudentRoute>
-              <StudentExams />
-            </StudentRoute>
-          </Route>
-
-          <Route path="/student/exams/:examId/start">
-            <StudentRoute>
-              <ExamInstructions />
-            </StudentRoute>
-          </Route>
-
-          <Route path="/student/exams/:examId/attempt/:attemptId">
-            <StudentRoute>
-              <StudentExamAttempt />
-            </StudentRoute>
-          </Route>
-
-          <Route path="/student/exams/:examId/results/:attemptId">
-            <StudentRoute>
-              <StudentExamResults />
-            </StudentRoute>
-          </Route>
-
-          <Route path="/student/mistakes">
-            <StudentRoute>
-              <StudentMistakes />
-            </StudentRoute>
-          </Route>
-
-          <Route path="/student/retake-config">
-            <StudentRoute>
-              <StudentRetakeConfig />
-            </StudentRoute>
-          </Route>
-
-          <Route path="/student/retakes/:retakeId">
-            <StudentRoute>
-              <StudentRetakeAttempt />
-            </StudentRoute>
-          </Route>
-
-          <Route path="/student/grades">
-            <StudentRoute>
-              <StudentGrades />
-            </StudentRoute>
-          </Route>
-
-          <Route path="/student/report-cards">
-            <StudentRoute>
-              <StudentReportCards />
-            </StudentRoute>
-          </Route>
-
-          <Route path="/student/ai-buddy">
-            <StudentRoute>
-              <AIStudyBuddy />
-            </StudentRoute>
-          </Route>
-
-          <Route path="/student/schedule">
-            <StudentRoute>
-              <StudentSchedule />
-            </StudentRoute>
-          </Route>
-
-          <Route path="/student/courses/:courseId/announcements">
-            <StudentRoute>
-              <StudentAnnouncementsPage />
-            </StudentRoute>
-          </Route>
-
-          <Route path="/student/announcements">
-            <StudentRoute>
-              <StudentAllAnnouncementsPage />
-            </StudentRoute>
-          </Route>
-
-          <Route path="/student/messages">
-            <StudentRoute>
-              <StudyGroupsChatPage />
-            </StudentRoute>
-          </Route>
-
-          <Route path="/student/calendar">
-            <StudentRoute>
-              <StudentCalendar />
-            </StudentRoute>
-          </Route>
-
-          <Route path="/student/profile">
-            <StudentRoute>
-              <ProfilePage />
-            </StudentRoute>
+            <StudentPortal />
           </Route>
 
           {/* Universal Settings - All authenticated users */}
@@ -874,6 +732,7 @@ function Router() {
           {/* Fallback */}
           <Route component={NotFound} />
         </Switch>
+        </Suspense>
       </main>
       {!isDashboardRoute && <Footer />}
     </div>
