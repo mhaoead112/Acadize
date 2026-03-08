@@ -65,5 +65,7 @@
     "categorySettingsSaved": "تم حفظ إعدادات {{category}} بنجاح"
   },
   "eventCreatedShort": "تم إنشاء الحدث",
-  "eventUpdatedShort": "تم تحديث الحدث"
+  "eventUpdatedShort": "تم تحديث الحدث",
+  "activated": "مُفعّل",
+  "deactivated": "غير مُفعّل"
 }

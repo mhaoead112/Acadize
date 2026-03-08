@@ -1,1 +1,102 @@
-{"nav":{"home":"الرئيسية","courses":"الدورات","dashboard":"لوحة التحكم","logout":"تسجيل الخروج","profile":"الملف الشخصي","settings":"الإعدادات","announcements":"الإعلانات","exams":"الامتحانات","assignments":"الواجبات","calendar":"التقويم","reports":"التقارير","attendance":"الحضور","messages":"الرسائل","mistakes":"الأخطاء","classes":"الحصص","reportCards":"كشف الدرجات","students":"الطلاب","sessions":"الجلسات","analytics":"التحليلات","myChildren":"أبنائي","users":"المستخدمون","studentParentLinks":"ربط الطالب وولي الأمر"},"viewProfile":"عرض الملف الشخصي","studentPortal":"بوابة الطالب","teacherPortal":"بوابة المعلم","parentPortal":"بوابة ولي الأمر","adminPortal":"لوحة الإدارة","searchPlaceholderStudent":"البحث عن مواد أو واجبات أو معلمين","searchPlaceholderTeacher":"البحث في الحصص أو الطلاب أو الواجبات...","searchPlaceholderParent":"البحث في الأبناء أو المواد أو التقارير...","searchPlaceholderAdmin":"البحث في المستخدمين أو الدورات أو التقويم...","actions":{"save":"حفظ","cancel":"إلغاء","delete":"حذف","edit":"تعديل","create":"إنشاء","submit":"إرسال","back":"رجوع","next":"التالي","close":"إغلاق","confirm":"تأكيد"},"common":{"loading":"جاري التحميل...","error":"حدث خطأ ما.","noData":"لا توجد بيانات.","language":"اللغة"},"notifications":"الإشعارات","clearAll":"مسح الكل","noNotificationsYet":"لا توجد إشعارات بعد","loadingNotifications":"جاري تحميل الإشعارات...","unreadNotification":"إشعار غير مقروء","unreadNotifications":"إشعارات غير مقروءة","justNow":"الآن","checkingSubscription":"جاري التحقق من الاشتراك...","toast":{"success":"نجاح","error":"خطأ","saved":"تم الحفظ بنجاح","updated":"تم التحديث بنجاح","deleted":"تم الحذف بنجاح","missingInfo":"معلومات ناقصة","requiredFields":"يرجى تعبئة جميع الحقول المطلوبة","failed":"فشلت العملية"},"placeholders":{"search":"بحث...","select":"اختر...","filterByStatus":"تصفية حسب الحالة","noResultsFound":"لا توجد نتائج","selectChild":"اختر طالباً/طالبة","selectCourse":"اختر مادة","enterScore":"أدخل الدرجة","provideFeedback":"أضف تعليقاً (اختياري)","typeMessage":"اكتب رسالة...","searchStudents":"بحث عن طلاب","searchUsers":"بحث عن مستخدمين","searchCourses":"بحث عن مواد"}}
+{
+  "nav": {
+    "home": "الرئيسية",
+    "courses": "الدورات",
+    "dashboard": "لوحة التحكم",
+    "logout": "تسجيل الخروج",
+    "profile": "الملف الشخصي",
+    "settings": "الإعدادات",
+    "announcements": "الإعلانات",
+    "exams": "الامتحانات",
+    "assignments": "الواجبات",
+    "calendar": "التقويم",
+    "reports": "التقارير",
+    "attendance": "الحضور",
+    "messages": "الرسائل",
+    "mistakes": "الأخطاء",
+    "classes": "الحصص",
+    "reportCards": "كشف الدرجات",
+    "students": "الطلاب",
+    "sessions": "الجلسات",
+    "analytics": "التحليلات",
+    "myChildren": "أبنائي",
+    "users": "المستخدمون",
+    "studentParentLinks": "ربط الطالب وولي الأمر"
+  },
+  "viewProfile": "عرض الملف الشخصي",
+  "studentPortal": "بوابة الطالب",
+  "teacherPortal": "بوابة المعلم",
+  "parentPortal": "بوابة ولي الأمر",
+  "adminPortal": "بوابة الإدارة",
+  "searchPlaceholderStudent": "ابحث عن حصص أو واجبات أو معلمين",
+  "searchPlaceholderTeacher": "ابحث في الحصص أو الطلاب أو الواجبات...",
+  "searchPlaceholderParent": "ابحث في الأبناء أو الدورات أو التقارير...",
+  "searchPlaceholderAdmin": "ابحث في المستخدمين أو الدورات أو التقويم...",
+  "actions": {
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "create": "إنشاء",
+    "submit": "إرسال",
+    "back": "رجوع",
+    "next": "التالي",
+    "close": "إغلاق",
+    "confirm": "تأكيد"
+  },
+  "common": {
+    "loading": "جارٍ التحميل...",
+    "error": "حدث خطأ ما.",
+    "noData": "لا توجد بيانات للعرض.",
+    "language": "اللغة",
+    "more": "المزيد"
+  },
+  "notifications": "الإشعارات",
+  "clearAll": "مسح الكل",
+  "noNotificationsYet": "لا توجد إشعارات بعد",
+  "loadingNotifications": "جارٍ تحميل الإشعارات...",
+  "unreadNotification": "إشعار غير مقروء",
+  "unreadNotifications": "إشعارات غير مقروءة",
+  "justNow": "الآن",
+  "checkingSubscription": "جارٍ التحقق من الاشتراك...",
+  "toast": {
+    "success": "نجاح",
+    "error": "خطأ",
+    "saved": "تم الحفظ بنجاح",
+    "updated": "تم التحديث بنجاح",
+    "deleted": "تم الحذف بنجاح",
+    "missingInfo": "معلومات ناقصة",
+    "requiredFields": "يرجى تعبئة جميع الحقول المطلوبة",
+    "failed": "فشلت العملية"
+  },
+  "placeholders": {
+    "search": "بحث...",
+    "select": "اختر...",
+    "filterByStatus": "تصفية حسب الحالة",
+    "noResultsFound": "لا توجد نتائج",
+    "selectChild": "اختر طفلاً",
+    "selectCourse": "اختر دورة",
+    "enterScore": "أدخل الدرجة",
+    "provideFeedback": "أضف ملاحظة (اختياري)",
+    "typeMessage": "اكتب رسالة...",
+    "searchStudents": "ابحث عن الطلاب",
+    "searchUsers": "ابحث عن المستخدمين",
+    "searchCourses": "ابحث عن الدورات"
+  },
+  "auth": {
+    "checkingAuthentication": "جارٍ التحقق من تسجيل الدخول...",
+    "accessDenied": "تم رفض الوصول",
+    "accessDeniedDescription": "ليس لديك صلاحية للوصول إلى هذه الصفحة. سيتم تحويلك إلى لوحة التحكم.",
+    "goToMyDashboard": "الانتقال إلى لوحة التحكم"
+  },
+  "roles": {
+    "student": "طالب",
+    "teacher": "معلم",
+    "admin": "مشرف",
+    "parent": "ولي أمر"
+  },
+  "aria": {
+    "toggleTheme": "تبديل السمة",
+    "userAvatar": "الملف الشخصي"
+  }
+}
