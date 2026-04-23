@@ -20,6 +20,8 @@ import retakeSubmissionRoutes from './retake-submission.routes.js';
 import attendanceRoutes, { sessionQrRouter } from './attendance.routes.js';
 import sessionRoutes from './session.routes.js';
 import zoomWebhookRoutes from './zoom-webhook.routes.js';
+import { gamificationRouter, teacherGamificationRouter } from './gamification.routes.js';
+import adminGamificationRouter from './admin-gamification.routes.js';
 
 export function registerRoutes(app: express.Application) {
   // API routes
@@ -51,6 +53,11 @@ export function registerRoutes(app: express.Application) {
 
   // Zoom webhook (must be before the 404 catch-all)
   app.use('/api/webhooks/zoom', zoomWebhookRoutes);
+
+  // Gamification routes
+  app.use('/api/gamification', gamificationRouter);
+  app.use('/api/teacher/gamification', teacherGamificationRouter);
+  app.use('/api/admin/gamification', adminGamificationRouter);
 
   // 404 handler for API routes
   app.use('/api/*', (req, res) => {
