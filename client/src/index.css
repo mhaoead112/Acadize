@@ -26,6 +26,17 @@
   --ring: hsl(0, 0%, 11%);
   --radius: 0.75rem;
 
+  /* Landing Page Redesign Variables */
+  --color-primary: #F2D00D;
+  --color-background: #ffffff;
+  --color-surface: #f8fafc;
+  --color-text: #0f172a;
+  --color-muted: #64748b;
+  --color-border: #e2e8f0;
+
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-heading: 'Inter', system-ui, sans-serif;
+
   /* ── Academy Brand Variables (overridden at runtime by BrandingContext) ── */
   --brand-primary: 51 100% 50%;   /* HSL components for hsl(var(--brand-primary)) -> #FFD700 */
   --brand-secondary: 210 100% 12%; /* #001f3f */
@@ -76,6 +87,13 @@
   --destructive-foreground: hsl(60, 30%, 96%);
   --ring: hsl(42, 85%, 50%);
   --radius: 0.75rem;
+
+  /* Landing Page Redesign Dark Variables */
+  --color-background: #020617;
+  --color-surface: #0f172a;
+  --color-text: #f8fafc;
+  --color-muted: #94a3b8;
+  --color-border: rgba(255, 255, 255, 0.08);
   
   /* Dark mode specific eduverse colors */
   --eduverse-gold: hsl(42, 85%, 55%);

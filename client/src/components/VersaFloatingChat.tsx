@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { MessageCircle, X, Send, Bot, User, Sparkles, Zap, BookOpen } from "lucide-react";
+import { X, Send, User, Zap, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +8,42 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { apiEndpoint } from "@/lib/config";
 import { useTranslation } from "react-i18next";
+import { MascotCompanion, useMascotState } from "@/components/MascotCompanion";
+import { motion, AnimatePresence } from "framer-motion";
+
+// ── ReactBits-style Tooltip ───────────────────────────────────────────
+function AidenTooltip({ visible, isRTL }: { visible: boolean; isRTL: boolean }) {
+  return (
+    <AnimatePresence>
+      {visible && (
+        <motion.div
+          className={`absolute bottom-full mb-4 pointer-events-none z-10 ${
+            isRTL ? 'left-0' : 'right-0'
+          }`}
+          initial={{ opacity: 0, y: 8, scale: 0.88 }}
+          animate={{ opacity: 1, y: 0,  scale: 1    }}
+          exit={  { opacity: 0, y: 6,  scale: 0.92  }}
+          transition={{ type: 'spring', stiffness: 400, damping: 28 }}
+        >
+          <div className="relative bg-slate-900 text-white text-[13px] font-medium px-4 py-2.5 rounded-2xl shadow-2xl whitespace-nowrap flex items-center gap-2.5">
+            {/* animated dot */}
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-400" />
+            </span>
+            Chat with Aiden
+          </div>
+          {/* arrow */}
+          <div className={`absolute top-full ${isRTL ? 'left-5' : 'right-5'} w-0 h-0
+            border-l-[6px] border-l-transparent
+            border-r-[6px] border-r-transparent
+            border-t-[6px] border-t-slate-900`}
+          />
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
 
 interface Message {
   id: string;
@@ -20,18 +56,21 @@ export default function VersaFloatingChat() {
   const { t, i18n } = useTranslation('dashboard');
   const isRTL = i18n.language?.startsWith('ar') || i18n.dir() === 'rtl' || (typeof document !== "undefined" && document.documentElement.dir === "rtl");
   const [isOpen, setIsOpen] = useState(false);
+  const [tooltipVisible, setTooltipVisible] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      content: t('versaWelcome'),
-      isUser: false,
-      timestamp: new Date()
-    }
+    { id: '1', content: "Hi! I'm Aiden, your AI Study Buddy 🦫 Ask me anything about your lessons!", isUser: false, timestamp: new Date() }
   ]);
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const [mascotState, triggerMascot] = useMascotState("idle");
+
+  const handleOpen = () => {
+    setIsOpen(true);
+    setTooltipVisible(false);
+    triggerMascot("wave", 1400);
+  };
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -50,6 +89,7 @@ export default function VersaFloatingChat() {
     setMessages(prev => [...prev, userMessage]);
     setInputMessage("");
     setIsLoading(true);
+    triggerMascot("thinking");  // start thinking animation
 
     try {
       const token = localStorage.getItem("auth_token") || localStorage.getItem("eduverse_token");
@@ -80,6 +120,7 @@ export default function VersaFloatingChat() {
       };
 
       setMessages(prev => [...prev, aiMessage]);
+      triggerMascot("happy", 1200);  // bounce when reply arrives
     } catch (error: any) {
       console.error("Chat error:", error);
       toast({
@@ -98,6 +139,7 @@ export default function VersaFloatingChat() {
       setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
+      triggerMascot("idle");
     }
   };
 
@@ -112,38 +154,26 @@ export default function VersaFloatingChat() {
     <>
       {/* Floating Button - Enhanced Design */}
       {!isOpen && (
-        <div className={`fixed bottom-4 sm:bottom-6 z-50 group ${isRTL ? 'left-4 sm:left-6' : 'right-4 sm:right-6'}`}>
-          {/* Pulsing glow effect */}
-          <div className="absolute inset-0 h-14 w-14 sm:h-16 sm:w-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 opacity-40 blur-lg animate-pulse group-hover:opacity-60 transition-opacity" />
-          
-          {/* Tooltip */}
-          <div className={`absolute bottom-full mb-3 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 pointer-events-none ${isRTL ? 'left-0' : 'right-0'}`}>
-            <div className="bg-gray-900 text-white text-sm px-4 py-2 rounded-lg shadow-xl whitespace-nowrap flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-yellow-400" />
-              <span>{t('askVersaAnything')}</span>
-            </div>
-            <div className={`absolute -bottom-1 w-2 h-2 bg-gray-900 rotate-45 ${isRTL ? 'left-6' : 'right-6'}`} />
-          </div>
-          
-          <Button
-            onClick={() => setIsOpen(true)}
-            className="relative h-14 w-14 sm:h-16 sm:w-16 rounded-full shadow-2xl bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 hover:from-blue-600 hover:via-purple-600 hover:to-pink-600 transition-all duration-300 hover:scale-110 hover:shadow-purple-500/25 hover:shadow-[0_0_30px_rgba(139,92,246,0.5)] border-2 border-white/20"
-            size="icon"
+        <div className={`fixed bottom-4 sm:bottom-6 z-50 ${isRTL ? 'left-4 sm:left-6' : 'right-4 sm:right-6'}`}>
+
+          {/* ReactBits tooltip */}
+          <AidenTooltip visible={tooltipVisible} isRTL={isRTL} />
+
+          {/* Mascot button — big, no circle */}
+          <button
+            onClick={handleOpen}
+            onMouseEnter={() => setTooltipVisible(true)}
+            onMouseLeave={() => setTooltipVisible(false)}
+            className="relative focus:outline-none"
+            aria-label="Chat with Aiden"
           >
-            <div className="relative flex items-center justify-center">
-              <Sparkles className="h-6 w-6 sm:h-7 sm:w-7 text-white animate-pulse" />
-              {/* Notification dot */}
-              <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500 border border-white" />
-              </span>
-            </div>
-          </Button>
-          
-          {/* "AI" label */}
-          <div className={`absolute -bottom-1 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg ${isRTL ? '-left-2' : '-right-2'}`}>
-            AI
-          </div>
+            <MascotCompanion state={mascotState} size={88} />
+            {/* Online dot */}
+            <span className="absolute top-1 right-1 flex h-3.5 w-3.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-green-500 border-2 border-white" />
+            </span>
+          </button>
         </div>
       )}
 
@@ -158,12 +188,12 @@ export default function VersaFloatingChat() {
             
             <div className="flex items-center justify-between relative z-10">
               <div className="flex items-center gap-3">
-                <div className="h-11 w-11 sm:h-12 sm:w-12 rounded-xl bg-white/20 flex items-center justify-center backdrop-blur-sm border border-white/30 shadow-lg">
-                  <Sparkles className="h-6 w-6 sm:h-7 sm:w-7 text-yellow-300" />
+                <div className="flex-shrink-0">
+                  <MascotCompanion state={mascotState} size={48} />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <CardTitle className="text-lg sm:text-xl font-bold">Versa</CardTitle>
+                    <CardTitle className="text-lg sm:text-xl font-bold">Aiden</CardTitle>
                     <Badge className="bg-green-400/20 text-green-100 border-green-400/30 text-xs">
                       {t('online')}
                     </Badge>
@@ -204,7 +234,7 @@ export default function VersaFloatingChat() {
                 onClick={() => setInputMessage(t('quickPromptStudyTips'))}
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-white/15 hover:bg-white/25 rounded-full text-xs text-white/90 whitespace-nowrap transition-colors border border-white/20"
               >
-                <Sparkles className="h-3.5 w-3.5" />
+                <img src="/images/mascot.png" alt="" className="h-3.5 w-3.5 object-contain" />
                 {t('studyTips')}
               </button>
             </div>
@@ -220,9 +250,7 @@ export default function VersaFloatingChat() {
                     className={`flex gap-3 ${message.isUser ? 'justify-end' : 'justify-start'}`}
                   >
                     {!message.isUser && (
-                      <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0 shadow-lg">
-                        <Bot className="h-5 w-5 text-white" />
-                      </div>
+                      <MascotCompanion state="idle" size={36} />  
                     )}
                     <div
                       className={`max-w-[80%] rounded-2xl px-4 py-3 shadow-sm ${
@@ -245,9 +273,7 @@ export default function VersaFloatingChat() {
                 ))}
                 {isLoading && (
                   <div className="flex gap-3">
-                    <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg">
-                      <Bot className="h-5 w-5 text-white" />
-                    </div>
+                    <MascotCompanion state="thinking" size={36} />
                     <div className="bg-white border border-gray-100 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm">
                       <div className="flex gap-1.5">
                         <div className="h-2 w-2 bg-purple-400 rounded-full animate-bounce" />
@@ -282,7 +308,7 @@ export default function VersaFloatingChat() {
                 </Button>
               </div>
               <div className="flex items-center justify-center gap-1.5 mt-3">
-                <Sparkles className="h-3 w-3 text-purple-400" />
+                <MascotCompanion state="idle" size={16} />
                 <p className="text-[11px] text-gray-400">
                   {t('poweredByGemini')}
                 </p>

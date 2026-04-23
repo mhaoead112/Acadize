@@ -80,7 +80,8 @@ function getFileHash(filePath: string): string {
 // PDF text extraction
 async function extractPdfText(filePath: string): Promise<string> {
   try {
-    const pdfParse = (await import('pdf-parse')).default;
+    const pdfModule = await import('pdf-parse') as any;
+    const pdfParse = pdfModule.default || pdfModule;
     const data = fs.readFileSync(filePath);
 
     // Add timeout and error handling for large PDFs

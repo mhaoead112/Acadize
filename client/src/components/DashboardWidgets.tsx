@@ -275,7 +275,7 @@ export function AchievementBadge({
 // Activity Feed Widget
 interface ActivityItem {
   id: string;
-  type: 'assignment' | 'grade' | 'message' | 'announcement' | 'achievement';
+  type: 'assignment' | 'grade' | 'message' | 'announcement' | 'achievement' | 'submission';
   title: string;
   description: string;
   timestamp: string;
@@ -294,6 +294,7 @@ export function ActivityFeed({ activities, maxItems = 5 }: ActivityFeedProps) {
   const getActivityIcon = (type: ActivityItem['type']) => {
     switch (type) {
       case 'assignment': return FileText;
+      case 'submission': return FileText;
       case 'grade': return BarChart3;
       case 'message': return MessageCircle;
       case 'announcement': return Bell;
@@ -305,6 +306,7 @@ export function ActivityFeed({ activities, maxItems = 5 }: ActivityFeedProps) {
   const getActivityColor = (type: ActivityItem['type']) => {
     switch (type) {
       case 'assignment': return 'text-blue-600';
+      case 'submission': return 'text-blue-600';
       case 'grade': return 'text-green-600';
       case 'message': return 'text-purple-600';
       case 'announcement': return 'text-orange-600';
@@ -382,7 +384,7 @@ interface ScheduleItem {
   id: string;
   title: string;
   time: string;
-  type: 'class' | 'assignment' | 'meeting' | 'event';
+  type: 'class' | 'assignment' | 'meeting' | 'event' | 'office';
   location?: string;
   color?: 'blue' | 'green' | 'purple' | 'orange' | 'red';
 }
@@ -400,6 +402,7 @@ export function ScheduleWidget({ title, items, date }: ScheduleWidgetProps) {
       case 'assignment': return FileText;
       case 'meeting': return Users;
       case 'event': return Calendar;
+      case 'office': return Clock;
       default: return Calendar;
     }
   };

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useStudentNotifications } from '@/contexts/StudentNotificationContext';
+import { useNotifications } from '@/contexts/NotificationContext';
 import { useAuth } from '@/hooks/useAuth';
 import { apiEndpoint } from '@/lib/config';
 import { isRtlDirection, overlayEdgeClass } from '@/lib/rtl';
@@ -42,7 +42,7 @@ const getColorClass = (type: string) => {
 
 export default function NotificationBell() {
   const { t, i18n } = useTranslation('common');
-  const { notifications, unreadCount, markAsRead, clearNotifications, setNotificationsFromServer } = useStudentNotifications();
+  const { notifications, unreadCount, markAsRead, clearNotifications, setNotificationsFromServer } = useNotifications();
   const { token } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -78,11 +78,15 @@ export default function NotificationBell() {
         });
 
         if (res.ok) {
-          const data: ApiNotification[] = await res.json();
-          const normalized = data
+          const result = await res.json();
+          // Result is now { data: Notification[], pagination: { ... } }
+          const notificationsArray = Array.isArray(result.data) ? result.data : 
+                                    (Array.isArray(result) ? result : []);
+          
+          const normalized = notificationsArray
             .slice()
-            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-            .map((notif) => ({
+            .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+            .map((notif: any) => ({
               id: notif.id,
               title: notif.title,
               message: notif.message,

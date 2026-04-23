@@ -8,8 +8,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { StatePanel } from "@/components/ui/state-panel";
 import { Navigation } from "@/components/navigation";
-import Navbar from "@/components/landing/Navbar";
-import { Footer } from "@/components/landing/Footer";
+import { PublicLayout } from "@/components/PublicLayout";
 import { 
   PublicOnlyRoute, 
   StudentRoute, 
@@ -42,7 +41,7 @@ function ParentRoute({ children }: { children: React.ReactNode }) {
 
 import { useAuth, AuthProvider } from "@/hooks/useAuth";
 import { ThemeProvider } from "@/contexts/ThemeContext";
-import { StudentNotificationProvider } from "@/contexts/StudentNotificationContext";
+import { NotificationProvider } from "@/contexts/NotificationContext";
 const Home = React.lazy(() => import("@/pages/home"));
 const About = React.lazy(() => import("@/pages/about"));
 const Programs = React.lazy(() => import("@/pages/programs"));
@@ -188,18 +187,10 @@ function RouteFallback() {
 function Router() {
   const [location] = useLocation();
   
-  // Check if current route is a dashboard route (hide navbar/footer on dashboards)
-  const isDashboardRoute = location.startsWith('/student') || 
-                          location.startsWith('/teacher') || 
-                          location.startsWith('/admin') || 
-                          location.startsWith('/parent') ||
-                          location.startsWith('/dashboard') ||
-                          location === '/settings';
   
   return (
     <div className="min-h-screen flex flex-col">
       <HreflangLinks />
-      {!isDashboardRoute && <Navbar />}
       <main className="flex-1">
         <Suspense fallback={<RouteFallback />}>
           <Switch>
@@ -243,22 +234,22 @@ function Router() {
           
           {/* Locale-prefixed public pages (SEO) */}
           <Route path="/en/home">
-            <SyncLocaleFromPath locale="en"><Home /></SyncLocaleFromPath>
+            <SyncLocaleFromPath locale="en"><PublicLayout><Home /></PublicLayout></SyncLocaleFromPath>
           </Route>
           <Route path="/ar/home">
-            <SyncLocaleFromPath locale="ar"><Home /></SyncLocaleFromPath>
+            <SyncLocaleFromPath locale="ar"><PublicLayout><Home /></PublicLayout></SyncLocaleFromPath>
           </Route>
           <Route path="/en/about">
-            <SyncLocaleFromPath locale="en"><About /></SyncLocaleFromPath>
+            <SyncLocaleFromPath locale="en"><PublicLayout><About /></PublicLayout></SyncLocaleFromPath>
           </Route>
           <Route path="/ar/about">
-            <SyncLocaleFromPath locale="ar"><About /></SyncLocaleFromPath>
+            <SyncLocaleFromPath locale="ar"><PublicLayout><About /></PublicLayout></SyncLocaleFromPath>
           </Route>
           <Route path="/en/contact">
-            <SyncLocaleFromPath locale="en"><Contact /></SyncLocaleFromPath>
+            <SyncLocaleFromPath locale="en"><PublicLayout><Contact /></PublicLayout></SyncLocaleFromPath>
           </Route>
           <Route path="/ar/contact">
-            <SyncLocaleFromPath locale="ar"><Contact /></SyncLocaleFromPath>
+            <SyncLocaleFromPath locale="ar"><PublicLayout><Contact /></PublicLayout></SyncLocaleFromPath>
           </Route>
 
           {/* Public home page */}
@@ -267,7 +258,9 @@ function Router() {
           </Route>
           
           {/* Redirect root to home page - no login required */}
-          <Route path="/" component={Home} />
+          <Route path="/">
+            <PublicLayout><Home /></PublicLayout>
+          </Route>
           
           {/* Student portal: single prefix route. Layout and nav mount once. */}
           {/* wouter wildcard syntax is /student/* for nested student paths */}
@@ -692,35 +685,85 @@ function Router() {
           </Route>
 
           {/* Now publicly accessible - no login required */}
-          <Route path="/ai-chat" component={AiChat} />
-          <Route path="/group-chat" component={GroupChat} />
-          <Route path="/ar-learning" component={ARLearning} />
-          <Route path="/emotional-learning" component={EmotionalLearning} />
-          <Route path="/avatars" component={Avatars} />
+          <Route path="/ai-chat">
+            <PublicLayout><AiChat /></PublicLayout>
+          </Route>
+          <Route path="/group-chat">
+            <PublicLayout><GroupChat /></PublicLayout>
+          </Route>
+          <Route path="/ar-learning">
+            <PublicLayout><ARLearning /></PublicLayout>
+          </Route>
+          <Route path="/emotional-learning">
+            <PublicLayout><EmotionalLearning /></PublicLayout>
+          </Route>
+          <Route path="/avatars">
+            <PublicLayout><Avatars /></PublicLayout>
+          </Route>
           
           {/* Public accessible routes (but enhanced when authenticated) */}
-          <Route path="/home" component={Home} />
-          <Route path="/about" component={About} />
-          <Route path="/programs" component={Programs} />
-          <Route path="/subjects" component={Subjects} />
-          <Route path="/admissions" component={Admissions} />
-          <Route path="/contact" component={Contact} />
-          <Route path="/lms-structure" component={LMSStructure} />
-          <Route path="/portal" component={PortalLanding} />
-          <Route path="/news" component={News} />
-          <Route path="/events" component={Events} />
-          <Route path="/staff" component={StaffDirectory} />
+          <Route path="/home">
+            <PublicLayout><Home /></PublicLayout>
+          </Route>
+          <Route path="/about">
+            <PublicLayout><About /></PublicLayout>
+          </Route>
+          <Route path="/programs">
+            <PublicLayout><Programs /></PublicLayout>
+          </Route>
+          <Route path="/subjects">
+            <PublicLayout><Subjects /></PublicLayout>
+          </Route>
+          <Route path="/admissions">
+            <PublicLayout><Admissions /></PublicLayout>
+          </Route>
+          <Route path="/contact">
+            <PublicLayout><Contact /></PublicLayout>
+          </Route>
+          <Route path="/lms-structure">
+            <PublicLayout><LMSStructure /></PublicLayout>
+          </Route>
+          <Route path="/portal">
+            <PublicLayout><PortalLanding /></PublicLayout>
+          </Route>
+          <Route path="/news">
+            <PublicLayout><News /></PublicLayout>
+          </Route>
+          <Route path="/events">
+            <PublicLayout><Events /></PublicLayout>
+          </Route>
+          <Route path="/staff">
+            <PublicLayout><StaffDirectory /></PublicLayout>
+          </Route>
           
           {/* New landing pages */}
-          <Route path="/pricing" component={Pricing} />
-          <Route path="/integrations" component={Integrations} />
-          <Route path="/blog/:slug" component={BlogPostDetail} />
-          <Route path="/blog" component={Blog} />
-          <Route path="/community" component={Community} />
-          <Route path="/docs" component={Docs} />
-          <Route path="/help-center" component={HelpCenter} />
-          <Route path="/privacy" component={Privacy} />
-          <Route path="/terms" component={Terms} />
+          <Route path="/pricing">
+            <PublicLayout><Pricing /></PublicLayout>
+          </Route>
+          <Route path="/integrations">
+            <PublicLayout><Integrations /></PublicLayout>
+          </Route>
+          <Route path="/blog/:slug">
+            <PublicLayout><BlogPostDetail /></PublicLayout>
+          </Route>
+          <Route path="/blog">
+            <PublicLayout><Blog /></PublicLayout>
+          </Route>
+          <Route path="/community">
+            <PublicLayout><Community /></PublicLayout>
+          </Route>
+          <Route path="/docs">
+            <PublicLayout><Docs /></PublicLayout>
+          </Route>
+          <Route path="/help-center">
+            <PublicLayout><HelpCenter /></PublicLayout>
+          </Route>
+          <Route path="/privacy">
+            <PublicLayout><Privacy /></PublicLayout>
+          </Route>
+          <Route path="/terms">
+            <PublicLayout><Terms /></PublicLayout>
+          </Route>
           
           {/* Admin Organizations - Admin only */}
           <Route path="/admin/organizations">
@@ -734,7 +777,6 @@ function Router() {
         </Switch>
         </Suspense>
       </main>
-      {!isDashboardRoute && <Footer />}
     </div>
   );
 }
@@ -744,12 +786,12 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <AuthProvider>
-          <StudentNotificationProvider>
+          <NotificationProvider>
             <TooltipProvider>
               <Toaster />
               <Router />
             </TooltipProvider>
-          </StudentNotificationProvider>
+          </NotificationProvider>
         </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>

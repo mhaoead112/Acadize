@@ -1,5 +1,6 @@
 {
   "welcome": "Welcome",
+  "studentDashboard": "Student Dashboard",
   "welcomeBack": "Welcome back, {{name}}!",
   "myCourses": "My Courses",
   "recentActivity": "Recent Activity",

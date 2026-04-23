@@ -31,7 +31,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (loginData: LoginData) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
-  getAuthHeaders: () => HeadersInit;
+  getAuthHeaders: () => Record<string, string>;
   updateUser: (userData: Partial<User>) => void;
 }
 
@@ -214,19 +214,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  const getAuthHeaders = (): HeadersInit => {
+  const getAuthHeaders = (): Record<string, string> => {
     const subdomain = getSubdomain();
-    if (authState.token) {
-      return {
-        'Authorization': `Bearer ${authState.token}`,
-        'Content-Type': 'application/json',
-        'X-Tenant-Subdomain': subdomain,
-      };
-    }
-    return {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       'X-Tenant-Subdomain': subdomain,
     };
+    
+    if (authState.token) {
+      headers['Authorization'] = `Bearer ${authState.token}`;
+    }
+    
+    return headers;
   };
 
   // Function to update user data directly (for profile updates)

@@ -19,7 +19,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
-interface Question {
+export interface SortableQuestion {
   id: string;
   type: string;
   text: string;
@@ -27,9 +27,9 @@ interface Question {
 }
 
 interface SortableQuestionListProps {
-  questions: Question[];
+  questions: any[];
   activeQuestionId: string | null;
-  onReorder: (questions: Question[]) => void;
+  onReorder: (questions: any[]) => void;
   onSelect: (id: string) => void;
   typeToLabel: Record<string, string>;
 }
