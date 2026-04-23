@@ -139,6 +139,7 @@ const AdminCalendar = React.lazy(() => import("@/pages/admin-calendar"));
 const AdminAnnouncements = React.lazy(() => import("@/pages/admin-announcements"));
 const AdminGamificationSettings = React.lazy(() => import("@/pages/admin-gamification-settings"));
 const AdminGamificationRules = React.lazy(() => import("@/pages/admin-gamification-rules"));
+const AdminGamificationBadges = React.lazy(() => import("@/pages/admin-gamification-badges"));
 const ParentDashboard = React.lazy(() => import("@/pages/parent-dashboard"));
 const ParentDashboardEnhanced = React.lazy(() => import("@/pages/parent-dashboard-enhanced"));
 const ParentDashboardModern = React.lazy(() => import("@/pages/parent-dashboard-modern"));
@@ -787,6 +788,11 @@ function Router() {
           <Route path="/admin/gamification/rules">
             <MultiRoleRoute roles={['admin']}>
               <AdminGamificationRules />
+            </MultiRoleRoute>
+          </Route>
+          <Route path="/admin/gamification/badges">
+            <MultiRoleRoute roles={['admin']}>
+              <AdminGamificationBadges />
             </MultiRoleRoute>
           </Route>
 
