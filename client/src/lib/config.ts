@@ -12,6 +12,8 @@ const getIsProduction = () => {
 };
 
 const isProduction = getIsProduction();
+const ROOT_TENANT_SUBDOMAIN = 'acadize';
+const ROOT_DOMAIN_HOSTS = new Set(['acadize.com', 'www.acadize.com']);
 
 // In production, URLs MUST be set via env vars. In dev, fall back to localhost.
 if (isProduction && !import.meta.env.VITE_API_URL) {
@@ -74,6 +76,10 @@ export const getSubdomain = (): string => {
   if (typeof window === 'undefined') return 'default';
 
   const hostname = window.location.hostname;
+
+  if (ROOT_DOMAIN_HOSTS.has(hostname)) {
+    return ROOT_TENANT_SUBDOMAIN;
+  }
 
   // localhost without subdomain
   if (hostname === 'localhost' || hostname === '127.0.0.1') {

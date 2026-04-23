@@ -197,9 +197,11 @@ export const tenantMiddleware = async (
     res: Response,
     next: NextFunction
 ) => {
-    // Allow development override via header in non-production only.
-    const rawDevSubdomain = !isProduction ? (req.headers['x-tenant-subdomain'] as string) : undefined;
-    const devSubdomain = sanitizeSubdomain(rawDevSubdomain);
+    // Accept an explicit tenant header from the frontend. This is required when
+    // the UI is served from acadize.com but the API is called on a separate
+    // backend host like *.onrender.com.
+    const rawHeaderSubdomain = req.headers['x-tenant-subdomain'] as string | undefined;
+    const headerSubdomain = sanitizeSubdomain(rawHeaderSubdomain);
     const hostname = getRequestHostname(req);
 
     // In non-production only, optionally use Origin/Referer as fallback for local multi-host setups.
@@ -222,12 +224,12 @@ export const tenantMiddleware = async (
     }
 
     // Determine subdomain:
-    // production -> host only
-    // non-production -> dev header > origin/referer > host
+    // production -> explicit header > host
+    // non-production -> explicit header > origin/referer > host
     const hostSubdomain = sanitizeSubdomain(extractSubdomain(hostname)) || 'default';
     const subdomain = !isProduction
-        ? (devSubdomain || originSubdomain || hostSubdomain)
-        : hostSubdomain;
+        ? (headerSubdomain || originSubdomain || hostSubdomain)
+        : (headerSubdomain || hostSubdomain);
 
     // Skip tenant resolution for certain paths (health checks, registration, webhooks)
     // Note: req.path doesn't include /api when middleware is mounted at /api
