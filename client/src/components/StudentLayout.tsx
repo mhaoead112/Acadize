@@ -26,6 +26,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { label: 'nav.dashboard', icon: 'dashboard', path: '/student/dashboard' },
+  { label: 'nav.gamification', icon: 'emoji_events', path: '/student/gamification' },
   { label: 'nav.courses', icon: 'school', path: '/student/courses' },
   { label: 'nav.attendance', icon: 'how_to_reg', path: '/student/attendance' },
   { label: 'nav.assignments', icon: 'task', path: '/student/assignments' },

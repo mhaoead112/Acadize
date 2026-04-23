@@ -58,6 +58,7 @@ interface StreakInfo {
 
 interface CourseProgress {
     courseId: string;
+    courseName?: string;
     progressPercentage: number;
 }
 
@@ -71,6 +72,18 @@ const fetchWithAuth = async (url: string, token: string | null) => {
     return res.json();
 };
 
+const extractList = <T>(payload: unknown): T[] => {
+    if (Array.isArray(payload)) return payload as T[];
+    if (
+        payload &&
+        typeof payload === 'object' &&
+        Array.isArray((payload as { data?: unknown }).data)
+    ) {
+        return (payload as { data: T[] }).data;
+    }
+    return [];
+};
+
 export function useStudentEnrollments() {
     const { token } = useAuth();
 
@@ -78,7 +91,7 @@ export function useStudentEnrollments() {
         queryKey: ['enrollments', 'student'],
         queryFn: async () => {
             const data = await fetchWithAuth('/api/enrollments/student', token);
-            const enrollmentsList = Array.isArray(data) ? data : [];
+            const enrollmentsList = extractList<any>(data);
             return enrollmentsList
                 .filter((e: any) => e.course)
                 .map((e: any) => ({
@@ -103,7 +116,17 @@ export function useStudentProgress() {
 
     return useQuery<{ overallProgress: OverallProgress; courseProgress: CourseProgress[] }>({
         queryKey: ['progress', 'student'],
-        queryFn: () => fetchWithAuth('/api/progress/student', token),
+        queryFn: async () => {
+            const [overallProgress, courseProgress] = await Promise.all([
+                fetchWithAuth('/api/progress/overall', token),
+                fetchWithAuth('/api/progress/courses', token),
+            ]);
+
+            return {
+                overallProgress,
+                courseProgress: Array.isArray(courseProgress) ? courseProgress : [],
+            };
+        },
         enabled: !!token,
         staleTime: 5 * 60 * 1000,
     });
@@ -114,7 +137,7 @@ export function useStudentStreak() {
 
     return useQuery<StreakInfo>({
         queryKey: ['streak'],
-        queryFn: () => fetchWithAuth('/api/streak', token),
+        queryFn: () => fetchWithAuth('/api/streaks/me', token),
         enabled: !!token,
         staleTime: 5 * 60 * 1000,
     });
