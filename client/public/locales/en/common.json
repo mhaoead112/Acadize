@@ -1,1 +1,103 @@
-﻿{"nav":{"home":"Home","courses":"Courses","dashboard":"Dashboard","logout":"Log out","profile":"Profile","settings":"Settings","announcements":"Announcements","exams":"Exams","assignments":"Assignments","calendar":"Calendar","reports":"Reports","attendance":"Attendance","messages":"Messages","mistakes":"Mistakes","classes":"Classes","reportCards":"Report Cards","students":"Students","sessions":"Sessions","analytics":"Analytics","myChildren":"My Children","users":"Users","studentParentLinks":"Student-Parent Links"},"viewProfile":"View Profile","studentPortal":"Student Portal","teacherPortal":"Teacher Portal","parentPortal":"Parent Portal","adminPortal":"Admin Portal","searchPlaceholderStudent":"Search for classes, assignments, or teachers","searchPlaceholderTeacher":"Search classes, students, assignments...","searchPlaceholderParent":"Search children, classes, reports...","searchPlaceholderAdmin":"Search users, courses, calendar...","actions":{"save":"Save","cancel":"Cancel","delete":"Delete","edit":"Edit","create":"Create","submit":"Submit","back":"Back","next":"Next","close":"Close","confirm":"Confirm"},"common":{"loading":"Loading...","error":"Something went wrong.","noData":"No data to display.","language":"Language","more":"More"},"notifications":"Notifications","clearAll":"Clear All","noNotificationsYet":"No notifications yet","loadingNotifications":"Loading notifications...","unreadNotification":"unread notification","unreadNotifications":"unread notifications","justNow":"Just now","checkingSubscription":"Checking subscription...","toast":{"success":"Success","error":"Error","saved":"Saved successfully","updated":"Updated successfully","deleted":"Deleted successfully","missingInfo":"Missing information","requiredFields":"Please fill in all required fields","failed":"Operation failed"},"placeholders":{"search":"Search...","select":"Select...","filterByStatus":"Filter by status","noResultsFound":"No results found","selectChild":"Select a child","selectCourse":"Select a course","enterScore":"Enter score","provideFeedback":"Provide feedback (optional)","typeMessage":"Type a message...","searchStudents":"Search students","searchUsers":"Search users","searchCourses":"Search courses"},"auth":{"checkingAuthentication":"Checking authentication...","accessDenied":"Access Denied","accessDeniedDescription":"You don't have permission to access this page. You'll be redirected to your dashboard.","goToMyDashboard":"Go to My Dashboard"},"roles":{"student":"Student","teacher":"Teacher","admin":"Admin","parent":"Parent"},"aria":{"toggleTheme":"Toggle theme","userAvatar":"Profile"}}
+﻿{
+    "nav": {
+        "home": "Home",
+        "courses": "Courses",
+        "dashboard": "Dashboard",
+        "logout": "Log out",
+        "profile": "Profile",
+        "settings": "Settings",
+        "announcements": "Announcements",
+        "exams": "Exams",
+        "assignments": "Assignments",
+        "calendar": "Calendar",
+        "reports": "Reports",
+        "attendance": "Attendance",
+        "messages": "Messages",
+        "gamification": "Gamification",
+        "mistakes": "Mistakes",
+        "classes": "Classes",
+        "reportCards": "Report Cards",
+        "students": "Students",
+        "sessions": "Sessions",
+        "analytics": "Analytics",
+        "myChildren": "My Children",
+        "users": "Users",
+        "studentParentLinks": "Student-Parent Links"
+    },
+    "viewProfile": "View Profile",
+    "studentPortal": "Student Portal",
+    "teacherPortal": "Teacher Portal",
+    "parentPortal": "Parent Portal",
+    "adminPortal": "Admin Portal",
+    "searchPlaceholderStudent": "Search for classes, assignments, or teachers",
+    "searchPlaceholderTeacher": "Search classes, students, assignments...",
+    "searchPlaceholderParent": "Search children, classes, reports...",
+    "searchPlaceholderAdmin": "Search users, courses, calendar...",
+    "actions": {
+        "save": "Save",
+        "cancel": "Cancel",
+        "delete": "Delete",
+        "edit": "Edit",
+        "create": "Create",
+        "submit": "Submit",
+        "back": "Back",
+        "next": "Next",
+        "close": "Close",
+        "confirm": "Confirm"
+    },
+    "common": {
+        "loading": "Loading...",
+        "error": "Something went wrong.",
+        "noData": "No data to display.",
+        "language": "Language",
+        "more": "More"
+    },
+    "notifications": "Notifications",
+    "clearAll": "Clear All",
+    "noNotificationsYet": "No notifications yet",
+    "loadingNotifications": "Loading notifications...",
+    "unreadNotification": "unread notification",
+    "unreadNotifications": "unread notifications",
+    "justNow": "Just now",
+    "checkingSubscription": "Checking subscription...",
+    "toast": {
+        "success": "Success",
+        "error": "Error",
+        "saved": "Saved successfully",
+        "updated": "Updated successfully",
+        "deleted": "Deleted successfully",
+        "missingInfo": "Missing information",
+        "requiredFields": "Please fill in all required fields",
+        "failed": "Operation failed"
+    },
+    "placeholders": {
+        "search": "Search...",
+        "select": "Select...",
+        "filterByStatus": "Filter by status",
+        "noResultsFound": "No results found",
+        "selectChild": "Select a child",
+        "selectCourse": "Select a course",
+        "enterScore": "Enter score",
+        "provideFeedback": "Provide feedback (optional)",
+        "typeMessage": "Type a message...",
+        "searchStudents": "Search students",
+        "searchUsers": "Search users",
+        "searchCourses": "Search courses"
+    },
+    "auth": {
+        "checkingAuthentication": "Checking authentication...",
+        "accessDenied": "Access Denied",
+        "accessDeniedDescription": "You don't have permission to access this page. You'll be redirected to your dashboard.",
+        "goToMyDashboard": "Go to My Dashboard"
+    },
+    "roles": {
+        "student": "Student",
+        "teacher": "Teacher",
+        "admin": "Admin",
+        "parent": "Parent"
+    },
+    "aria": {
+        "toggleTheme": "Toggle theme",
+        "userAvatar": "Profile"
+    }
+}

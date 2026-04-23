@@ -1,4 +1,4 @@
-# Eduverse — Modern Learning Management System
+# acadize — Modern Learning Management System
 
 <p align="center">
   <img src="https://img.shields.io/badge/version-1.0.0-6366f1?style=for-the-badge" alt="Version" />
@@ -35,7 +35,7 @@
 
 ## 📖 Description
 
-**Eduverse** is a full-stack, multi-tenant Learning Management System (LMS) designed to serve diverse educational organizations — from K-12 schools to professional training institutes. It supports five distinct user roles (Student, Teacher, Admin, Parent, Proctor) each with a purpose-built portal and tailored feature set.
+**acadize** is a full-stack, multi-tenant Learning Management System (LMS) designed to serve diverse educational organizations — from K-12 schools to professional training institutes. It supports five distinct user roles (Student, Teacher, Admin, Parent, Proctor) each with a purpose-built portal and tailored feature set.
 
 Key differentiators:
 
@@ -129,7 +129,7 @@ Key differentiators:
 ## 📁 Project Structure
 
 ```
-eduverse/
+acadize/
 ├── client/                    # React + Vite frontend
 │   └── src/
 │       ├── components/        # Shared UI components (shadcn/ui + custom)
@@ -179,8 +179,8 @@ eduverse/
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/your-username/eduverse.git
-cd eduverse
+git clone https://github.com/mhaoead112/acadize.git
+cd acadize
 ```
 
 ### 2. Install dependencies
@@ -221,7 +221,7 @@ Copy `.env.example` to `.env` and fill in the following values:
 
 ```env
 # ── REQUIRED ──────────────────────────────────────────
-DATABASE_URL=postgres://user:password@localhost:5432/eduverse
+DATABASE_URL=postgres://user:password@localhost:5432/acadize
 JWT_SECRET=your-jwt-secret-min-32-chars
 SESSION_SECRET=your-session-secret
 
@@ -302,7 +302,7 @@ SENTRY_DSN=https://...
 The full REST API is documented in:
 
 - **OpenAPI spec**: [`docs/openapi.yaml`](./docs/openapi.yaml)
-- **Postman collection**: [`docs/Eduverse-API.postman_collection.json`](./docs/Eduverse-API.postman_collection.json)
+- **Postman collection**: [`docs/acadize-API.postman_collection.json`](./docs/acadize-API.postman_collection.json)
 - **Markdown API docs**: [`docs/API-DOCS.md`](./docs/API-DOCS.md)
 
 ### Authentication
@@ -408,10 +408,10 @@ This project is licensed under the **MIT License**. See the [LICENSE](./LICENSE)
 
 ## 👤 Author
 
-Built and maintained with ❤️ by the Eduverse team.
+Built and maintained with ❤️ by the acadize team.
 
-- GitHub: [@your-username](https://github.com/your-username)
-- Email: contact@eduverse.app
+- GitHub: [@mhaoead112](https://github.com/mhaoead112)
+- Email: contact@acadize.app
 - Docs: [`docs/`](./docs/)
 
 ---
