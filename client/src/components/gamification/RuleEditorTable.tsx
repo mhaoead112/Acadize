@@ -134,7 +134,7 @@ export default function RuleEditorTable({ rules, onSave, isSaving }: RuleEditorT
           <AlertTriangle className="h-4 w-4" />
           <AlertTitle>Warning</AlertTitle>
           <AlertDescription>
-            High point values (> 500) may encourage behavior farming and unbalance the gamification system.
+            High point values (&gt; 500) may encourage behavior farming and unbalance the gamification system.
           </AlertDescription>
         </Alert>
       )}

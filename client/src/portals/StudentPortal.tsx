@@ -30,6 +30,8 @@ const StudentAnnouncementsPage = React.lazy(() => import("@/pages/student-announ
 const ProfilePage = React.lazy(() => import("@/pages/student-profile"));
 const StudentMessages = React.lazy(() => import("@/pages/study-groups-chat-enhanced"));
 const StudentGamification = React.lazy(() => import("@/pages/student-gamification"));
+const StudentAchievements = React.lazy(() => import("@/pages/student-achievements"));
+const StudentLeaderboard = React.lazy(() => import("@/pages/student-leaderboard"));
 
 function RouteFallback() {
   return (
@@ -55,6 +57,8 @@ export function StudentPortal() {
           <Switch>
             <Route path="/student/dashboard" component={StudentDashboard} />
             <Route path="/student/gamification" component={StudentGamification} />
+            <Route path="/student/achievements" component={StudentAchievements} />
+            <Route path="/student/leaderboard" component={StudentLeaderboard} />
             <Route path="/student/courses" component={StudentCoursesPage} />
             <Route path="/student/join-course" component={StudentJoinCoursePage} />
             <Route path="/student/search" component={StudentSearchResultsPage} />

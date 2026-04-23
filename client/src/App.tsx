@@ -131,6 +131,7 @@ const TeacherExamManage = React.lazy(() => import("@/pages/teacher-exam-manage")
 const TeacherAttemptReview = React.lazy(() => import("@/pages/teacher-attempt-review"));
 const TeacherExamEdit = React.lazy(() => import("@/pages/teacher-exam-edit"));
 const TeacherExamQuestions = React.lazy(() => import("@/pages/teacher-exam-questions"));
+const TeacherGamification = React.lazy(() => import("@/pages/teacher-gamification"));
 const StudentExamPreview = React.lazy(() => import("@/pages/student-exam-preview"));
 const AdminUsers = React.lazy(() => import("@/pages/admin-users"));
 const AdminStudentParentLink = React.lazy(() => import("@/pages/admin-student-parent-link"));
@@ -577,6 +578,11 @@ function Router() {
           <Route path="/teacher/profile">
             <TeacherRoute>
               <TeacherProfile />
+            </TeacherRoute>
+          </Route>
+          <Route path="/teacher/gamification">
+            <TeacherRoute>
+              <TeacherGamification />
             </TeacherRoute>
           </Route>
 

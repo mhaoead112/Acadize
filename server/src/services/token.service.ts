@@ -5,6 +5,7 @@ import { db } from '../db/index.js';
 import { refreshTokens } from '../db/schema.js';
 import { eq, and, gt, lt } from 'drizzle-orm';
 import crypto from 'crypto';
+import { logger } from '../utils/logger.js';
 
 if (!process.env.JWT_SECRET) {
     throw new Error('JWT_SECRET environment variable is required');
