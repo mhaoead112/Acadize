@@ -210,10 +210,10 @@ const mockTeacherData = {
     {
       title: 'Top Performer',
       description: 'Class average above 85%',
-      icon: Star,
+      icon: Award,
       earned: true,
-      earnedDate: 'Oct 20, 2025',
-      color: 'gold' as const
+      earnedDate: 'May 20, 2023',
+      color: 'blue' as const
     },
     {
       title: 'Engagement Master',
@@ -235,7 +235,7 @@ const mockTeacherData = {
       description: 'Help 10 struggling students',
       icon: GraduationCap,
       earned: false,
-      color: 'purple' as const
+      color: 'blue' as const
     }
   ],
   activities: [

@@ -2,12 +2,14 @@ import React, { useEffect, useState, useRef, useMemo, useCallback } from "react"
 import { useTranslation } from "react-i18next";
 import { useRoute, Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useBranding } from "@/contexts/BrandingContext";
 import LessonViewer from "@/components/LessonViewer";
 import StudyBuddyChat from "@/components/StudyBuddyChat";
 import NotificationBell from "@/components/NotificationBell";
 import { apiEndpoint } from "@/lib/config";
+import { useToast } from "@/hooks/use-toast";
 
 import { 
   pageVariants, 
@@ -41,6 +43,8 @@ export default function StudentCourseLessonsPage() {
   const courseId = params?.courseId as string | undefined;
   const { getAuthHeaders, user } = useAuth();
   const { features } = useBranding();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const [course, setCourse] = useState<Course | null>(null);
   const [lessons, setLessons] = useState<Lesson[]>([]);
@@ -49,6 +53,9 @@ export default function StudentCourseLessonsPage() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [viewedLessons, setViewedLessons] = useState<Set<string>>(new Set());
+  const [completedLessons, setCompletedLessons] = useState<Set<string>>(new Set());
+  const [completingLessonId, setCompletingLessonId] = useState<string | null>(null);
+  const [courseCompleted, setCourseCompleted] = useState<boolean>(false);
   const [showAIChat, setShowAIChat] = useState<boolean>(true);
   const [bookmarkedLessons, setBookmarkedLessons] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState<'overview' | 'resources' | 'discussion'>('overview');
@@ -129,6 +136,36 @@ export default function StudentCourseLessonsPage() {
           setSelectedLesson(lessonsWithUrls[0]);
           setSelectedIndex(0);
         }
+
+        // Restore persisted completion state from gamification events so the
+        // UI survives refreshes and revisit sessions.
+        if (user?.role === 'student' && lessonsWithUrls.length > 0) {
+          const activityRes = await fetch(
+            apiEndpoint('/api/gamification/activity?limit=500&offset=0'),
+            { headers },
+          );
+
+          if (activityRes.ok) {
+            const activityData = await activityRes.json();
+            const events = Array.isArray(activityData?.events) ? activityData.events : [];
+            const lessonIds = new Set(lessonsWithUrls.map((lesson: Lesson) => lesson.id));
+            const completedFromEvents = new Set<string>();
+
+            for (const event of events) {
+              if (event?.eventType === 'lesson_completion' && lessonIds.has(event.entityId)) {
+                completedFromEvents.add(event.entityId);
+              }
+            }
+
+            setCompletedLessons(completedFromEvents);
+            setCourseCompleted(
+              events.some(
+                (event: any) =>
+                  event?.eventType === 'course_completion' && event.entityId === courseId,
+              ),
+            );
+          }
+        }
       } catch (err: any) {
         setError(err?.message || t('unknownError'));
       } finally {
@@ -137,7 +174,7 @@ export default function StudentCourseLessonsPage() {
     };
 
     fetchData();
-  }, [courseId]);
+  }, [courseId, getAuthHeaders, t, user?.role]);
 
   // Mark lesson as viewed when selected
   useEffect(() => {
@@ -174,39 +211,85 @@ export default function StudentCourseLessonsPage() {
 
   const markAsComplete = async () => {
     if (!selectedLesson) return;
+    if (completedLessons.has(selectedLesson.id)) return;
     
     try {
+      setCompletingLessonId(selectedLesson.id);
       const authHeaders = getAuthHeaders();
       const headers = {
         ...(authHeaders as any).Authorization ? authHeaders : {},
-        'Content-Type': 'application/json',
       };
       
-      await fetch(apiEndpoint(`/api/progress`), {
+      const response = await fetch(apiEndpoint(`/api/lessons/${selectedLesson.id}/complete`), {
         method: 'POST',
         headers,
-        body: JSON.stringify({
-          courseId,
-          lessonId: selectedLesson.id,
-          completed: true,
-        }),
       });
+
+      if (!response.ok) {
+        throw new Error(t('failedToLoadLessons'));
+      }
+
+      const result = await response.json();
+      const nextCompletedLessons = new Set(Array.from(completedLessons));
+      nextCompletedLessons.add(selectedLesson.id);
       
+      setCompletedLessons(nextCompletedLessons);
+      void queryClient.invalidateQueries({ queryKey: ['gamification'] });
+      void queryClient.invalidateQueries({ queryKey: ['student-dashboard'] });
+
       setViewedLessons(prev => {
         const newSet = new Set(Array.from(prev));
         newSet.add(selectedLesson.id);
         return newSet;
       });
+
+      const pointsAwarded = result?.gamification?.pointsAwarded ?? 0;
+      toast({
+        title: pointsAwarded > 0 ? "Lesson completed" : "Marked as complete",
+        description: pointsAwarded > 0
+          ? `You earned ${pointsAwarded} XP for this lesson.`
+          : "Your progress has been updated.",
+      });
+
+      const allLessonsCompleted = lessons.length > 0 && nextCompletedLessons.size === lessons.length;
+
+      if (allLessonsCompleted && courseId && !courseCompleted) {
+        const courseResponse = await fetch(apiEndpoint(`/api/enrollments/${courseId}/complete`), {
+          method: 'POST',
+          headers,
+        });
+
+        if (courseResponse.ok) {
+          const courseResult = await courseResponse.json();
+          const coursePoints = courseResult?.gamification?.pointsAwarded ?? 0;
+          setCourseCompleted(true);
+          void queryClient.invalidateQueries({ queryKey: ['gamification'] });
+          void queryClient.invalidateQueries({ queryKey: ['student-dashboard'] });
+          toast({
+            title: "Course completed",
+            description: coursePoints > 0
+              ? `You finished the course and earned ${coursePoints} bonus XP.`
+              : "You finished all lessons in this course.",
+          });
+        }
+      }
     } catch (err) {
       console.error('Failed to mark lesson as complete:', err);
+      toast({
+        title: "Couldn't mark lesson as complete",
+        description: "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setCompletingLessonId(null);
     }
   };
 
   const progressPercentage = useMemo(() => 
     lessons.length > 0 
-      ? Math.round((viewedLessons.size / lessons.length) * 100) 
+      ? Math.round((completedLessons.size / lessons.length) * 100) 
       : 0
-  , [lessons.length, viewedLessons.size]);
+  , [completedLessons.size, lessons.length]);
 
   if (isLoading) {
     return (
@@ -316,6 +399,7 @@ export default function StudentCourseLessonsPage() {
             {lessons.map((lesson, index) => {
               const isSelected = selectedLesson?.id === lesson.id;
               const isViewed = viewedLessons.has(lesson.id);
+              const isCompleted = completedLessons.has(lesson.id);
               
               return (
                 <motion.button
@@ -335,9 +419,17 @@ export default function StudentCourseLessonsPage() {
                     <div className="flex-shrink-0">
                       {isSelected ? (
                         <span className="material-symbols-outlined text-primary text-[18px]">play_circle</span>
+                      ) : isCompleted ? (
+                        <span className="material-symbols-outlined text-[18px] text-green-400">
+                          check_circle
+                        </span>
+                      ) : isViewed ? (
+                        <span className="material-symbols-outlined text-[18px] text-slate-500 dark:text-slate-400">
+                          visibility
+                        </span>
                       ) : (
-                        <span className={`material-symbols-outlined text-[18px] ${isViewed ? 'text-green-400' : 'text-slate-400 dark:text-slate-600'}`}>
-                          {isViewed ? 'check_circle' : 'circle'}
+                        <span className="material-symbols-outlined text-[18px] text-slate-400 dark:text-slate-600">
+                          circle
                         </span>
                       )}
                     </div>
@@ -358,7 +450,7 @@ export default function StudentCourseLessonsPage() {
                           {bookmarkedLessons.has(lesson.id) && (
                             <span className="material-symbols-outlined text-primary text-[16px]" style={{fontVariationSettings: "'FILL' 1"}}>bookmark</span>
                           )}
-                          {viewedLessons.has(lesson.id) && !isSelected && (
+                          {completedLessons.has(lesson.id) && !isSelected && (
                             <span className="material-symbols-outlined text-green-400 text-[16px]">check_circle</span>
                           )}
                         </div>
@@ -421,14 +513,18 @@ export default function StudentCourseLessonsPage() {
               </button>
               <button 
                 onClick={markAsComplete}
-                disabled={selectedLesson ? viewedLessons.has(selectedLesson.id) : true}
+                disabled={!selectedLesson || !courseId || (selectedLesson ? completedLessons.has(selectedLesson.id) : true) || completingLessonId === selectedLesson?.id}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow-md shadow-black/20 transition-all text-sm font-bold ${
-                  selectedLesson && viewedLessons.has(selectedLesson.id)
+                  selectedLesson && completedLessons.has(selectedLesson.id)
                     ? 'bg-green-500 text-white cursor-default'
-                    : 'bg-primary hover:bg-primary/90 text-black'
+                    : 'bg-primary hover:bg-primary/90 text-black disabled:opacity-60 disabled:cursor-not-allowed'
                 }`}
               >
-                {selectedLesson && viewedLessons.has(selectedLesson.id) ? t('completed') : t('markAsComplete')}
+                {completingLessonId === selectedLesson?.id
+                  ? t('common:common.loading')
+                  : selectedLesson && completedLessons.has(selectedLesson.id)
+                    ? t('completed')
+                    : t('markAsComplete')}
                 <span className="material-symbols-outlined text-[20px]">check</span>
               </button>
             </div>

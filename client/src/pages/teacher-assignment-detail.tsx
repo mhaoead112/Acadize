@@ -84,7 +84,7 @@ export default function TeacherAssignmentDetail() {
 
       const csvContent = [
         headers.join(','),
-        ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+        ...rows.map((row: any[]) => row.map((cell: any) => `"${cell}"`).join(','))
       ].join('\n');
 
       // Download CSV

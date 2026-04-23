@@ -26,6 +26,22 @@ interface Enrollment {
   course: Course;
 }
 
+const extractEnrollments = (payload: unknown): Enrollment[] => {
+  if (Array.isArray(payload)) {
+    return payload as Enrollment[];
+  }
+
+  if (
+    payload &&
+    typeof payload === "object" &&
+    Array.isArray((payload as { data?: unknown }).data)
+  ) {
+    return (payload as { data: Enrollment[] }).data;
+  }
+
+  return [];
+};
+
 export default function StudentCoursesPage() {
   const { t } = useTranslation('courses');
   const { token } = useAuth();
@@ -65,7 +81,7 @@ export default function StudentCoursesPage() {
         });
         if (!res.ok) throw new Error(t('failedToLoadEnrolledCourses'));
         const data = await res.json();
-        setEnrollments(Array.isArray(data) ? data : []);
+        setEnrollments(extractEnrollments(data));
       } catch (err: any) {
         setError(err?.message || t('failedToLoadEnrolledCourses'));
       } finally {
@@ -133,7 +149,7 @@ export default function StudentCoursesPage() {
       });
       if (listRes.ok) {
         const listData = await listRes.json();
-        setEnrollments(Array.isArray(listData) ? listData : []);
+        setEnrollments(extractEnrollments(listData));
       }
     } catch {
       setJoinError(t("joinPreviewFailed") || "Something went wrong.");

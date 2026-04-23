@@ -24,6 +24,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { SortableLessonList, SortableLesson } from "@/components/SortableLessonList";
 
 interface Course {
   id: string;
@@ -41,6 +42,7 @@ interface Lesson {
   content: string;
   videoUrl?: string;
   createdAt: string;
+  order?: number;
 }
 
 interface Assignment {
@@ -148,28 +150,29 @@ export default function TeacherCourseManage() {
       const lessonsRes = await fetch(apiEndpoint(`/api/lessons/course/${courseId}`), { headers });
       if (lessonsRes.ok) {
         const lessonsData = await lessonsRes.json();
-        setLessons(Array.isArray(lessonsData.lessons) ? lessonsData.lessons : []);
+        // Lessons might be in .lessons or .data depending on version
+        setLessons(Array.isArray(lessonsData.lessons) ? lessonsData.lessons : (Array.isArray(lessonsData.data) ? lessonsData.data : []));
       }
 
       // Fetch assignments
       const assignmentsRes = await fetch(apiEndpoint(`/api/assignments/courses/${courseId}/assignments`), { headers });
       if (assignmentsRes.ok) {
         const assignmentsData = await assignmentsRes.json();
-        setAssignments(Array.isArray(assignmentsData) ? assignmentsData : []);
+        setAssignments(Array.isArray(assignmentsData.data) ? assignmentsData.data : (Array.isArray(assignmentsData) ? assignmentsData : []));
       }
 
       // Fetch enrolled students
       const studentsRes = await fetch(apiEndpoint(`/api/enrollments/course/${courseId}`), { headers });
       if (studentsRes.ok) {
         const studentsData = await studentsRes.json();
-        setEnrollments(Array.isArray(studentsData) ? studentsData : []);
+        setEnrollments(Array.isArray(studentsData.data) ? studentsData.data : (Array.isArray(studentsData) ? studentsData : []));
       }
 
       // Fetch announcements
       const announcementsRes = await fetch(apiEndpoint(`/api/announcements/course/${courseId}`), { headers });
       if (announcementsRes.ok) {
         const announcementsData = await announcementsRes.json();
-        setAnnouncements(announcementsData.announcements || []);
+        setAnnouncements(Array.isArray(announcementsData.data) ? announcementsData.data : (announcementsData.announcements || []));
       }
     } catch (error) {
       console.error("Failed to fetch course data:", error);
@@ -713,31 +716,11 @@ export default function TeacherCourseManage() {
               </Button>
             </div>
             <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 overflow-hidden divide-y divide-slate-100 dark:divide-slate-800">
-              {lessons.length === 0 ? (
-                <div className="p-6 text-center text-slate-500">No lessons yet. Create your first lesson.</div>
-              ) : (
-                lessons.map((lesson, i) => (
-                  <div key={lesson.id} className={`p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors ${i === 0 ? 'bg-gold/5 border-l-4 border-l-gold' : ''}`}>
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-sm font-bold text-slate-700 dark:text-white">
-                        {i + 1}
-                      </div>
-                      <div>
-                        <p className="font-semibold text-slate-900 dark:text-white">{lesson.title}</p>
-                        <p className="text-xs text-slate-500">Published {new Date(lesson.createdAt).toLocaleDateString()}</p>
-                      </div>
-                    </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => setLocation(`/teacher/courses/${courseId}/lessons/${lesson.id}`)}
-                      className="bg-white dark:bg-navy border-slate-200 dark:border-gray-800"
-                    >
-                      View
-                    </Button>
-                  </div>
-                ))
-              )}
+              <SortableLessonList
+                initialLessons={lessons as SortableLesson[]}
+                courseId={courseId!}
+                onView={(lessonId) => setLocation(`/teacher/courses/${courseId}/lessons/${lessonId}`)}
+              />
             </div>
           </div>
         );

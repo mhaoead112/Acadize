@@ -54,7 +54,7 @@ interface APIAssignment {
 }
 
 // Fetch assignments from API
-const fetchAssignments = async (token: string): Promise<APIAssignment[]> => {
+const fetchAssignments = async (token: string): Promise<{ data: APIAssignment[]; pagination: any }> => {
   const response = await fetch(apiEndpoint('/api/assignments/student'), {
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -86,12 +86,14 @@ export default function StudentAssignments() {
   const [isViewSubmissionDialogOpen, setIsViewSubmissionDialogOpen] = useState(false);
 
   // Fetch assignments
-  const { data: apiAssignments = [], isLoading } = useQuery<APIAssignment[]>({
+  const { data: assignmentsResponse, isLoading } = useQuery({
     queryKey: ['studentAssignments'],
     queryFn: () => fetchAssignments(token || ''),
     enabled: !!token,
     refetchInterval: 30000,
   });
+
+  const apiAssignments = assignmentsResponse?.data || [];
 
   // Submit assignment mutation
   const submitMutation = useMutation({
@@ -512,21 +514,39 @@ export default function StudentAssignments() {
                         <span className="material-symbols-outlined text-[16px]">schedule</span>
                         {t('due')} {formatDueDate(assignment.dueDate)}
                       </div>
-                      <span className={`text-xs px-2 py-1 rounded-md font-bold ${
-                        assignment.submission?.status === 'graded' 
-                          ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800'
+                       {assignment.submission?.status === 'graded'
+                          ? (
+                            <span className="flex items-center gap-1 text-xs px-2 py-1 rounded-md font-bold bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800">
+                              <span className="material-symbols-outlined text-[14px]" style={{ fontVariationSettings: '"FILL" 1' }}>grade</span>
+                              Graded
+                            </span>
+                          )
                           : assignment.submission
-                          ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 border border-blue-200 dark:border-blue-800'
-                          : 'bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-white border border-slate-200 dark:border-slate-500'
-                      }`}>
-                        {assignment.submission?.status === 'graded' ? t('done') : assignment.submission ? t('inProgress') : t('notStarted')}
-                      </span>
+                          ? <span className="text-xs px-2 py-1 rounded-md font-bold bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 border border-blue-200 dark:border-blue-800">{t('inProgress')}</span>
+                          : <span className="text-xs px-2 py-1 rounded-md font-bold bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-white border border-slate-200 dark:border-slate-500">{t('notStarted')}</span>
+                       }
                     </div>
                     {assignment.submission?.status === 'graded' && assignment.submission.score !== null ? (
-                      <div className="text-center py-2 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-                        <p className="text-sm font-bold text-green-700 dark:text-green-300">
-                          {t('score')}: {assignment.submission.score}/{assignment.maxScore}
-                        </p>
+                      <div className="space-y-2">
+                        <div className="text-center py-2 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                          <p className="text-sm font-bold text-green-700 dark:text-green-300">
+                            {t('score')}: {assignment.submission.score}/{assignment.maxScore}
+                          </p>
+                        </div>
+                        {assignment.submission.feedback && (
+                          <button
+                            onClick={() => handleViewSubmission(assignment)}
+                            className="w-full text-left px-3 py-2 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg"
+                          >
+                            <p className="text-[10px] font-bold uppercase tracking-wide text-indigo-500 mb-0.5 flex items-center gap-1">
+                              <span className="material-symbols-outlined text-[12px]">chat</span>
+                              Teacher Feedback
+                            </p>
+                            <p className="text-xs text-indigo-800 dark:text-indigo-200 italic line-clamp-2">
+                              "{assignment.submission.feedback}"
+                            </p>
+                          </button>
+                        )}
                       </div>
                     ) : assignment.submission ? (
                       <motion.button 

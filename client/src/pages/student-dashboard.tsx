@@ -11,6 +11,7 @@ import {
 
 import { DashboardStatsSkeleton } from "@/components/skeletons/DashboardStatsSkeleton";
 import { CardSkeleton } from "@/components/skeletons/CardSkeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,7 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { useStudentNotifications } from "@/contexts/StudentNotificationContext";
+import { useNotifications } from "@/contexts/NotificationContext";
 import { apiEndpoint } from '@/lib/config';
 import {
   premiumCardVariants,
@@ -74,7 +75,7 @@ export default function StudentDashboard() {
   const { user, token, isLoading: authLoading } = useAuth();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const { checkProgressNudges } = useStudentNotifications();
+  const { checkProgressNudges } = useNotifications();
   const prefersReducedMotion = useReducedMotion();
   
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
@@ -142,7 +143,7 @@ export default function StudentDashboard() {
       }
 
       const enrollmentsData = await enrollmentsRes.json();
-      const enrollmentsList = Array.isArray(enrollmentsData) ? enrollmentsData : [];
+      const enrollmentsList = Array.isArray(enrollmentsData?.data) ? enrollmentsData.data : (Array.isArray(enrollmentsData) ? enrollmentsData : []);
       
       // Extract courses from enrollments
       const enrolledCourses: Course[] = enrollmentsList
@@ -175,7 +176,7 @@ export default function StudentDashboard() {
           .then(res => res.ok ? res.json() : null)
           .then(data => ({
             courseTitle: course.title,
-            announcements: data?.announcements || [],
+            announcements: data?.data || data?.announcements || [],
           }))
           .catch(() => ({ courseTitle: course.title, announcements: [] }))
       );
@@ -189,7 +190,7 @@ export default function StudentDashboard() {
           .then(assignments => ({
             courseId: course.id,
             courseTitle: course.title,
-            assignments: Array.isArray(assignments) ? assignments : [],
+            assignments: Array.isArray(assignments?.data) ? assignments.data : (Array.isArray(assignments) ? assignments : []),
           }))
           .catch(() => ({ courseId: course.id, courseTitle: course.title, assignments: [] }))
       );
@@ -648,8 +649,14 @@ export default function StudentDashboard() {
                       );
                     })}
                     {enrollments.length === 0 && (
-                      <div className="col-span-3 text-center py-8 text-slate-600 dark:text-slate-400 bg-slate-100/80 dark:bg-[#112240]/80 rounded-2xl border border-slate-200 dark:border-slate-700 border-dashed">
-                        {t('noClassesEnrolledYet')}
+                      <div className="col-span-1 md:col-span-2 xl:col-span-3">
+                        <EmptyState
+                          icon={<BookOpen className="h-12 w-12" />}
+                          title={t('noClassesEnrolledYet')}
+                          description="You haven't been enrolled in any classes yet. Classes will appear here once your teacher adds you."
+                          actionLabel="Browse Courses"
+                          onAction={() => setLocation('/student/courses')}
+                        />
                       </div>
                     )}
                   </div>
@@ -687,9 +694,12 @@ export default function StudentDashboard() {
                       );
                     })}
                     {assignments.length === 0 && (
-                      <div className="text-center py-8 text-slate-500 dark:text-slate-400 bg-white/80 dark:bg-[#112240]/30 rounded-2xl border border-slate-200 dark:border-slate-700 border-dashed">
-                        {t('noUpcomingAssignments')}
-                      </div>
+                      <EmptyState
+                        icon={<BookOpenCheck className="h-8 w-8" />}
+                        title={t('noUpcomingAssignments')}
+                        description="You're all caught up! No pending assignments right now."
+                        className="py-6 min-h-[200px]"
+                      />
                     )}
                   </div>
                 </section>
@@ -722,7 +732,13 @@ export default function StudentDashboard() {
                         <p className="text-xs font-semibold text-slate-600 dark:text-slate-300">{assignment.status === 'graded' ? '95%' : t('pending')}</p>
                       </m.div>
                     ))}
-                    {assignments.length === 0 && <p className="text-sm text-slate-500 dark:text-slate-400">{t('noRecentAssignments')}</p>}
+                    {assignments.length === 0 && (
+                      <EmptyState
+                        title="No recent assignments"
+                        description="When you complete assignments, they will appear here."
+                        className="min-h-[150px] p-4"
+                      />
+                    )}
                   </div>
                 </m.div>
 
@@ -736,9 +752,12 @@ export default function StudentDashboard() {
                       </m.div>
                     ))}
                     {announcements.length === 0 && (
-                      <div className="rounded-xl border border-dashed border-slate-300 p-4 text-sm text-slate-500 dark:border-slate-600 dark:text-slate-400">
-                        No recent announcements.
-                      </div>
+                      <EmptyState
+                        icon={<Megaphone className="h-8 w-8" />}
+                        title="No announcements"
+                        description="There are no recent announcements from your teachers."
+                        className="min-h-[150px] p-4"
+                      />
                     )}
                   </div>
                 </m.div>

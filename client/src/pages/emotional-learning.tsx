@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Heart, Brain, Smile, Frown, AlertTriangle, Star, RefreshCw, PartyPopper, Zap, Target, Lightbulb, BookOpen, Users, HelpCircle, Sparkles, Rocket, FileText, Search, MessageCircle, GraduationCap, Wind, Footprints, PenTool, Headphones, Apple, Bed, Video, School, Palette, CheckCircle, Music, FlaskConical, Flame, Atom, Landmark, Vase, Castle, Map, HeartPulse, Stethoscope, Mountain, Waves, Volcano, Cloud, Ruler, BarChart, Hash, Infinity, Hand, RotateCw, Scale, PlayCircle, Award } from "lucide-react";
+import { Heart, Brain, Smile, Frown, AlertTriangle, Star, RefreshCw, PartyPopper, Zap, Target, Lightbulb, BookOpen, Users, HelpCircle, Sparkles, Rocket, FileText, Search, MessageCircle, GraduationCap, Wind, Footprints, PenTool, Headphones, Apple, Bed, Video, School, Palette, CheckCircle, Music, FlaskConical, Flame, Atom, Landmark, Castle, Map, HeartPulse, Stethoscope, Mountain, Waves, Cloud, Ruler, BarChart, Hash, Infinity, Hand, RotateCw, Scale, PlayCircle, Award, TrendingUp } from "lucide-react";
 
 interface EmotionState {
   emotion: string;

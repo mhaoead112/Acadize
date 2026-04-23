@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { useAuth } from "@/hooks/useAuth";
 import { useWebSocket } from "@/hooks/useWebSocket";
@@ -113,7 +113,10 @@ export default function StudyGroupsChatPage() {
 
   const handleWebSocketMessage = (data: any) => {
     if (data.type === 'new_message' && data.message?.conversationId === selectedConversation?.conversationId) {
-      setMessages(prev => [...prev, data.message]);
+      setMessages(prev => {
+        if (prev.some(m => m.id === data.message.id)) return prev;
+        return [...prev, data.message];
+      });
     }
   };
 

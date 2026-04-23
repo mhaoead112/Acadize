@@ -359,7 +359,7 @@ function SessionCard({
 // EMPTY STATE
 // ============================================================================
 
-function EmptyState({ onCreate }: { onCreate: () => void }) {
+function EmptyState({ onCreate, t }: { onCreate: () => void, t: any }) {
   return (
     <div className="col-span-full flex flex-col items-center justify-center py-24 px-8 text-center">
       <div className="relative mb-8">
@@ -795,7 +795,7 @@ export default function TeacherSessions() {
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <EmptyState onCreate={() => setModalOpen(true)} />
+                  <EmptyState onCreate={() => setModalOpen(true)} t={t} />
                 </motion.div>
               ) : (
                 filtered.map((session, idx) => (

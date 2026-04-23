@@ -125,6 +125,7 @@ export default function StudentCourseDetailPage() {
               const teacherData = await teacherRes.json();
               fetchedCourse.teacher = teacherData.user || teacherData;
             }
+
           } catch (err) {
             console.error('Failed to fetch teacher details:', err);
           }
@@ -136,25 +137,27 @@ export default function StudentCourseDetailPage() {
       // Fetch lessons
       if (lessonsRes.ok) {
         const lessonsData = await lessonsRes.json();
-        setLessons(lessonsData.lessons || []);
+        setLessons(Array.isArray(lessonsData.lessons) ? lessonsData.lessons : []);
       }
 
       // Fetch assignments
       if (assignmentsRes.ok) {
         const assignmentsData = await assignmentsRes.json();
-        setAssignments(assignmentsData.assignments || assignmentsData || []);
+        const assignmentsList = assignmentsData.assignments || assignmentsData || [];
+        setAssignments(Array.isArray(assignmentsList) ? (assignmentsList as Assignment[]) : []);
       }
 
       // Fetch announcements
       if (announcementsRes.ok) {
         const announcementsData = await announcementsRes.json();
-        setAnnouncements(announcementsData.announcements || announcementsData || []);
+        const announcementsList = announcementsData.announcements || announcementsData || [];
+        setAnnouncements(Array.isArray(announcementsList) ? (announcementsList as Announcement[]) : []);
       }
 
       // Fetch student progress for this course
       if (progressRes?.ok) {
         const progressData = await progressRes.json();
-        setProgress(progressData.progressPercentage || 75);
+        setProgress(progressData.progressPercentage ?? 75);
       }
     } catch (error) {
       console.error("Error fetching course data:", error);
@@ -567,7 +570,7 @@ export default function StudentCourseDetailPage() {
                     <p className="text-slate-600 dark:text-slate-400 text-sm mb-5">{t('dashboard:dueDateLabel', { date: formatDate(nextAssignment.dueDate) })}</p>
                     <div className="flex items-center justify-between pt-4 border-t border-amber-300 dark:border-amber-800/30">
                       <span className="text-xs font-medium bg-card px-2 py-1 rounded border border-white/10 text-slate-400">
-                        {t('dashboard:pointsLabel', { count: nextAssignment.maxScore || '100' })}
+                        {t('dashboard:pointsLabel', { count: Number(nextAssignment.maxScore || 100) })}
                       </span>
                       <Link href="/student/assignments" className="text-primary text-sm font-bold hover:underline">
                         {t('dashboard:viewDetails')}
@@ -767,7 +770,7 @@ export default function StudentCourseDetailPage() {
                             {assignment.maxScore && (
                               <span className="flex items-center gap-1">
                                 <span className="material-symbols-outlined text-[14px]">trophy</span>
-                                {t('dashboard:pointsLabel', { count: assignment.maxScore })}
+                                {t('dashboard:pointsLabel', { count: Number(assignment.maxScore) })}
                               </span>
                             )}
                           </div>
@@ -851,4 +854,3 @@ export default function StudentCourseDetailPage() {
     </main>
   );
 }
-

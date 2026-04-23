@@ -266,7 +266,10 @@ export default function TeacherExamQuestions() {
 
       const res = await fetch(url, {
         method,
-        headers: getAuthHeaders(),
+        headers: {
+          ...getAuthHeaders(),
+          'Content-Type': 'application/json',
+        },
         credentials: 'include',
         body: JSON.stringify(payload)
       });

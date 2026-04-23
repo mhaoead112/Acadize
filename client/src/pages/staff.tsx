@@ -236,7 +236,7 @@ export default function StaffDirectory() {
               <div className="flex items-start gap-6 mb-6">
                 <Avatar className="w-20 h-20 border-4 border-white shadow-lg">
                   <AvatarImage 
-                    src={member.profileImage || ''} 
+                    src={(member as any).imageUrl || ''} 
                     alt={`${member.firstName} ${member.lastName}`} 
                   />
                   <AvatarFallback className="bg-gradient-to-br from-eduverse-blue to-purple-500 text-white text-xl font-bold">
@@ -268,14 +268,14 @@ export default function StaffDirectory() {
               )}
 
               {/* Expertise Tags */}
-              {formatExpertise(member.expertise).length > 0 && (
+              {formatExpertise((member as any).expertise).length > 0 && (
                 <div className="mb-6">
                   <div className="flex items-center gap-2 mb-3">
                     <GraduationCap className="h-4 w-4 text-eduverse-blue" />
                     <span className="text-sm font-medium text-gray-700">Areas of Expertise</span>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {formatExpertise(member.expertise).slice(0, 4).map((skill, index) => (
+                    {formatExpertise((member as any).expertise).slice(0, 4).map((skill, index) => (
                       <Badge 
                         key={index} 
                         variant="secondary" 
@@ -284,9 +284,9 @@ export default function StaffDirectory() {
                         {skill}
                       </Badge>
                     ))}
-                    {formatExpertise(member.expertise).length > 4 && (
+                    {formatExpertise((member as any).expertise).length > 4 && (
                       <Badge variant="outline" className="text-xs">
-                        +{formatExpertise(member.expertise).length - 4} more
+                        +{formatExpertise((member as any).expertise).length - 4} more
                       </Badge>
                     )}
                   </div>
@@ -344,12 +344,12 @@ export default function StaffDirectory() {
               </div>
 
               {/* Experience Badge */}
-              {member.experience && (
+              {(member as any).experience && (
                 <div className="mt-4 pt-4 border-t border-gray-100">
                   <div className="flex items-center gap-2 text-sm text-gray-600">
                     <Award className="h-4 w-4 text-yellow-500" />
                     <span className="font-medium">Experience:</span>
-                    <span>{member.experience}</span>
+                    <span>{(member as any).experience}</span>
                   </div>
                 </div>
               )}

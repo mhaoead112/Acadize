@@ -13,7 +13,7 @@ import {
   ListItemText,
   IconButton
 } from '@mui/material';
-import { Edit, Delete } from '@mui/icons-material';
+import { Edit, Trash2 as Delete } from 'lucide-react';
 
 interface Goal {
   name: string;

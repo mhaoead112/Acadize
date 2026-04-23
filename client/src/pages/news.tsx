@@ -46,9 +46,13 @@ export default function News() {
     
     return filtered.sort((a, b) => {
       // Sort by pinned status first, then by publication date
-      if (a.isPinned && !b.isPinned) return -1;
-      if (!a.isPinned && b.isPinned) return 1;
-      return new Date(b.publishedAt || b.createdAt).getTime() - new Date(a.publishedAt || a.createdAt).getTime();
+      const aPinned = (a as any).isPinned;
+      const bPinned = (b as any).isPinned;
+      if (aPinned && !bPinned) return -1;
+      if (!aPinned && bPinned) return 1;
+      const aDate = new Date((a as any).publishedAt || a.createdAt).getTime();
+      const bDate = new Date((b as any).publishedAt || b.createdAt).getTime();
+      return bDate - aDate;
     });
   }, [articles, selectedCategory, searchQuery]);
 
@@ -144,7 +148,7 @@ export default function News() {
               <Card 
                 key={article.id} 
                 className={`hover:shadow-lg transition-shadow ${
-                  article.isPinned ? 'border-yellow-300 bg-yellow-50' : ''
+                  (article as any).isPinned ? 'border-yellow-300 bg-yellow-50' : ''
                 }`}
                 data-testid={`article-${article.id}`}
               >
@@ -152,7 +156,7 @@ export default function News() {
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
-                        {article.isPinned && (
+                        {(article as any).isPinned && (
                           <Badge className="bg-yellow-500 text-white">
                             <Pin className="h-3 w-3 mr-1" />
                             Pinned
@@ -179,15 +183,15 @@ export default function News() {
                         </div>
                         <div className="flex items-center gap-1">
                           <Calendar className="h-4 w-4" />
-                          {format(new Date(article.publishedAt || article.createdAt), "MMM dd, yyyy")}
+                          {format(new Date((article as any).publishedAt || article.createdAt), "MMM dd, yyyy")}
                         </div>
                         <div className="flex items-center gap-1">
                           <Clock className="h-4 w-4" />
-                          {format(new Date(article.publishedAt || article.createdAt), "h:mm a")}
+                          {format(new Date((article as any).publishedAt || article.createdAt), "h:mm a")}
                         </div>
                         <div className="flex items-center gap-1">
                           <Eye className="h-4 w-4" />
-                          {article.views || 0} views
+                          {(article as any).views || 0} views
                         </div>
                       </div>
                     </div>
@@ -196,14 +200,14 @@ export default function News() {
                 
                 <CardContent>
                   <p className="text-gray-700 mb-4 line-clamp-3">
-                    {article.excerpt || article.content.substring(0, 200) + "..."}
+                    {(article as any).excerpt || article.content.substring(0, 200) + "..."}
                   </p>
                   
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4 text-sm text-gray-500">
-                      {article.tags && Array.isArray(article.tags) && article.tags.length > 0 ? (
+                      {(article as any).tags && Array.isArray((article as any).tags) && (article as any).tags.length > 0 ? (
                         <div className="flex items-center gap-1 flex-wrap">
-                          {(article.tags as string[]).slice(0, 3).map((tag: string, index: number) => (
+                          {((article as any).tags as string[]).slice(0, 3).map((tag: string, index: number) => (
                             <Badge key={index} variant="outline" className="text-xs">
                               #{tag}
                             </Badge>

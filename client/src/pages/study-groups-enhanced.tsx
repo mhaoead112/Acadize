@@ -88,15 +88,19 @@ export default function StudyGroupsPage() {
   const [readReceipts, setReadReceipts] = useState<Map<string, ReadReceipt[]>>(new Map());
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const typingTimeoutRef = useRef<NodeJS.Timeout>();
+  const typingTimeoutRef = useRef<any>(null);
 
   // WebSocket connection
   const { isConnected, sendMessage: wsSendMessage } = useWebSocket((data) => {
     handleWebSocketMessage(data);
   });
 
-  const getAuthHeaders = () => {
-    return token ? { Authorization: `Bearer ${token}` } : {};
+  const getAuthHeaders = (): Record<string, string> => {
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    return headers;
   };
 
   useEffect(() => {

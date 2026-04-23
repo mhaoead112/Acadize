@@ -124,7 +124,7 @@ export default function SubscriptionRequired() {
                 <Card className="bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 backdrop-blur-sm overflow-hidden group hover:border-primary/30 transition-all shadow-sm">
                   <CardContent className="p-6">
                     <div className="mb-4 p-3 bg-primary/10 rounded-xl inline-block group-hover:scale-110 transition-transform">
-                      {React.cloneElement(feature.icon as React.ReactElement, { className: 'h-6 w-6 text-primary' })}
+                      {feature.icon}
                     </div>
                     <h4 className="text-lg font-bold mb-2 text-slate-900 dark:text-white italic">{feature.title}</h4>
                     <p className="text-sm text-slate-500 dark:text-gray-400 leading-relaxed">

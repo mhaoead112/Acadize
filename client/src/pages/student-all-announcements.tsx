@@ -34,10 +34,13 @@ export default function StudentAllAnnouncementsPage() {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const getAuthHeaders = () => {
+  const getAuthHeaders = (): Record<string, string> => {
     const token = localStorage.getItem("auth_token") || localStorage.getItem("eduverse_token");
-    if (!token) return {};
-    return { Authorization: `Bearer ${token}` };
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+    return headers;
   };
 
   useEffect(() => {

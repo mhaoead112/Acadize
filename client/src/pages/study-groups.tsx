@@ -128,16 +128,19 @@ export default function StudyGroupsPage() {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const typingTimeoutRef = useRef<NodeJS.Timeout>();
+  const typingTimeoutRef = useRef<any>(null);
 
   // WebSocket connection
   const { isConnected, sendMessage: wsSendMessage } = useWebSocket((data) => {
     handleWebSocketMessage(data);
   });
 
-  const getAuthHeaders = (): HeadersInit => {
-    if (!token) return {};
-    return { Authorization: `Bearer ${token}` };
+  const getAuthHeaders = (): Record<string, string> => {
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    return headers;
   };
 
   useEffect(() => {
@@ -960,7 +963,7 @@ export default function StudyGroupsPage() {
                             ) : message.type === 'image' ? (
                               <div>
                                 <img
-                                  src={assetUrl(message.fileUrl)}
+                                  src={assetUrl(message.fileUrl || '')}
                                   alt={message.fileName}
                                   className="max-w-sm rounded-lg mb-1"
                                 />

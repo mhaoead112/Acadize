@@ -164,7 +164,8 @@ const buildActivityFeed = (activity?: DashboardData["recentActivity"]) => {
     user: item.childName || "Student",
     description: item.action || "Activity update",
     time: item.timestamp || "",
-    avatar: `https://picsum.photos/seed/${encodeURIComponent(item.childName || "school")}/100`
+    avatar: `https://picsum.photos/seed/${encodeURIComponent(item.childName || "school")}/100`,
+    isPlaceholder: false
   }));
 
   if (feed.length) return feed;
@@ -182,7 +183,7 @@ const buildActivityFeed = (activity?: DashboardData["recentActivity"]) => {
 };
 
 export default function ParentDashboardModern() {
-  const { t } = useTranslation('parent');
+  const { t } = useTranslation('parent') as any;
   const { token } = useAuth();
   const [, setLocation] = useLocation();
   const [data, setData] = useState<DashboardData | null>(null);

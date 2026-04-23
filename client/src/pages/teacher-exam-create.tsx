@@ -7,6 +7,7 @@ import { CardSkeleton } from '../components/skeletons/CardSkeleton';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '@/contexts/ThemeContext';
 import { apiEndpoint } from '../lib/config';
+import { useToast } from '@/hooks/use-toast';
 import { 
   fadeInVariants, 
   staggerContainer, 
@@ -15,7 +16,6 @@ import {
   springConfigs
 } from '@/lib/animations';
 import { Button } from '@/components/ui/button';
-
 
 
 // ============================================================================
@@ -42,6 +42,7 @@ export default function TeacherExamCreate() {
   const [, setLocation] = useLocation();
   const { user, getAuthHeaders } = useAuth();
   const { theme } = useTheme();
+  const { toast } = useToast();
   
   // Form state
   const [courses, setCourses] = useState<Course[]>([]);
@@ -49,6 +50,14 @@ export default function TeacherExamCreate() {
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
+  const errorBannerRef = React.useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to error banner whenever errors appear
+  useEffect(() => {
+    if (errors.length > 0 && errorBannerRef.current) {
+      errorBannerRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [errors]);
   
   // Form data
   const [formData, setFormData] = useState({
@@ -253,22 +262,45 @@ export default function TeacherExamCreate() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await response.json().catch(() => ({ message: t('teacherExamCreate.failedToCreateExam') }));
+        const msg = errorData.message || t('teacherExamCreate.failedToCreateExam');
         if (errorData.errors && Array.isArray(errorData.errors)) {
           setErrors(errorData.errors);
         } else {
-          setErrors([errorData.message || t('teacherExamCreate.failedToCreateExam')]);
+          setErrors([msg]);
         }
+        toast({
+          title: t('teacherExamCreate.configurationError'),
+          description: msg,
+          variant: 'destructive',
+        });
         return;
       }
 
       const result = await response.json();
-      
-      // Success - navigate to exam detail or exams list
-      setLocation(`/teacher/exams`);
+      const examId: string = result.examId || result.exam?.id;
+
+      if (!examId) {
+        // Unexpected — server returned 2xx but no ID
+        const msg = 'Exam was created but no ID was returned. Please check your exam list.';
+        toast({ title: 'Warning', description: msg, variant: 'destructive' });
+        setLocation('/teacher/exams');
+        return;
+      }
+
+      toast({
+        title: t('teacherExamCreate.successTitle') || 'Exam Created!',
+        description: t('teacherExamCreate.successDesc') || 'Now add your questions below.',
+      });
+
+      // Navigate directly to the question builder — the primary UX goal
+      setLocation(`/teacher/exams/${examId}/questions`);
+
     } catch (err: any) {
       console.error('Error creating exam:', err);
-      setErrors([err.message || t('teacherExamCreate.unexpectedError')]);
+      const msg = err.message || t('teacherExamCreate.unexpectedError');
+      setErrors([msg]);
+      toast({ title: 'Error', description: msg, variant: 'destructive' });
     } finally {
       setSubmitting(false);
     }
@@ -334,6 +366,7 @@ export default function TeacherExamCreate() {
           <AnimatePresence>
             {errors.length > 0 && (
               <motion.div 
+                ref={errorBannerRef}
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
@@ -404,7 +437,56 @@ export default function TeacherExamCreate() {
                     {getFieldError('courseId')}
                   </p>
                 )}
-              </div>              {/* Time Limit */}
+              </div>
+
+              {/* Exam Title */}
+              <div className="space-y-3 md:col-span-2">
+                <label className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 ml-1">
+                  Exam Title <span className="text-gold">*</span>
+                </label>
+                <input
+                  type="text"
+                  className="w-full bg-slate-50 dark:bg-navy/60 border-2 border-slate-200 dark:border-white/5 text-navy dark:text-white rounded-[1.5rem] px-6 py-5 focus:ring-4 focus:ring-gold/10 focus:border-gold transition-all outline-none font-bold text-lg placeholder:text-slate-400/40"
+                  placeholder="e.g. Midterm Exam — Chapter 1–5"
+                  value={formData.title}
+                  onChange={(e) => handleInputChange('title', e.target.value)}
+                  required
+                />
+                {getFieldError('title') && (
+                  <p className="text-red-500 text-xs font-bold mt-1 ml-2 flex items-center gap-1">
+                    <span className="material-symbols-outlined text-[14px]">error</span>
+                    {getFieldError('title')}
+                  </p>
+                )}
+              </div>
+
+              {/* Description */}
+              <div className="space-y-3 md:col-span-2">
+                <label className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 ml-1">
+                  Description
+                </label>
+                <textarea
+                  className="w-full bg-slate-50 dark:bg-navy/60 border-2 border-slate-200 dark:border-white/5 text-navy dark:text-white rounded-[1.5rem] px-6 py-5 focus:ring-4 focus:ring-gold/10 focus:border-gold transition-all outline-none min-h-[100px] font-medium placeholder:text-slate-400/40 leading-relaxed resize-none"
+                  placeholder="Brief overview of this exam's scope and purpose..."
+                  value={formData.description}
+                  onChange={(e) => handleInputChange('description', e.target.value)}
+                />
+              </div>
+
+              {/* Instructions */}
+              <div className="space-y-3 md:col-span-2">
+                <label className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 ml-1">
+                  Student Instructions
+                </label>
+                <textarea
+                  className="w-full bg-slate-50 dark:bg-navy/60 border-2 border-slate-200 dark:border-white/5 text-navy dark:text-white rounded-[1.5rem] px-6 py-5 focus:ring-4 focus:ring-gold/10 focus:border-gold transition-all outline-none min-h-[100px] font-medium placeholder:text-slate-400/40 leading-relaxed resize-none"
+                  placeholder="Rules, tips, and special instructions for students before they begin..."
+                  value={formData.instructions}
+                  onChange={(e) => handleInputChange('instructions', e.target.value)}
+                />
+              </div>
+
+              {/* Time Limit */}
               <div className="space-y-3">
                 <label className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 ml-1 flex items-center gap-2">
                   <span className="material-symbols-outlined text-[16px]">timer</span>
@@ -494,22 +576,42 @@ export default function TeacherExamCreate() {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="space-y-3">
-                <label className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 ml-1">{t('teacherExamCreate.windowOpenDateTime')}</label>
+                <label className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 ml-1">
+                  {t('teacherExamCreate.windowOpenDateTime')} <span className="text-gold">*</span>
+                </label>
                 <input
                   type="datetime-local"
-                  className="w-full bg-slate-50 dark:bg-navy/60 border-2 border-slate-200 dark:border-white/5 text-navy dark:text-white rounded-[1.5rem] px-6 py-5 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none font-bold"
+                  className={`w-full bg-slate-50 dark:bg-navy/60 border-2 text-navy dark:text-white rounded-[1.5rem] px-6 py-5 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none font-bold ${
+                    getFieldError('scheduledStartAt') ? 'border-red-400 dark:border-red-500' : 'border-slate-200 dark:border-white/5'
+                  }`}
                   value={formData.scheduledStartAt}
                   onChange={(e) => handleInputChange('scheduledStartAt', e.target.value)}
                 />
+                {getFieldError('scheduledStartAt') && (
+                  <p className="text-red-500 text-xs font-bold mt-1 ml-2 flex items-center gap-1">
+                    <span className="material-symbols-outlined text-[14px]">error</span>
+                    {getFieldError('scheduledStartAt')}
+                  </p>
+                )}
               </div>
               <div className="space-y-3">
-                <label className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 ml-1">{t('teacherExamCreate.windowCloseDateTime')}</label>
+                <label className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 ml-1">
+                  {t('teacherExamCreate.windowCloseDateTime')} <span className="text-gold">*</span>
+                </label>
                 <input
                   type="datetime-local"
-                  className="w-full bg-slate-50 dark:bg-navy/60 border-2 border-slate-200 dark:border-white/5 text-navy dark:text-white rounded-[1.5rem] px-6 py-5 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none font-bold"
+                  className={`w-full bg-slate-50 dark:bg-navy/60 border-2 text-navy dark:text-white rounded-[1.5rem] px-6 py-5 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none font-bold ${
+                    getFieldError('scheduledEndAt') ? 'border-red-400 dark:border-red-500' : 'border-slate-200 dark:border-white/5'
+                  }`}
                   value={formData.scheduledEndAt}
                   onChange={(e) => handleInputChange('scheduledEndAt', e.target.value)}
                 />
+                {getFieldError('scheduledEndAt') && (
+                  <p className="text-red-500 text-xs font-bold mt-1 ml-2 flex items-center gap-1">
+                    <span className="material-symbols-outlined text-[14px]">error</span>
+                    {getFieldError('scheduledEndAt')}
+                  </p>
+                )}
               </div>
             </div>
           </motion.div>

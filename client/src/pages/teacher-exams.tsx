@@ -41,8 +41,8 @@ interface Exam {
   status: 'draft' | 'scheduled' | 'active' | 'completed' | 'archived';
   courseId: string;
   courseName: string;
-  scheduledStart: string | null;
-  scheduledEnd: string | null;
+  scheduledStartAt: string | null;
+  scheduledEndAt: string | null;
   duration: number;
   totalPoints: number;
   passingScore: number;
@@ -190,11 +190,11 @@ export default function TeacherExams() {
 
   const getNextScheduledExam = () => {
     const scheduled = exams
-      .filter(e => e.scheduledStart && e.status === 'scheduled')
-      .sort((a, b) => new Date(a.scheduledStart!).getTime() - new Date(b.scheduledStart!).getTime());
+      .filter(e => e.scheduledStartAt && e.status === 'scheduled')
+      .sort((a, b) => new Date(a.scheduledStartAt!).getTime() - new Date(b.scheduledStartAt!).getTime());
     
     if (scheduled.length === 0) return t("teacherExams.none");
-    const nextDate = new Date(scheduled[0].scheduledStart!);
+    const nextDate = new Date(scheduled[0].scheduledStartAt!);
     return nextDate.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
   };
 

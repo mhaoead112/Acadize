@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, Link } from "wouter";
 import { 
@@ -8,14 +8,13 @@ import {
 import TeacherLayout from "@/components/TeacherLayout";
 import { DashboardStatsSkeleton } from "@/components/skeletons/DashboardStatsSkeleton";
 import { CardSkeleton } from "@/components/skeletons/CardSkeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { apiEndpoint } from "@/lib/config";
-
-const VersaFloatingChat = lazy(() => import("@/components/VersaFloatingChat"));
 
 interface Course {
   id: string;
@@ -75,7 +74,7 @@ export default function TeacherDashboard() {
       setLoading(true);
       const authHeaders = getAuthHeaders();
 
-      // Fetch teacher's OWN courses only (using /user endpoint for teacher's courses)
+      // Fetch teacher's OWN courses only
       const coursesRes = await fetch(apiEndpoint("/api/courses/user"), {
         headers: authHeaders,
       });
@@ -85,7 +84,7 @@ export default function TeacherDashboard() {
       }
 
       const coursesData = await coursesRes.json();
-      const allCourses = Array.isArray(coursesData) ? coursesData : [];
+      const allCourses = Array.isArray(coursesData.data) ? coursesData.data : (Array.isArray(coursesData) ? coursesData : []);
       setCourses(allCourses);
 
       // Fetch assignments and calculate stats
@@ -102,11 +101,11 @@ export default function TeacherDashboard() {
           );
           if (enrollmentsRes.ok) {
             const enrollmentData = await enrollmentsRes.json();
-            if (Array.isArray(enrollmentData)) {
-              enrollmentData.forEach((e: any) => {
-                if (e.studentId) uniqueStudentIds.add(e.studentId);
-              });
-            }
+            const enrollmentsArray = Array.isArray(enrollmentData.data) ? enrollmentData.data : (Array.isArray(enrollmentData) ? enrollmentData : []);
+            
+            enrollmentsArray.forEach((e: any) => {
+              if (e.studentId) uniqueStudentIds.add(e.studentId);
+            });
           }
         } catch (error) {
           // Silently handle enrollment fetch errors
@@ -120,7 +119,7 @@ export default function TeacherDashboard() {
           
           if (assignmentsRes.ok) {
             const data = await assignmentsRes.json();
-            const courseAssignments = Array.isArray(data) ? data : [];
+            const courseAssignments = Array.isArray(data.data) ? data.data : (Array.isArray(data) ? data : []);
             
             for (const assignment of courseAssignments) {
               try {
@@ -131,8 +130,7 @@ export default function TeacherDashboard() {
                 
                 if (submissionsRes.ok) {
                   const submissionData = await submissionsRes.json();
-                  const submissions = Array.isArray(submissionData) ? submissionData : 
-                                     (submissionData.submissions ? submissionData.submissions : []);
+                  const submissions = Array.isArray(submissionData.data) ? submissionData.data : (Array.isArray(submissionData) ? submissionData : (submissionData.submissions ? submissionData.submissions : []));
                   const ungradedCount = submissions.filter((s: any) => !s.grade).length;
                   pendingGrading += ungradedCount;
                   
@@ -244,9 +242,9 @@ export default function TeacherDashboard() {
           <div className="flex flex-col gap-2 rounded-xl p-5 border border-slate-200 dark:border-gray-800 bg-white dark:bg-slate-800 shadow-sm transition-colors duration-300">
             <div className="flex justify-between items-start">
               <p className="text-slate-500 dark:text-gray-400 text-sm font-medium leading-normal">{t('activeClasses')}</p>
-<div className="p-2 rounded-lg bg-navy/10 dark:bg-gold/10">
-  <BookOpen className="h-5 w-5 text-navy dark:text-gold" />
-</div>
+              <div className="p-2 rounded-lg bg-navy/10 dark:bg-gold/10">
+                <BookOpen className="h-5 w-5 text-navy dark:text-gold" />
+              </div>
             </div>
             <p className="text-navy dark:text-white tracking-tight text-3xl font-bold leading-tight">
               {stats.totalCourses}
@@ -303,15 +301,14 @@ export default function TeacherDashboard() {
               </div>
 
               {courses.length === 0 ? (
-                <div className="rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-slate-800 p-12 text-center transition-colors duration-300">
-                  <BookOpen className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600 dark:text-gray-400 mb-4">
-                    {t('noCoursesYet')}
-                  </p>
-                  <Button onClick={() => setLocation('/teacher/courses/create')}>
-                    {t('createClass')}
-                  </Button>
-                </div>
+                <EmptyState
+                  icon={<BookOpen className="h-16 w-16" />}
+                  title={t('noCoursesYet')}
+                  description="You haven't created any classes yet. Create your first class to get started."
+                  actionLabel={t('createClass')}
+                  onAction={() => setLocation('/teacher/courses/create')}
+                  className="bg-white dark:bg-slate-800 border-slate-200 dark:border-gray-800"
+                />
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {courses.slice(0, 4).map((course) => {
@@ -357,10 +354,12 @@ export default function TeacherDashboard() {
 
               <div className="rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-slate-800 shadow-sm overflow-hidden transition-colors duration-300">
                 {assignments.length === 0 ? (
-                  <div className="p-12 text-center">
-                    <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-sm text-gray-600 dark:text-gray-400">No assignments yet</p>
-                  </div>
+                  <EmptyState
+                    icon={<FileText className="h-12 w-12" />}
+                    title="No assignments yet"
+                    description="When you create assignments for your classes, they will appear here."
+                    className="min-h-[250px] bg-transparent border-none"
+                  />
                 ) : (
                   <div className="divide-y divide-slate-100 dark:divide-gray-800">
                     {assignments.map((assignment) => {
@@ -455,9 +454,9 @@ export default function TeacherDashboard() {
                   Announcements
                 </h3>
                 <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={() => setLocation('/teacher/courses')}
+                   variant="ghost" 
+                   size="sm"
+                   onClick={() => setLocation('/teacher/courses')}
                 >
                   <Plus className="h-4 w-4" />
                 </Button>
@@ -507,9 +506,6 @@ export default function TeacherDashboard() {
           </div>
         </div>
       </div>
-
-      <Suspense fallback={null}><VersaFloatingChat /></Suspense>
     </TeacherLayout>
   );
 }
-

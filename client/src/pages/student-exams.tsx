@@ -56,6 +56,14 @@ interface ExamCategory {
   retakeEligible: RetakeEligibility[];
 }
 
+interface Enrollment {
+  courseId: string;
+  course?: {
+    id: string;
+    title: string;
+  };
+}
+
 type CategoryType = 'main' | 'mock' | 'practice' | 'all';
 
 // ============================================================================
@@ -105,7 +113,8 @@ const StudentExams: React.FC = () => {
 
   const getFilteredExams = (category: CategoryType, exams: Exam[]) => {
     if (category === 'all') return exams;
-    return categorizeExams(exams)[category];
+    const stats = categorizeExams(exams);
+    return stats[category] || [];
   };
 
   // ============================================================================
@@ -140,9 +149,13 @@ const StudentExams: React.FC = () => {
         throw new Error(t('failedToFetchExamData'));
       }
 
-      const availableExams: Exam[] = await availableResponse.json();
-      const attempts: ExamAttempt[] = await attemptsResponse.json();
-      const enrollments = await enrollmentsResponse.json();
+      const availableData = await availableResponse.json();
+      const attemptsData = await attemptsResponse.json();
+      const enrollmentsData = await enrollmentsResponse.json();
+
+      const availableExams: Exam[] = Array.isArray(availableData.data) ? (availableData.data as Exam[]) : (Array.isArray(availableData) ? (availableData as Exam[]) : []);
+      const attempts: ExamAttempt[] = Array.isArray(attemptsData.data) ? (attemptsData.data as ExamAttempt[]) : (Array.isArray(attemptsData) ? (attemptsData as ExamAttempt[]) : []);
+      const enrollments: Enrollment[] = Array.isArray(enrollmentsData.data) ? (enrollmentsData.data as Enrollment[]) : (Array.isArray(enrollmentsData) ? (enrollmentsData as Enrollment[]) : []);
 
       // Categorize attempts
       const inProgressAttempts = attempts.filter(a => a.status === 'in_progress');
@@ -193,8 +206,8 @@ const StudentExams: React.FC = () => {
       const retakeEligible = retakeResults.filter((r): r is RetakeEligibility => r !== null);
 
       // Enrich exams with course names
-      const enrichedExams = availableExams.map(exam => {
-        const enrollment = enrollments.find((e: any) => e.courseId === exam.courseId);
+      const enrichedFilteredExams = filteredAvailableExams.map(exam => {
+        const enrollment = enrollments.find((e: Enrollment) => e.courseId === exam.courseId);
         return {
           ...exam,
           courseName: enrollment?.course?.title || t('unknownCourse')
@@ -202,7 +215,7 @@ const StudentExams: React.FC = () => {
       });
 
       setExamData({
-        available: filteredAvailableExams,
+        available: enrichedFilteredExams,
         inProgress: inProgressAttempts,
         completed: completedAttempts,
         retakeEligible
@@ -216,12 +229,8 @@ const StudentExams: React.FC = () => {
     }
   };
 
-  // ============================================================================
-  // EXAM ACTIONS
-  // ============================================================================
-
-  const handleStartExam = async (exam: Exam) => {
-    // Exam lock: prevent starting new exam if one is active
+  const handleStartExam = (exam: Exam) => {
+    // If there's an active session for ANOTHER exam, prevent starting new ones
     if (activeExamLock && activeExamLock !== exam.id) {
       toast({
         title: t('examSessionActive'),
@@ -277,7 +286,6 @@ const StudentExams: React.FC = () => {
 
   const getStatusStyle = (status: Exam['status'] | ExamAttempt['status']) => {
     switch (status) {
-      case 'available':
       case 'active':
       case 'scheduled':
         return 'bg-green-500/10 text-green-400 border-green-500/20';
@@ -315,7 +323,7 @@ const StudentExams: React.FC = () => {
       case 'invalidated':
         return t('statusInvalidated');
       default:
-        return status.replace('_', ' ');
+        return (status as string).replace('_', ' ');
     }
   };
 
@@ -410,7 +418,7 @@ const StudentExams: React.FC = () => {
         <div className="p-4 dark:bg-navy-dark/40 dark:border-navy-border bg-slate-50 border-t border-slate-200">
           <button 
             onClick={() => handleStartExam(exam)}
-            disabled={isLocked}
+            disabled={!!isLocked}
             className={`w-full py-2.5 font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${
               isLocked
                 ? 'dark:bg-navy-dark dark:text-slate-600 bg-slate-200 text-slate-600 dark:border dark:border-navy-border cursor-not-allowed'
@@ -588,13 +596,6 @@ const StudentExams: React.FC = () => {
             'practice': t('practiceCategory')
   };
 
-  const categoryIcons: Record<CategoryType, string> = {
-    'all': 'assignment',
-    'main': 'verified_user',
-    'mock': 'simulation',
-    'practice': 'fitness_center'
-  };
-
   return (
     <div className="max-w-7xl mx-auto w-full p-4 sm:p-8 space-y-10">
         {/* Header */}
@@ -683,7 +684,7 @@ const StudentExams: React.FC = () => {
           ) : (
             <div className="col-span-full py-12 dark:bg-navy-dark/30 dark:border-navy-border bg-slate-100 border-2 border-dashed border-slate-300 rounded-2xl flex flex-col items-center justify-center text-center">
               <span className="material-symbols-outlined text-4xl dark:text-slate-700 text-slate-400 mb-2">inbox</span>
-              <p className="dark:text-slate-500 text-slate-600 font-medium">{selectedCategory === 'all' ? t('noExamsAvailable') : t('noExamsInCategory', { category: t(selectedCategory + 'Category') })}</p>
+              <p className="dark:text-slate-500 text-slate-600 font-medium">{selectedCategory === 'all' ? t('noExamsAvailable') : t('noExamsInCategory', { category: t((selectedCategory || 'all') + 'Category') })}</p>
             </div>
           )}
         </section>
@@ -730,8 +731,3 @@ const StudentExams: React.FC = () => {
 };
 
 export default StudentExams;
-
-// ============================================================================
-// COMPONENT
-// ============================================================================
-

@@ -84,7 +84,8 @@ export default function Login() {
             parent: '/parent/dashboard',
             admin: '/admin/dashboard'
           };
-          return roleRoutes[userData?.role] || '/';
+          const role = userData?.role;
+          return (role ? roleRoutes[role] : null) || '/';
         })();
 
         setTimeout(() => {

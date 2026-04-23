@@ -42,7 +42,7 @@ interface Course {
 
 export default function ParentCourses() {
   const { t } = useTranslation('parent');
-  const { token } = useAuth();
+  const { token, getAuthHeaders } = useAuth();
   const [, setLocation] = useLocation();
   const [children, setChildren] = useState<Child[]>([]);
   const [selectedChildId, setSelectedChildId] = useState<string | 'all'>('all');
@@ -71,10 +71,7 @@ export default function ParentCourses() {
 
     try {
       const response = await fetch(apiEndpoint('/api/parent/children'), {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
+        headers: getAuthHeaders(),
         credentials: 'include'
       });
 
@@ -105,10 +102,7 @@ export default function ParentCourses() {
         // Fetch courses from all children and merge
         const allCoursesPromises = children.map(async (child) => {
           const response = await fetch(apiEndpoint(`/api/parent/children/${child.id}/courses`), {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            },
+            headers: getAuthHeaders(),
             credentials: 'include'
           });
           
@@ -121,7 +115,7 @@ export default function ParentCourses() {
           const coursesWithStudentInfo = (data.courses || []).map((course: any) => ({
             ...course,
             studentId: child.id,
-            studentName: child.name,
+            studentName: child.fullName,
             currentScore: convertGradeToScore(course.currentGrade),
           }));
           
@@ -134,10 +128,7 @@ export default function ParentCourses() {
       } else {
         // Fetch courses for specific child
         const response = await fetch(apiEndpoint(`/api/parent/children/${selectedChildId}/courses`), {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
+          headers: getAuthHeaders(),
           credentials: 'include'
         });
 
@@ -147,7 +138,7 @@ export default function ParentCourses() {
           const coursesWithStudentInfo = (data.courses || []).map((course: any) => ({
             ...course,
             studentId: selectedChildId,
-            studentName: child?.name,
+            studentName: child?.fullName,
             currentScore: convertGradeToScore(course.currentGrade),
           }));
           setCourses(coursesWithStudentInfo);

@@ -514,16 +514,8 @@ export default function ParentMessagesPage() {
 
       if (response.ok) {
         const message = await response.json();
-        // Don't add message locally - let WebSocket handle it for consistency
+        // No need to send WebSocket message manually - REST API handles the broadcast
         setNewMessage("");
-        
-        // Send WebSocket message for real-time delivery
-        wsSendMessage({
-          type: 'message',
-          conversationId: selectedConversation.conversationId,
-          content: message.content,
-          messageType: 'text',
-        });
         
         // Stop typing indicator
         sendTypingIndicator(false);

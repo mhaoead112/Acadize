@@ -278,7 +278,7 @@ const StudentExamAttempt: React.FC = () => {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [antiCheatEnabled]);
+  }, [examData?.attempt.status, examData?.exam.antiCheatEnabled]);
 
   // ============================================================================
   // AUTO-SAVE ANSWERS
@@ -295,7 +295,7 @@ const StudentExamAttempt: React.FC = () => {
     return () => {
       if (autoSaveTimeoutRef.current) clearInterval(autoSaveTimeoutRef.current);
     };
-  }, [antiCheatEnabled]);
+  }, [examData?.attempt.status, examData?.exam.antiCheatEnabled]);
 
   const saveAnswers = async () => {
     if (!attemptId || isSubmittingRef.current) return;
