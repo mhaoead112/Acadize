@@ -22,12 +22,12 @@ export async function recordLoginStreak(userId: string): Promise<void> {
     await db.insert(studyStreaks).values({
       id: createId(),
       userId,
-      currentStreak: '1',
-      longestStreak: '1',
+      currentStreak: 1,
+      longestStreak: 1,
       lastActivityDate: today,
-      totalActiveDays: '1',
-      weeklyGoalHours: '10',
-      currentWeekHours: '0',
+      totalActiveDays: 1,
+      weeklyGoalHours: 10,
+      currentWeekHours: 0,
     });
     return;
   }
@@ -56,9 +56,9 @@ export async function recordLoginStreak(userId: string): Promise<void> {
     (today.getTime() - lastDateNormalized.getTime()) / (1000 * 60 * 60 * 24)
   );
 
-  let newCurrentStreak = parseInt(streak.currentStreak);
-  let newLongestStreak = parseInt(streak.longestStreak);
-  let newTotalActiveDays = parseInt(streak.totalActiveDays) + 1;
+  let newCurrentStreak = streak.currentStreak;
+  let newLongestStreak = streak.longestStreak;
+  const newTotalActiveDays = streak.totalActiveDays + 1;
 
   if (daysSinceLastLogin === 1) {
     // Consecutive day - increment streak
@@ -87,10 +87,10 @@ async function updateStreakRecord(
   await db
     .update(studyStreaks)
     .set({
-      currentStreak: currentStreak.toString(),
-      longestStreak: longestStreak.toString(),
+      currentStreak,
+      longestStreak,
       lastActivityDate: activityDate,
-      totalActiveDays: totalActiveDays.toString(),
+      totalActiveDays,
       updatedAt: new Date(),
     })
     .where(eq(studyStreaks.userId, userId));
@@ -120,16 +120,18 @@ export async function getStreakInfo(userId: string) {
 
   const weeklyProgress = Math.min(
     100,
-    Math.round((parseFloat(streak.currentWeekHours) / parseFloat(streak.weeklyGoalHours)) * 100)
+    streak.weeklyGoalHours > 0
+      ? Math.round((streak.currentWeekHours / streak.weeklyGoalHours) * 100)
+      : 0
   );
 
   return {
-    currentStreak: parseInt(streak.currentStreak),
-    longestStreak: parseInt(streak.longestStreak),
+    currentStreak: streak.currentStreak,
+    longestStreak: streak.longestStreak,
     lastActivityDate: streak.lastActivityDate,
-    totalActiveDays: parseInt(streak.totalActiveDays),
-    weeklyGoalHours: parseFloat(streak.weeklyGoalHours),
-    currentWeekHours: parseFloat(streak.currentWeekHours),
+    totalActiveDays: streak.totalActiveDays,
+    weeklyGoalHours: streak.weeklyGoalHours,
+    currentWeekHours: streak.currentWeekHours,
     weeklyProgress,
   };
 }
@@ -148,7 +150,7 @@ export async function updateWeeklyGoal(userId: string, goalHours: number): Promi
     await db
       .update(studyStreaks)
       .set({
-        weeklyGoalHours: goalHours.toString(),
+        weeklyGoalHours: goalHours,
         updatedAt: new Date(),
       })
       .where(eq(studyStreaks.userId, userId));
@@ -156,12 +158,12 @@ export async function updateWeeklyGoal(userId: string, goalHours: number): Promi
     await db.insert(studyStreaks).values({
       id: createId(),
       userId,
-      currentStreak: '0',
-      longestStreak: '0',
+      currentStreak: 0,
+      longestStreak: 0,
       lastActivityDate: null,
-      totalActiveDays: '0',
-      weeklyGoalHours: goalHours.toString(),
-      currentWeekHours: '0',
+      totalActiveDays: 0,
+      weeklyGoalHours: goalHours,
+      currentWeekHours: 0,
     });
   }
 }

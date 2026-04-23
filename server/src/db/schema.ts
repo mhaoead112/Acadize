@@ -1,5 +1,7 @@
 import { pgTable, text, boolean, timestamp, varchar, pgEnum, date, integer, real, jsonb, index, uniqueIndex } from "drizzle-orm/pg-core";
 import { createId } from "@paralleldrive/cuid2";
+import { desc } from "drizzle-orm";
+import { z } from "zod";
 
 // --- ENUMS ---
 export const userRoleEnum = pgEnum('user_role', ['student', 'teacher', 'admin', 'parent', 'proctor']);
@@ -140,6 +142,7 @@ export const users = pgTable("users", {
   orgIdx: index("users_org_idx").on(table.organizationId),
   orgEmailIdx: uniqueIndex("users_org_email_idx").on(table.organizationId, table.email),
   orgUsernameIdx: uniqueIndex("users_org_username_idx").on(table.organizationId, table.username),
+  orgActiveIdx: index("users_org_active_idx").on(table.organizationId, table.isActive),
 }));
 
 // Refresh Tokens for JWT authentication
@@ -209,7 +212,7 @@ export const lessons = pgTable("lessons", {
   filePath: text("file_path").notNull(),
   fileType: text("file_type").notNull(),
   fileSize: text("file_size").notNull(),
-  order: text("order").default('0'),
+  order: integer("order").default(0).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
 });
@@ -233,7 +236,7 @@ export const assignments = pgTable("assignments", {
   description: text("description"),
   type: text("type").default('homework').notNull(),
   dueDate: timestamp("due_date"),
-  maxScore: text("max_score").default('100'),
+  maxScore: integer("max_score").default(100),
   isPublished: boolean("is_published").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
@@ -250,13 +253,15 @@ export const submissions = pgTable("submissions", {
   fileSize: text("file_size"),
   submittedAt: timestamp("submitted_at").defaultNow().notNull(),
   status: text("status").default('submitted').notNull(),
-});
+}, (table) => ({
+  assignmentSubmittedIdx: index("submissions_assignment_submitted_idx").on(table.assignmentId, table.submittedAt),
+}));
 
 export const grades = pgTable("grades", {
   id: text("id").primaryKey().$defaultFn(() => createId()),
   submissionId: text("submission_id").notNull().references(() => submissions.id, { onDelete: 'cascade' }).unique(),
-  score: text("score").notNull(),
-  maxScore: text("max_score").default('100'),
+  score: real("score").notNull(),
+  maxScore: integer("max_score").default(100),
   feedback: text("feedback"),
   gradedBy: text("graded_by").references(() => users.id, { onDelete: 'set null' }),
   gradedAt: timestamp("graded_at").defaultNow().notNull(),
@@ -288,6 +293,7 @@ export const announcementTranslations = pgTable("announcement_translations", {
 
 export const reportCards = pgTable("report_cards", {
   id: text("id").primaryKey().$defaultFn(() => createId()),
+  organizationId: text("organization_id").notNull().references(() => organizations.id, { onDelete: 'cascade' }),
   studentId: text("student_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
   period: reportCardPeriodEnum("period").notNull(),
   academicYear: text("academic_year").notNull(),
@@ -297,7 +303,9 @@ export const reportCards = pgTable("report_cards", {
   uploadedBy: text("uploaded_by").notNull().references(() => users.id, { onDelete: 'set null' }),
   uploadedAt: timestamp("uploaded_at").defaultNow().notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (table) => ({
+  orgIdx: index("report_cards_org_idx").on(table.organizationId),
+}));
 
 // --- STUDY GROUPS & MESSAGING ---
 export const studyGroups = pgTable("study_groups", {
@@ -384,7 +392,9 @@ export const notifications = pgTable("notifications", {
   groupId: text("group_id").references(() => studyGroups.id, { onDelete: 'cascade' }),
   isRead: boolean("is_read").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (table) => ({
+  userCreatedIdx: index("notifications_user_created_idx").on(table.userId, table.createdAt),
+}));
 
 export const blockedUsers = pgTable("blocked_users", {
   id: text("id").primaryKey().$defaultFn(() => createId()),
@@ -511,12 +521,12 @@ export const studyActivities = pgTable("study_activities", {
 export const studyStreaks = pgTable("study_streaks", {
   id: text("id").primaryKey().$defaultFn(() => createId()),
   userId: text("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }).unique(),
-  currentStreak: text("current_streak").default('0').notNull(), // Current consecutive days
-  longestStreak: text("longest_streak").default('0').notNull(), // Best streak ever
+  currentStreak: integer("current_streak").default(0).notNull(), // Current consecutive days
+  longestStreak: integer("longest_streak").default(0).notNull(), // Best streak ever
   lastActivityDate: timestamp("last_activity_date"), // Last date user was active
-  totalActiveDays: text("total_active_days").default('0').notNull(), // Total days with activity
-  weeklyGoalHours: text("weekly_goal_hours").default('10').notNull(), // User's weekly goal
-  currentWeekHours: text("current_week_hours").default('0').notNull(), // Hours this week
+  totalActiveDays: integer("total_active_days").default(0).notNull(), // Total days with activity
+  weeklyGoalHours: real("weekly_goal_hours").default(10).notNull(), // User's weekly goal
+  currentWeekHours: real("current_week_hours").default(0).notNull(), // Hours this week
   updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
 });
 
@@ -539,13 +549,15 @@ export const contacts = pgTable("contacts", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const chatMessages = pgTable("chat_messages", {
-  id: text("id").primaryKey().$defaultFn(() => createId()),
-  senderId: text("sender_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
-  content: text("content").notNull(),
-  conversationId: text("conversation_id"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+export const insertContactSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  email: z.string().email("Invalid email address"),
+  subject: z.string().min(1, "Subject is required"),
+  message: z.string().min(1, "Message is required"),
 });
+
+export type InsertContact = z.infer<typeof insertContactSchema>;
+export type Contact = typeof contacts.$inferSelect;
 
 export const newsArticles = pgTable("news_articles", {
   id: text("id").primaryKey().$defaultFn(() => createId()),
@@ -611,12 +623,10 @@ export const exams = pgTable("exams", {
   description: text("description"),
   instructions: text("instructions"),
 
-  // Scheduling - using actual database column names
+  // Scheduling
   status: examStatusEnum("status").default('draft').notNull(),
   scheduledStartAt: timestamp("scheduled_start_at"),
   scheduledEndAt: timestamp("scheduled_end_at"),
-  scheduledStart: timestamp("scheduled_start"),
-  scheduledEnd: timestamp("scheduled_end"),
   duration: integer("duration").notNull(), // in minutes
 
   // Scoring & Passing
@@ -671,6 +681,7 @@ export const exams = pgTable("exams", {
   courseIdx: index("exam_course_idx").on(table.courseId),
   statusIdx: index("exam_status_idx").on(table.status),
   scheduleIdx: index("exam_schedule_idx").on(table.scheduledStartAt, table.scheduledEndAt),
+  orgStatusIdx: index("exam_org_status_idx").on(table.organizationId, table.status),
 }));
 
 export const examTranslations = pgTable("exam_translations", {
@@ -770,7 +781,7 @@ export const examAttempts = pgTable("exam_attempts", {
 
   // Retake Info
   isRetake: boolean("is_retake").default(false).notNull(),
-  originalAttemptId: text("original_attempt_id").references(() => examAttempts.id, { onDelete: 'set null' }),
+  originalAttemptId: text("original_attempt_id").references((): any => examAttempts.id, { onDelete: 'set null' }),
   retakeReason: text("retake_reason"), // e.g., "failed", "violation", "mistake_based"
 
   // Privacy & Compliance
@@ -1255,5 +1266,185 @@ export const attendanceNotifications = pgTable("attendance_notifications", {
   typeIdx: index("att_notif_type_idx").on(table.type),
 }));
 
+// =====================================================
+// GAMIFICATION
+// =====================================================
 
+export const gamificationSettings = pgTable("gamification_settings", {
+  organizationId: text("organization_id").primaryKey().references(() => organizations.id, { onDelete: 'cascade' }),
+  enabled: boolean("enabled").default(false).notNull(),
+  pointsEnabled: boolean("points_enabled").default(true).notNull(),
+  levelsEnabled: boolean("levels_enabled").default(true).notNull(),
+  badgesEnabled: boolean("badges_enabled").default(true).notNull(),
+  leaderboardEnabled: boolean("leaderboard_enabled").default(false).notNull(),
+  levelNaming: varchar("level_naming", { length: 50 }).default("Level").notNull(),
+  pointNaming: varchar("point_naming", { length: 50 }).default("XP").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
+});
 
+export const gamificationPointRules = pgTable("gamification_point_rules", {
+  id: text("id").primaryKey().$defaultFn(() => createId()),
+  organizationId: text("organization_id").notNull().references(() => organizations.id, { onDelete: 'cascade' }),
+  eventType: varchar("event_type", { length: 50 }).notNull(),
+  points: integer("points").default(0).notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
+}, (table) => ({
+  orgEventIdx: index("gamification_point_rules_org_event_idx").on(table.organizationId, table.eventType),
+  orgEventUniqueIdx: uniqueIndex("gamification_point_rules_org_event_unique_idx").on(table.organizationId, table.eventType),
+}));
+
+export const gamificationLevels = pgTable("gamification_levels", {
+  id: text("id").primaryKey().$defaultFn(() => createId()),
+  organizationId: text("organization_id").notNull().references(() => organizations.id, { onDelete: 'cascade' }),
+  levelNumber: integer("level_number").notNull(),
+  name: varchar("name", { length: 100 }).notNull(),
+  minPoints: integer("min_points").notNull(),
+  maxPoints: integer("max_points"),
+  badgeEmoji: varchar("badge_emoji", { length: 10 }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  orgLevelUniqueIdx: uniqueIndex("gamification_levels_org_level_unique_idx").on(table.organizationId, table.levelNumber),
+}));
+
+export const gamificationBadges = pgTable("gamification_badges", {
+  id: text("id").primaryKey().$defaultFn(() => createId()),
+  organizationId: text("organization_id").notNull().references(() => organizations.id, { onDelete: 'cascade' }),
+  name: varchar("name", { length: 100 }).notNull(),
+  description: text("description").notNull(),
+  emoji: varchar("emoji", { length: 10 }),
+  criteriaType: varchar("criteria_type", { length: 50 }).notNull(),
+  criteriaValue: integer("criteria_value").notNull(),
+  courseId: text("course_id").references(() => courses.id, { onDelete: 'cascade' }),
+  isActive: boolean("is_active").default(true).notNull(),
+  archivedAt: timestamp("archived_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
+}, (table) => ({
+  orgIdx: index("gamification_badges_org_idx").on(table.organizationId),
+  courseIdx: index("gamification_badges_course_idx").on(table.courseId),
+}));
+
+export const userGamificationProfiles = pgTable("user_gamification_profiles", {
+  id: text("id").primaryKey().$defaultFn(() => createId()),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  organizationId: text("organization_id").notNull().references(() => organizations.id, { onDelete: 'cascade' }),
+  totalPoints: integer("total_points").default(0).notNull(),
+  currentLevelId: text("current_level_id").references(() => gamificationLevels.id, { onDelete: 'set null' }),
+  currentLevelNumber: integer("current_level_number").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
+}, (table) => ({
+  userOrgUniqueIdx: uniqueIndex("user_gamification_profiles_user_org_unique_idx").on(table.userId, table.organizationId),
+  leaderboardIdx: index("user_gamification_profiles_org_total_points_idx").on(table.organizationId, desc(table.totalPoints)),
+}));
+
+export const gamificationEvents = pgTable("gamification_events", {
+  id: text("id").primaryKey().$defaultFn(() => createId()),
+  organizationId: text("organization_id").notNull().references(() => organizations.id, { onDelete: 'cascade' }),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  eventType: varchar("event_type", { length: 50 }).notNull(),
+  entityId: varchar("entity_id", { length: 255 }).notNull(),
+  entityType: varchar("entity_type", { length: 50 }).notNull(),
+  pointsAwarded: integer("points_awarded").default(0).notNull(),
+  metadata: jsonb("metadata").$type<Record<string, unknown> | null>(),
+  occurredAt: timestamp("occurred_at").defaultNow().notNull(),
+}, (table) => ({
+  userEventEntityUniqueIdx: uniqueIndex("gamification_events_user_event_entity_unique_idx").on(table.userId, table.eventType, table.entityId),
+  orgUserIdx: index("gamification_events_org_user_idx").on(table.organizationId, table.userId),
+  userOccurredAtIdx: index("gamification_events_user_occurred_at_idx").on(table.userId, desc(table.occurredAt)),
+}));
+
+export const userBadges = pgTable("user_badges", {
+  id: text("id").primaryKey().$defaultFn(() => createId()),
+  organizationId: text("organization_id").notNull().references(() => organizations.id, { onDelete: 'cascade' }),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  badgeId: text("badge_id").notNull().references(() => gamificationBadges.id, { onDelete: 'cascade' }),
+  awardedAt: timestamp("awarded_at").defaultNow().notNull(),
+}, (table) => ({
+  userBadgeUniqueIdx: uniqueIndex("user_badges_user_badge_unique_idx").on(table.userId, table.badgeId),
+  userOrgIdx: index("user_badges_user_org_idx").on(table.userId, table.organizationId),
+}));
+
+export const auditLogs = pgTable("audit_logs", {
+  id: text("id").primaryKey().$defaultFn(() => createId()),
+  organizationId: text("organization_id").notNull().references(() => organizations.id, { onDelete: 'cascade' }),
+  actorId: text("actor_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  action: text("action").notNull(),
+  targetId: text("target_id"),
+  targetType: text("target_type"),
+  // using jsonb if possible, otherwise text for serialized payload, let's use jsonb
+  metadata: jsonb("metadata"),
+  // Using json from drizzle to be safe
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  orgIdx: index("audit_logs_org_idx").on(table.organizationId),
+  actorIdx: index("audit_logs_actor_idx").on(table.actorId),
+  actionIdx: index("audit_logs_action_idx").on(table.action),
+}));
+
+// =====================================================
+// TYPE EXPORTS
+// =====================================================
+
+export type User = typeof users.$inferSelect;
+export type NewUser = typeof users.$inferInsert;
+export type Organization = typeof organizations.$inferSelect;
+export type NewOrganization = typeof organizations.$inferInsert;
+export type Course = typeof courses.$inferSelect;
+export type NewCourse = typeof courses.$inferInsert;
+export type Lesson = typeof lessons.$inferSelect;
+export type NewLesson = typeof lessons.$inferInsert;
+export type Assignment = typeof assignments.$inferSelect;
+export type NewAssignment = typeof assignments.$inferInsert;
+export type Submission = typeof submissions.$inferSelect;
+export type NewSubmission = typeof submissions.$inferInsert;
+export type Exam = typeof exams.$inferSelect;
+export type NewExam = typeof exams.$inferInsert;
+export type ExamQuestion = typeof examQuestions.$inferSelect;
+export type NewExamQuestion = typeof examQuestions.$inferInsert;
+export type ExamAttempt = typeof examAttempts.$inferSelect;
+export type NewExamAttempt = typeof examAttempts.$inferInsert;
+export type ExamAnswer = typeof examAnswers.$inferSelect;
+export type NewExamAnswer = typeof examAnswers.$inferInsert;
+export type ReportCard = typeof reportCards.$inferSelect;
+export type NewReportCard = typeof reportCards.$inferInsert;
+export type Enrollment = typeof enrollments.$inferSelect;
+export type NewEnrollment = typeof enrollments.$inferInsert;
+export type StudyGroup = typeof studyGroups.$inferSelect;
+export type NewStudyGroup = typeof studyGroups.$inferInsert;
+export type GroupMember = typeof groupMembers.$inferSelect;
+export type NewGroupMember = typeof groupMembers.$inferInsert;
+export type Conversation = typeof conversations.$inferSelect;
+export type NewConversation = typeof conversations.$inferInsert;
+export type Message = typeof messages.$inferSelect;
+export type NewMessage = typeof messages.$inferInsert;
+export type GamificationSettings = typeof gamificationSettings.$inferSelect;
+export type GamificationPointRule = typeof gamificationPointRules.$inferSelect;
+export type GamificationLevel = typeof gamificationLevels.$inferSelect;
+export type GamificationBadge = typeof gamificationBadges.$inferSelect;
+export type UserGamificationProfile = typeof userGamificationProfiles.$inferSelect;
+export type GamificationEvent = typeof gamificationEvents.$inferSelect;
+export type UserBadge = typeof userBadges.$inferSelect;
+export type Announcement = typeof announcements.$inferSelect;
+export type NewAnnouncement = typeof announcements.$inferInsert;
+export type Event = typeof events.$inferSelect;
+export type NewEvent = typeof events.$inferInsert;
+export type NewsArticle = typeof newsArticles.$inferSelect;
+export type NewNewsArticle = typeof newsArticles.$inferInsert;
+export type StaffProfile = typeof staffProfiles.$inferSelect;
+export type NewStaffProfile = typeof staffProfiles.$inferInsert;
+export type AuditLog = typeof auditLogs.$inferSelect;
+export type NewAuditLog = typeof auditLogs.$inferInsert;
+
+// Enum Types
+export type UserRole = (typeof userRoleEnum.enumValues)[number];
+export type ReportPeriod = (typeof reportCardPeriodEnum.enumValues)[number];
+export type OrganizationPlan = (typeof organizationPlanEnum.enumValues)[number];
+export type ExamStatus = (typeof examStatusEnum.enumValues)[number];
+export type QuestionType = (typeof questionTypeEnum.enumValues)[number];
+export type AttemptStatus = (typeof attemptStatusEnum.enumValues)[number];
+export type ConversationType = (typeof conversationTypeEnum.enumValues)[number];
+export type MessageType = (typeof messageTypeEnum.enumValues)[number];
