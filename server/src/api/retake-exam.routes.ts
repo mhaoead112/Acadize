@@ -3,6 +3,9 @@ import { RetakeExamGeneratorService } from '../services/retake-exam-generator.se
 import { AnswerEvaluationService } from '../services/answer-evaluation.service.js';
 import { isAuthenticated, isTeacher } from '../middleware/auth.middleware.js';
 import { requireSubscription } from '../middleware/subscription.middleware.js';
+import { db } from '../db/index.js';
+import { exams, examAttempts } from '../db/schema.js';
+import { eq } from 'drizzle-orm';
 
 // Combined auth + subscription middleware
 const requireAuth = [isAuthenticated, requireSubscription];
@@ -33,6 +36,7 @@ router.post('/generate', ...requireAuth, async (req, res) => {
     // Authorization: students can only generate for themselves
     const requesterId = (req as any).user.id;
     const requesterRole = (req as any).user.role;
+    const requesterOrgId: string = (req as any).user.organizationId;
 
     if (requesterRole === 'student' && requesterId !== studentId) {
       return res.status(403).json({
@@ -41,9 +45,25 @@ router.post('/generate', ...requireAuth, async (req, res) => {
       });
     }
 
-    // Generate retake
-    const retakeExam = await RetakeExamGeneratorService.generateRetakeExam(
-      {
+    // ── Tenant isolation: verify the exam belongs to the requester's org ──
+    if (examId) {
+      const exam = await db.query.exams.findFirst({ where: eq(exams.id, examId) });
+      if (!exam) {
+        return res.status(404).json({ success: false, message: 'Exam not found' });
+      }
+      if (exam.organizationId !== requesterOrgId) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied: exam does not belong to your organization',
+        });
+      }
+    }
+
+    // Generate retake via Queue
+    const { enqueueJob } = await import('../jobs/index.js');
+    const jobId = await enqueueJob('retake_generation', {
+      type: 'generator',
+      generatorOptions: {
         studentId,
         examId,
         topic,
@@ -55,13 +75,13 @@ router.post('/generate', ...requireAuth, async (req, res) => {
         timeLimit,
         shuffleQuestions,
       },
-      constraints
-    );
+      generatorConstraints: constraints
+    });
 
-    res.json({
+    res.status(202).json({
       success: true,
-      data: retakeExam,
-      message: 'Retake exam generated successfully',
+      jobId, // Client should either poll or wait for push notifications
+      message: 'Retake exam generation queued',
     });
   } catch (error: any) {
     console.error('[RETAKE API] Error generating retake:', error);
@@ -84,6 +104,7 @@ router.get('/preview', ...requireAuth, async (req, res) => {
     // Authorization check
     const requesterId = (req as any).user.id;
     const requesterRole = (req as any).user.role;
+    const requesterOrgId: string = (req as any).user.organizationId;
 
     if (requesterRole === 'student' && requesterId !== studentId) {
       return res.status(403).json({
@@ -97,6 +118,20 @@ router.get('/preview', ...requireAuth, async (req, res) => {
         success: false,
         message: 'studentId is required',
       });
+    }
+
+    // ── Tenant isolation ─────────────────────────────────────────────────────
+    if (examId) {
+      const exam = await db.query.exams.findFirst({ where: eq(exams.id, examId as string) });
+      if (!exam) {
+        return res.status(404).json({ success: false, message: 'Exam not found' });
+      }
+      if (exam.organizationId !== requesterOrgId) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied: exam does not belong to your organization',
+        });
+      }
     }
 
     const preview = await RetakeExamGeneratorService.getRetakePreview(
@@ -130,6 +165,7 @@ router.get('/eligibility', ...requireAuth, async (req, res) => {
     // Authorization check
     const requesterId = (req as any).user.id;
     const requesterRole = (req as any).user.role;
+    const requesterOrgId: string = (req as any).user.organizationId;
 
     if (requesterRole === 'student' && requesterId !== studentId) {
       return res.status(403).json({
@@ -143,6 +179,20 @@ router.get('/eligibility', ...requireAuth, async (req, res) => {
         success: false,
         message: 'studentId is required',
       });
+    }
+
+    // ── Tenant isolation ─────────────────────────────────────────────────────
+    if (examId) {
+      const exam = await db.query.exams.findFirst({ where: eq(exams.id, examId as string) });
+      if (!exam) {
+        return res.status(404).json({ success: false, message: 'Exam not found' });
+      }
+      if (exam.organizationId !== requesterOrgId) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied: exam does not belong to your organization',
+        });
+      }
     }
 
     const eligibility = await RetakeExamGeneratorService.checkRetakeEligibility(
@@ -214,33 +264,41 @@ router.post('/track-resolution', ...requireAuth, isTeacher, async (req, res) => 
 router.post('/grade-and-track/:attemptId', ...requireAuth, isTeacher, async (req, res) => {
   try {
     const { attemptId } = req.params;
+    const requesterOrgId: string = (req as any).user.organizationId;
+
+    // ── Tenant isolation: verify attempt belongs to requester's org ───────────
+    const attempt = await db.query.examAttempts.findFirst({
+      where: eq(examAttempts.id, attemptId),
+      with: { exam: { columns: { organizationId: true } } } as any,
+    });
+
+    if (!attempt) {
+      return res.status(404).json({ success: false, message: 'Exam attempt not found' });
+    }
+
+    // Resolve organizationId via exam FK join
+    const examRecord = await db.query.exams.findFirst({
+      where: eq(exams.id, (attempt as any).examId),
+      columns: { organizationId: true },
+    });
+
+    if (!examRecord || examRecord.organizationId !== requesterOrgId) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied: attempt does not belong to your organization',
+      });
+    }
 
     // Step 1: Grade the attempt
     const gradingResult = await AnswerEvaluationService.gradeAttempt(attemptId);
 
-    // Step 2: Fetch attempt to get student ID
-    const { db } = await import('../db/index.js');
-    const { examAttempts } = await import('../db/schema.js');
-    const { eq } = await import('drizzle-orm');
-
-    const attempt = await db.query.examAttempts.findFirst({
-      where: eq(examAttempts.id, attemptId),
-    });
-
-    if (!attempt) {
-      return res.status(404).json({
-        success: false,
-        message: 'Exam attempt not found',
-      });
-    }
-
-    // Step 3: Extract graded answers
+    // Step 2: Extract graded answers
     const gradedAnswers = gradingResult.gradedAnswers.map(answer => ({
       questionId: answer.answerId, // Map to question ID
       isCorrect: answer.isCorrect,
     }));
 
-    // Step 4: Track mistake resolution
+    // Step 3: Track mistake resolution
     const resolutions = await RetakeExamGeneratorService.trackMistakeResolution(
       attempt.studentId,
       attemptId,

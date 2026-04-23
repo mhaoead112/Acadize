@@ -14,6 +14,7 @@ import {
 } from '../db/schema.js';
 import { eq, and, desc, count } from 'drizzle-orm';
 import { createId } from '@paralleldrive/cuid2';
+import * as gamificationService from './gamification.service.js';
 
 // =====================================================
 // TYPE DEFINITIONS
@@ -109,7 +110,6 @@ export class ExamAttemptService {
   static async startExamAttempt(dto: StartExamAttemptDto): Promise<{
     attempt: any;
     examSnapshot: ExamSnapshot;
-    expiresAt: Date;
     expiresAt: Date;
   }> {
     const { examId, studentId, ipAddress, userAgent, deviceFingerprint, browserInfo, organizationId } = dto;
@@ -623,16 +623,22 @@ export class ExamAttemptService {
     const { attemptId, studentId, timeRemaining, finalAnswers } = dto;
 
     return await db.transaction(async (tx) => {
-      // 1. Get and lock attempt
-      const [attempt] = await tx
-        .select()
+      // 1. Get and lock attempt + exam
+      const [attemptRecord] = await tx
+        .select({
+          attempt: examAttempts,
+          exam: exams
+        })
         .from(examAttempts)
+        .innerJoin(exams, eq(examAttempts.examId, exams.id))
         .where(eq(examAttempts.id, attemptId))
         .limit(1);
 
-      if (!attempt) {
+      if (!attemptRecord) {
         throw new Error('Attempt not found.');
       }
+      
+      const { attempt, exam } = attemptRecord;
 
       // 2. Verify student
       if (attempt.studentId !== studentId) {
@@ -642,6 +648,18 @@ export class ExamAttemptService {
       // 3. Verify status
       if (attempt.status !== 'in_progress') {
         throw new Error('Cannot submit. Attempt already submitted or invalid.');
+      }
+
+      // 3b. Verify time elapsed vs allowed time + grace period
+      const submittedAt = new Date();
+      const durationSeconds = Math.floor((submittedAt.getTime() - attempt.startedAt!.getTime()) / 1000);
+      
+      const parsedTimeLimit = typeof exam.timeLimit === 'string' ? parseInt(exam.timeLimit, 10) : exam.timeLimit;
+      const durationMinutes = (parsedTimeLimit && parsedTimeLimit > 0) ? parsedTimeLimit : (exam.duration || 60);
+      const allowedSeconds = (durationMinutes * 60) + (5 * 60); // 5 minutes grace period
+      
+      if (durationSeconds > allowedSeconds) {
+        throw new Error(`Submission rejected. Attempt took significantly longer than the permitted time limit (${durationMinutes}min + 5min grace).`);
       }
 
       // 4. Save final answers if provided
@@ -662,9 +680,8 @@ export class ExamAttemptService {
         }
       }
 
-      // 5. Calculate final duration
-      const submittedAt = new Date();
-      const duration = Math.floor((submittedAt.getTime() - attempt.startedAt!.getTime()) / 1000);
+      // 5. Calculate final duration (reusing submission time from above)
+      const duration = durationSeconds;
 
       // 6. Update attempt status
       await tx
@@ -726,6 +743,40 @@ export class ExamAttemptService {
 
       // 4. Update final status
       await this.updateAttemptFinalStatus(attemptId);
+
+      // -- Gamification: exam_completion (fire-and-forget) ------------------
+      try {
+        // Re-fetch attempt so we have examId, studentId, and organizationId
+        const [completedAttempt] = await db
+          .select({
+            studentId:      examAttempts.studentId,
+            examId:         examAttempts.examId,
+            organizationId: exams.organizationId,
+          })
+          .from(examAttempts)
+          .innerJoin(exams, eq(examAttempts.examId, exams.id))
+          .where(eq(examAttempts.id, attemptId))
+          .limit(1);
+
+        if (completedAttempt) {
+          await gamificationService.awardPoints({
+            userId:         completedAttempt.studentId,
+            organizationId: completedAttempt.organizationId,
+            eventType:      'exam_completion',
+            entityId:       completedAttempt.examId,
+            entityType:     'exam',
+          });
+          void gamificationService.evaluateBadges(
+            completedAttempt.studentId,
+            completedAttempt.organizationId,
+            'exam_completion',
+          );
+        }
+      } catch (gamErr) {
+        // Intentionally swallowed — gamification must never break exam processing
+        console.warn('[Gamification] exam_completion hook failed silently:', gamErr);
+      }
+      // ---------------------------------------------------------------------
 
       console.log(`[PROCESSING] Completed submission processing for attempt: ${attemptId}`);
     } catch (error) {

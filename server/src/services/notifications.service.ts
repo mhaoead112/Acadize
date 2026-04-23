@@ -5,7 +5,7 @@ import { notifications, blockedUsers, reportedUsers, users } from '../db/schema.
 import { eq, and, desc, sql } from 'drizzle-orm';
 import { createId } from '@paralleldrive/cuid2';
 import { requireTenantId } from '../utils/tenant-query.js';
-import { broadcastToUser } from '../websocket.js';
+import { broadcastToUser } from '../websocket-state.js';
 
 // ==================== TYPE DEFINITIONS ====================
 
@@ -40,10 +40,14 @@ export interface ReportUserInput {
  * Get user notifications
  * Enforces tenant isolation
  */
+import { count } from 'drizzle-orm';
+
 export async function getUserNotifications(
     userId: string,
     unreadOnly: boolean,
-    organizationId: string
+    organizationId: string,
+    limit: number = 50,
+    offset: number = 0
 ) {
     const orgId = requireTenantId(organizationId);
 
@@ -68,6 +72,9 @@ export async function getUserNotifications(
         )
         : eq(notifications.userId, userId);
 
+    const countResult = await db.select({ count: count() }).from(notifications).where(whereCondition);
+    const totalCount = countResult[0].count;
+
     const userNotifications = await db
         .select({
             id: notifications.id,
@@ -86,9 +93,10 @@ export async function getUserNotifications(
         .leftJoin(users, eq(users.id, notifications.senderId))
         .where(whereCondition)
         .orderBy(desc(notifications.createdAt))
-        .limit(50);
+        .limit(limit)
+        .offset(offset);
 
-    return userNotifications;
+    return { data: userNotifications, totalCount };
 }
 
 /**

@@ -111,9 +111,23 @@ export class EmailService {
   }
 
   /**
-   * Send a single email
+   * Send a single email (enqueues job)
    */
   static async sendEmail(options: EmailOptions): Promise<boolean> {
+    try {
+      const { enqueueJob } = await import('../jobs/index.js');
+      await enqueueJob('send_email', options);
+      return true;
+    } catch (e) {
+      console.warn('[Email] Failed to enqueue send_email job, falling back to sync', e);
+      return this.sendEmailSync(options);
+    }
+  }
+
+  /**
+   * Actual sync delivery
+   */
+  static async sendEmailSync(options: EmailOptions): Promise<boolean> {
     try {
       const transport = getTransporter();
 

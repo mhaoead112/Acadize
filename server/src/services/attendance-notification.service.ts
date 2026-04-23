@@ -520,6 +520,16 @@ function channelsForRecipient(recipient: Recipient): NotifChannel[] {
  *   void triggerNotification({ type: 'absent_alert', sessionId, studentId, date });
  */
 export async function triggerNotification(event: AttendanceEvent): Promise<void> {
+    try {
+        const { enqueueJob } = await import('../jobs/index.js');
+        await enqueueJob('attendance_notification', event);
+    } catch (e) {
+        log('error', 'Failed to enqueue attendance job, falling back to sync', { error: e });
+        await triggerNotificationSync(event);
+    }
+}
+
+export async function triggerNotificationSync(event: AttendanceEvent): Promise<void> {
     log('info', 'Triggering notification', { type: event.type });
 
     try {

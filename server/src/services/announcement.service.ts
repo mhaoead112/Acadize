@@ -87,12 +87,13 @@ export const createAnnouncement = async (announcementData: CreateAnnouncementDto
 export const getAnnouncementsByCourse = async (
     courseId: string,
     organizationId: string,
-    locale?: string
+    locale?: string,
+    limit: number = 50,
+    offset: number = 0
 ) => {
     const orgId = requireTenantId(organizationId);
 
-    // Join with courses to verify org
-    const results = await db
+    let query = db
         .select()
         .from(announcements)
         .innerJoin(courses, eq(announcements.courseId, courses.id))
@@ -101,6 +102,15 @@ export const getAnnouncementsByCourse = async (
             eq(courses.organizationId, orgId)
         ))
         .orderBy(desc(announcements.isPinned), desc(announcements.createdAt));
+        
+    if (limit !== undefined) {
+        query = query.limit(limit) as any;
+    }
+    if (offset !== undefined) {
+        query = query.offset(offset) as any;
+    }
+
+    const results = await query;
 
     const list = results.map(r => r.announcements);
     if (locale) return resolveAnnouncementTranslations(list, locale);

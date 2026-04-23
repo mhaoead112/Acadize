@@ -7,6 +7,7 @@ import { fileURLToPath } from 'url';
 import fs from 'fs/promises';
 import { isAuthenticated } from '../middleware/auth.middleware.js';
 import { requireSubscription } from '../middleware/subscription.middleware.js';
+import { logger } from '../utils/logger.js';
 
 // Combined auth + subscription middleware
 const requireAuth = [isAuthenticated, requireSubscription];
@@ -17,6 +18,10 @@ import { uploadFile, deleteFile, isCloudStorageConfigured } from '../services/cl
 const router = express.Router();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Helper: prefer subdomain-resolved tenant org, fall back to JWT org (dev / single-domain)
+const getOrgId = (req: any): string | undefined =>
+  req.tenant?.organizationId ?? req.user?.organizationId;
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -78,7 +83,7 @@ router.post('/upload', ...requireAuth, upload.single('file'), async (req, res) =
             return res.status(403).json({ message: 'Forbidden: Teachers or Admins only.' });
         }
 
-        const orgId = (req as any).tenant?.organizationId;
+        const orgId = getOrgId(req);
         if (!orgId) return res.status(400).json({ message: "Organization context required" });
 
         const { courseId, lessonTitle } = req.body;
@@ -189,7 +194,7 @@ router.post('/upload', ...requireAuth, upload.single('file'), async (req, res) =
 router.get('/course/:courseId', async (req, res) => {
     try {
         const { courseId } = req.params;
-        const orgId = (req as any).tenant?.organizationId;
+        const orgId = getOrgId(req);
         if (!orgId) return res.status(400).json({ message: "Organization context required" });
 
         const locale = (req as any).locale;
@@ -214,7 +219,7 @@ router.get('/course/:courseId', async (req, res) => {
  */
 router.get('/:id', async (req, res) => {
     try {
-        const orgId = (req as any).tenant?.organizationId;
+        const orgId = getOrgId(req);
         if (!orgId) return res.status(400).json({ message: "Organization context required" });
 
         const locale = (req as any).locale;
@@ -246,11 +251,19 @@ router.patch('/:id', ...requireAuth, async (req, res) => {
             return res.status(403).json({ message: 'Forbidden: Teachers or Admins only.' });
         }
 
-        const orgId = (req as any).tenant?.organizationId;
+        const orgId = getOrgId(req);
         if (!orgId) return res.status(400).json({ message: "Organization context required" });
 
         const lessonId = req.params.id;
-        const { title } = req.body;
+        const { title, order } = req.body;
+
+        // Validate order if provided
+        if (order !== undefined) {
+          const orderNum = parseInt(String(order), 10);
+          if (isNaN(orderNum) || orderNum < 1) {
+            return res.status(400).json({ message: 'order must be a positive integer.' });
+          }
+        }
 
         // Get lesson to verify ownership (enforces orgId)
         const lesson = await getLessonById(lessonId, orgId);
@@ -268,8 +281,11 @@ router.patch('/:id', ...requireAuth, async (req, res) => {
             return res.status(403).json({ message: "You don't have permission to update this lesson." });
         }
 
-        // Update lesson
-        const updatedLesson = await updateLesson(lessonId, { title }, orgId);
+        // Update lesson — title and/or order
+        const updatedLesson = await updateLesson(lessonId, {
+          ...(title !== undefined ? { title } : {}),
+          ...(order !== undefined ? { order: parseInt(String(order), 10) } : {}),
+        }, orgId);
 
         res.status(200).json({
             message: 'Lesson updated successfully',
@@ -296,7 +312,7 @@ router.post('/reorder', ...requireAuth, async (req, res) => {
             return res.status(403).json({ message: 'Forbidden: Teachers or Admins only.' });
         }
 
-        const orgId = (req as any).tenant?.organizationId;
+        const orgId = getOrgId(req);
         if (!orgId) return res.status(400).json({ message: "Organization context required" });
 
         const { lessons: lessonOrders } = req.body;
@@ -343,7 +359,7 @@ router.delete('/:id', ...requireAuth, async (req, res) => {
             return res.status(403).json({ message: 'Forbidden: Teachers or Admins only.' });
         }
 
-        const orgId = (req as any).tenant?.organizationId;
+        const orgId = getOrgId(req);
         if (!orgId) return res.status(400).json({ message: "Organization context required" });
 
         const lessonId = req.params.id;
@@ -395,7 +411,7 @@ router.delete('/:id', ...requireAuth, async (req, res) => {
  */
 router.get('/:id/download', async (req, res) => {
     try {
-        const orgId = (req as any).tenant?.organizationId;
+        const orgId = getOrgId(req);
         if (!orgId) return res.status(400).json({ message: "Organization context required" });
         const locale = (req as any).locale;
         const lesson = await getLessonById(req.params.id, orgId, locale);
@@ -517,6 +533,64 @@ router.get('/:id/download', async (req, res) => {
         res.status(500).json({
             message: 'Failed to download lesson',
             error: error instanceof Error ? error.message : 'Unknown error'
+        });
+    }
+});
+
+/**
+ * PROTECTED (STUDENT)
+ * POST /api/lessons/:id/complete
+ * Mark a lesson as completed and award gamification points.
+ * Idempotent: duplicate calls are silently ignored by the gamification engine.
+ */
+router.post('/:id/complete', ...requireAuth, async (req, res) => {
+    try {
+        const user = (req as any).user;
+        if (!user || user.role !== 'student') {
+            return res.status(403).json({ message: 'Forbidden: Students only.' });
+        }
+
+        const orgId = getOrgId(req);
+        if (!orgId) return res.status(400).json({ message: 'Organization context required.' });
+
+        const lessonId = req.params.id;
+
+        // Verify lesson exists and belongs to this org
+        const lesson = await getLessonById(lessonId, orgId);
+        if (!lesson) {
+            return res.status(404).json({ message: 'Lesson not found.' });
+        }
+
+        // -- Gamification: fire-and-forget (never throws) --------------------
+        let gamResult: { awarded: boolean; pointsAwarded: number; newTotal: number; levelUp: boolean } = {
+            awarded: false, pointsAwarded: 0, newTotal: 0, levelUp: false,
+        };
+        try {
+            const { awardPoints, evaluateBadges } = await import('../services/gamification.service.js');
+            gamResult = await awardPoints({
+                userId: user.id,
+                organizationId: orgId,
+                eventType: 'lesson_completion',
+                entityId: lessonId,
+                entityType: 'lesson',
+            });
+            void evaluateBadges(user.id, orgId, 'lesson_completion');
+        } catch (gamErr) {
+            // Intentionally swallowed — gamification must never break the lesson flow
+            logger.warn('[Gamification] lesson_completion hook failed silently', { lessonId, error: String(gamErr) });
+        }
+        // --------------------------------------------------------------------
+
+        return res.status(200).json({
+            message: 'Lesson marked as complete.',
+            lessonId,
+            gamification: gamResult,
+        });
+    } catch (error) {
+        logger.error('Error marking lesson complete:', error);
+        res.status(500).json({
+            message: 'Failed to mark lesson as complete.',
+            error: error instanceof Error ? error.message : 'Unknown error',
         });
     }
 });

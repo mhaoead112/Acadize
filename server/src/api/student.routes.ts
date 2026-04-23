@@ -21,7 +21,8 @@ const isStudent = (req: express.Request, res: express.Response, next: express.Ne
 router.get("/my-progress", ...requireAuth, isStudent, async (req, res) => {
   try {
     const user = (req as any).user;
-    const progress = await getStudentProgress(user.id);
+    const organizationId = user.organizationId || (req as any).tenant?.organizationId;
+    const progress = await getStudentProgress(user.id, organizationId);
     res.json(progress);
   } catch (error: any) {
     console.error("Error fetching student progress:", error);

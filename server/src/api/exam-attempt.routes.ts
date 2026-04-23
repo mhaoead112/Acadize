@@ -11,24 +11,7 @@ import { eq } from 'drizzle-orm';
 
 const router = express.Router();
 
-// =====================================================
-// MIDDLEWARE
-// =====================================================
-
-/**
- * Middleware to ensure the authenticated user is a student
- */
-const isStudent = (req: Request, res: Response, next: express.NextFunction) => {
-  if (!req.user) {
-    return res.status(401).json({ message: 'Unauthorized: Authentication required.' });
-  }
-
-  if (req.user.role !== 'student') {
-    return res.status(403).json({ message: 'Forbidden: Student access required.' });
-  }
-
-  next();
-};
+// Middleware is imported from ../middleware/auth.middleware.js
 
 // =====================================================
 // EXAM ATTEMPT LIFECYCLE ENDPOINTS
@@ -134,9 +117,8 @@ router.post('/start', ...requireAuth, isStudent, async (req: Request, res: Respo
         version: deviceInfo.browserVersion || 'unknown',
         os: deviceInfo.os || 'unknown',
         screenResolution: deviceInfo.screenResolution || 'unknown',
-        screenResolution: deviceInfo.screenResolution || 'unknown',
       } : undefined,
-      organizationId: req.tenant?.organizationId || req.user?.organizationId
+      organizationId: (req.tenant?.organizationId || req.user?.organizationId)!
     });
 
     res.status(201).json({
@@ -694,23 +676,26 @@ router.post('/:attemptId/decision', ...requireAuth, async (req: Request, res: Re
 
     // Update attempt based on decision
     let updateData: any = {
-      reviewedBy: userId,
-      reviewedAt: new Date(),
-      reviewNotes: notes || null,
+      gradedBy: userId,
+      gradedAt: new Date(),
+      metadata: {
+        ...(attemptData.attempt.metadata as any || {}),
+        reviewNotes: notes || null,
+      }
     };
 
     if (decision === 'valid') {
       updateData.flaggedForReview = false;
-      updateData.reviewStatus = 'approved';
+      updateData.metadata.reviewStatus = 'approved';
     } else if (decision === 'invalid') {
       updateData.flaggedForReview = true;
-      updateData.reviewStatus = 'rejected';
+      updateData.metadata.reviewStatus = 'rejected';
       updateData.score = null;
       updateData.percentage = null;
       updateData.passed = null;
     } else if (decision === 'allow_retake') {
       updateData.flaggedForReview = false;
-      updateData.reviewStatus = 'retake_granted';
+      updateData.metadata.reviewStatus = 'retake_granted';
       // Note: Actual retake logic would need to create a new attempt
     }
 
@@ -802,8 +787,8 @@ router.patch('/:attemptId/adjust-score', ...requireAuth, async (req: Request, re
       .set({
         pointsAwarded: newScore,
         feedback: feedback || null,
-        gradedAt: new Date(),
-        gradedBy: userId,
+        updatedAt: new Date(),
+        manuallyReviewed: true,
       })
       .where(
         and(
@@ -914,9 +899,12 @@ router.post('/:attemptId/feedback', ...requireAuth, async (req: Request, res: Re
     const [updatedAttempt] = await db
       .update(examAttempts)
       .set({
-        reviewNotes: feedback,
-        reviewedBy: userId,
-        reviewedAt: new Date(),
+        metadata: {
+          ...(attemptData.attempt.metadata as any || {}),
+          reviewNotes: feedback,
+        },
+        gradedBy: userId,
+        gradedAt: new Date(),
       })
       .where(eq(examAttempts.id, attemptId))
       .returning();

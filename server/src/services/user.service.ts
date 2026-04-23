@@ -48,7 +48,7 @@ export async function googleUpsert(id_token: string) {
   // check existing
   const sel = 'SELECT id,email,role,name FROM users WHERE email=$1';
   const r = await pool.query(sel, [email]);
-  if (r.rowCount > 0) {
+  if (r.rowCount && r.rowCount > 0) {
     const user = r.rows[0];
     const token = jwt.sign({ id: user.id, email: user.email, role: user.role, name: user.name }, JWT_SECRET, { expiresIn: '7d' });
     return token;

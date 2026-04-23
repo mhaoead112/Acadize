@@ -34,7 +34,15 @@ router.get('/', ...requireAuth, async (req, res) => {
 
         const { db } = await import('../db/index.js');
         const { announcements, courses, users } = await import('../db/schema.js');
-        const { desc, eq, and } = await import('drizzle-orm');
+        const { desc, eq, and, count } = await import('drizzle-orm');
+        const { getPaginationParams, buildPaginatedResponse } = await import('../utils/pagination.js');
+
+        const { limit, offset, page } = getPaginationParams(req);
+
+        const countResult = await db.select({ count: count() }).from(announcements)
+            .leftJoin(courses, eq(announcements.courseId, courses.id))
+            .where(eq(courses.organizationId, orgId));
+        const totalCount = countResult[0].count;
 
         // Get all announcements with course and teacher info
         // Filter by organizationId via course
@@ -55,7 +63,9 @@ router.get('/', ...requireAuth, async (req, res) => {
             .leftJoin(courses, eq(announcements.courseId, courses.id))
             .leftJoin(users, eq(announcements.teacherId, users.id))
             .where(eq(courses.organizationId, orgId)) // Enforce tenant isolation
-            .orderBy(desc(announcements.createdAt));
+            .orderBy(desc(announcements.createdAt))
+            .limit(limit)
+            .offset(offset);
 
         // Transform to match frontend expectations
         const formattedAnnouncements = allAnnouncements.map(ann => ({
@@ -63,9 +73,7 @@ router.get('/', ...requireAuth, async (req, res) => {
             isGlobal: false // All current announcements are course-specific
         }));
 
-        res.status(200).json({
-            announcements: formattedAnnouncements
-        });
+        res.status(200).json(buildPaginatedResponse(formattedAnnouncements, totalCount, page, limit));
     } catch (error) {
         console.error('Error fetching all announcements:', error);
         res.status(500).json({
@@ -86,12 +94,26 @@ router.get('/course/:courseId', async (req, res) => {
         const orgId = (req as any).tenant?.organizationId;
         if (!orgId) return res.status(400).json({ message: "Organization context required" });
 
-        const locale = (req as any).locale;
-        const courseAnnouncements = await getAnnouncementsByCourse(courseId, orgId, locale);
+        const { getPaginationParams, buildPaginatedResponse } = await import('../utils/pagination.js');
+        const { limit, offset, page } = getPaginationParams(req);
+        const locale = (req.query.locale as string) || 'en';
 
-        res.status(200).json({
-            announcements: courseAnnouncements
-        });
+        const { announcements: announcementsTable, courses: coursesTable } = await import('../db/schema.js');
+        const { eq, and, count } = await import('drizzle-orm');
+        const { db } = await import('../db/index.js');
+
+        // Get total count for this course
+        const countResult = await db.select({ count: count() })
+            .from(announcementsTable)
+            .innerJoin(coursesTable, eq(announcementsTable.courseId, coursesTable.id))
+            .where(and(
+                eq(announcementsTable.courseId, courseId),
+                eq(coursesTable.organizationId, orgId)
+            ));
+        const totalCount = countResult[0].count;
+
+        const list = await getAnnouncementsByCourse(courseId, orgId, locale, limit, offset);
+        res.status(200).json(buildPaginatedResponse(list, totalCount, page, limit));
     } catch (error) {
         console.error('Error fetching announcements:', error);
         res.status(500).json({

@@ -106,6 +106,10 @@ router.post('/', isAuthenticated, async (req: Request, res: Response) => {
 
         // Create user with organization scoping
         const tenantOrgId = (req as any).tenant?.organizationId;
+        if (!tenantOrgId) {
+            return res.status(403).json({ message: 'Organization context required for user creation' });
+        }
+
         const [newUser] = await db
             .insert(users)
             .values({
@@ -117,7 +121,7 @@ router.post('/', isAuthenticated, async (req: Request, res: Response) => {
                 isActive: true,
                 emailVerified: false, // Will be verified on first login
                 passwordResetExpires: passwordExpiry, // Temporary password expires in 7 days
-                ...(tenantOrgId ? { organizationId: tenantOrgId } : {}),
+                organizationId: tenantOrgId,
             })
             .returning({
                 id: users.id,
@@ -128,6 +132,16 @@ router.post('/', isAuthenticated, async (req: Request, res: Response) => {
             });
 
         console.log('✅ User created:', newUser.email);
+
+        const { AuditService } = await import('../services/audit.service.js');
+        await AuditService.logAction({
+            organizationId: tenantOrgId,
+            actorId: adminId,
+            action: 'create_user',
+            targetId: newUser.id,
+            targetType: 'user',
+            metadata: { email: newUser.email, role: newUser.role }
+        });
 
         // Send email with credentials (non-blocking)
         try {
@@ -175,6 +189,7 @@ router.post('/:userId/reset-password', isAuthenticated, async (req: Request, res
     try {
         const { userId } = req.params;
         const adminId = (req as any).user?.id;
+        const tenantOrgId = (req as any).tenant?.organizationId;
 
         // Verify admin role
         const [admin] = await db
@@ -187,6 +202,10 @@ router.post('/:userId/reset-password', isAuthenticated, async (req: Request, res
             return res.status(403).json({ message: 'Only admins can reset passwords' });
         }
 
+        if (!tenantOrgId || admin.organizationId !== tenantOrgId) {
+            return res.status(403).json({ message: 'Invalid organization context' });
+        }
+
         // Get user
         const [user] = await db
             .select()
@@ -195,6 +214,10 @@ router.post('/:userId/reset-password', isAuthenticated, async (req: Request, res
             .limit(1);
 
         if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        if (user.organizationId !== tenantOrgId) {
             return res.status(404).json({ message: 'User not found' });
         }
 
@@ -226,6 +249,15 @@ router.post('/:userId/reset-password', isAuthenticated, async (req: Request, res
                 temporaryPassword,
             });
             console.log(`✅ Password reset email sent to ${user.email}`);
+
+            const { AuditService } = await import('../services/audit.service.js');
+            await AuditService.logAction({
+                organizationId: tenantOrgId,
+                actorId: adminId,
+                action: 'reset_password',
+                targetId: user.id,
+                targetType: 'user',
+            });
         } catch (emailError) {
             console.error('❌ Failed to send password reset email:', emailError);
         }
@@ -248,8 +280,6 @@ router.get('/', isAuthenticated, async (req: Request, res: Response) => {
         const adminId = (req as any).user?.id;
         const tenantOrgId = (req as any).tenant?.organizationId; // From tenant middleware
 
-        console.log('[AdminUsers] Tenant context:', { tenantOrgId, tenant: (req as any).tenant });
-
         // Verify admin role
         const [admin] = await db
             .select()
@@ -263,7 +293,6 @@ router.get('/', isAuthenticated, async (req: Request, res: Response) => {
 
         // If no tenant context, return empty (don't allow cross-tenant access)
         if (!tenantOrgId) {
-            console.log('[AdminUsers] No tenant context - returning empty');
             return res.status(200).json({ users: [] });
         }
 
@@ -284,8 +313,6 @@ router.get('/', isAuthenticated, async (req: Request, res: Response) => {
             .from(users)
             .where(eq(users.organizationId, tenantOrgId))
             .orderBy(users.createdAt);
-
-        console.log('[AdminUsers] Found users:', allUsers.length, 'for org:', tenantOrgId);
 
         res.status(200).json({ users: allUsers });
     } catch (error) {

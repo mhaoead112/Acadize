@@ -106,7 +106,7 @@ export const registerUser = async (userData: RegisterUserDto) => {
     try {
         const { EmailService } = await import('./email.service.js');
         const { organizations } = await import('../db/schema.js');
-        const [org] = await db.select({ defaultLocale: organizations.defaultLocale }).from(organizations).where(eq(organizations.id, orgId)).limit(1);
+        const [org] = await db.select({ defaultLocale: organizations.defaultLocale }).from(organizations).where(eq(organizations.id, organizationId)).limit(1);
         await EmailService.sendWelcomeEmail(
             {
                 email: newUser[0].email,

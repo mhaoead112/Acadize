@@ -19,7 +19,7 @@ export interface GetScheduleInput {
 export interface CreateEventInput {
     title: string;
     description?: string;
-    eventType: string;
+    eventType: 'class' | 'meeting' | 'holiday' | 'exam' | 'announcement';
     startTime: Date;
     endTime: Date;
     location?: string;
@@ -36,7 +36,7 @@ export interface UpdateEventInput {
     userRole: string;
     title?: string;
     description?: string;
-    eventType?: string;
+    eventType?: 'class' | 'meeting' | 'holiday' | 'exam' | 'announcement';
     startTime?: Date;
     endTime?: Date;
     location?: string;

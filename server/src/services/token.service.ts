@@ -3,11 +3,18 @@
 import jwt from 'jsonwebtoken';
 import { db } from '../db/index.js';
 import { refreshTokens } from '../db/schema.js';
-import { eq, and, gt } from 'drizzle-orm';
+import { eq, and, gt, lt } from 'drizzle-orm';
 import crypto from 'crypto';
 
-const ACCESS_TOKEN_SECRET = process.env.JWT_SECRET || 'your-secret-key';
-const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET || 'your-refresh-secret-key';
+if (!process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET environment variable is required');
+}
+if (!process.env.REFRESH_TOKEN_SECRET) {
+    throw new Error('REFRESH_TOKEN_SECRET environment variable is required');
+}
+
+const ACCESS_TOKEN_SECRET = process.env.JWT_SECRET;
+const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
 const ACCESS_TOKEN_EXPIRY = '4h'; // 4 hours
 const REFRESH_TOKEN_EXPIRY = '7d'; // 7 days
 
@@ -81,29 +88,52 @@ export class TokenService {
     }
 
     /**
-     * Verify refresh token and return user ID
+     * Rotate a refresh token: securely invalidates the old one and generates a new pair.
+     * Returns the user ID if successful, or null if invalid.
+     * If a revoked token is used, it revokes ALL tokens for that user (security feature).
      */
-    static async verifyRefreshToken(token: string): Promise<string | null> {
+    static async rotateRefreshToken(oldToken: string): Promise<string | null> {
         try {
+            // First find the token record
             const [tokenRecord] = await db
                 .select()
                 .from(refreshTokens)
-                .where(
-                    and(
-                        eq(refreshTokens.token, token),
-                        eq(refreshTokens.revoked, false),
-                        gt(refreshTokens.expiresAt, new Date())
-                    )
-                )
+                .where(eq(refreshTokens.token, oldToken))
                 .limit(1);
 
             if (!tokenRecord) {
+                return null; // Token doesn't exist
+            }
+
+            if (tokenRecord.revoked || tokenRecord.expiresAt < new Date()) {
+                // REUSE DETECTED or EXPIRED
+                // Security policy: If a revoked token is used, assume breach and revoke ALL tokens for this user.
+                logger.warn('[TokenService] Revoked/Expired refresh token reused. Revoking all user tokens.', { userId: tokenRecord.userId });
+                await this.revokeAllUserTokens(tokenRecord.userId);
                 return null;
+            }
+
+            // Attempt to revoke the token specifically
+            const result = await db
+                .update(refreshTokens)
+                .set({ revoked: true })
+                .where(
+                    and(
+                        eq(refreshTokens.token, oldToken),
+                        eq(refreshTokens.revoked, false)
+                    )
+                )
+                .returning({ updatedToken: refreshTokens.token });
+
+            // If no rows were updated, a concurrent request beat us to it.
+            if (result.length === 0) {
+                 logger.warn('[TokenService] Concurrent refresh detected.', { userId: tokenRecord.userId });
+                 return null;
             }
 
             return tokenRecord.userId;
         } catch (error) {
-            console.error('[TokenService] Error verifying refresh token:', error);
+            logger.error('[TokenService] Error rotating refresh token:', { error: String(error) });
             return null;
         }
     }
@@ -151,7 +181,7 @@ export class TokenService {
                 .delete(refreshTokens)
                 .where(
                     and(
-                        gt(new Date(), refreshTokens.expiresAt),
+                        lt(refreshTokens.expiresAt, new Date()),
                         eq(refreshTokens.revoked, true)
                     )
                 );

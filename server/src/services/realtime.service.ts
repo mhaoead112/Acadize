@@ -55,6 +55,7 @@
 import { Server as SocketIOServer, Socket, Namespace } from 'socket.io';
 import type { Server as HttpServer } from 'http';
 import jwt from 'jsonwebtoken';
+import { SOCKETIO_ATTENDANCE_NAMESPACE } from '../realtime.config.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -126,7 +127,7 @@ function buildCorsOrigins(): string[] {
     if (process.env.CORS_ORIGINS) {
         process.env.CORS_ORIGINS.split(',').map(o => o.trim()).filter(Boolean).forEach(o => origins.push(o));
     }
-    return [...new Set(origins)];
+    return Array.from(new Set(origins));
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -280,7 +281,7 @@ export async function initializeSocket(httpServer: HttpServer): Promise<SocketIO
     await attachRedisAdapter(io);
 
     // ─────────────────────── /attendance namespace ────────────────────────────
-    const attendance = io.of('/attendance');
+    const attendance = io.of(SOCKETIO_ATTENDANCE_NAMESPACE);
     attendanceNs = attendance;
 
     // Apply JWT auth before any connection handler runs
@@ -290,7 +291,7 @@ export async function initializeSocket(httpServer: HttpServer): Promise<SocketIO
         registerConnectionHandlers(socket as AttendanceSocket);
     });
 
-    log('info', 'Socket.IO /attendance namespace initialised', {
+    log('info', `Socket.IO ${SOCKETIO_ATTENDANCE_NAMESPACE} namespace initialised`, {
         origins: buildCorsOrigins(),
         heartbeatSecs: HEARTBEAT_MS / 1000,
     });

@@ -13,6 +13,16 @@ const requireAuth = [isAuthenticated, requireSubscription];
 
 const router = Router();
 
+// Helper — fail fast if org context is missing
+const requireOrgId = (req: any, res: any): string | null => {
+  const orgId: string | undefined = req.tenant?.organizationId;
+  if (!orgId) {
+    res.status(400).json({ message: 'Organization context required' });
+    return null;
+  }
+  return orgId;
+};
+
 // Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -42,10 +52,12 @@ const upload = multer({
   }
 });
 
-// Upload a report card (teachers only)
+// Upload a report card (teachers/admins only)
 router.post('/upload', ...requireAuth, upload.single('file'), async (req, res) => {
   try {
     const user = req.user;
+    const orgId = requireOrgId(req, res);
+    if (!orgId) return;
 
     if (user?.role !== 'teacher' && user?.role !== 'admin') {
       return res.status(403).json({ message: 'Only teachers can upload report cards' });
@@ -58,18 +70,18 @@ router.post('/upload', ...requireAuth, upload.single('file'), async (req, res) =
     const { studentId, period, academicYear } = req.body;
 
     if (!studentId || !period || !academicYear) {
-      // Clean up uploaded file
       fs.unlinkSync(req.file.path);
       return res.status(400).json({ message: 'Student ID, period, and academic year are required' });
     }
 
-    // Verify student exists and is a student
+    // Verify student exists AND belongs to this organisation
     const [student] = await db
       .select()
       .from(users)
       .where(and(
         eq(users.id, studentId),
-        eq(users.role, 'student')
+        eq(users.role, 'student'),
+        eq(users.organizationId, orgId)
       ));
 
     if (!student) {
@@ -83,6 +95,7 @@ router.post('/upload', ...requireAuth, upload.single('file'), async (req, res) =
       .from(reportCards)
       .where(and(
         eq(reportCards.studentId, studentId),
+        eq(reportCards.organizationId, orgId),
         eq(reportCards.period, period),
         eq(reportCards.academicYear, academicYear)
       ));
@@ -94,17 +107,18 @@ router.post('/upload', ...requireAuth, upload.single('file'), async (req, res) =
       });
     }
 
-    // Create report card record
+    // Create report card record — always stamp organizational ownership
     const [reportCard] = await db
       .insert(reportCards)
       .values({
+        organizationId: orgId,
         studentId,
         period,
         academicYear,
         fileName: req.file.originalname,
         filePath: req.file.path,
         fileSize: req.file.size.toString(),
-        uploadedBy: user.id,
+        uploadedBy: user!.id,
       })
       .returning();
 
@@ -115,23 +129,20 @@ router.post('/upload', ...requireAuth, upload.single('file'), async (req, res) =
   } catch (error) {
     console.error('Upload error:', error);
 
-    // Clean up file if there was an error
     if (req.file) {
-      try {
-        fs.unlinkSync(req.file.path);
-      } catch (cleanupError) {
-        console.error('Error cleaning up file:', cleanupError);
-      }
+      try { fs.unlinkSync(req.file.path); } catch { /* ignore */ }
     }
 
     res.status(500).json({ message: 'Failed to upload report card' });
   }
 });
 
-// Get all report cards (teachers only)
+// Get all report cards — scoped to caller's org (teachers/admins only)
 router.get('/all', ...requireAuth, async (req, res) => {
   try {
     const user = req.user;
+    const orgId = requireOrgId(req, res);
+    if (!orgId) return;
 
     if (user?.role !== 'teacher' && user?.role !== 'admin') {
       return res.status(403).json({ message: 'Access denied' });
@@ -154,6 +165,7 @@ router.get('/all', ...requireAuth, async (req, res) => {
       })
       .from(reportCards)
       .leftJoin(users, eq(reportCards.studentId, users.id))
+      .where(eq(reportCards.organizationId, orgId))
       .orderBy(desc(reportCards.uploadedAt));
 
     res.json(reports);
@@ -163,36 +175,23 @@ router.get('/all', ...requireAuth, async (req, res) => {
   }
 });
 
-// Get report cards for current student
+// Get report cards for current student — scoped to org
 router.get('/student', ...requireAuth, async (req, res) => {
   try {
     const user = req.user;
+    const orgId = requireOrgId(req, res);
+    if (!orgId) return;
+
     const { academicYear, period } = req.query;
 
     if (user?.role !== 'student') {
       return res.status(403).json({ message: 'Access denied' });
     }
 
-    let query = db
-      .select({
-        id: reportCards.id,
-        studentId: reportCards.studentId,
-        period: reportCards.period,
-        academicYear: reportCards.academicYear,
-        fileName: reportCards.fileName,
-        filePath: reportCards.filePath,
-        fileSize: reportCards.fileSize,
-        uploadedBy: reportCards.uploadedBy,
-        uploaderName: users.fullName,
-        uploadedAt: reportCards.uploadedAt,
-        createdAt: reportCards.createdAt,
-      })
-      .from(reportCards)
-      .leftJoin(users, eq(reportCards.uploadedBy, users.id))
-      .where(eq(reportCards.studentId, user.id));
-
-    // Apply filters if provided
-    const conditions = [eq(reportCards.studentId, user.id)];
+    const conditions: any[] = [
+      eq(reportCards.studentId, user.id),
+      eq(reportCards.organizationId, orgId),
+    ];
 
     if (academicYear) {
       conditions.push(eq(reportCards.academicYear, academicYear as string));
@@ -228,10 +227,12 @@ router.get('/student', ...requireAuth, async (req, res) => {
   }
 });
 
-// View a report card
+// View a report card — streams PDF after org + ownership check
 router.get('/:id/view', ...requireAuth, async (req, res) => {
   try {
     const user = req.user;
+    const orgId = requireOrgId(req, res);
+    if (!orgId) return;
     const { id } = req.params;
 
     const [report] = await db
@@ -243,7 +244,12 @@ router.get('/:id/view', ...requireAuth, async (req, res) => {
       return res.status(404).json({ message: 'Report card not found' });
     }
 
-    // Check permissions
+    // Tenant guard — report must belong to caller's org
+    if (report.organizationId !== orgId) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    // Role guard — students can only view their own reports
     if (user?.role === 'student' && report.studentId !== user.id) {
       return res.status(403).json({ message: 'Access denied' });
     }
@@ -267,10 +273,12 @@ router.get('/:id/view', ...requireAuth, async (req, res) => {
   }
 });
 
-// Download a report card
+// Download a report card — streams PDF after org + ownership check
 router.get('/:id/download', ...requireAuth, async (req, res) => {
   try {
     const user = req.user;
+    const orgId = requireOrgId(req, res);
+    if (!orgId) return;
     const { id } = req.params;
 
     const [report] = await db
@@ -282,7 +290,12 @@ router.get('/:id/download', ...requireAuth, async (req, res) => {
       return res.status(404).json({ message: 'Report card not found' });
     }
 
-    // Check permissions
+    // Tenant guard
+    if (report.organizationId !== orgId) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    // Role guard
     if (user?.role === 'student' && report.studentId !== user.id) {
       return res.status(403).json({ message: 'Access denied' });
     }
@@ -306,10 +319,12 @@ router.get('/:id/download', ...requireAuth, async (req, res) => {
   }
 });
 
-// Delete a report card (teachers only)
+// Delete a report card (teachers/admins only) — org-scoped
 router.delete('/:id', ...requireAuth, async (req, res) => {
   try {
     const user = req.user;
+    const orgId = requireOrgId(req, res);
+    if (!orgId) return;
     const { id } = req.params;
 
     if (user?.role !== 'teacher' && user?.role !== 'admin') {
@@ -325,15 +340,18 @@ router.delete('/:id', ...requireAuth, async (req, res) => {
       return res.status(404).json({ message: 'Report card not found' });
     }
 
-    // Delete the file
+    // Tenant guard
+    if (report.organizationId !== orgId) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
     if (fs.existsSync(report.filePath)) {
       fs.unlinkSync(report.filePath);
     }
 
-    // Delete the database record
     await db
       .delete(reportCards)
-      .where(eq(reportCards.id, id));
+      .where(and(eq(reportCards.id, id), eq(reportCards.organizationId, orgId)));
 
     res.json({ message: 'Report card deleted successfully' });
   } catch (error) {

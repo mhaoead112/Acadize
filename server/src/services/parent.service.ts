@@ -143,8 +143,8 @@ export async function getParentChildren(parentId: string) {
       let overallGrade = 'N/A';
       if (childGrades.length > 0) {
         const avgScore = childGrades.reduce((sum, g) => {
-          const score = parseFloat(g.grade.score);
-          const maxScore = parseFloat(g.grade.maxScore || '100');
+          const score = g.grade.score;
+          const maxScore = g.grade.maxScore ?? 100;
           return sum + (score / maxScore * 100);
         }, 0) / childGrades.length;
         
@@ -242,8 +242,8 @@ export async function getChildGrades(
       
       if (gradedAssignments.length > 0) {
         const totalScore = gradedAssignments.reduce((sum, a) => {
-          const score = parseFloat(a.grade!.score);
-          const maxScore = parseFloat(a.grade!.maxScore || '100');
+          const score = a.grade!.score;
+          const maxScore = a.grade!.maxScore ?? 100;
           return sum + (score / maxScore) * 100;
         }, 0);
         averageGrade = totalScore / gradedAssignments.length;
@@ -260,8 +260,8 @@ export async function getChildGrades(
           id: a.assignment.id,
           title: a.assignment.title,
           dueDate: a.assignment.dueDate,
-          score: a.grade ? parseFloat(a.grade.score) : null,
-          maxScore: a.grade ? parseFloat(a.grade.maxScore || '100') : parseFloat(a.assignment.maxScore || '100'),
+          score: a.grade ? a.grade.score : null,
+          maxScore: a.grade ? (a.grade.maxScore ?? 100) : (a.assignment.maxScore ?? 100),
           feedback: a.grade?.feedback,
           status: !a.submission ? 'not_submitted' : a.grade ? 'graded' : 'submitted'
         }))
@@ -674,9 +674,9 @@ export async function getDashboardOverview(parentId: string, forceRefresh = fals
       const recentGrades = recentGradesData.map(g => ({
         assignmentTitle: g.assignment?.title || 'Unknown',
         courseName: g.course?.title || 'Unknown',
-        score: parseFloat(g.grade.score),
-        maxScore: parseFloat(g.grade.maxScore || '100'),
-        percentage: Math.round((parseFloat(g.grade.score) / parseFloat(g.grade.maxScore || '100')) * 100),
+        score: g.grade.score,
+        maxScore: g.grade.maxScore ?? 100,
+        percentage: Math.round((g.grade.score / (g.grade.maxScore ?? 100)) * 100),
         gradedAt: g.grade.gradedAt
       }));
 
@@ -737,8 +737,8 @@ export async function getDashboardOverview(parentId: string, forceRefresh = fals
       let progressPercentage = 0;
       
       if (allGradesData.length > 0) {
-        totalScore = allGradesData.reduce((sum, g) => sum + parseFloat(g.grade.score), 0);
-        totalMaxScore = allGradesData.reduce((sum, g) => sum + parseFloat(g.grade.maxScore || '100'), 0);
+        totalScore = allGradesData.reduce((sum, g) => sum + g.grade.score, 0);
+        totalMaxScore = allGradesData.reduce((sum, g) => sum + (g.grade.maxScore ?? 100), 0);
         progressPercentage = totalMaxScore > 0 ? Math.round((totalScore / totalMaxScore) * 100) : 0;
       }
 
@@ -749,9 +749,9 @@ export async function getDashboardOverview(parentId: string, forceRefresh = fals
         .where(eq(studyStreaks.userId, child.id))
         .limit(1);
 
-      const currentStreak = streakData ? parseInt(streakData.currentStreak) : 0;
-      const weeklyGoalHours = streakData ? parseFloat(streakData.weeklyGoalHours) : 10;
-      const currentWeekHours = streakData ? parseFloat(streakData.currentWeekHours) : 0;
+      const currentStreak = streakData ? streakData.currentStreak : 0;
+      const weeklyGoalHours = streakData ? (streakData.weeklyGoalHours ?? 10) : 10;
+      const currentWeekHours = streakData ? (streakData.currentWeekHours ?? 0) : 0;
 
       // Get alerts for this child
       const alerts = [];
@@ -815,7 +815,7 @@ export async function getDashboardOverview(parentId: string, forceRefresh = fals
   );
 
   // Get recent activity across all children
-  const recentActivity = [];
+  const recentActivity: any[] = [];
   for (const childData of childrenData) {
     // Add recent grades to activity
     childData.recentGrades.slice(0, 3).forEach(grade => {
@@ -934,10 +934,10 @@ export async function getChildAssignments(
       courseId: a.assignment.courseId,
       dueDate: a.assignment.dueDate,
       type: a.assignment.type,
-      maxScore: parseFloat(a.assignment.maxScore || '100'),
+      maxScore: a.assignment.maxScore ?? 100,
       status: assignmentStatus,
       submittedAt: a.submission?.submittedAt,
-      score: a.grade ? parseFloat(a.grade.score) : null,
+      score: a.grade?.score ?? null,
       feedback: a.grade?.feedback,
       isLate
     };
@@ -1046,26 +1046,26 @@ export async function getChildAnalytics(
   // Calculate grade trends over time
   const gradesTrend = gradesData.map(g => ({
     date: g.grade.gradedAt,
-    percentage: Math.round((parseFloat(g.grade.score) / parseFloat(g.grade.maxScore || '100')) * 100),
+    percentage: Math.round((g.grade.score / (g.grade.maxScore ?? 100)) * 100),
     courseName: g.course?.title || 'Unknown',
     assignmentTitle: g.assignment?.title || 'Unknown'
   }));
 
   // Calculate subject performance
-  const subjectPerformance = new Map();
+  const subjectPerformance = new Map<string, { scores: number[]; count: number }>();
   gradesData.forEach(g => {
     const courseName = g.course?.title || 'Unknown';
     if (!subjectPerformance.has(courseName)) {
       subjectPerformance.set(courseName, { scores: [], count: 0 });
     }
-    const percentage = (parseFloat(g.grade.score) / parseFloat(g.grade.maxScore || '100')) * 100;
-    subjectPerformance.get(courseName).scores.push(percentage);
-    subjectPerformance.get(courseName).count++;
+    const percentage = (g.grade.score / (g.grade.maxScore ?? 100)) * 100;
+    subjectPerformance.get(courseName)!.scores.push(percentage);
+    subjectPerformance.get(courseName)!.count++;
   });
 
   const subjectStats = Array.from(subjectPerformance.entries()).map(([subject, data]) => ({
     subject,
-    avgGrade: Math.round(data.scores.reduce((a, b) => a + b, 0) / data.count * 10) / 10,
+    avgGrade: Math.round(data.scores.reduce((a: number, b: number) => a + b, 0) / data.count * 10) / 10,
     assignments: data.count,
     trend: data.scores.length >= 2 
       ? (data.scores[data.scores.length - 1] > data.scores[0] ? 'improving' : 'declining')
@@ -1090,15 +1090,15 @@ export async function getChildAnalytics(
     .orderBy(attendance.date);
 
   // Calculate attendance by month
-  const attendanceByMonth = new Map();
+  const attendanceByMonth = new Map<string, { total: number; present: number }>();
   attendanceData.forEach(a => {
     const month = a.attendance.date.substring(0, 7); // YYYY-MM
     if (!attendanceByMonth.has(month)) {
       attendanceByMonth.set(month, { total: 0, present: 0 });
     }
-    attendanceByMonth.get(month).total++;
+    attendanceByMonth.get(month)!.total++;
     if (a.attendance.status === 'present') {
-      attendanceByMonth.get(month).present++;
+      attendanceByMonth.get(month)!.present++;
     }
   });
 
@@ -1251,8 +1251,8 @@ export async function getChildCourses(parentId: string, childId: string) {
       let courseGrade = 'N/A';
       if (gradedAssignments.length > 0) {
         const avgScore = gradedAssignments.reduce((sum, g) => {
-          const score = parseFloat(g.grade.score);
-          const maxScore = parseFloat(g.grade.maxScore || '100');
+          const score = g.grade.score;
+          const maxScore = g.grade.maxScore ?? 100;
           return sum + (score / maxScore * 100);
         }, 0) / gradedAssignments.length;
 

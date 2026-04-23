@@ -5,18 +5,24 @@ import { db } from './db/index.js';
 import { messages, conversationParticipants, conversations, users, messageReadReceipts, userPresence, notifications } from './db/schema.js';
 import { eq, and, desc, inArray, sql } from 'drizzle-orm';
 import { createId } from '@paralleldrive/cuid2';
+import { clients, conversationClients, broadcastToUser, broadcastToConversation, AuthenticatedWebSocket } from './websocket-state.js';
+import * as ConversationsService from './services/conversations.service.js';
+import { logger } from './utils/logger.js';
+import { WS_CHAT_PATH } from './realtime.config.js';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// websocket.ts — OWNERSHIP: raw ws at path /ws
+// Purpose  : real-time chat messages + user presence
+// Namespace: only one (the default namespace on path /ws)
+// See      : server/src/realtime.config.ts for the authoritative path registry
+// Contrast : realtime.service.ts owns Socket.IO /attendance (live attendance)
+// ─────────────────────────────────────────────────────────────────────────────
 
 // JWT secret must be set in environment variables
 if (!process.env.JWT_SECRET) {
   throw new Error('JWT_SECRET environment variable is required!');
 }
 const JWT_SECRET = process.env.JWT_SECRET;
-
-interface AuthenticatedWebSocket extends WebSocket {
-  userId?: string;
-  username?: string;
-  organizationId?: string;
-}
 
 interface WSMessage {
   type: 'auth' | 'message' | 'typing' | 'read' | 'join' | 'leave' | 'delivered' | 'presence';
@@ -33,14 +39,11 @@ interface WSMessage {
   status?: 'online' | 'offline' | 'away';
 }
 
-const clients = new Map<string, Set<AuthenticatedWebSocket>>();
-const conversationClients = new Map<string, Set<string>>();
-
 export function setupWebSocketServer(wss: WebSocketServer) {
-  console.log('🔌 WebSocket server initialized');
+  logger.info(`[ws] Handler attached — owns path ${WS_CHAT_PATH} (chat + presence)`);
 
   wss.on('connection', (ws: AuthenticatedWebSocket, request: IncomingMessage) => {
-    console.log('📱 New WebSocket connection');
+    logger.info('[ws] New connection established');
 
     ws.on('message', async (data: Buffer) => {
       try {
@@ -83,7 +86,7 @@ export function setupWebSocketServer(wss: WebSocketServer) {
             ws.send(JSON.stringify({ error: 'Unknown message type' }));
         }
       } catch (error) {
-        console.error('WebSocket message error:', error);
+        logger.error('[ws] Message handler error', { error: String(error) });
         ws.send(JSON.stringify({ error: 'Invalid message format' }));
       }
     });
@@ -93,7 +96,7 @@ export function setupWebSocketServer(wss: WebSocketServer) {
     });
 
     ws.on('error', (error) => {
-      console.error('WebSocket error:', error);
+      logger.error('[ws] Socket error', { error: String(error) });
     });
   });
 }
@@ -150,9 +153,9 @@ async function handleAuth(ws: AuthenticatedWebSocket, message: WSMessage) {
       username: ws.username
     }));
 
-    console.log(`✅ User ${ws.username} (${ws.userId}) authenticated [org: ${ws.organizationId}]`);
+    logger.info(`[ws] User authenticated`, { userId: ws.userId, username: ws.username, organizationId: ws.organizationId });
   } catch (error) {
-    console.error('WebSocket auth error:', error);
+    logger.error('[ws] Auth error', { error: String(error) });
     ws.send(JSON.stringify({ type: 'error', message: 'Authentication failed' }));
     ws.close();
   }
@@ -161,16 +164,14 @@ async function handleAuth(ws: AuthenticatedWebSocket, message: WSMessage) {
 async function handleJoinConversation(ws: AuthenticatedWebSocket, message: WSMessage) {
   if (!ws.userId || !ws.organizationId || !message.conversationId) return;
 
-  // Verify user is participant AND conversation belongs to same organization
+  // Verify user is participant
   const participant = await db
-    .select({ userId: conversationParticipants.userId, convOrgId: conversations.organizationId })
+    .select({ userId: conversationParticipants.userId })
     .from(conversationParticipants)
-    .innerJoin(conversations, eq(conversations.id, conversationParticipants.conversationId))
     .where(
       and(
         eq(conversationParticipants.conversationId, message.conversationId),
-        eq(conversationParticipants.userId, ws.userId),
-        eq(conversations.organizationId, ws.organizationId)
+        eq(conversationParticipants.userId, ws.userId)
       )
     )
     .limit(1);
@@ -218,119 +219,23 @@ async function handleMessage(ws: AuthenticatedWebSocket, message: WSMessage) {
   if (!ws.userId || !message.conversationId) return;
 
   try {
-    // Check if any participants are online
-    const conversationUsers = conversationClients.get(message.conversationId);
-    const isDelivered = conversationUsers && conversationUsers.size > 1; // More than just sender
-
-    // Save message to database
-    const [newMessage] = await db.insert(messages).values({
+    // CENTRALIZED: Use common service for both REST and WebSocket
+    await ConversationsService.sendMessage({
       conversationId: message.conversationId,
       senderId: ws.userId,
       type: message.messageType || 'text',
-      content: message.content || null,
-      fileUrl: message.fileUrl || null,
-      fileName: message.fileName || null,
-      fileSize: message.fileSize || null,
-      fileType: message.fileType || null,
-      deliveredAt: isDelivered ? new Date() : null,
-      isEdited: false,
-      isDeleted: false,
-    }).returning();
-
-    // Get sender info
-    const [sender] = await db
-      .select({
-        fullName: users.fullName,
-        username: users.username,
-      })
-      .from(users)
-      .where(eq(users.id, ws.userId))
-      .limit(1);
-
-    // Get conversation participants
-    const participants = await db
-      .select({ userId: conversationParticipants.userId })
-      .from(conversationParticipants)
-      .where(eq(conversationParticipants.conversationId, message.conversationId));
-
-    // Check for mentions (@username)
-    const mentions = message.content?.match(/@(\w+)/g) || [];
-    const mentionedUsernames = mentions.map(m => m.substring(1));
-
-    if (mentionedUsernames.length > 0) {
-      // Scope @mention lookups to the same organization to prevent cross-tenant user discovery
-      const mentionedUsers = await db
-        .select({ id: users.id, username: users.username })
-        .from(users)
-        .where(and(inArray(users.username, mentionedUsernames), eq(users.organizationId, ws.organizationId!)));
-
-      // Create notifications for mentioned users
-      for (const mentionedUser of mentionedUsers) {
-        if (mentionedUser.id !== ws.userId) {
-          await db.insert(notifications).values({
-            userId: mentionedUser.id,
-            type: 'mention',
-            title: `${sender.username} mentioned you`,
-            message: message.content?.substring(0, 100) || '',
-            senderId: ws.userId,
-            conversationId: message.conversationId,
-            isRead: false,
-          });
-
-          // Broadcast notification to mentioned user if online
-          broadcastToUser(mentionedUser.id, {
-            type: 'new_notification',
-            notification: {
-              type: 'mention',
-              title: `${sender.username} mentioned you`,
-              message: message.content?.substring(0, 100),
-              senderId: ws.userId,
-              senderUsername: sender.username,
-            }
-          });
-        }
-      }
-    }
-
-    // Create notifications for offline participants
-    for (const participant of participants) {
-      if (participant.userId !== ws.userId && !conversationUsers?.has(participant.userId)) {
-        await db.insert(notifications).values({
-          userId: participant.userId,
-          type: 'new_message',
-          title: `New message from ${sender.username}`,
-          message: message.content?.substring(0, 100) || 'Sent a file',
-          senderId: ws.userId,
-          conversationId: message.conversationId,
-          isRead: false,
-        });
-      }
-    }
-
-    // Update conversation updated_at (using sql since updatedAt has $onUpdate)
-    await db.execute(sql`UPDATE conversations SET updated_at = NOW() WHERE id = ${message.conversationId}`);
-
-    // Broadcast to all conversation participants
-    broadcastToConversation(message.conversationId, {
-      type: 'new_message',
-      message: {
-        ...newMessage,
-        senderName: sender.fullName,
-        senderUsername: sender.username,
-      }
+      content: message.content || undefined,
+      fileUrl: message.fileUrl || undefined,
+      fileName: message.fileName || undefined,
+      fileSize: message.fileSize || undefined,
+      fileType: message.fileType || undefined,
+      organizationId: ws.organizationId!
     });
 
-    // If delivered, notify sender
-    if (isDelivered) {
-      ws.send(JSON.stringify({
-        type: 'message_delivered',
-        messageId: newMessage.id,
-        deliveredAt: newMessage.deliveredAt
-      }));
-    }
-
+    // Note: ConversationsService.sendMessage already handles broadcasts to all participants
+    // including the sender, so we don't need to broadcast here.
   } catch (error) {
-    console.error('Error saving message:', error);
+    logger.error('[ws] handleMessage error', { error: String(error), conversationId: message.conversationId });
     ws.send(JSON.stringify({ type: 'error', message: 'Failed to send message' }));
   }
 }
@@ -393,7 +298,7 @@ async function handleRead(ws: AuthenticatedWebSocket, message: WSMessage) {
       );
 
     // Notify senders about read receipts
-    const uniqueSenders = [...new Set(unreadMessages.map(m => m.senderId))];
+    const uniqueSenders = Array.from(new Set(unreadMessages.map((m: any) => m.senderId)));
     uniqueSenders.forEach(senderId => {
       if (senderId !== ws.userId) {
         broadcastToUser(senderId, {
@@ -413,7 +318,7 @@ async function handleRead(ws: AuthenticatedWebSocket, message: WSMessage) {
       conversationId: message.conversationId
     }, ws.userId);
   } catch (error) {
-    console.error('Error updating read status:', error);
+    logger.error('[ws] handleRead error', { error: String(error), conversationId: message.conversationId });
   }
 }
 
@@ -442,11 +347,11 @@ function handleDisconnect(ws: AuthenticatedWebSocket) {
       }
     });
 
-    console.log(`👋 User ${ws.username} disconnected`);
+    logger.info('[ws] User disconnected', { userId: ws.userId, username: ws.username });
   }
 }
 
-function broadcastToConversation(conversationId: string, data: any, excludeUserId?: string) {
+function deprecatedBroadcastToConversation1(conversationId: string, data: any, excludeUserId?: string) {
   const conversationUsers = conversationClients.get(conversationId);
   if (!conversationUsers) return;
 
@@ -498,7 +403,7 @@ async function handleDelivered(ws: AuthenticatedWebSocket, message: WSMessage) {
         });
     });
   } catch (error) {
-    console.error('Error marking messages as delivered:', error);
+    logger.error('[ws] handleDelivered error', { error: String(error) });
   }
 }
 
@@ -520,7 +425,7 @@ async function handlePresence(ws: AuthenticatedWebSocket, message: WSMessage) {
       }
     });
   } catch (error) {
-    console.error('Error updating presence:', error);
+    logger.error('[ws] handlePresence error', { error: String(error) });
   }
 }
 
@@ -551,11 +456,11 @@ async function updateUserPresence(userId: string, status: string) {
         });
     }
   } catch (error) {
-    console.error('Error updating user presence:', error);
+    logger.error('[ws] updateUserPresence error', { userId, status, error: String(error) });
   }
 }
 
-export function broadcastToUser(userId: string, data: any) {
+function deprecatedBroadcastToUser1(userId: string, data: any) {
   const userClients = clients.get(userId);
   if (userClients) {
     userClients.forEach(client => {

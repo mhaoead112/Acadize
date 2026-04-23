@@ -63,7 +63,7 @@ export const createLesson = async (lessonData: CreateLessonDto) => {
         .from(lessons)
         .where(eq(lessons.courseId, courseId));
 
-    const nextOrder = (result[0]?.maxOrder || 0) + 1;
+    const nextOrder = (parseInt(String(result[0]?.maxOrder ?? 0), 10) || 0) + 1;
 
     const newLesson = await db.insert(lessons).values({
         courseId,

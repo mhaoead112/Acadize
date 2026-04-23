@@ -15,6 +15,8 @@ import { eq, and } from 'drizzle-orm';
 
 const router = express.Router();
 
+import { getPaginationParams, buildPaginatedResponse } from '../utils/pagination.js';
+
 /**
  * PUBLIC
  * GET /api/courses
@@ -25,8 +27,11 @@ router.get('/', async (req, res) => {
         const orgId = (req as any).tenant?.organizationId;
         if (!orgId) return res.status(400).json({ message: "Organization context required" });
         const locale = (req as any).locale;
-        const courses = await getPublishedCourses(orgId, locale);
-        res.status(200).json(courses);
+        
+        const { limit, offset, page } = getPaginationParams(req);
+        
+        const { data, totalCount } = await getPublishedCourses(orgId, locale, limit, offset);
+        res.status(200).json(buildPaginatedResponse(data, totalCount, page, limit));
     } catch (error) {
         console.error("Error fetching published courses:", error);
         res.status(500).json({ message: "Failed to fetch courses." });
@@ -49,8 +54,10 @@ router.get('/user', ...requireAuth, async (req, res) => {
         if (!orgId) return res.status(400).json({ message: "Organization context required" });
 
         const locale = (req as any).locale;
-        const courses = await getCoursesByTeacher(user.id, orgId, locale);
-        res.status(200).json(courses);
+        const { limit, offset, page } = getPaginationParams(req);
+        
+        const { data, totalCount } = await getCoursesByTeacher(user.id, orgId, locale, limit, offset);
+        res.status(200).json(buildPaginatedResponse(data, totalCount, page, limit));
     } catch (error) {
         console.error('Error fetching teacher courses:', error);
         res.status(500).json({ message: 'Failed to fetch courses.' });
@@ -209,7 +216,7 @@ router.put('/:id', ...requireAuth, async (req, res) => {
                 description: description !== undefined ? description : existingCourse.description,
                 updatedAt: new Date()
             })
-            .where(eq(courses.id, courseId))
+            .where(and(eq(courses.id, courseId), eq(courses.organizationId, orgId)))
             .returning();
 
         res.status(200).json(updatedCourse);
@@ -262,7 +269,7 @@ router.post('/:id/join-code', ...requireAuth, async (req, res) => {
             joinCode = randomJoinCode(8);
         }
 
-        await db.update(courses).set({ joinCode, updatedAt: new Date() }).where(eq(courses.id, courseId));
+        await db.update(courses).set({ joinCode, updatedAt: new Date() }).where(and(eq(courses.id, courseId), eq(courses.organizationId, orgId)));
         res.status(200).json({ joinCode, invitePath: `/student/join?code=${encodeURIComponent(joinCode)}` });
     } catch (error) {
         console.error('Error generating join code:', error);
@@ -460,7 +467,7 @@ router.delete('/:courseId/lessons/:lessonId', ...requireAuth, async (req, res) =
         }
 
         // Delete lesson
-        await deleteLesson(lessonId);
+        await deleteLesson(lessonId, orgId);
 
         res.status(200).json({
             message: 'Lesson deleted successfully'

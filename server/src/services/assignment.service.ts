@@ -5,6 +5,7 @@ import { assignments, submissions, courses, grades, enrollments } from "../db/sc
 import { and, desc, eq } from "drizzle-orm";
 import { createId } from "@paralleldrive/cuid2";
 import { requireTenantId } from "../utils/tenant-query.js";
+import * as gamificationService from "./gamification.service.js";
 
 export interface CreateAssignmentInput {
   courseId: string;
@@ -45,11 +46,25 @@ export async function createAssignment(data: CreateAssignmentInput) {
   return created;
 }
 
-export async function getAssignmentsForCourse(courseId: string, organizationId: string) {
+export async function getAssignmentsForCourse(
+  courseId: string,
+  organizationId: string,
+  limit: number = 50,
+  offset: number = 0
+) {
   const orgId = requireTenantId(organizationId);
 
+  const { count } = await import('drizzle-orm');
+  const countResult = await db.select({ count: count() }).from(assignments)
+    .innerJoin(courses, eq(assignments.courseId, courses.id))
+    .where(and(
+      eq(assignments.courseId, courseId),
+      eq(courses.organizationId, orgId)
+    ));
+  const totalCount = countResult[0].count;
+
   // Verify course belongs to org via join
-  return db
+  const data = await db
     .select({
       id: assignments.id,
       courseId: assignments.courseId,
@@ -69,7 +84,11 @@ export async function getAssignmentsForCourse(courseId: string, organizationId: 
       eq(assignments.courseId, courseId),
       eq(courses.organizationId, orgId)
     ))
-    .orderBy(desc(assignments.createdAt));
+    .orderBy(desc(assignments.createdAt))
+    .limit(limit)
+    .offset(offset);
+
+  return { data, totalCount };
 }
 
 export interface SubmitAssignmentInput {
@@ -116,12 +135,28 @@ export async function submitAssignment(data: SubmitAssignmentInput) {
     .values({
       assignmentId: data.assignmentId,
       studentId: data.studentId,
-      fileUrl: data.fileUrl,
+      filePath: data.fileUrl,
       submittedAt: new Date(),
     })
     .returning();
 
   if (!created) throw new Error("Failed to create submission");
+
+  // -- Gamification: fire-and-forget (never throws) -------------------------
+  try {
+    await gamificationService.awardPoints({
+      userId: data.studentId,
+      organizationId: orgId,
+      eventType: 'assignment_submission',
+      entityId: data.assignmentId,
+      entityType: 'assignment',
+    });
+    void gamificationService.evaluateBadges(data.studentId, orgId, 'assignment_submission');
+  } catch (gamErr) {
+    // Intentionally swallowed — gamification must never break submission flow
+  }
+  // -------------------------------------------------------------------------
+
   return created;
 }
 
@@ -160,13 +195,23 @@ export async function gradeSubmission(data: GradeSubmissionInput) {
     .where(eq(grades.submissionId, data.submissionId))
     .limit(1);
 
+  // Resolve studentId for gamification (needed in both branches)
+  const [submissionRow] = await db
+    .select({ studentId: submissions.studentId })
+    .from(submissions)
+    .where(eq(submissions.id, data.submissionId))
+    .limit(1);
+  const studentId = submissionRow?.studentId;
+
+  let gradeResult: typeof grades.$inferSelect;
+
   if (existingGrade.length > 0) {
     // Update existing grade
     const [updated] = await db
       .update(grades)
       .set({
-        score: data.grade.toString(),
-        maxScore: data.maxScore?.toString() || '100',
+        score: data.grade,
+        maxScore: data.maxScore ?? 100,
         feedback: data.feedback ?? null,
         gradedBy: data.gradedBy ?? null,
         gradedAt: new Date(),
@@ -176,7 +221,7 @@ export async function gradeSubmission(data: GradeSubmissionInput) {
       .returning();
 
     if (!updated) throw new Error("Failed to update grade.");
-    return updated;
+    gradeResult = updated;
   } else {
     // Create new grade
     const [created] = await db
@@ -184,16 +229,40 @@ export async function gradeSubmission(data: GradeSubmissionInput) {
       .values({
         id: createId(),
         submissionId: data.submissionId,
-        score: data.grade.toString(),
-        maxScore: data.maxScore?.toString() || '100',
+        score: data.grade,
+        maxScore: data.maxScore ?? 100,
         feedback: data.feedback ?? null,
         gradedBy: data.gradedBy ?? null,
       })
       .returning();
 
     if (!created) throw new Error("Failed to create grade.");
-    return created;
+    gradeResult = created;
   }
+
+  // -- Gamification: award points for a passing grade (fire-and-forget) -----
+  try {
+    if (studentId) {
+      const maxScore = data.maxScore ?? 100;
+      const passingThreshold = maxScore * 0.5; // 50% is passing
+      if (data.grade >= passingThreshold) {
+        await gamificationService.awardPoints({
+          userId: studentId,
+          organizationId: orgId,
+          eventType: 'assignment_graded_pass',
+          entityId: data.submissionId,
+          entityType: 'submission',
+          metadata: { score: data.grade, maxScore },
+        });
+        void gamificationService.evaluateBadges(studentId, orgId, 'assignment_graded_pass');
+      }
+    }
+  } catch (gamErr) {
+    // Intentionally swallowed — gamification must never break grading flow
+  }
+  // -------------------------------------------------------------------------
+
+  return gradeResult;
 }
 
 export async function getStudentProgress(studentId: string, organizationId: string) {
@@ -222,7 +291,7 @@ export async function getStudentProgress(studentId: string, organizationId: stri
       id: submissions.id,
       assignmentId: submissions.assignmentId,
       studentId: submissions.studentId,
-      fileUrl: submissions.fileUrl,
+      fileUrl: submissions.filePath,
       content: submissions.content,
       submittedAt: submissions.submittedAt,
       status: submissions.status,
@@ -243,26 +312,8 @@ export async function getStudentProgress(studentId: string, organizationId: stri
       id: submissions.id,
       courseTitle: courses.title,
       assignmentTitle: assignments.title,
-      score: submissions.grade, // Note: Schema check needed if 'grade' column exists on submissions or if it is joined via 'grades' table.
-      // The original code used `submissions.grade` but also `grades` table elsewhere? 
-      // Original code: 
-      /*
-      const studentGrades = await db
-        .select({
-          ...
-          score: submissions.grade,
-          maxScore: submissions.maxScore,
-          letterGrade: submissions.letterGrade,
-        })
-        .from(submissions)
-        ...
-      */
-      // It seems `submissions` table might have denormalized grade columns OR the original code was wrong/using a different view.
-      // `grades` table is used in `gradeSubmission`.
-      // Let's stick to joining `grades`.
-      // But wait, `submissions` in `db/schema.ts` might have `grade`? I should check schema.
-      // For safety, I'll assume `grades` table is the source of truth if `gradeSubmission` writes to it.
-
+      score: grades.score,
+      maxScore: grades.maxScore,
     })
     .from(submissions)
     .innerJoin(assignments, eq(submissions.assignmentId, assignments.id))

@@ -38,7 +38,7 @@ async function performGoogleSearch(query: string): Promise<string> {
         const snippets = response.data.items.map((item: any) => item.snippet);
         return snippets.join("\n---\n");
 
-    } catch (error) {
+    } catch (error: any) {
         console.error("Error performing Google Search:", error.response?.data || error.message);
         // Return a fallback message instead of throwing an error to the user
         return "There was an error while trying to search for information.";

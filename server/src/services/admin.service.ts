@@ -1,6 +1,8 @@
 import { db } from '../db/index.js';
 import { users, courses, enrollments, announcements, grades, submissions, assignments, reportedUsers, studyGroups, parentChildren } from '../db/schema.js';
 import { eq, sql, desc, asc, and, or, like, count, avg } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/pg-core';
+
 import bcrypt from 'bcrypt';
 import { createId } from '@paralleldrive/cuid2';
 
@@ -224,11 +226,16 @@ export async function getAllUsers(filters?: {
 /**
  * Get user by ID
  */
-export async function getUserById(userId: string) {
+export async function getUserById(userId: string, organizationId: string) {
   const [user] = await db
     .select()
     .from(users)
-    .where(eq(users.id, userId))
+    .where(
+      and(
+        eq(users.id, userId),
+        eq(users.organizationId, organizationId)
+      )!
+    )
     .limit(1);
 
   if (!user) {
@@ -291,9 +298,9 @@ export async function createUser(input: CreateUserInput) {
 /**
  * Update user
  */
-export async function updateUser(userId: string, input: UpdateUserInput) {
+export async function updateUser(userId: string, input: UpdateUserInput, organizationId: string) {
   // Check if user exists
-  const existingUser = await getUserById(userId);
+  const existingUser = await getUserById(userId, organizationId);
 
   // If updating username or email, check for duplicates
   if (input.username || input.email) {
@@ -302,6 +309,7 @@ export async function updateUser(userId: string, input: UpdateUserInput) {
       .from(users)
       .where(
         and(
+          eq(users.organizationId, organizationId),
           sql`${users.id} != ${userId}`,
           or(
             input.username ? eq(users.username, input.username) : sql`false`,
@@ -322,7 +330,12 @@ export async function updateUser(userId: string, input: UpdateUserInput) {
       ...input,
       updatedAt: new Date()
     })
-    .where(eq(users.id, userId))
+    .where(
+      and(
+        eq(users.id, userId),
+        eq(users.organizationId, organizationId)
+      )!
+    )
     .returning();
 
   const { password, ...userWithoutPassword } = updatedUser;
@@ -332,10 +345,15 @@ export async function updateUser(userId: string, input: UpdateUserInput) {
 /**
  * Delete user
  */
-export async function deleteUser(userId: string) {
+export async function deleteUser(userId: string, organizationId: string) {
   await db
     .delete(users)
-    .where(eq(users.id, userId));
+    .where(
+      and(
+        eq(users.id, userId),
+        eq(users.organizationId, organizationId)
+      )!
+    );
 
   return { success: true };
 }
@@ -343,14 +361,19 @@ export async function deleteUser(userId: string) {
 /**
  * Toggle user status (activate/deactivate)
  */
-export async function toggleUserStatus(userId: string, status: boolean) {
+export async function toggleUserStatus(userId: string, status: boolean, organizationId: string) {
   const [updatedUser] = await db
     .update(users)
     .set({
       isActive: status,
       updatedAt: new Date()
     })
-    .where(eq(users.id, userId))
+    .where(
+      and(
+        eq(users.id, userId),
+        eq(users.organizationId, organizationId)
+      )!
+    )
     .returning();
 
   const { password, ...userWithoutPassword } = updatedUser;
@@ -411,7 +434,38 @@ export async function getAllCourses(filters?: {
 /**
  * Create enrollment
  */
-export async function createEnrollment(studentId: string, courseId: string) {
+export async function createEnrollment(studentId: string, courseId: string, organizationId: string) {
+  const [student] = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(
+      and(
+        eq(users.id, studentId),
+        eq(users.organizationId, organizationId),
+        eq(users.role, 'student')
+      )!
+    )
+    .limit(1);
+
+  if (!student) {
+    throw new Error('Student not found in your organization');
+  }
+
+  const [course] = await db
+    .select({ id: courses.id })
+    .from(courses)
+    .where(
+      and(
+        eq(courses.id, courseId),
+        eq(courses.organizationId, organizationId)
+      )!
+    )
+    .limit(1);
+
+  if (!course) {
+    throw new Error('Course not found in your organization');
+  }
+
   // Check if enrollment already exists
   const existing = await db
     .select()
@@ -443,10 +497,24 @@ export async function createEnrollment(studentId: string, courseId: string) {
 /**
  * Remove enrollment
  */
-export async function removeEnrollment(enrollmentId: string) {
-  await db
-    .delete(enrollments)
-    .where(eq(enrollments.id, enrollmentId));
+export async function removeEnrollment(enrollmentId: string, organizationId: string) {
+  const [existing] = await db
+    .select({ id: enrollments.id })
+    .from(enrollments)
+    .innerJoin(courses, eq(enrollments.courseId, courses.id))
+    .where(
+      and(
+        eq(enrollments.id, enrollmentId),
+        eq(courses.organizationId, organizationId)
+      )!
+    )
+    .limit(1);
+
+  if (!existing) {
+    throw new Error('Enrollment not found in your organization');
+  }
+
+  await db.delete(enrollments).where(eq(enrollments.id, enrollmentId));
 
   return { success: true };
 }
@@ -679,14 +747,15 @@ export async function bulkImportUsers(usersData: CreateUserInput[]) {
 /**
  * Link a student to a parent
  */
-export async function linkStudentToParent(studentId: string, parentId: string) {
+export async function linkStudentToParent(studentId: string, parentId: string, organizationId: string) {
   // Verify student and parent exist and have correct roles
   const [student] = await db
     .select()
     .from(users)
     .where(and(
       eq(users.id, studentId),
-      eq(users.role, 'student')
+      eq(users.role, 'student'),
+      eq(users.organizationId, organizationId)
     ));
 
   if (!student) {
@@ -698,7 +767,8 @@ export async function linkStudentToParent(studentId: string, parentId: string) {
     .from(users)
     .where(and(
       eq(users.id, parentId),
-      eq(users.role, 'parent')
+      eq(users.role, 'parent'),
+      eq(users.organizationId, organizationId)
     ));
 
   if (!parent) {
@@ -737,16 +807,27 @@ export async function linkStudentToParent(studentId: string, parentId: string) {
 /**
  * Unlink a student from their parent
  */
-export async function unlinkStudentFromParent(studentId: string) {
-  // Find and delete the parent-child relationship
-  const deletedLinks = await db
-    .delete(parentChildren)
-    .where(eq(parentChildren.childId, studentId))
-    .returning();
+export async function unlinkStudentFromParent(studentId: string, organizationId: string) {
+  const [student] = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(
+      and(
+        eq(users.id, studentId),
+        eq(users.organizationId, organizationId),
+        eq(users.role, 'student')
+      )!
+    )
+    .limit(1);
 
-  if (deletedLinks.length === 0) {
-    throw new Error('No parent link found for this student');
+  if (!student) {
+    throw new Error('Student not found in your organization');
   }
+
+  // Idempotent: delete any existing link (no error if already unlinked)
+  await db
+    .delete(parentChildren)
+    .where(eq(parentChildren.childId, studentId));
 
   return {
     success: true,
@@ -758,6 +839,8 @@ export async function unlinkStudentFromParent(studentId: string) {
  * Get all students with their parent information
  */
 export async function getStudentsWithParents(organizationId?: string) {
+  const parentUser = alias(users, 'parent_user');
+
   const conditions: any[] = [eq(users.role, 'student')];
   if (organizationId) {
     conditions.push(eq(users.organizationId, organizationId));
@@ -770,18 +853,12 @@ export async function getStudentsWithParents(organizationId?: string) {
       email: users.email,
       fullName: users.fullName,
       parentId: parentChildren.parentId,
-      parentName: sql<string>`parent_user.full_name`,
-      parentEmail: sql<string>`parent_user.email`
+      parentName: parentUser.fullName,
+      parentEmail: parentUser.email,
     })
     .from(users)
-    .leftJoin(
-      parentChildren,
-      eq(users.id, parentChildren.childId)
-    )
-    .leftJoin(
-      sql`${users} as parent_user`,
-      sql`parent_user.id = ${parentChildren.parentId}`
-    )
+    .leftJoin(parentChildren, eq(users.id, parentChildren.childId))
+    .leftJoin(parentUser, eq(parentUser.id, parentChildren.parentId))
     .where(and(...conditions)!)
     .orderBy(asc(users.fullName));
 
@@ -791,6 +868,6 @@ export async function getStudentsWithParents(organizationId?: string) {
     email: row.email,
     fullName: row.fullName,
     parentId: row.parentId,
-    parentName: row.parentName
+    parentName: row.parentName,
   }));
 }

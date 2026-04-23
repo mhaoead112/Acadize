@@ -12,6 +12,7 @@ import { createId } from '@paralleldrive/cuid2';
 
 interface RetakeConfig {
   studentId: string;
+  organizationId: string;    // requester's org — enforces tenant isolation
   topicNames: string[]; // e.g., ["Topic 1", "Topic 2"]
   questionCount: number;
   difficulty: 'review' | 'challenge';
@@ -71,11 +72,24 @@ export async function generateRetakeExam(config: RetakeConfig) {
     const totalPoints = selectedQuestions.reduce((sum, q) => sum + (q.points || 1), 0);
 
     // Get the original exam details
+    const originalExamId = mistakeQuestions[0]?.examId || '';
     const originalExam = await db
       .select()
       .from(exams)
-      .where(eq(exams.id, mistakeQuestions[0]?.examId || ''))
+      .where(eq(exams.id, originalExamId))
       .limit(1);
+
+    // ── Tenant isolation: verify the exam belongs to the requester's organization ──
+    if (!originalExam[0]) {
+      throw new Error('Original exam not found');
+    }
+    if (originalExam[0].organizationId !== config.organizationId) {
+      const err: any = new Error(
+        'Access denied: the exam associated with these mistakes does not belong to your organization'
+      );
+      err.status = 403;
+      throw err;
+    }
 
     const retakeId = createId();
     const now = new Date();
@@ -83,7 +97,7 @@ export async function generateRetakeExam(config: RetakeConfig) {
 
     // Insert retake exam record
     await db.insert(mistakeRetakeExams).values({
-      originalExamId: mistakeQuestions[0]?.examId || '',
+      originalExamId,
       studentId: config.studentId,
       originalAttemptId: studentMistakes[0]?.attemptId || '',
       title: `${originalExam[0]?.title || 'Exam'} - Retake (${config.topicNames.join(', ')})`,
@@ -205,17 +219,17 @@ export async function submitRetakeExam(
       status: 'submitted',
       startedAt: new Date(now.getTime() - durationSeconds * 1000),
       submittedAt: now,
-      durationSeconds,
+      duration: durationSeconds, // column is duration_seconds, mapped to duration property
       score: 0,
       maxScore: retakeExam[0].totalPoints || 100,
       percentage: 0,
-      auto_graded: true,
+      autoGraded: true, // column was auto_graded
       isRetake: true,
       originalAttemptId: retakeExam[0].originalAttemptId,
       retakeReason: 'mistake_based_learning',
       createdAt: now,
       updatedAt: now,
-    });
+    } as any);
 
     // 3. Fetch questions and grade answers
     const mistakeIds = (retakeExam[0].mistakeIds as string[]) || [];

@@ -9,6 +9,7 @@ const requireAuth = [isAuthenticated, requireSubscription];
 import { db } from '../db/index.js';
 import { enrollments, courses, users, assignments, submissions, grades } from '../db/schema.js';
 import { eq, and, sql, inArray } from 'drizzle-orm';
+import { getPaginationParams, buildPaginatedResponse } from '../utils/pagination.js';
 
 const router = express.Router();
 
@@ -24,6 +25,16 @@ router.get('/my-courses', ...requireAuth, async (req, res) => {
             return res.status(401).json({ message: 'Unauthorized' });
         }
 
+        const { limit, offset, page } = getPaginationParams(req);
+
+        // Get total count for pagination
+        const [totalCountResult] = await db
+            .select({ count: sql<number>`count(*)` })
+            .from(enrollments)
+            .where(eq(enrollments.studentId, user.id));
+        
+        const totalCount = Number(totalCountResult?.count || 0);
+
         const studentEnrollments = await db
             .select({
                 id: courses.id,
@@ -33,9 +44,11 @@ router.get('/my-courses', ...requireAuth, async (req, res) => {
             })
             .from(enrollments)
             .leftJoin(courses, eq(enrollments.courseId, courses.id))
-            .where(eq(enrollments.studentId, user.id));
+            .where(eq(enrollments.studentId, user.id))
+            .limit(limit)
+            .offset(offset);
 
-        res.status(200).json(studentEnrollments);
+        res.status(200).json(buildPaginatedResponse(studentEnrollments, totalCount, page, limit));
     } catch (error) {
         console.error('Error fetching student courses:', error);
         res.status(500).json({
@@ -57,6 +70,16 @@ router.get('/student', ...requireAuth, async (req, res) => {
             return res.status(401).json({ message: 'Unauthorized' });
         }
 
+        const { limit, offset, page } = getPaginationParams(req);
+
+        // Get total count for pagination
+        const [totalCountResult] = await db
+            .select({ count: sql<number>`count(*)` })
+            .from(enrollments)
+            .where(eq(enrollments.studentId, user.id));
+        
+        const totalCount = Number(totalCountResult?.count || 0);
+
         const studentEnrollments = await db
             .select({
                 id: enrollments.id,
@@ -73,9 +96,11 @@ router.get('/student', ...requireAuth, async (req, res) => {
             })
             .from(enrollments)
             .leftJoin(courses, eq(enrollments.courseId, courses.id))
-            .where(eq(enrollments.studentId, user.id));
+            .where(eq(enrollments.studentId, user.id))
+            .limit(limit)
+            .offset(offset);
 
-        res.status(200).json(studentEnrollments);
+        res.status(200).json(buildPaginatedResponse(studentEnrollments, totalCount, page, limit));
     } catch (error) {
         console.error('Error fetching student enrollments:', error);
         res.status(500).json({
@@ -97,7 +122,15 @@ router.get('/student/:studentId', ...requireAuth, async (req, res) => {
             return res.status(403).json({ message: 'Forbidden: Teachers only' });
         }
 
-        const { studentId } = req.params;
+        const { limit, offset, page } = getPaginationParams(req);
+
+        // Get total count for pagination
+        const [totalCountResult] = await db
+            .select({ count: sql<number>`count(*)` })
+            .from(enrollments)
+            .where(eq(enrollments.studentId, req.params.studentId));
+        
+        const totalCount = Number(totalCountResult?.count || 0);
 
         // Get all enrollments for this student with course details
         const studentEnrollments = await db
@@ -116,9 +149,11 @@ router.get('/student/:studentId', ...requireAuth, async (req, res) => {
             })
             .from(enrollments)
             .leftJoin(courses, eq(enrollments.courseId, courses.id))
-            .where(eq(enrollments.studentId, studentId));
+            .where(eq(enrollments.studentId, req.params.studentId))
+            .limit(limit)
+            .offset(offset);
 
-        res.status(200).json({ enrollments: studentEnrollments });
+        res.status(200).json(buildPaginatedResponse(studentEnrollments, totalCount, page, limit));
     } catch (error) {
         console.error('Error fetching student enrollments:', error);
         res.status(500).json({
@@ -156,6 +191,16 @@ router.get('/course/:courseId', ...requireAuth, async (req, res) => {
             return res.status(403).json({ message: 'You do not have permission to view this course' });
         }
 
+        const { limit, offset, page } = getPaginationParams(req);
+
+        // Get total count for pagination
+        const [totalCountResult] = await db
+            .select({ count: sql<number>`count(*)` })
+            .from(enrollments)
+            .where(eq(enrollments.courseId, courseId));
+        
+        const totalCount = Number(totalCountResult?.count || 0);
+
         // Get all enrolled students
         const enrolledStudents = await db
             .select({
@@ -168,7 +213,9 @@ router.get('/course/:courseId', ...requireAuth, async (req, res) => {
             })
             .from(enrollments)
             .leftJoin(users, eq(enrollments.studentId, users.id))
-            .where(eq(enrollments.courseId, courseId));
+            .where(eq(enrollments.courseId, courseId))
+            .limit(limit)
+            .offset(offset);
 
         // Get all assignments for this course
         const courseAssignments = await db
@@ -214,8 +261,8 @@ router.get('/course/:courseId', ...requireAuth, async (req, res) => {
                 let totalMaxScore = 0;
                 studentSubmissions.forEach(sub => {
                     if (sub.score && sub.maxScore) {
-                        totalScore += parseFloat(sub.score);
-                        totalMaxScore += parseFloat(sub.maxScore);
+                        totalScore += Number(sub.score);
+                        totalMaxScore += Number(sub.maxScore);
                     }
                 });
                 const averageScore = totalMaxScore > 0 ? Math.round((totalScore / totalMaxScore) * 100) : 0;
@@ -230,7 +277,7 @@ router.get('/course/:courseId', ...requireAuth, async (req, res) => {
             })
         );
 
-        res.status(200).json(studentsWithProgress);
+        res.status(200).json(buildPaginatedResponse(studentsWithProgress, totalCount, page, limit));
     } catch (error) {
         console.error('Error fetching course enrollments:', error);
         res.status(500).json({
@@ -268,6 +315,8 @@ router.get('/students/available/:courseId', ...requireAuth, async (req, res) => 
             return res.status(403).json({ message: 'You do not have permission to view this course' });
         }
 
+        const { limit, offset, page } = getPaginationParams(req);
+
         // Get all students
         const allStudents = await db
             .select({
@@ -291,8 +340,11 @@ router.get('/students/available/:courseId', ...requireAuth, async (req, res) => 
 
         // Filter out enrolled students
         const availableStudents = allStudents.filter(s => !enrolledIds.has(s.id));
+        
+        // Manual pagination for filtered result
+        const paginatedData = availableStudents.slice(offset, offset + limit);
 
-        res.status(200).json(availableStudents);
+        res.status(200).json(buildPaginatedResponse(paginatedData, availableStudents.length, page, limit));
     } catch (error) {
         console.error('Error fetching available students:', error);
         res.status(500).json({
@@ -313,6 +365,8 @@ router.get('/students/all', ...requireAuth, async (req, res) => {
         if (!user || user.role !== 'teacher') {
             return res.status(403).json({ message: 'Forbidden: Teachers only' });
         }
+
+        const { limit, offset, page } = getPaginationParams(req);
 
         // Get all students
         const allStudents = await db
@@ -341,7 +395,7 @@ router.get('/students/all', ...requireAuth, async (req, res) => {
             ? await db
                 .select()
                 .from(enrollments)
-                .where(sql`${enrollments.courseId} IN (${sql.raw(courseIds.map(id => `'${id}'`).join(','))})`)
+                .where(inArray(enrollments.courseId, courseIds))
             : [];
 
         // Map students with their enrollment counts
@@ -364,7 +418,10 @@ router.get('/students/all', ...requireAuth, async (req, res) => {
             };
         });
 
-        res.status(200).json(studentsWithEnrollments);
+        // Manual pagination for mapped results
+        const paginatedData = studentsWithEnrollments.slice(offset, offset + limit);
+
+        res.status(200).json(buildPaginatedResponse(paginatedData, studentsWithEnrollments.length, page, limit));
     } catch (error) {
         console.error('Error fetching all students:', error);
         res.status(500).json({
@@ -633,6 +690,76 @@ router.delete('/:enrollmentId', ...requireAuth, async (req, res) => {
         res.status(500).json({
             message: 'Failed to unenroll student',
             error: error instanceof Error ? error.message : 'Unknown error'
+        });
+    }
+});
+/**
+ * PROTECTED (STUDENT)
+ * POST /api/enrollments/:courseId/complete
+ * Mark a course as completed by the authenticated student and award gamification points.
+ * Idempotent: duplicate calls are silently ignored by the gamification engine.
+ *
+ * Requirements: student must be enrolled in the course and it must belong to their org.
+ */
+router.post('/:courseId/complete', ...requireAuth, async (req, res) => {
+    try {
+        const user = (req as any).user;
+        if (!user || user.role !== 'student') {
+            return res.status(403).json({ message: 'Forbidden: Students only.' });
+        }
+
+        const { courseId } = req.params;
+        const orgId: string | undefined = (req as any).tenant?.organizationId ?? user.organizationId;
+        if (!orgId) {
+            return res.status(400).json({ message: 'Organization context required.' });
+        }
+
+        // Verify student is enrolled in this course (scoped to org via course join)
+        const [enrollment] = await db
+            .select({ id: enrollments.id })
+            .from(enrollments)
+            .innerJoin(courses, eq(enrollments.courseId, courses.id))
+            .where(and(
+                eq(enrollments.studentId, user.id),
+                eq(enrollments.courseId, courseId),
+                eq(courses.organizationId, orgId),
+            ))
+            .limit(1);
+
+        if (!enrollment) {
+            return res.status(404).json({ message: 'Enrollment not found or course does not belong to your organization.' });
+        }
+
+        // -- Gamification: fire-and-forget (never throws) --------------------
+        let gamResult: { awarded: boolean; pointsAwarded: number; newTotal: number; levelUp: boolean } = {
+            awarded: false, pointsAwarded: 0, newTotal: 0, levelUp: false,
+        };
+        try {
+            const { awardPoints, evaluateBadges } = await import('../services/gamification.service.js');
+            gamResult = await awardPoints({
+                userId: user.id,
+                organizationId: orgId,
+                eventType: 'course_completion',
+                entityId: courseId,
+                entityType: 'course',
+            });
+            void evaluateBadges(user.id, orgId, 'course_completion');
+        } catch (gamErr) {
+            // Intentionally swallowed — gamification must never break the course flow
+            console.warn('[Gamification] course_completion hook failed silently:', gamErr);
+        }
+        // --------------------------------------------------------------------
+
+        return res.status(200).json({
+            message: 'Course marked as complete.',
+            courseId,
+            gamification: gamResult,
+        });
+    } catch (error) {
+        console.error('Error marking course as complete:', error);
+        res.status(500).json({
+            message: 'Failed to mark course as complete.',
+            error: error instanceof Error ? error.message : 'Unknown error',
         });
     }
 });

@@ -16,9 +16,10 @@ async function enableSubscriptions() {
         .returning();
 
     console.log(`✅ Updated ${result.length} organization(s)`);
-    console.log('Subscription settings:');
     result.forEach(org => {
-        console.log(`  - ${org.name}: $${org.userMonthlyPricePiasters / 100}/mo, $${org.userAnnualPricePiasters / 100}/yr`);
+        const monthly = org.userMonthlyPricePiasters ?? 0;
+        const annual = org.userAnnualPricePiasters ?? 0;
+        console.log(`  - ${org.name}: $${monthly / 100}/mo, $${annual / 100}/yr`);
     });
 
     process.exit(0);

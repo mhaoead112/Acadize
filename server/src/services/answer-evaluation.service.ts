@@ -114,8 +114,7 @@ export class AnswerEvaluationService {
 
     // Step 3: Calculate percentage and pass/fail
     const percentage = maxScore > 0 ? (totalScore / maxScore) * 100 : 0;
-    const examData = Array.isArray(attempt.exam) ? attempt.exam[0] : attempt.exam;
-    const passed = percentage >= (examData.passingScore || 70);
+    const passed = percentage >= (exam.passingScore || 70);
 
     // Step 4: Update answer records in database
     for (const result of gradedAnswers) {
@@ -391,7 +390,7 @@ export class AnswerEvaluationService {
         subtopic: question.subtopic || null,
         skillTag: question.skillTag || 'Unknown',
         difficultyLevel: question.difficultyLevel || 'medium',
-        studentAnswer: answer.studentAnswer,
+        studentAnswer: answer.answer,
         correctAnswer: question.correctAnswer,
         pointsLost,
         pointsPossible: question.points || 0,
@@ -612,10 +611,11 @@ export class AnswerEvaluationService {
     // Group by topic
     const mistakesByTopic = new Map<string, Set<string>>();
     mistakes.forEach(mistake => {
-      if (!mistakesByTopic.has(mistake.topic)) {
-        mistakesByTopic.set(mistake.topic, new Set());
+      const topic = mistake.topic || 'Unknown';
+      if (!mistakesByTopic.has(topic)) {
+        mistakesByTopic.set(topic, new Set());
       }
-      mistakesByTopic.get(mistake.topic)!.add(mistake.questionId);
+      mistakesByTopic.get(topic)!.add(mistake.questionId);
     });
 
     // Build topic breakdown

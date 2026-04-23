@@ -175,7 +175,6 @@ router.post('/', async (req, res) => {
             secondaryColor,
             config,
             maxUsers,
-            maxCourses,
         } = req.body;
 
         // Validate required fields
@@ -210,7 +209,6 @@ router.post('/', async (req, res) => {
                 secondaryColor: secondaryColor || '#8b5cf6',
                 config: config || {},
                 maxUsers: maxUsers || null,
-                maxCourses: maxCourses || null,
                 isActive: true,
             })
             .returning();
@@ -243,7 +241,6 @@ router.put('/:id', async (req, res) => {
             secondaryColor,
             config,
             maxUsers,
-            maxCourses,
             isActive,
         } = req.body;
 
@@ -291,7 +288,6 @@ router.put('/:id', async (req, res) => {
                 secondaryColor,
                 config,
                 maxUsers,
-                maxCourses,
                 isActive,
                 updatedAt: new Date(),
             })
@@ -299,6 +295,19 @@ router.put('/:id', async (req, res) => {
             .returning();
 
         console.log(`[AdminOrganizations] Updated organization: ${updatedOrg.id}`);
+
+        const { AuditService } = await import('../services/audit.service.js');
+        await AuditService.logAction({
+            organizationId: id,
+            actorId: req.user!.id,
+            action: 'update_organization',
+            targetId: id,
+            targetType: 'organization',
+            metadata: { 
+                plan: updatedOrg.plan, 
+                isActive: updatedOrg.isActive 
+            }
+        });
 
         res.json(updatedOrg);
     } catch (error) {

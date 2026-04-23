@@ -88,31 +88,66 @@ export const createCourse = async (courseData: CreateCourseDto) => {
 export const getCoursesByTeacher = async (
     teacherId: string,
     organizationId: string,
-    locale?: string
+    locale?: string,
+    limit: number = 50,
+    offset: number = 0
 ) => {
     const orgId = requireTenantId(organizationId);
+
+    const countResult = await db
+        .select({ count: count() })
+        .from(courses)
+        .where(and(
+            eq(courses.teacherId, teacherId),
+            eq(courses.organizationId, orgId)
+        ));
+    const totalCount = countResult[0].count;
+
     const teacherCourses = await db
         .select()
         .from(courses)
         .where(and(
             eq(courses.teacherId, teacherId),
             eq(courses.organizationId, orgId)
-        ));
-    if (locale) return resolveCourseTranslations(teacherCourses, locale);
-    return teacherCourses;
+        ))
+        .limit(limit)
+        .offset(offset);
+        
+    const data = locale ? await resolveCourseTranslations(teacherCourses, locale) : teacherCourses;
+    return { data, totalCount };
 };
 
-export const getPublishedCourses = async (organizationId: string, locale?: string) => {
+import { count } from 'drizzle-orm';
+
+export const getPublishedCourses = async (
+    organizationId: string, 
+    locale?: string,
+    limit: number = 50,
+    offset: number = 0
+) => {
     const orgId = requireTenantId(organizationId);
+    
+    const countResult = await db
+        .select({ count: count() })
+        .from(courses)
+        .where(and(
+            eq(courses.isPublished, true),
+            eq(courses.organizationId, orgId)
+        ));
+    const totalCount = countResult[0].count;
+
     const publishedCourses = await db
         .select()
         .from(courses)
         .where(and(
             eq(courses.isPublished, true),
             eq(courses.organizationId, orgId)
-        ));
-    if (locale) return resolveCourseTranslations(publishedCourses, locale);
-    return publishedCourses;
+        ))
+        .limit(limit)
+        .offset(offset);
+        
+    const data = locale ? await resolveCourseTranslations(publishedCourses, locale) : publishedCourses;
+    return { data, totalCount };
 };
 
 export const getCourseById = async (

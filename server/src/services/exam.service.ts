@@ -101,6 +101,7 @@ export async function createExam(data: CreateExamInput) {
     }
 
     const [newExam] = await db.insert(exams).values({
+        organizationId: orgId,
         courseId: data.courseId,
         createdBy: data.userId,
         title: data.title,
@@ -295,7 +296,9 @@ export async function getExamsByCourse(
     userId: string,
     role: string,
     organizationId: string,
-    locale?: string
+    locale?: string,
+    limit: number = 50,
+    offset: number = 0
 ) {
     const orgId = requireTenantId(organizationId);
 
@@ -336,6 +339,10 @@ export async function getExamsByCourse(
         }
     }
 
+    const { count } = await import('drizzle-orm');
+    const countResult = await db.select({ count: count() }).from(exams).where(eq(exams.courseId, courseId));
+    const totalCount = countResult[0].count;
+
     const courseExams = await db
         .select({
             id: exams.id,
@@ -353,13 +360,22 @@ export async function getExamsByCourse(
             createdAt: exams.createdAt,
         })
         .from(exams)
-        .where(eq(exams.courseId, courseId));
+        .where(eq(exams.courseId, courseId))
+        .orderBy(desc(exams.createdAt))
+        .limit(limit)
+        .offset(offset);
 
-    if (locale) return resolveExamTranslations(courseExams, locale);
-    return courseExams;
+    const data = locale ? await resolveExamTranslations(courseExams, locale) : courseExams;
+
+    return { data, totalCount };
 }
 
-export async function getAvailableExamsForStudent(studentId: string, organizationId: string) {
+export async function getAvailableExamsForStudent(
+    studentId: string, 
+    organizationId: string,
+    limit: number = 50,
+    offset: number = 0
+) {
     const orgId = requireTenantId(organizationId);
 
     // Get student's enrollments in this org
@@ -373,24 +389,31 @@ export async function getAvailableExamsForStudent(studentId: string, organizatio
         ));
 
     if (studentEnrollments.length === 0) {
-        return [];
+        return { data: [], totalCount: 0 };
     }
 
     const courseIds = studentEnrollments.map(e => e.courseId);
+
+    const whereConditions = and(
+        sql`${exams.courseId} IN (${sql.raw(courseIds.map(id => `'${id}'`).join(','))})`,
+        inArray(exams.status, ['scheduled', 'active']),
+        eq(courses.organizationId, orgId) // Redundant but safe
+    );
+
+    const { count } = await import('drizzle-orm');
+    const countResult = await db.select({ count: count() }).from(exams).innerJoin(courses, eq(exams.courseId, courses.id)).where(whereConditions);
+    const totalCount = countResult[0].count;
 
     const availableExams = await db
         .select()
         .from(exams)
         .innerJoin(courses, eq(exams.courseId, courses.id))
-        .where(
-            and(
-                sql`${exams.courseId} IN (${sql.raw(courseIds.map(id => `'${id}'`).join(','))})`,
-                inArray(exams.status, ['scheduled', 'active']),
-                eq(courses.organizationId, orgId) // Redundant but safe
-            )
-        );
+        .where(whereConditions)
+        .limit(limit)
+        .offset(offset);
 
-    return availableExams.map(result => result.exams);
+    const data = availableExams.map(result => result.exams);
+    return { data, totalCount };
 }
 
 // ==========================================================
@@ -591,7 +614,7 @@ export async function reorderQuestions(examId: string, questionIds: string[], us
     return true;
 }
 
-export async function getExamAttempts(examId: string, userId: string, organizationId: string) {
+export async function getExamAttempts(examId: string, userId: string, organizationId: string, limit: number = 50, offset: number = 0) {
     const orgId = requireTenantId(organizationId);
 
     // Verify exam and permission (teacher owns course in org)
@@ -610,6 +633,10 @@ export async function getExamAttempts(examId: string, userId: string, organizati
         throw new Error("Exam not found or access denied.");
     }
 
+    const { count } = await import('drizzle-orm');
+    const countResult = await db.select({ count: count() }).from(examAttempts).where(eq(examAttempts.examId, examId));
+    const totalCount = countResult[0].count;
+
     // Fetch attempts
     const attempts = await db
         .select({
@@ -623,12 +650,14 @@ export async function getExamAttempts(examId: string, userId: string, organizati
             percentage: examAttempts.percentage,
             passed: examAttempts.passed,
             flaggedForReview: examAttempts.flaggedForReview,
-            reviewStatus: examAttempts.reviewStatus
+            // reviewStatus doesn't exist on examAttempts in current schema
         })
         .from(examAttempts)
         .innerJoin(users, eq(examAttempts.studentId, users.id))
         .where(eq(examAttempts.examId, examId))
-        .orderBy(desc(examAttempts.startedAt));
+        .orderBy(desc(examAttempts.startedAt))
+        .limit(limit)
+        .offset(offset);
 
-    return attempts;
+    return { data: attempts, totalCount };
 }

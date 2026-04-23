@@ -20,9 +20,14 @@ router.post('/', ...requireAuth, async (req: Request, res: Response) => {
   try {
     const { topicNames, questionCount, difficulty } = req.body;
     const studentId = (req as any).user?.id;
+    const organizationId: string = (req as any).user?.organizationId;
 
     if (!studentId) {
       return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    if (!organizationId) {
+      return res.status(403).json({ message: 'No organization context' });
     }
 
     if (!topicNames || !Array.isArray(topicNames) || topicNames.length === 0) {
@@ -37,17 +42,23 @@ router.post('/', ...requireAuth, async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'Invalid difficulty level' });
     }
 
-    const retakeData = await generateRetakeExam({
-      studentId,
-      topicNames,
-      questionCount,
-      difficulty,
+    const { enqueueJob } = await import('../jobs/index.js');
+    const jobId = await enqueueJob('retake_generation', {
+      type: 'basic',
+      basicOptions: {
+        studentId,
+        organizationId,
+        topicNames,
+        questionCount,
+        difficulty,
+      }
     });
 
-    return res.status(201).json(retakeData);
+    return res.status(202).json({ success: true, jobId, message: 'Retake exam generation queued' });
   } catch (error: any) {
     console.error('Error creating retake exam:', error);
-    return res.status(500).json({ message: error.message || 'Failed to create retake exam' });
+    const status = error.status === 403 ? 403 : 500;
+    return res.status(status).json({ message: error.message || 'Failed to create retake exam' });
   }
 });
 

@@ -5,6 +5,9 @@ import { db } from '../db/index.js';
 import { users, enrollments, assignments, submissions, courses, grades } from '../db/schema.js';
 import { eq, and, sql, avg, count, inArray, gte } from 'drizzle-orm';
 
+const getOrgId = (req: express.Request): string | undefined =>
+    (req as any).tenant?.organizationId;
+
 const router = express.Router();
 
 // Combined auth + subscription middleware
@@ -21,13 +24,19 @@ router.get('/overview', ...requireAuth, async (req, res) => {
             return res.status(403).json({ message: 'Forbidden: Teachers only.' });
         }
 
+        const orgId = getOrgId(req);
+        if (!orgId) return res.status(400).json({ message: 'Organization context required.' });
+
         const { courseId } = req.query;
 
-        // Get teacher's courses
+        // Get teacher's courses scoped to this organisation
         const teacherCourses = await db
             .select({ id: courses.id })
             .from(courses)
-            .where(eq(courses.teacherId, user.id));
+            .where(and(
+                eq(courses.teacherId, user.id),
+                eq(courses.organizationId, orgId)
+            ));
 
         const courseIds = teacherCourses.map(c => c.id);
 
@@ -142,13 +151,19 @@ router.get('/students', ...requireAuth, async (req, res) => {
             return res.status(403).json({ message: 'Forbidden: Teachers only.' });
         }
 
+        const orgId = getOrgId(req);
+        if (!orgId) return res.status(400).json({ message: 'Organization context required.' });
+
         const { courseId } = req.query;
 
-        // Get teacher's courses
+        // Get teacher's courses scoped to this organisation
         const teacherCourses = await db
             .select({ id: courses.id })
             .from(courses)
-            .where(eq(courses.teacherId, user.id));
+            .where(and(
+                eq(courses.teacherId, user.id),
+                eq(courses.organizationId, orgId)
+            ));
 
         const courseIds = teacherCourses.map(c => c.id);
 
@@ -284,14 +299,20 @@ router.get('/courses', ...requireAuth, async (req, res) => {
             return res.status(403).json({ message: 'Forbidden: Teachers only.' });
         }
 
-        // Get teacher's courses
+        const orgId = getOrgId(req);
+        if (!orgId) return res.status(400).json({ message: 'Organization context required.' });
+
+        // Get teacher's courses scoped to this organisation
         const teacherCourses = await db
             .select({
                 id: courses.id,
                 title: courses.title,
             })
             .from(courses)
-            .where(eq(courses.teacherId, user.id));
+            .where(and(
+                eq(courses.teacherId, user.id),
+                eq(courses.organizationId, orgId)
+            ));
 
         if (teacherCourses.length === 0) {
             return res.status(200).json([]);
@@ -369,7 +390,7 @@ router.get('/performance-trend', ...requireAuth, async (req, res) => {
         }
 
         const { courseId, timeframeDays } = req.query;
-        const days = timeframeDays && !Array.isArray(timeframeDays)
+        const days = timeframeDays && typeof timeframeDays === 'string'
             ? Math.max(7, Number.parseInt(timeframeDays, 10) || 60)
             : 60;
 
@@ -377,10 +398,16 @@ router.get('/performance-trend', ...requireAuth, async (req, res) => {
         sinceDate.setHours(0, 0, 0, 0);
         sinceDate.setDate(sinceDate.getDate() - days);
 
+        const orgId = getOrgId(req);
+        if (!orgId) return res.status(400).json({ message: 'Organization context required.' });
+
         const teacherCourses = await db
             .select({ id: courses.id })
             .from(courses)
-            .where(eq(courses.teacherId, user.id));
+            .where(and(
+                eq(courses.teacherId, user.id),
+                eq(courses.organizationId, orgId)
+            ));
 
         const courseIds = teacherCourses.map(c => c.id);
         if (courseIds.length === 0) {
@@ -462,10 +489,16 @@ router.get('/submission-status', ...requireAuth, async (req, res) => {
 
         const { courseId } = req.query;
 
+        const orgId = getOrgId(req);
+        if (!orgId) return res.status(400).json({ message: 'Organization context required.' });
+
         const teacherCourses = await db
             .select({ id: courses.id })
             .from(courses)
-            .where(eq(courses.teacherId, user.id));
+            .where(and(
+                eq(courses.teacherId, user.id),
+                eq(courses.organizationId, orgId)
+            ));
 
         const courseIds = teacherCourses.map(c => c.id);
         if (courseIds.length === 0) {

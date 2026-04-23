@@ -315,7 +315,7 @@ export class RetakeExamGeneratorService {
 
     // Filter by minimum repetitions
     if (minRepetitions && minRepetitions > 1) {
-      mistakes = mistakes.filter(m => m.repetitionCount >= minRepetitions);
+      mistakes = mistakes.filter(m => (m.repetitionCount ?? 0) >= minRepetitions);
     }
 
     return mistakes;

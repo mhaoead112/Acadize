@@ -18,7 +18,7 @@ export interface CreateEventInput {
   meetingLink?: string;
   courseId?: string;
   isPublic?: boolean;
-  maxParticipants?: number;
+  maxParticipants?: string;
   createdBy: string;
   organizationId: string; // Required for tenant isolation
 }
@@ -33,7 +33,7 @@ export interface UpdateEventInput {
   meetingLink?: string;
   courseId?: string;
   isPublic?: boolean;
-  maxParticipants?: number;
+  maxParticipants?: string;
 }
 
 export interface EventFilters {
@@ -173,7 +173,7 @@ export async function getEventById(eventId: string, userId: string, organization
     userId: eventParticipants.userId,
     userName: users.fullName,
     status: eventParticipants.status,
-    registeredAt: eventParticipants.registeredAt,
+    registeredAt: eventParticipants.createdAt,
   })
     .from(eventParticipants)
     .innerJoin(users, eq(eventParticipants.userId, users.id))

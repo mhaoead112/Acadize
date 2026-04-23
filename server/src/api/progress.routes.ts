@@ -79,11 +79,11 @@ router.get('/overall', ...requireAuth, async (req, res) => {
     // Calculate totals with bonus
     for (const assignment of allAssignments) {
       const submission = studentSubmissions.find(s => s.assignmentId === assignment.id);
-      const maxScore = parseFloat(assignment.maxScore || '100');
+      const maxScore = Number(assignment.maxScore || 100);
       totalMaxScore += maxScore;
 
       if (submission && submission.score) {
-        const score = parseFloat(submission.score);
+        const score = Number(submission.score);
         totalScore += score;
         gradedCount++;
 
@@ -171,11 +171,11 @@ router.get('/courses', ...requireAuth, async (req, res) => {
 
         for (const assignment of courseAssignments) {
           const submission = courseSubmissions.find(s => s.assignmentId === assignment.id);
-          const maxScore = parseFloat(assignment.maxScore || '100');
+          const maxScore = Number(assignment.maxScore || 100);
           totalMaxScore += maxScore;
 
           if (submission && submission.score) {
-            const score = parseFloat(submission.score);
+            const score = Number(submission.score);
             totalScore += score;
             gradedCount++;
 
@@ -284,7 +284,7 @@ router.get('/course/:courseId', ...requireAuth, async (req, res) => {
           const submittedAt = new Date(submission.submittedAt);
 
           if (submittedAt < dueDate) {
-            const maxScore = parseFloat(assignment.maxScore || '100');
+            const maxScore = Number(assignment.maxScore || 100);
             bonusPoints = calculateBonusPoints(dueDate, submittedAt, maxScore);
             bonusPercentage = Math.round((bonusPoints / maxScore) * 100);
           }
@@ -312,11 +312,11 @@ router.get('/course/:courseId', ...requireAuth, async (req, res) => {
     let gradedCount = 0;
 
     assignmentDetails.forEach(detail => {
-      const maxScore = parseFloat(detail.maxScore || '100');
+      const maxScore = Number(detail.maxScore || 100);
       totalMaxScore += maxScore;
 
       if (detail.score) {
-        totalScore += parseFloat(detail.score);
+        totalScore += Number(detail.score);
         totalBonusPoints += detail.bonusPoints;
         gradedCount++;
       }

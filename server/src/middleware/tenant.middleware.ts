@@ -7,6 +7,9 @@ import { Request, Response, NextFunction } from "express";
 import { db } from "../db/index.js";
 import { organizations } from "../db/schema.js";
 import { eq, or } from "drizzle-orm";
+import { getRedisClient } from "../db/redis.js";
+
+const isProduction = process.env.NODE_ENV === 'production';
 
 // Tenant context attached to each request
 export interface TenantContext {
@@ -39,9 +42,10 @@ declare global {
     }
 }
 
-// Cache for tenant lookups (simple in-memory, replace with Redis in production)
+// Process-local fallback cache if Redis is unavailable
 const tenantCache = new Map<string, { data: TenantContext; expires: number }>();
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const CACHE_TTL_SEC = 5 * 60; // 5 minutes in seconds
+const CACHE_TTL_MS = CACHE_TTL_SEC * 1000;
 
 /**
  * Extract subdomain from hostname
@@ -72,15 +76,50 @@ function extractSubdomain(hostname: string): string {
     return parts[0];
 }
 
+function sanitizeSubdomain(input: string | undefined): string | undefined {
+    if (!input) return undefined;
+    const normalized = input.trim().toLowerCase();
+    if (!/^[a-z0-9-]{1,63}$/.test(normalized)) {
+        return undefined;
+    }
+    return normalized;
+}
+
+function getRequestHostname(req: Request): string {
+    const forwardedHost = req.headers['x-forwarded-host'];
+    const rawHost = Array.isArray(forwardedHost)
+        ? forwardedHost[0]
+        : (typeof forwardedHost === 'string' ? forwardedHost.split(',')[0] : req.headers.host || req.hostname || 'localhost');
+    const normalized = rawHost.trim().toLowerCase();
+    const withoutPort = normalized.startsWith('[')
+        ? normalized.replace(/^\[([^\]]+)\](?::\d+)?$/, '$1')
+        : normalized.split(':')[0];
+    return withoutPort;
+}
+
 /**
  * Lookup organization by subdomain or custom domain
  */
 async function lookupOrganization(subdomain: string, hostname: string): Promise<TenantContext | null> {
     // Check cache first
-    const cacheKey = subdomain;
-    const cached = tenantCache.get(cacheKey);
-    if (cached && cached.expires > Date.now()) {
-        return cached.data;
+    const cacheKey = `tenant:${subdomain}`;
+    const redis = getRedisClient();
+
+    if (redis) {
+        try {
+            const cachedParams = await redis.get(cacheKey);
+            if (cachedParams) {
+                return JSON.parse(cachedParams) as TenantContext;
+            }
+        } catch (error) {
+            // Log but don't fail, fall back to DB
+            console.error('[Tenant Middleware] Redis get error', error);
+        }
+    } else {
+        const cached = tenantCache.get(cacheKey);
+        if (cached && cached.expires > Date.now()) {
+            return cached.data;
+        }
     }
 
     try {
@@ -119,11 +158,15 @@ async function lookupOrganization(subdomain: string, hostname: string): Promise<
             userCurrency: org.userCurrency ?? 'EGP',
         };
 
-        // Cache the result
-        tenantCache.set(cacheKey, {
-            data: tenant,
-            expires: Date.now() + CACHE_TTL,
-        });
+        if (redis) {
+            try {
+                await redis.setex(cacheKey, CACHE_TTL_SEC, JSON.stringify(tenant));
+            } catch (error) {
+                console.error('[Tenant Middleware] Redis set error', error);
+            }
+        } else {
+            tenantCache.set(cacheKey, { data: tenant, expires: Date.now() + CACHE_TTL_MS });
+        }
 
         return tenant;
     } catch (error) {
@@ -141,36 +184,41 @@ export const tenantMiddleware = async (
     res: Response,
     next: NextFunction
 ) => {
-    // Allow development override via header
-    const devSubdomain = req.headers['x-tenant-subdomain'] as string;
-    const hostname = req.headers.host || req.hostname || 'localhost';
+    // Allow development override via header in non-production only.
+    const rawDevSubdomain = !isProduction ? (req.headers['x-tenant-subdomain'] as string) : undefined;
+    const devSubdomain = sanitizeSubdomain(rawDevSubdomain);
+    const hostname = getRequestHostname(req);
 
-    // Also check Origin or Referer headers for subdomain (useful when frontend is on different host)
+    // In non-production only, optionally use Origin/Referer as fallback for local multi-host setups.
     let originSubdomain: string | undefined;
-    const origin = req.headers.origin as string;
-    const referer = req.headers.referer as string;
+    if (!isProduction) {
+        const origin = req.headers.origin as string;
+        const referer = req.headers.referer as string;
 
-    if (origin) {
-        try {
-            const originUrl = new URL(origin);
-            originSubdomain = extractSubdomain(originUrl.hostname);
-        } catch { }
-    } else if (referer) {
-        try {
-            const refererUrl = new URL(referer);
-            originSubdomain = extractSubdomain(refererUrl.hostname);
-        } catch { }
+        if (origin) {
+            try {
+                const originUrl = new URL(origin);
+                originSubdomain = sanitizeSubdomain(extractSubdomain(originUrl.hostname));
+            } catch { }
+        } else if (referer) {
+            try {
+                const refererUrl = new URL(referer);
+                originSubdomain = sanitizeSubdomain(extractSubdomain(refererUrl.hostname));
+            } catch { }
+        }
     }
 
-    // Determine subdomain: explicit header > origin/referer > host header
-    const subdomain = devSubdomain || originSubdomain || extractSubdomain(hostname);
-
-    console.log('[TenantMiddleware] Resolved subdomain:', subdomain, { devSubdomain, originSubdomain, hostname });
+    // Determine subdomain:
+    // production -> host only
+    // non-production -> dev header > origin/referer > host
+    const hostSubdomain = sanitizeSubdomain(extractSubdomain(hostname)) || 'default';
+    const subdomain = !isProduction
+        ? (devSubdomain || originSubdomain || hostSubdomain)
+        : hostSubdomain;
 
     // Skip tenant resolution for certain paths (health checks, registration, webhooks)
     // Note: req.path doesn't include /api when middleware is mounted at /api
     if (req.path === '/health' ||
-        req.path === '/api/health' ||
         req.path.startsWith('/registration/') ||
         req.path.startsWith('/webhooks/')) {
         return next();
@@ -180,26 +228,20 @@ export const tenantMiddleware = async (
     const tenant = await lookupOrganization(subdomain, hostname);
 
     if (!tenant) {
-        // For API requests, return JSON error
-        if (req.path.startsWith('/api/')) {
-            return res.status(404).json({
-                error: 'Organization not found',
-                message: `No organization found for subdomain: ${subdomain}`,
-            });
-        }
-        // For non-API requests, you might redirect to a landing page
         return res.status(404).json({
             error: 'Organization not found',
-            subdomain,
+            message: 'Organization not found',
         });
     }
 
     // Attach tenant context to request
     req.tenant = tenant;
 
-    // Add tenant info to response headers for debugging
-    res.setHeader('X-Tenant-Id', tenant.organizationId);
-    res.setHeader('X-Tenant-Subdomain', tenant.subdomain);
+    // Add tenant info headers only in non-production for local debugging.
+    if (!isProduction) {
+        res.setHeader('X-Tenant-Id', tenant.organizationId);
+        res.setHeader('X-Tenant-Subdomain', tenant.subdomain);
+    }
 
     next();
 };

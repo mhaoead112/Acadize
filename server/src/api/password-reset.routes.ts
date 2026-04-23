@@ -6,6 +6,7 @@ import { users } from '../db/schema.js';
 import { eq } from 'drizzle-orm';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
+import { isAuthenticated } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
 
@@ -141,12 +142,13 @@ router.post('/reset', async (req: Request, res: Response) => {
  * POST /api/password-reset/change
  * Change password (for logged-in users or first-time login)
  */
-router.post('/change', async (req: Request, res: Response) => {
+router.post('/change', isAuthenticated, async (req: Request, res: Response) => {
     try {
-        const { userId, currentPassword, newPassword } = req.body;
+        const { currentPassword, newPassword } = req.body;
+        const userId = req.user?.id;
 
-        if (!userId || !newPassword) {
-            return res.status(400).json({ message: 'User ID and new password are required' });
+        if (!userId || !currentPassword || !newPassword) {
+            return res.status(400).json({ message: 'Current password and new password are required' });
         }
 
         if (newPassword.length < 8) {
@@ -166,12 +168,10 @@ router.post('/change', async (req: Request, res: Response) => {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        // If current password provided, verify it
-        if (currentPassword) {
-            const isValid = await bcrypt.compare(currentPassword, user.password);
-            if (!isValid) {
-                return res.status(401).json({ message: 'Current password is incorrect' });
-            }
+        // Always verify current password for authenticated password changes
+        const isValid = await bcrypt.compare(currentPassword, user.password);
+        if (!isValid) {
+            return res.status(401).json({ message: 'Current password is incorrect' });
         }
 
         // Hash new password

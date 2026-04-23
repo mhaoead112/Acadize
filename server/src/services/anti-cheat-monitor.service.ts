@@ -184,11 +184,15 @@ export class AntiCheatMonitorService {
     console.log(`[ANTI-CHEAT] Event recorded: ${event.id}, type: ${payload.eventType}, severity: ${severity}`);
 
     // Step 9: Update attempt violation count (denormalized for performance)
+    // Update attempt violation count (denormalized for performance)
+    // totalViolations field does not exist in schema, so we skip it for now.
+    /*
     await db.update(examAttempts)
       .set({
         totalViolations: (attempt.totalViolations || 0) + 1,
-      })
+      } as any)
       .where(eq(examAttempts.id, payload.attemptId));
+    */
 
     // Step 10: Trigger real-time alerts for critical events
     if (severity === 'critical') {

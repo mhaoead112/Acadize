@@ -264,7 +264,7 @@ export class RetakeSubmissionService {
           subtopic: latestMistake.subtopic,
           skillTag: latestMistake.skillTag,
           difficultyLevel: latestMistake.difficultyLevel,
-          studentAnswer: answerRecord.studentAnswer,
+          studentAnswer: answerRecord.answer,
           correctAnswer: latestMistake.correctAnswer,
           pointsLost: (answerRecord.pointsPossible || 0) - (answerRecord.pointsAwarded || 0),
           pointsPossible: answerRecord.pointsPossible || 0,
@@ -331,7 +331,7 @@ export class RetakeSubmissionService {
     }
 
     // Calculate mastery for each topic
-    for (const [topic, performance] of topicPerformance.entries()) {
+    for (const [topic, performance] of Array.from(topicPerformance.entries())) {
       const masteryPercentage = (performance.correct / performance.total) * 100;
       
       // Determine mastery level

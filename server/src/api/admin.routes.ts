@@ -25,6 +25,10 @@ import { isAuthenticated, isAdmin } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
 
+// Helper: prefer subdomain tenant org, fall back to JWT org (dev/single-domain)
+const getOrgId = (req: any): string | undefined =>
+  req.tenant?.organizationId ?? req.user?.organizationId;
+
 // All admin routes require authentication and admin role
 router.use(isAuthenticated);
 router.use(isAdmin);
@@ -101,7 +105,11 @@ router.get('/users', async (req, res) => {
  */
 router.get('/users/:userId', async (req, res) => {
   try {
-    const user = await getUserById(req.params.userId);
+    const orgId = (req as any).tenant?.organizationId;
+    if (!orgId) {
+      return res.status(400).json({ error: 'Organization context required' });
+    }
+    const user = await getUserById(req.params.userId, orgId);
     res.json(user);
   } catch (error) {
     console.error('Error fetching user:', error);
@@ -162,6 +170,10 @@ router.post('/users', async (req, res) => {
  */
 router.patch('/users/:userId', async (req, res) => {
   try {
+    const orgId = (req as any).tenant?.organizationId;
+    if (!orgId) {
+      return res.status(400).json({ error: 'Organization context required' });
+    }
     const input: UpdateUserInput = {};
 
     if (req.body.username) input.username = req.body.username;
@@ -170,7 +182,18 @@ router.patch('/users/:userId', async (req, res) => {
     if (req.body.role) input.role = req.body.role;
     if (req.body.isActive !== undefined) input.isActive = req.body.isActive;
 
-    const updatedUser = await updateUser(req.params.userId, input);
+    const updatedUser = await updateUser(req.params.userId, input, orgId);
+
+    const { AuditService } = await import('../services/audit.service.js');
+    await AuditService.logAction({
+        organizationId: orgId,
+        actorId: req.user!.id,
+        action: 'update_user',
+        targetId: req.params.userId,
+        targetType: 'user',
+        metadata: { input }
+    });
+
     res.json({ user: updatedUser, message: 'User updated successfully' });
   } catch (error) {
     console.error('Error updating user:', error);
@@ -193,12 +216,26 @@ router.patch('/users/:userId', async (req, res) => {
  */
 router.delete('/users/:userId', async (req, res) => {
   try {
+    const orgId = (req as any).tenant?.organizationId;
+    if (!orgId) {
+      return res.status(400).json({ error: 'Organization context required' });
+    }
     // Prevent deleting yourself
     if (req.user?.id === req.params.userId) {
       return res.status(400).json({ error: 'Cannot delete your own account' });
     }
 
-    await deleteUser(req.params.userId);
+    await deleteUser(req.params.userId, orgId);
+
+    const { AuditService } = await import('../services/audit.service.js');
+    await AuditService.logAction({
+        organizationId: orgId,
+        actorId: req.user!.id,
+        action: 'delete_user',
+        targetId: req.params.userId,
+        targetType: 'user'
+    });
+
     res.json({ message: 'User deleted successfully' });
   } catch (error) {
     console.error('Error deleting user:', error);
@@ -215,6 +252,10 @@ router.delete('/users/:userId', async (req, res) => {
  */
 router.patch('/users/:userId/status', async (req, res) => {
   try {
+    const orgId = (req as any).tenant?.organizationId;
+    if (!orgId) {
+      return res.status(400).json({ error: 'Organization context required' });
+    }
     const { status } = req.body;
 
     if (typeof status !== 'boolean') {
@@ -226,7 +267,18 @@ router.patch('/users/:userId/status', async (req, res) => {
       return res.status(400).json({ error: 'Cannot deactivate your own account' });
     }
 
-    const updatedUser = await toggleUserStatus(req.params.userId, status);
+    const updatedUser = await toggleUserStatus(req.params.userId, status, orgId);
+
+    const { AuditService } = await import('../services/audit.service.js');
+    await AuditService.logAction({
+        organizationId: orgId,
+        actorId: req.user!.id,
+        action: status ? 'activate_user' : 'deactivate_user',
+        targetId: req.params.userId,
+        targetType: 'user',
+        metadata: { status }
+    });
+
     res.json({
       user: updatedUser,
       message: `User ${status ? 'activated' : 'deactivated'} successfully`
@@ -299,13 +351,17 @@ router.get('/courses', async (req, res) => {
  */
 router.post('/enrollments', async (req, res) => {
   try {
+    const orgId = (req as any).tenant?.organizationId;
+    if (!orgId) {
+      return res.status(400).json({ error: 'Organization context required' });
+    }
     const { studentId, courseId } = req.body;
 
     if (!studentId || !courseId) {
       return res.status(400).json({ error: 'Student ID and Course ID are required' });
     }
 
-    const enrollment = await createEnrollment(studentId, courseId);
+    const enrollment = await createEnrollment(studentId, courseId, orgId);
     res.status(201).json({
       enrollment,
       message: 'Student enrolled successfully'
@@ -329,7 +385,11 @@ router.post('/enrollments', async (req, res) => {
  */
 router.delete('/enrollments/:enrollmentId', async (req, res) => {
   try {
-    await removeEnrollment(req.params.enrollmentId);
+    const orgId = (req as any).tenant?.organizationId;
+    if (!orgId) {
+      return res.status(400).json({ error: 'Organization context required' });
+    }
+    await removeEnrollment(req.params.enrollmentId, orgId);
     res.json({ message: 'Enrollment removed successfully' });
   } catch (error) {
     console.error('Error removing enrollment:', error);
@@ -593,6 +653,10 @@ router.delete('/announcements/:id', async (req, res) => {
  */
 router.post('/link-student-parent', async (req, res) => {
   try {
+    const orgId = getOrgId(req);
+    if (!orgId) {
+      return res.status(400).json({ error: 'Organization context required' });
+    }
     const { studentId, parentId } = req.body;
 
     if (!studentId || !parentId) {
@@ -600,7 +664,7 @@ router.post('/link-student-parent', async (req, res) => {
     }
 
     // Convert to strings since IDs in database are text
-    const result = await linkStudentToParent(String(studentId), String(parentId));
+    const result = await linkStudentToParent(String(studentId), String(parentId), orgId);
     res.status(200).json(result);
   } catch (error) {
     console.error('Error linking student to parent:', error);
@@ -617,6 +681,10 @@ router.post('/link-student-parent', async (req, res) => {
  */
 router.post('/unlink-student-parent', async (req, res) => {
   try {
+    const orgId = getOrgId(req);
+    if (!orgId) {
+      return res.status(400).json({ error: 'Organization context required' });
+    }
     const { studentId } = req.body;
 
     if (!studentId) {
@@ -624,7 +692,7 @@ router.post('/unlink-student-parent', async (req, res) => {
     }
 
     // Convert to string since IDs in database are text
-    const result = await unlinkStudentFromParent(String(studentId));
+    const result = await unlinkStudentFromParent(String(studentId), orgId);
     res.status(200).json(result);
   } catch (error) {
     console.error('Error unlinking student from parent:', error);
@@ -641,7 +709,7 @@ router.post('/unlink-student-parent', async (req, res) => {
  */
 router.get('/students-with-parents', async (req, res) => {
   try {
-    const orgId = (req as any).tenant?.organizationId;
+    const orgId = getOrgId(req);
     const students = await getStudentsWithParents(orgId);
     res.json(students);
   } catch (error) {

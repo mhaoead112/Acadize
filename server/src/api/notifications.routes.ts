@@ -8,6 +8,8 @@ import { requireSubscription } from '../middleware/subscription.middleware.js';
 const requireAuth = [isAuthenticated, requireSubscription];
 import * as NotificationsService from '../services/notifications.service.js';
 
+import { getPaginationParams, buildPaginatedResponse } from '../utils/pagination.js';
+
 const router = Router();
 
 /**
@@ -24,13 +26,17 @@ router.get('/', ...requireAuth, async (req, res) => {
       return res.status(400).json({ error: 'Organization context required' });
     }
 
-    const notifications = await NotificationsService.getUserNotifications(
+    const { limit, offset, page } = getPaginationParams(req);
+
+    const { data, totalCount } = await NotificationsService.getUserNotifications(
       userId,
       unreadOnly === 'true',
-      orgId
+      orgId,
+      limit,
+      offset
     );
 
-    res.json(notifications);
+    res.json(buildPaginatedResponse(data, totalCount, page, limit));
   } catch (error: any) {
     console.error('Error fetching notifications:', error);
     res.status(500).json({ error: error.message || 'Failed to fetch notifications' });

@@ -48,24 +48,53 @@ const avatarUpload = multer({
   }
 });
 
+import { count } from 'drizzle-orm';
+import { getPaginationParams, buildPaginatedResponse } from '../utils/pagination.js';
+
 // Get all users (for adding to groups)
 router.get('/', ...requireAuth, async (req, res) => {
   try {
-    const allUsers = await db
-      .select({
-        id: users.id,
-        username: users.username,
-        fullName: users.fullName,
-        email: users.email,
-        role: users.role,
-      })
-      .from(users)
-      .where(and(
-        eq(users.isActive, true),
-        eq(users.organizationId, (req as any).user.organizationId)
-      ));
+    const requestingUser = req.user;
+    if (!requestingUser) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
 
-    res.json(allUsers);
+    const { limit, offset, page } = getPaginationParams(req);
+    const canViewSensitiveFields = requestingUser.role === 'teacher' || requestingUser.role === 'admin';
+
+    const conditions = and(
+      eq(users.isActive, true),
+      eq(users.organizationId, requestingUser.organizationId)
+    );
+
+    const countResult = await db.select({ count: count() }).from(users).where(conditions);
+    const totalCount = countResult[0].count;
+
+    const allUsers = canViewSensitiveFields
+      ? await db
+        .select({
+          id: users.id,
+          username: users.username,
+          fullName: users.fullName,
+          email: users.email,
+          role: users.role,
+        })
+        .from(users)
+        .where(conditions)
+        .limit(limit)
+        .offset(offset)
+      : await db
+        .select({
+          id: users.id,
+          username: users.username,
+          fullName: users.fullName,
+        })
+        .from(users)
+        .where(conditions)
+        .limit(limit)
+        .offset(offset);
+
+    res.json(buildPaginatedResponse(allUsers, totalCount, page, limit));
   } catch (error) {
     console.error('Fetch users error:', error);
     res.status(500).json({ message: 'Failed to fetch users' });
@@ -81,6 +110,15 @@ router.get('/students', ...requireAuth, async (req, res) => {
       return res.status(403).json({ message: 'Access denied' });
     }
 
+    const { limit, offset, page } = getPaginationParams(req);
+    const conditions = and(
+      eq(users.role, 'student'),
+      eq(users.organizationId, user.organizationId)
+    );
+
+    const countResult = await db.select({ count: count() }).from(users).where(conditions);
+    const totalCount = countResult[0].count;
+
     const students = await db
       .select({
         id: users.id,
@@ -91,12 +129,11 @@ router.get('/students', ...requireAuth, async (req, res) => {
         createdAt: users.createdAt,
       })
       .from(users)
-      .where(and(
-        eq(users.role, 'student'),
-        eq(users.organizationId, user.organizationId)
-      ));
+      .where(conditions)
+      .limit(limit)
+      .offset(offset);
 
-    res.json(students);
+    res.json(buildPaginatedResponse(students, totalCount, page, limit));
   } catch (error) {
     console.error('Fetch students error:', error);
     res.status(500).json({ message: 'Failed to fetch students' });
@@ -138,15 +175,13 @@ router.get('/:id', ...requireAuth, async (req, res) => {
         createdAt: users.createdAt,
       })
       .from(users)
-      .where(eq(users.id, id))
+      .where(and(
+        eq(users.id, id),
+        eq(users.organizationId, requestingUser.organizationId)
+      ))
       .limit(1);
 
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    // Verify user belongs to same organization
-    if (user.organizationId !== requestingUser.organizationId) {
       return res.status(404).json({ message: 'User not found' });
     }
 

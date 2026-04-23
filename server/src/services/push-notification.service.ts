@@ -131,6 +131,19 @@ export async function unsubscribeUser(
 
 // Send push notification to a specific user
 export async function sendPushNotification(
+  userId: string,
+  payload: PushPayload
+) {
+  try {
+    const { enqueueJob } = await import('../jobs/index.js');
+    await enqueueJob('push_notification', { type: 'single', userId, payload });
+  } catch (e) {
+    console.warn('[Push] Enqueue failed, falling back to sync', e);
+    await sendPushNotificationSync(userId, payload);
+  }
+}
+
+export async function sendPushNotificationSync(
   userId: string, 
   payload: PushPayload
 ): Promise<{ success: boolean; sent: number; failed: number }> {
@@ -187,7 +200,17 @@ export async function sendPushNotification(
 }
 
 // Send push notification to multiple users
-export async function sendPushNotificationToUsers(
+export async function sendPushNotificationToUsers(userIds: string[], payload: PushPayload) {
+  try {
+    const { enqueueJob } = await import('../jobs/index.js');
+    await enqueueJob('push_notification', { type: 'users', userIds, payload });
+  } catch (e) {
+    console.warn('[Push] Enqueue failed, falling back to sync', e);
+    await sendPushNotificationToUsersSync(userIds, payload);
+  }
+}
+
+export async function sendPushNotificationToUsersSync(
   userIds: string[], 
   payload: PushPayload
 ): Promise<{ success: boolean; totalSent: number; totalFailed: number }> {
@@ -195,7 +218,7 @@ export async function sendPushNotificationToUsers(
   let totalFailed = 0;
 
   for (const userId of userIds) {
-    const result = await sendPushNotification(userId, payload);
+    const result = await sendPushNotificationSync(userId, payload);
     totalSent += result.sent;
     totalFailed += result.failed;
   }
@@ -204,18 +227,34 @@ export async function sendPushNotificationToUsers(
 }
 
 // Send push notification to all users with a specific role
-export async function sendPushNotificationToRole(
-  role: 'student' | 'teacher' | 'admin' | 'parent', 
-  payload: PushPayload
+export async function sendPushNotificationToRole(role: string, payload: PushPayload, organizationId?: string) {
+  try {
+    const { enqueueJob } = await import('../jobs/index.js');
+    await enqueueJob('push_notification', { type: 'role', role, organizationId, payload });
+  } catch (e) {
+    console.warn('[Push] Enqueue failed, falling back to sync', e);
+    await sendPushNotificationToRoleSync(role, payload, organizationId);
+  }
+}
+
+export async function sendPushNotificationToRoleSync(
+  role: string, 
+  payload: PushPayload,
+  organizationId?: string
 ): Promise<{ success: boolean; totalSent: number; totalFailed: number }> {
   try {
+    const conditions = [eq(users.role, role as any)];
+    if (organizationId) {
+      conditions.push(eq(users.organizationId, organizationId as any));
+    }
+
     const usersWithRole = await db
       .select({ id: users.id })
       .from(users)
-      .where(eq(users.role, role));
+      .where(and(...conditions));
 
     const userIds = usersWithRole.map(u => u.id);
-    return await sendPushNotificationToUsers(userIds, payload);
+    return await sendPushNotificationToUsersSync(userIds, payload);
   } catch (error) {
     console.error('Error sending push notification to role:', error);
     return { success: false, totalSent: 0, totalFailed: 0 };
@@ -223,7 +262,17 @@ export async function sendPushNotificationToRole(
 }
 
 // Send push notification to all subscribed users
-export async function sendPushNotificationToAll(
+export async function sendPushNotificationToAll(payload: PushPayload) {
+  try {
+    const { enqueueJob } = await import('../jobs/index.js');
+    await enqueueJob('push_notification', { type: 'all', payload });
+  } catch (e) {
+    console.warn('[Push] Enqueue failed, falling back to sync', e);
+    await sendPushNotificationToAllSync(payload);
+  }
+}
+
+export async function sendPushNotificationToAllSync(
   payload: PushPayload
 ): Promise<{ success: boolean; totalSent: number; totalFailed: number }> {
   try {

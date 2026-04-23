@@ -3,9 +3,11 @@
 import express, { Request, Response } from 'express';
 import { isAuthenticated } from '../middleware/auth.middleware.js';
 import { requireSubscription } from '../middleware/subscription.middleware.js';
+import { logger } from '../utils/logger.js';
 
 // Combined auth + subscription middleware
 const requireAuth = [isAuthenticated, requireSubscription];
+import { getPaginationParams, buildPaginatedResponse } from '../utils/pagination.js';
 import {
   createExam,
   updateExam,
@@ -22,8 +24,14 @@ import {
 
 const router = express.Router();
 
-// Helper to get Org ID
-const getOrgId = (req: Request) => (req as any).tenant?.organizationId;
+// Helper to get Org ID — prefers req.tenant (subdomain routing) but falls back to
+// req.user.organizationId (JWT claim) for single-domain / dev deployments where
+// the tenant middleware resolves to no org from subdomain.
+const getOrgId = (req: Request): string | undefined => {
+  const tenantOrg = (req as any).tenant?.organizationId as string | undefined;
+  const userOrg   = (req as any).user?.organizationId  as string | undefined;
+  return tenantOrg || userOrg;
+};
 const getUser = (req: Request) => (req as any).user;
 
 /**
@@ -49,15 +57,16 @@ router.post('/', ...requireAuth, async (req: Request, res: Response) => {
       scheduledStartAt: req.body.scheduledStartAt ? new Date(req.body.scheduledStartAt) : undefined,
       scheduledEndAt: req.body.scheduledEndAt ? new Date(req.body.scheduledEndAt) : undefined,
       userId: user.id,
-      organizationId: orgId
+      organizationId: orgId  // Always sourced from server — never trusted from client body
     });
 
     res.status(201).json({
       message: 'Exam created successfully.',
+      examId: exam.id,   // Top-level shortcut so client can redirect without drilling into exam.*
       exam
     });
   } catch (error: any) {
-    console.error('Error creating exam:', error);
+    logger.error('Error creating exam', { error: error.message, stack: error.stack });
     res.status(500).json({ message: error.message || 'Failed to create exam.' });
   }
 });
@@ -72,8 +81,11 @@ router.get('/student/available', ...requireAuth, async (req: Request, res: Respo
     const orgId = getOrgId(req);
     if (!orgId) return res.status(400).json({ message: "Organization context required" });
 
-    const exams = await getAvailableExamsForStudent(user.id, orgId);
-    res.status(200).json(exams);
+    const { getPaginationParams, buildPaginatedResponse } = await import('../utils/pagination.js');
+    const { limit, offset, page } = getPaginationParams(req);
+
+    const { data, totalCount } = await getAvailableExamsForStudent(user.id, orgId, limit, offset);
+    res.status(200).json(buildPaginatedResponse(data, totalCount, page, limit));
   } catch (error: any) {
     console.error('Error fetching available exams:', error);
     res.status(500).json({ message: error.message || 'Failed to fetch available exams.' });
@@ -172,9 +184,12 @@ router.get('/course/:courseId', ...requireAuth, async (req: Request, res: Respon
     const orgId = getOrgId(req);
     if (!orgId) return res.status(400).json({ message: "Organization context required" });
 
+    const { getPaginationParams, buildPaginatedResponse } = await import('../utils/pagination.js');
+    const { limit, offset, page } = getPaginationParams(req);
+
     const locale = (req as any).locale;
-    const exams = await getExamsByCourse(req.params.courseId, user.id, user.role, orgId, locale);
-    res.status(200).json(exams);
+    const { data, totalCount } = await getExamsByCourse(req.params.courseId, user.id, user.role, orgId, locale, limit, offset);
+    res.status(200).json(buildPaginatedResponse(data, totalCount, page, limit));
   } catch (error: any) {
     console.error('Error fetching course exams:', error);
     res.status(500).json({ message: error.message || 'Failed to fetch exams.' });
@@ -194,8 +209,10 @@ router.get('/:id/attempts', ...requireAuth, async (req: Request, res: Response) 
       return res.status(403).json({ message: "Forbidden: Teacher access required." });
     }
 
-    const attempts = await getExamAttempts(req.params.id, user.id, orgId);
-    res.json(attempts);
+    const { limit, offset, page } = getPaginationParams(req);
+    const { data, totalCount } = await getExamAttempts(req.params.id, user.id, orgId, limit, offset);
+    
+    res.json(buildPaginatedResponse(data, totalCount, page, limit));
   } catch (error: any) {
     console.error('Error fetching exam attempts:', error);
     res.status(500).json({ message: error.message || 'Failed to fetch attempts.' });
@@ -217,14 +234,15 @@ router.patch('/:id/publish', ...requireAuth, async (req: Request, res: Response)
   try {
     const user = getUser(req);
     const orgId = getOrgId(req);
+    if (!orgId) return res.status(400).json({ message: "Organization context required" });
     const { scheduledStartAt, scheduledEndAt } = req.body;
-
+ 
     const now = new Date();
     const start = scheduledStartAt ? new Date(scheduledStartAt) : undefined;
     // If start is in future, scheduled. Else active.
     // We'll trust client or default logic.
     const status = (start && start > now) ? 'scheduled' : 'active';
-
+ 
     const updatedExam = await updateExam(req.params.id, {
       status,
       scheduledStartAt: start,
@@ -248,6 +266,7 @@ router.patch('/:id/unpublish', ...requireAuth, async (req: Request, res: Respons
   try {
     const user = getUser(req);
     const orgId = getOrgId(req);
+    if (!orgId) return res.status(400).json({ message: "Organization context required" });
 
     const updatedExam = await updateExam(req.params.id, {
       status: 'draft',
@@ -269,7 +288,8 @@ router.patch('/:id/archive', ...requireAuth, async (req: Request, res: Response)
   try {
     const user = getUser(req);
     const orgId = getOrgId(req);
-
+    if (!orgId) return res.status(400).json({ message: "Organization context required" });
+ 
     const updatedExam = await updateExam(req.params.id, {
       status: 'archived',
       organizationId: orgId,
@@ -354,12 +374,13 @@ router.patch('/:examId/questions/reorder', ...requireAuth, async (req: Request, 
   try {
     const user = getUser(req);
     const orgId = getOrgId(req);
+    if (!orgId) return res.status(400).json({ message: "Organization context required" });
     const { questionIds } = req.body;
-
+ 
     if (!Array.isArray(questionIds)) {
       return res.status(400).json({ message: "questionIds must be an array" });
     }
-
+ 
     await reorderQuestions(req.params.examId, questionIds, user.id, orgId);
 
     res.json({ message: 'Questions reordered successfully.' });
@@ -374,6 +395,7 @@ router.patch('/:id/anti-cheat', ...requireAuth, async (req: Request, res: Respon
   // Proxies to updateExam
   const user = getUser(req);
   const orgId = getOrgId(req);
+  if (!orgId) return res.status(400).json({ message: "Organization context required" });
   try {
     const updated = await updateExam(req.params.id, {
       ...req.body, // spread anti-cheat fields
@@ -387,6 +409,7 @@ router.patch('/:id/anti-cheat', ...requireAuth, async (req: Request, res: Respon
 router.get('/:id/anti-cheat', ...requireAuth, async (req: Request, res: Response) => {
   const user = getUser(req);
   const orgId = getOrgId(req);
+  if (!orgId) return res.status(400).json({ message: "Organization context required" });
   try {
     const locale = (req as any).locale;
     const exam = await getExamById(req.params.id, user.id, user.role, orgId, locale);
@@ -399,6 +422,7 @@ router.get('/:id/anti-cheat', ...requireAuth, async (req: Request, res: Response
 router.patch('/:id/retake-settings', ...requireAuth, async (req: Request, res: Response) => {
   const user = getUser(req);
   const orgId = getOrgId(req);
+  if (!orgId) return res.status(400).json({ message: "Organization context required" });
   try {
     const updated = await updateExam(req.params.id, {
       ...req.body,
@@ -412,6 +436,7 @@ router.patch('/:id/retake-settings', ...requireAuth, async (req: Request, res: R
 router.get('/:id/retake-settings', ...requireAuth, async (req: Request, res: Response) => {
   const user = getUser(req);
   const orgId = getOrgId(req);
+  if (!orgId) return res.status(400).json({ message: "Organization context required" });
   try {
     const locale = (req as any).locale;
     const exam = await getExamById(req.params.id, user.id, user.role, orgId, locale);

@@ -1,4 +1,4 @@
-import { db } from './index.js';
+import { db, pool } from './index.js';
 
 export async function setupDatabase() {
   try {
@@ -39,13 +39,14 @@ export async function setupDatabase() {
     ];
 
     for (const demoUser of demoUsers) {
-      const existing = await db.execute(
+      // Using pool.query for raw SQL with parameters to avoid Drizzle execute() ambiguity
+      const existing = await pool.query(
         'SELECT id FROM users WHERE username = $1 LIMIT 1',
         [demoUser.username]
       );
 
       if (existing.rows.length === 0) {
-        await db.execute(`
+        await pool.query(`
           INSERT INTO users (username, email, password, full_name, role, is_active, created_at, updated_at)
           VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
         `, [

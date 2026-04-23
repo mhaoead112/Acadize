@@ -199,7 +199,7 @@ export async function getAdminOverview(params: AdminOverviewParams): Promise<Adm
     const key = `${dow}-${hour}`;
     heatmapCell.set(key, (heatmapCell.get(key) || 0) + (r.status === 'present' || r.status === 'late' ? 1 : 0));
   });
-  const maxVal = Math.max(1, ...heatmapCell.values());
+  const maxVal = Math.max(1, ...Array.from(heatmapCell.values()));
   const heatmap = Array.from(heatmapCell.entries()).map(([k, v]) => {
     const [dow, hour] = k.split('-').map(Number);
     return { dayOfWeek: dow, hour, intensity: maxVal ? v / maxVal : 0 };

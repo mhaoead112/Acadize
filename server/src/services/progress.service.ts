@@ -42,8 +42,8 @@ export async function getStudentProgress(studentId: string): Promise<ProgressDat
     .from(assignments)
     .where(eq(assignments.courseId, submissions.studentId)); // This needs refinement
 
-  const totalScore = result.reduce((sum, item) => sum + parseFloat(item.score), 0);
-  const totalMaxScore = result.reduce((sum, item) => sum + parseFloat(item.maxScore), 0);
+  const totalScore = result.reduce((sum, item) => sum + (item.score ?? 0), 0);
+  const totalMaxScore = result.reduce((sum, item) => sum + (item.maxScore ?? 100), 0);
   const gradedAssignments = result.length;
 
   const overallProgress = totalMaxScore > 0 ? (totalScore / totalMaxScore) * 100 : 0;
@@ -91,15 +91,15 @@ export async function getStudentCourseProgress(studentId: string): Promise<Cours
       });
     }
     const course = courseMap.get(row.courseId)!;
-    course.scores.push(parseFloat(row.score));
-    course.maxScores.push(parseFloat(row.maxScore));
+    course.scores.push(row.score ?? 0);
+    course.maxScores.push(row.maxScore ?? 100);
   }
 
   // Calculate progress for each course
   const courseProgress: CourseProgress[] = [];
-  for (const [courseId, data] of courseMap) {
-    const totalScore = data.scores.reduce((sum, s) => sum + s, 0);
-    const totalMaxScore = data.maxScores.reduce((sum, s) => sum + s, 0);
+  for (const [courseId, data] of Array.from(courseMap.entries())) {
+    const totalScore = data.scores.reduce((sum: number, s: number) => sum + s, 0);
+    const totalMaxScore = data.maxScores.reduce((sum: number, s: number) => sum + s, 0);
     const progress = totalMaxScore > 0 ? (totalScore / totalMaxScore) * 100 : 0;
 
     courseProgress.push({

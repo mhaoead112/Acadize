@@ -155,9 +155,10 @@ router.post('/activate-free-trial', async (req, res) => {
             return res.status(400).json({ message: 'User ID and Organization ID are required.' });
         }
 
-        const result = await SubscriptionService.activateFreeTrial({
+        const result = await SubscriptionService.activateTrial({
             userId,
             organizationId,
+            promoCode: 'FREE_TRIAL', // fallback
         });
 
         res.json({
@@ -311,7 +312,6 @@ adminRouter.post('/promo-codes', async (req, res) => {
             trialDays,
             maxUses,
             expiresAt: expiresAt ? new Date(expiresAt) : undefined,
-            createdBy: user.id,
         });
 
         res.status(201).json(promoCode);

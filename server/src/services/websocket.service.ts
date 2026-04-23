@@ -1,7 +1,11 @@
 // server/src/services/websocket.service.ts
+// OWNERSHIP: raw ws — chat messages + user presence
+// Path: /ws (defined in realtime.config.ts → WS_CHAT_PATH)
 
 import { WebSocketServer, WebSocket } from 'ws';
 import { Server } from 'http';
+import { WS_CHAT_PATH } from '../realtime.config.js';
+import { logger } from '../utils/logger.js';
 
 interface WebSocketClient {
     userId: string;
@@ -17,31 +21,31 @@ export class WebSocketService {
      * Initialize WebSocket server
      */
     static initialize(server: Server): void {
-        this.wss = new WebSocketServer({ server, path: '/ws' });
+        this.wss = new WebSocketServer({ server, path: WS_CHAT_PATH });
 
         this.wss.on('connection', (ws: WebSocket, req) => {
-            console.log('[WebSocket] New connection established');
+            logger.info('[WebSocketService] New connection established');
 
             ws.on('message', (message: string) => {
                 try {
                     const data = JSON.parse(message.toString());
                     this.handleMessage(ws, data);
                 } catch (error) {
-                    console.error('[WebSocket] Error parsing message:', error);
+                    logger.error('[WebSocketService] Error parsing message', { error: String(error) });
                 }
             });
 
             ws.on('close', () => {
                 this.removeClient(ws);
-                console.log('[WebSocket] Connection closed');
+                logger.info('[WebSocketService] Connection closed');
             });
 
             ws.on('error', (error) => {
-                console.error('[WebSocket] Error:', error);
+                logger.error('[WebSocketService] Socket error', { error: String(error) });
             });
         });
 
-        console.log('[WebSocket] Server initialized on /ws');
+        logger.info(`[WebSocketService] Server initialized on ${WS_CHAT_PATH} (chat + presence)`);
     }
 
     /**
@@ -66,21 +70,22 @@ export class WebSocketService {
         }
 
         this.clients.get(userId)!.push({ userId, role, ws });
-        console.log(`[WebSocket] Client registered: ${userId} (${role})`);
+        logger.info('[WebSocketService] Client registered', { userId, role });
     }
 
     /**
      * Remove a client
      */
     private static removeClient(ws: WebSocket): void {
-        for (const [userId, clients] of this.clients.entries()) {
-            const index = clients.findIndex(c => c.ws === ws);
+        const entries = Array.from(this.clients.entries());
+        for (const [userId, clients] of entries) {
+            const index = clients.findIndex((c: WebSocketClient) => c.ws === ws);
             if (index !== -1) {
                 clients.splice(index, 1);
                 if (clients.length === 0) {
                     this.clients.delete(userId);
                 }
-                console.log(`[WebSocket] Client removed: ${userId}`);
+                logger.info('[WebSocketService] Client removed', { userId });
                 break;
             }
         }
@@ -92,7 +97,7 @@ export class WebSocketService {
     static sendToUser(userId: string, message: any): void {
         const clients = this.clients.get(userId);
         if (!clients || clients.length === 0) {
-            console.warn(`[WebSocket] No active connections for user: ${userId}`);
+            logger.warn('[WebSocketService] No active connections for user', { userId });
             return;
         }
 
@@ -103,7 +108,7 @@ export class WebSocketService {
             }
         });
 
-        console.log(`[WebSocket] Message sent to user ${userId}:`, message.type);
+        logger.info('[WebSocketService] Message sent to user', { userId, type: message.type });
     }
 
     /**
@@ -113,8 +118,9 @@ export class WebSocketService {
         const payload = JSON.stringify(message);
         let count = 0;
 
-        for (const clients of this.clients.values()) {
-            clients.forEach(client => {
+        const clientsValues = Array.from(this.clients.values());
+        for (const clients of clientsValues) {
+            clients.forEach((client: WebSocketClient) => {
                 if (client.role === role && client.ws.readyState === WebSocket.OPEN) {
                     client.ws.send(payload);
                     count++;
@@ -122,7 +128,7 @@ export class WebSocketService {
             });
         }
 
-        console.log(`[WebSocket] Message sent to ${count} ${role}s:`, message.type);
+        logger.info('[WebSocketService] Broadcast to role', { role, count, type: message.type });
     }
 
     /**
@@ -138,7 +144,7 @@ export class WebSocketService {
             }
         });
 
-        console.log('[WebSocket] Broadcast sent:', message.type);
+        logger.info('[WebSocketService] Broadcast sent', { type: message.type });
     }
 
     /**

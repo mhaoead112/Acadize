@@ -81,6 +81,9 @@ router.get("/student", ...requireAuth, async (req, res) => {
     const orgId = (req as any).tenant?.organizationId;
     if (!orgId) return res.status(400).json({ message: "Organization context required" });
 
+    const { getPaginationParams, buildPaginatedResponse } = await import('../utils/pagination.js');
+    const { limit, offset, page } = getPaginationParams(req);
+
     // Get student's enrolled courses scoped to organization
     const studentEnrollments = await db
       .select({ courseId: enrollments.courseId })
@@ -94,8 +97,17 @@ router.get("/student", ...requireAuth, async (req, res) => {
     const courseIds = studentEnrollments.map(e => e.courseId);
 
     if (courseIds.length === 0) {
-      return res.json([]);
+      return res.json(buildPaginatedResponse([], 0, page, limit));
     }
+
+    const { count } = await import('drizzle-orm');
+    const countResult = await db.select({ count: count() }).from(assignments)
+      .innerJoin(courses, eq(assignments.courseId, courses.id))
+      .where(and(
+        sql`${assignments.courseId} IN (${sql.raw(courseIds.map(id => `'${id}'`).join(','))})`,
+        eq(courses.organizationId, orgId)
+      ));
+    const totalCount = countResult[0].count;
 
     // Get all assignments for these courses
     // Assignments belong to courses, which we already verified belong to org via courseIds
@@ -119,32 +131,40 @@ router.get("/student", ...requireAuth, async (req, res) => {
         sql`${assignments.courseId} IN (${sql.raw(courseIds.map(id => `'${id}'`).join(','))})`,
         eq(courses.organizationId, orgId) // Redundant but safe
       ))
-      .orderBy(desc(assignments.dueDate));
+      .orderBy(desc(assignments.dueDate))
+      .limit(limit)
+      .offset(offset);
 
     // Get all student's submissions with grades
     // Join with assignments -> courses to verify org
-    const studentSubmissions = await db
-      .select({
-        submissionId: submissions.id,
-        assignmentId: submissions.assignmentId,
-        content: submissions.content,
-        filePath: submissions.filePath,
-        fileName: submissions.fileName,
-        submittedAt: submissions.submittedAt,
-        status: submissions.status,
-        score: grades.score,
-        maxScore: grades.maxScore,
-        feedback: grades.feedback,
-        gradedAt: grades.gradedAt,
-      })
-      .from(submissions)
-      .innerJoin(assignments, eq(submissions.assignmentId, assignments.id))
-      .innerJoin(courses, eq(assignments.courseId, courses.id))
-      .leftJoin(grades, eq(submissions.id, grades.submissionId))
-      .where(and(
-        eq(submissions.studentId, user.id),
-        eq(courses.organizationId, orgId) // Enforce org
-      ));
+    const assignmentIds = allAssignments.map(a => a.id);
+    let studentSubmissions: any[] = [];
+
+    if (assignmentIds.length > 0) {
+      studentSubmissions = await db
+        .select({
+          submissionId: submissions.id,
+          assignmentId: submissions.assignmentId,
+          content: submissions.content,
+          filePath: submissions.filePath,
+          fileName: submissions.fileName,
+          submittedAt: submissions.submittedAt,
+          status: submissions.status,
+          score: grades.score,
+          maxScore: grades.maxScore,
+          feedback: grades.feedback,
+          gradedAt: grades.gradedAt,
+        })
+        .from(submissions)
+        .innerJoin(assignments, eq(submissions.assignmentId, assignments.id))
+        .innerJoin(courses, eq(assignments.courseId, courses.id))
+        .leftJoin(grades, eq(submissions.id, grades.submissionId))
+        .where(and(
+          eq(submissions.studentId, user.id),
+          sql`${submissions.assignmentId} IN (${sql.raw(assignmentIds.map(id => `'${id}'`).join(','))})`,
+          eq(courses.organizationId, orgId) // Enforce org
+        ));
+    }
 
     // Combine assignments with submission status
     const assignmentsWithStatus = allAssignments.map(assignment => {
@@ -186,7 +206,7 @@ router.get("/student", ...requireAuth, async (req, res) => {
       };
     });
 
-    res.json(assignmentsWithStatus);
+    res.json(buildPaginatedResponse(assignmentsWithStatus, totalCount, page, limit));
   } catch (error: any) {
     console.error("Error fetching student assignments:", error);
     res.status(500).json({ message: error?.message || "Failed to fetch assignments" });
@@ -208,6 +228,9 @@ router.get("/teacher", ...requireAuth, async (req, res) => {
     const orgId = (req as any).tenant?.organizationId;
     if (!orgId) return res.status(400).json({ message: "Organization context required" });
 
+    const { getPaginationParams, buildPaginatedResponse } = await import('../utils/pagination.js');
+    const { limit, offset, page } = getPaginationParams(req);
+
     // Get all courses taught by this teacher in this org
     const teacherCourses = await db
       .select({ id: courses.id, title: courses.title })
@@ -220,8 +243,17 @@ router.get("/teacher", ...requireAuth, async (req, res) => {
     const courseIds = teacherCourses.map(c => c.id);
 
     if (courseIds.length === 0) {
-      return res.json([]);
+      return res.json(buildPaginatedResponse([], 0, page, limit));
     }
+
+    const { count } = await import('drizzle-orm');
+    const countResult = await db.select({ count: count() }).from(assignments)
+      .innerJoin(courses, eq(assignments.courseId, courses.id))
+      .where(and(
+        sql`${assignments.courseId} IN (${sql.raw(courseIds.map(id => `'${id}'`).join(','))})`,
+        eq(courses.organizationId, orgId)
+      ));
+    const totalCount = countResult[0].count;
 
     // Get all assignments for these courses with submission counts
     // Verify org via course join
@@ -245,7 +277,9 @@ router.get("/teacher", ...requireAuth, async (req, res) => {
         sql`${assignments.courseId} IN (${sql.raw(courseIds.map(id => `'${id}'`).join(','))})`,
         eq(courses.organizationId, orgId)
       ))
-      .orderBy(desc(assignments.createdAt));
+      .orderBy(desc(assignments.createdAt))
+      .limit(limit)
+      .offset(offset);
 
     // Get submission counts for each assignment
     // Verify org via assignments -> courses
@@ -281,7 +315,7 @@ router.get("/teacher", ...requireAuth, async (req, res) => {
       })
     );
 
-    res.json(assignmentsWithCounts);
+    res.json(buildPaginatedResponse(assignmentsWithCounts, totalCount, page, limit));
   } catch (error: any) {
     console.error("Error fetching teacher assignments:", error);
     res.status(500).json({ message: error?.message || "Failed to fetch assignments" });
@@ -323,7 +357,7 @@ router.post("/courses/:courseId/assignments", ...requireAuth, async (req, res) =
     const assignment = await createAssignment({
       courseId: req.params.courseId,
       title,
-      instructions: description, // Mapping description to instructions if needed, or update service interface
+      description: description, // Pass description correctly to the service
       dueDate: new Date(dueDate),
       organizationId: orgId
     });
@@ -375,9 +409,12 @@ router.get("/courses/:courseId/assignments", ...requireAuth, async (req, res) =>
     const orgId = (req as any).tenant?.organizationId;
     if (!orgId) return res.status(400).json({ message: "Organization context required" });
 
+    const { getPaginationParams, buildPaginatedResponse } = await import('../utils/pagination.js');
+    const { limit, offset, page } = getPaginationParams(req);
+
     // Use service which enforces org
-    const assignments = await getAssignmentsForCourse(req.params.courseId, orgId);
-    res.json(assignments);
+    const { data, totalCount } = await getAssignmentsForCourse(req.params.courseId, orgId, limit, offset);
+    res.json(buildPaginatedResponse(data, totalCount, page, limit));
   } catch (error: any) {
     console.error("Error fetching assignments:", error);
     res.status(500).json({ message: error?.message || "Failed to fetch assignments" });

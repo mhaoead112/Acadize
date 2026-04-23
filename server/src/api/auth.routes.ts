@@ -80,8 +80,8 @@ router.post('/refresh', async (req, res) => {
         const { db } = await import('../db/index.js');
         const { eq } = await import('drizzle-orm');
 
-        // Verify refresh token
-        const userId = await TokenService.verifyRefreshToken(refreshToken);
+        // Rotate refresh token
+        const userId = await TokenService.rotateRefreshToken(refreshToken);
 
         if (!userId) {
             return res.status(401).json({ message: 'Invalid or expired refresh token.' });
@@ -112,8 +112,8 @@ router.post('/refresh', async (req, res) => {
             return res.status(403).json({ message: 'Access denied: wrong organization.' });
         }
 
-        // Generate new access token (include preferredLocale for locale middleware)
-        const accessToken = TokenService.generateAccessToken({
+        // Generate new token pair
+        const tokens = await TokenService.generateTokenPair({
             id: user.id,
             organizationId: user.organizationId,
             email: user.email,
@@ -123,9 +123,10 @@ router.post('/refresh', async (req, res) => {
         });
 
         res.status(200).json({
-            token: accessToken,
+            token: tokens.accessToken,
+            refreshToken: tokens.refreshToken,
             user,
-            expiresIn: 4 * 60 * 60, // 4 hours
+            expiresIn: tokens.expiresIn,
         });
     } catch (error) {
         console.error('Refresh Token Error:', error instanceof Error ? error.message : error);

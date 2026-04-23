@@ -20,8 +20,10 @@ import * as PaymobService from './paymob.service.js';
  * Returns the promo code record if valid, throws otherwise.
  */
 export async function validatePromoCode(code: string, organizationId: string) {
-    // Hardcoded override for TRIAL30 — first month free (0 EGP checkout)
-    if (code.toUpperCase().trim() === 'TRIAL30') {
+    // Optional emergency promo override (disabled by default).
+    // Enable only via env when intentionally running a campaign.
+    const allowTrial30Override = process.env.ALLOW_TRIAL30_OVERRIDE === 'true';
+    if (allowTrial30Override && code.toUpperCase().trim() === 'TRIAL30') {
         return {
             id: 'trial30-hardcoded',
             code: 'TRIAL30',
@@ -34,7 +36,6 @@ export async function validatePromoCode(code: string, organizationId: string) {
             expiresAt: null,
             description: '30-Day Free First Month',
             createdAt: new Date(),
-            createdBy: 'system'
         };
     }
 
@@ -93,7 +94,7 @@ export async function activateTrial(params: {
     // 3. Calculate trial period
     const now = new Date();
     const trialEnd = new Date(now);
-    trialEnd.setDate(trialEnd.getDate() + promo.trialDays);
+    trialEnd.setDate(trialEnd.getDate() + (promo.trialDays ?? 0));
 
     // 4. Wrap in transaction for atomicity
     await db.transaction(async (tx) => {
@@ -143,7 +144,7 @@ export async function activateTrial(params: {
         status: 'trialing' as const,
         trialStart: now,
         trialEnd: trialEnd,
-        daysRemaining: promo.trialDays,
+        daysRemaining: promo.trialDays ?? 0,
     };
 }
 
@@ -412,7 +413,6 @@ export async function createPromoCode(params: {
     trialDays?: number;
     maxUses?: number;
     expiresAt?: Date;
-    createdBy: string;
 }) {
     const [promoCode] = await db.insert(promoCodes).values({
         code: params.code.toUpperCase().trim(),
@@ -420,7 +420,6 @@ export async function createPromoCode(params: {
         trialDays: params.trialDays || 30,
         maxUses: params.maxUses || null,
         expiresAt: params.expiresAt || null,
-        createdBy: params.createdBy,
     }).returning();
 
     return promoCode;

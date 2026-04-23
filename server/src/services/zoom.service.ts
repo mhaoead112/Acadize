@@ -601,7 +601,8 @@ export async function handleMeetingEnded(webhook: ZoomWebhookPayload): Promise<v
     await flushNotifications(notifications);
 
     // ── 5g. Cleanup segment store for this meeting ─────────────────────────
-    for (const [key] of segmentStore) {
+    const entries = Array.from(segmentStore.entries());
+    for (const [key] of entries) {
         if (key.startsWith(`${meetingId}::`)) {
             segmentStore.delete(key);
         }
@@ -627,7 +628,8 @@ async function closeOpenSegments(
     const sessionDurationMinutes =
         (session.endTime.getTime() - session.startTime.getTime()) / 60_000;
 
-    for (const [key, segment] of segmentStore) {
+    const entries = Array.from(segmentStore.entries());
+    for (const [key, segment] of entries) {
         if (!key.startsWith(`${meetingId}::`)) continue;
 
         const userId = key.slice(meetingId.length + 2);

@@ -4,6 +4,7 @@ import { users, organizations, userSubscriptions, payments } from '../db/schema.
 import { eq, and } from 'drizzle-orm';
 import bcrypt from 'bcrypt';
 import { createCheckout, validatePromoCode, activateTrial } from '../services/subscription.service.js';
+import { isAuthenticated } from '../middleware/auth.middleware.js';
 
 const router = Router();
 
@@ -84,12 +85,14 @@ router.get('/pricing', async (req, res) => {
  * POST /api/registration/apply-trial-coupon
  * Apply a coupon code to activate a trial for an existing user (e.g. at payment step)
  */
-router.post('/apply-trial-coupon', async (req, res) => {
+router.post('/apply-trial-coupon', isAuthenticated, async (req, res) => {
     try {
-        const { userId, code, organizationId } = req.body;
+        const { code } = req.body;
+        const userId = req.user?.id;
+        const organizationId = req.user?.organizationId || (req as any).tenant?.organizationId;
 
-        if (!userId || !code) {
-            return res.status(400).json({ message: 'User ID and coupon code are required' });
+        if (!userId || !organizationId || !code) {
+            return res.status(400).json({ message: 'Authenticated user and coupon code are required' });
         }
 
         // Validate promo code
@@ -299,9 +302,15 @@ router.post('/create-with-payment', async (req, res) => {
  * POST /api/registration/retry-payment
  * Retry failed payment with stored registration data
  */
-router.post('/retry-payment', async (req, res) => {
+router.post('/retry-payment', isAuthenticated, async (req, res) => {
     try {
         const { paymentId, paymobOrderId } = req.body;
+        const authUserId = req.user?.id;
+        const authOrgId = req.user?.organizationId || (req as any).tenant?.organizationId;
+
+        if (!authUserId || !authOrgId) {
+            return res.status(401).json({ message: 'Unauthorized' });
+        }
 
         if (!paymentId && !paymobOrderId) {
             return res.status(400).json({ message: 'Payment ID or Paymob Order ID is required' });
@@ -326,6 +335,10 @@ router.post('/retry-payment', async (req, res) => {
 
         if (!payment) {
             return res.status(404).json({ message: 'Payment not found' });
+        }
+
+        if (payment.userId !== authUserId || payment.organizationId !== authOrgId) {
+            return res.status(403).json({ message: 'Access denied' });
         }
 
         if (payment.status === 'succeeded') {

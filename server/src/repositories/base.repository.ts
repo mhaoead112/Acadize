@@ -53,7 +53,7 @@ export class BaseRepository<T extends OrgScopedTable> {
     async findAll() {
         return db
             .select()
-            .from(this.table)
+            .from(this.table as any)
             .where(this.scoped());
     }
 
@@ -63,7 +63,7 @@ export class BaseRepository<T extends OrgScopedTable> {
     async findById(id: string, idColumn: any) {
         const [result] = await db
             .select()
-            .from(this.table)
+            .from(this.table as any)
             .where(this.scoped(eq(idColumn, id)))
             .limit(1);
 

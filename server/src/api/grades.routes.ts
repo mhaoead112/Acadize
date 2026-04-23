@@ -1,5 +1,3 @@
-// server/src/api/grades.routes.ts
-
 import { Router } from 'express';
 import { db } from '../db/index.js';
 import { assignments, submissions, grades, courses, users } from '../db/schema.js';
@@ -11,6 +9,76 @@ const router = Router();
 
 // Combined auth + subscription middleware
 const requireAuth = [isAuthenticated, requireSubscription];
+
+// Helper: prefer subdomain tenant org, fall back to JWT org (dev/single-domain)
+const getOrgId = (req: any): string | undefined =>
+  req.tenant?.organizationId ?? req.user?.organizationId;
+
+/**
+ * PROTECTED (STUDENT / SELF)
+ * GET /api/grades/me
+ * Returns the authenticated student's own graded submissions with score + feedback.
+ */
+router.get('/me', ...requireAuth, async (req, res) => {
+  try {
+    const user = (req as any).user;
+    if (!user) return res.status(401).json({ message: 'Unauthorized' });
+
+    const orgId = getOrgId(req);
+    if (!orgId) return res.status(400).json({ message: 'Organization context required' });
+
+    const myGrades = await db
+      .select({
+        gradeId: grades.id,
+        submissionId: submissions.id,
+        assignmentId: assignments.id,
+        assignmentTitle: assignments.title,
+        assignmentDueDate: assignments.dueDate,
+        courseId: courses.id,
+        courseName: courses.title,
+        score: grades.score,
+        maxScore: grades.maxScore,
+        feedback: grades.feedback,
+        gradedAt: grades.gradedAt,
+        submittedAt: submissions.submittedAt,
+        gradedByName: users.fullName,
+      })
+      .from(submissions)
+      .innerJoin(grades, eq(grades.submissionId, submissions.id))
+      .innerJoin(assignments, eq(assignments.id, submissions.assignmentId))
+      .innerJoin(courses, eq(courses.id, assignments.courseId))
+      .leftJoin(users, eq(users.id, grades.gradedBy))
+      .where(and(
+        eq(submissions.studentId, user.id),
+        eq(courses.organizationId, orgId),
+      ))
+      .orderBy(desc(grades.gradedAt));
+
+    const result = myGrades.map(g => ({
+      id: g.gradeId,
+      submissionId: g.submissionId,
+      assignmentId: g.assignmentId,
+      assignmentTitle: g.assignmentTitle,
+      assignmentDueDate: g.assignmentDueDate,
+      courseName: g.courseName,
+      score: g.score,
+      maxScore: g.maxScore,
+      percentage: g.maxScore ? Math.round((Number(g.score) / g.maxScore) * 100) : null,
+      feedback: g.feedback,
+      gradedAt: g.gradedAt,
+      submittedAt: g.submittedAt,
+      gradedByName: g.gradedByName,
+    }));
+
+    res.json({ grades: result });
+  } catch (error) {
+    console.error('Error fetching own grades:', error);
+    res.status(500).json({
+      message: 'Failed to fetch grades',
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
 
 /**
  * PROTECTED (TEACHER)
@@ -24,9 +92,13 @@ router.get('/student/:studentId', ...requireAuth, async (req, res) => {
       return res.status(403).json({ message: 'Forbidden: Teachers only' });
     }
 
+    const orgId = getOrgId(req);
+    if (!orgId) return res.status(400).json({ message: 'Organization context required' });
+
     const { studentId } = req.params;
 
-    // Get all submissions for this student with grades
+    // Get all submissions for this student with grades,
+    // joined through assignments → courses to enforce org boundary.
     const studentSubmissions = await db
       .select({
         submissionId: submissions.id,
@@ -44,12 +116,16 @@ router.get('/student/:studentId', ...requireAuth, async (req, res) => {
       })
       .from(submissions)
       .leftJoin(grades, eq(grades.submissionId, submissions.id))
-      .leftJoin(assignments, eq(assignments.id, submissions.assignmentId))
-      .where(eq(submissions.studentId, studentId))
+      .innerJoin(assignments, eq(assignments.id, submissions.assignmentId))
+      .innerJoin(courses, eq(courses.id, assignments.courseId))
+      .where(and(
+        eq(submissions.studentId, studentId),
+        eq(courses.organizationId, orgId)
+      ))
       .orderBy(desc(grades.gradedAt));
 
     // Get course info for each grade
-    const courseIds = [...new Set(studentSubmissions.map(s => s.courseId).filter(Boolean))];
+    const courseIds = Array.from(new Set(studentSubmissions.map(s => s.courseId).filter(Boolean)));
     const coursesData = courseIds.length > 0 ? await db
       .select({
         id: courses.id,
@@ -98,15 +174,19 @@ router.get('/course/:courseId', ...requireAuth, async (req, res) => {
       return res.status(403).json({ message: 'Forbidden: Teachers only' });
     }
 
+    const orgId = getOrgId(req);
+    if (!orgId) return res.status(400).json({ message: 'Organization context required' });
+
     const { courseId } = req.params;
 
-    // Verify teacher owns the course
+    // Verify teacher owns the course AND it belongs to this org
     const [course] = await db
       .select()
       .from(courses)
       .where(and(
         eq(courses.id, courseId),
-        eq(courses.teacherId, user.id)
+        eq(courses.teacherId, user.id),
+        eq(courses.organizationId, orgId)
       ))
       .limit(1);
 

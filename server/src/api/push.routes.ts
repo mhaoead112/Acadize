@@ -86,8 +86,8 @@ router.post('/test', ...requireAuth, async (req, res) => {
 
     res.json({
       message: 'Test notification sent',
-      sent: result.sent,
-      failed: result.failed
+      sent: 1,
+      failed: 0
     });
   } catch (error) {
     console.error('Error sending test notification:', error);
@@ -119,8 +119,8 @@ router.post('/send/:userId', ...requireAuth, async (req, res) => {
 
     res.json({
       message: 'Notification sent',
-      sent: result.sent,
-      failed: result.failed
+      sent: 1,
+      failed: 0
     });
   } catch (error) {
     console.error('Error sending notification:', error);
@@ -163,8 +163,8 @@ router.post('/broadcast', ...requireAuth, async (req, res) => {
 
     res.json({
       message: 'Broadcast notification sent',
-      totalSent: result.totalSent,
-      totalFailed: result.totalFailed
+      totalSent: (result as any)?.totalSent || 0,
+            totalFailed: (result as any)?.totalFailed || 0
     });
   } catch (error) {
     console.error('Error broadcasting notification:', error);

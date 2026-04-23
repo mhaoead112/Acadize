@@ -14,7 +14,7 @@ import { eq, and, desc, sql, or, inArray, not, notInArray } from 'drizzle-orm';
 import { createId } from '@paralleldrive/cuid2';
 import { requireTenantId } from '../utils/tenant-query.js';
 import pushNotificationService from './push-notification.service.js';
-import { broadcastToUser } from '../websocket.js';
+import { broadcastToUser } from '../websocket-state.js';
 
 // ==================== TYPE DEFINITIONS ====================
 
@@ -87,7 +87,7 @@ async function verifyConversationTenant(conversationId: string, organizationId: 
  * Get all direct message conversations for a user
  * Enforces tenant isolation
  */
-export async function getDirectConversations(userId: string, organizationId: string) {
+export async function getDirectConversations(userId: string, organizationId: string, limit: number = 50, offset: number = 0) {
     const orgId = requireTenantId(organizationId);
 
     // Verify user belongs to organization
@@ -113,8 +113,18 @@ export async function getDirectConversations(userId: string, organizationId: str
     const conversationIds = userConversations.map(c => c.conversationId);
 
     if (conversationIds.length === 0) {
-        return [];
+        return { data: [], totalCount: 0 };
     }
+
+    const { count } = await import('drizzle-orm');
+    const totalCountResult = await db
+        .select({ count: count() })
+        .from(conversations)
+        .where(and(
+            eq(conversations.type, 'direct'),
+            inArray(conversations.id, conversationIds)
+        ));
+    const totalCount = totalCountResult[0].count;
 
     // Get direct conversations only
     const directConversations = await db
@@ -127,7 +137,9 @@ export async function getDirectConversations(userId: string, organizationId: str
         .where(and(
             eq(conversations.type, 'direct'),
             inArray(conversations.id, conversationIds)
-        ));
+        ))
+        .limit(limit)
+        .offset(offset);
 
     // For each conversation, get the other participant
     const conversationsWithUsers = await Promise.all(
@@ -223,7 +235,8 @@ export async function getDirectConversations(userId: string, organizationId: str
     );
 
     // Filter out null values
-    return conversationsWithUsers.filter(c => c !== null);
+    const data = conversationsWithUsers.filter(c => c !== null);
+    return { data, totalCount };
 }
 
 /**
@@ -245,6 +258,26 @@ export async function getConversationMessages(input: GetMessagesInput) {
 
     const limit = input.limit || 50;
 
+    const baseWhere = and(
+        eq(messages.conversationId, input.conversationId),
+        eq(messages.isDeleted, false)
+    );
+
+    let whereCondition = baseWhere;
+    if (input.before) {
+        // Find the timestamp of the 'before' message to use cursor pagination
+        const [beforeMessage] = await db
+            .select({ createdAt: messages.createdAt })
+            .from(messages)
+            .where(eq(messages.id, input.before))
+            .limit(1);
+
+        if (beforeMessage) {
+            const { lt } = await import('drizzle-orm');
+            whereCondition = and(baseWhere, lt(messages.createdAt, beforeMessage.createdAt));
+        }
+    }
+
     const messagesList = await db
         .select({
             id: messages.id,
@@ -264,10 +297,7 @@ export async function getConversationMessages(input: GetMessagesInput) {
         })
         .from(messages)
         .innerJoin(users, eq(users.id, messages.senderId))
-        .where(and(
-            eq(messages.conversationId, input.conversationId),
-            eq(messages.isDeleted, false)
-        ))
+        .where(whereCondition)
         .orderBy(desc(messages.createdAt))
         .limit(limit);
 
@@ -296,13 +326,13 @@ export async function sendMessage(input: SendMessageInput) {
         id: createId(),
         conversationId: input.conversationId,
         senderId: input.senderId,
-        type: input.type || 'text',
+        type: (input.type as any) || 'text',
         content: input.content,
         fileUrl: input.fileUrl,
         fileName: input.fileName,
         fileSize: input.fileSize,
         fileType: input.fileType,
-    }).returning();
+    } as any).returning();
 
     // Get sender details
     const [sender] = await db
@@ -322,19 +352,28 @@ export async function sendMessage(input: SendMessageInput) {
 
     // Send notifications to other participants
     try {
-        const otherParticipants = await db
+        // Get all participants for broadcasting
+        const allParticipants = await db
             .select({ userId: conversationParticipants.userId })
             .from(conversationParticipants)
-            .where(and(
-                eq(conversationParticipants.conversationId, input.conversationId),
-                not(eq(conversationParticipants.userId, input.senderId))
-            ));
+            .where(eq(conversationParticipants.conversationId, input.conversationId));
 
-        const recipientIds = otherParticipants.map(p => p.userId);
+        const otherParticipantIds: string[] = [];
 
-        if (recipientIds.length > 0) {
-            // Create notification entries
-            for (const recipientId of recipientIds) {
+        for (const participant of allParticipants) {
+            // Broadcast 'new_message' to all participants (including sender)
+            // This ensures consistent UI updates across all clients
+            broadcastToUser(participant.userId, {
+                type: 'new_message',
+                message: messageWithSender
+            });
+
+            // If not the sender, also send a notification
+            if (participant.userId !== input.senderId) {
+                otherParticipantIds.push(participant.userId);
+                const recipientId = participant.userId;
+                
+                // Create notification entries
                 await db.insert(notifications).values({
                     id: createId(),
                     userId: recipientId,
@@ -346,7 +385,7 @@ export async function sendMessage(input: SendMessageInput) {
                     isRead: false
                 });
 
-                // Broadcast via WebSocket
+                // Also send a 'notification' type for the system notification tray/toast
                 broadcastToUser(recipientId, {
                     type: 'notification',
                     data: {
@@ -358,7 +397,9 @@ export async function sendMessage(input: SendMessageInput) {
                     }
                 });
             }
+        }
 
+        if (otherParticipantIds.length > 0) {
             // Send push notification
             const payload = pushNotificationService.createNotificationPayload('MESSAGE', {
                 senderName: sender.fullName,
@@ -366,7 +407,7 @@ export async function sendMessage(input: SendMessageInput) {
                 conversationId: input.conversationId,
                 senderId: input.senderId
             });
-            await pushNotificationService.sendPushNotificationToUsers(recipientIds, payload);
+            await pushNotificationService.sendPushNotificationToUsers(otherParticipantIds, payload);
         }
     } catch (notifError) {
         console.error('Error sending notification for message:', notifError);
@@ -477,15 +518,31 @@ export async function markMessagesAsRead(
 export async function searchUsers(
     userId: string,
     query: string,
-    organizationId: string
+    organizationId: string,
+    limit: number = 10,
+    offset: number = 0
 ) {
     const orgId = requireTenantId(organizationId);
 
     if (!query) {
-        return [];
+        return { data: [], totalCount: 0 };
     }
 
     const searchQuery = `%${query}%`;
+    const { count } = await import('drizzle-orm');
+    
+    const countResult = await db
+        .select({ count: count() })
+        .from(users)
+        .where(and(
+            not(eq(users.id, userId)),
+            eq(users.organizationId, orgId),
+            or(
+                sql`${users.username} ILIKE ${searchQuery}`,
+                sql`${users.fullName} ILIKE ${searchQuery}`
+            )!
+        ));
+    const totalCount = countResult[0].count;
 
     const searchResults = await db
         .select({
@@ -503,9 +560,10 @@ export async function searchUsers(
                 sql`${users.fullName} ILIKE ${searchQuery}`
             )!
         ))
-        .limit(10);
+        .limit(limit)
+        .offset(offset);
 
-    return searchResults;
+    return { data: searchResults, totalCount };
 }
 
 /**

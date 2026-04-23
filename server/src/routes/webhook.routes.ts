@@ -94,10 +94,10 @@ router.post('/paymob', async (req, res) => {
 
             await SubscriptionService.handlePaymentSuccess({
                 paymentId: payment.id,
-                userId: payment.userId,
-                organizationId: payment.organizationId,
-                amountCents: payment.amountPiasters,
-                currency: payment.currency,
+                userId: payment.userId!,
+                organizationId: payment.organizationId!,
+                amountCents: payment.amountPiasters!,
+                currency: payment.currency!,
                 billingCycle: metadata.billingCycle || 'monthly',
                 paymobTransactionId: String(paymobTransactionId),
                 paymobOrderId: String(paymobOrderId),
@@ -112,7 +112,7 @@ router.post('/paymob', async (req, res) => {
 
             await SubscriptionService.handlePaymentFailure({
                 paymentId: payment.id,
-                userId: payment.userId,
+                userId: payment.userId!,
                 errorMessage,
             });
 

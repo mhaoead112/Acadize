@@ -196,7 +196,7 @@ async function extractPptxText(filePath: string): Promise<string> {
     const zip = new AdmZip(filePath);
     const slides: string[] = [];
     const slideFiles = zip.getEntries().filter(
-      (entry) => entry.entryName.startsWith('ppt/slides/slide') && entry.entryName.endsWith('.xml')
+      (entry: any) => entry.entryName.startsWith('ppt/slides/slide') && entry.entryName.endsWith('.xml')
     );
 
     for (const slideFile of slideFiles) {

@@ -52,12 +52,18 @@ export const logger = winston.createLogger({
       maxFiles: 5,
     }),
   ],
+  // Secondary safety net: Winston's own handlers capture anything that slips
+  // past the explicit process.on('uncaughtException'/'unhandledRejection')
+  // handlers in index.ts. Both console + file transports are registered so
+  // events are always visible regardless of environment.
   exceptionHandlers: [
+    new winston.transports.Console({ format: consoleFormat }),
     new winston.transports.File({
       filename: path.resolve(__dirname, '../../logs/exceptions.log'),
     }),
   ],
   rejectionHandlers: [
+    new winston.transports.Console({ format: consoleFormat }),
     new winston.transports.File({
       filename: path.resolve(__dirname, '../../logs/rejections.log'),
     }),

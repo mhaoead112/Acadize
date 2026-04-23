@@ -7,6 +7,7 @@ import { requireSubscription } from '../middleware/subscription.middleware.js';
 // Combined auth + subscription middleware
 const requireAuth = [isAuthenticated, requireSubscription];
 import * as ConversationsService from '../services/conversations.service.js';
+import { getPaginationParams, buildPaginatedResponse } from '../utils/pagination.js';
 
 const router = Router();
 
@@ -23,9 +24,11 @@ router.get('/direct', ...requireAuth, async (req, res) => {
       return res.status(400).json({ error: 'Organization context required' });
     }
 
-    const conversations = await ConversationsService.getDirectConversations(userId, orgId);
+    const { limit, offset, page } = getPaginationParams(req);
 
-    res.json(conversations);
+    const { data, totalCount } = await ConversationsService.getDirectConversations(userId, orgId, limit, offset);
+
+    res.json(buildPaginatedResponse(data, totalCount, page, limit));
   } catch (error: any) {
     console.error('Error fetching direct messages:', error);
     res.status(500).json({ error: error.message || 'Failed to fetch direct messages' });
@@ -47,15 +50,25 @@ router.get('/:conversationId/messages', ...requireAuth, async (req, res) => {
       return res.status(400).json({ error: 'Organization context required' });
     }
 
+    const finalLimit = limit ? Number(limit) : 50;
+
     const messages = await ConversationsService.getConversationMessages({
       conversationId,
       userId,
-      limit: limit ? Number(limit) : undefined,
+      limit: finalLimit,
       before: before as string,
       organizationId: orgId,
     });
 
-    res.json(messages);
+    // Cursor-based pagination still returns standardized structure
+    res.json({
+      data: messages,
+      pagination: {
+        limit: finalLimit,
+        before: before || null,
+        nextBefore: messages.length >= finalLimit ? messages[0]?.id : null // messages is reversed, so [0] is oldest in the fetched chunk?
+      }
+    });
   } catch (error: any) {
     console.error('Error fetching messages:', error);
     const statusCode = error.message.includes('Not authorized') ? 403 : 500;
@@ -166,9 +179,11 @@ router.get('/search', ...requireAuth, async (req, res) => {
       return res.status(400).json({ error: 'Organization context required' });
     }
 
-    const results = await ConversationsService.searchUsers(userId, query as string, orgId);
+    const { limit, offset, page } = getPaginationParams(req);
 
-    res.json(results);
+    const { data, totalCount } = await ConversationsService.searchUsers(userId, query as string, orgId, limit, offset);
+
+    res.json(buildPaginatedResponse(data, totalCount, page, limit));
   } catch (error: any) {
     console.error('Error searching:', error);
     res.status(500).json({ error: error.message || 'Failed to search' });
@@ -218,13 +233,18 @@ router.get('/:conversationId/participants', ...requireAuth, async (req, res) => 
       return res.status(400).json({ error: 'Organization context required' });
     }
 
+    const { limit, offset, page } = getPaginationParams(req);
+
     const participants = await ConversationsService.getConversationParticipants(
       conversationId,
       userId,
       orgId
     );
+    
+    // Pagination for participants (usually small, but for consistency)
+    const paginatedData = participants.slice(offset, offset + limit);
 
-    res.json(participants);
+    res.json(buildPaginatedResponse(paginatedData, participants.length, page, limit));
   } catch (error: any) {
     console.error('Error fetching participants:', error);
     const statusCode = error.message.includes('Not authorized') ? 403 : 500;
