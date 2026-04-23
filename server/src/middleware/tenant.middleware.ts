@@ -10,6 +10,8 @@ import { eq, or } from "drizzle-orm";
 import { getRedisClient } from "../db/redis.js";
 
 const isProduction = process.env.NODE_ENV === 'production';
+const ROOT_TENANT_SUBDOMAIN = 'acadize';
+const ROOT_DOMAIN_HOSTS = new Set(['acadize.com', 'www.acadize.com']);
 
 // Tenant context attached to each request
 export interface TenantContext {
@@ -58,6 +60,12 @@ function extractSubdomain(hostname: string): string {
     // Remove port if present
     const host = hostname.split(':')[0];
 
+    // Map the marketing/root domain to the platform tenant so auth and public
+    // API calls on acadize.com resolve to the Acadize organization.
+    if (ROOT_DOMAIN_HOSTS.has(host)) {
+        return ROOT_TENANT_SUBDOMAIN;
+    }
+
     // Handle localhost or IP addresses
     if (host === 'localhost' || /^\d+\.\d+\.\d+\.\d+$/.test(host)) {
         // Check for subdomain header in development
@@ -67,9 +75,14 @@ function extractSubdomain(hostname: string): string {
     // Split hostname and get first part as subdomain
     const parts = host.split('.');
 
-    // If only 2 parts (e.g., acadize.com), it's the main domain
+    // If only 2 parts, it's the main/apex domain.
     if (parts.length <= 2) {
         return 'default';
+    }
+
+    // Treat www.acadize.com like the root domain, not a real tenant.
+    if (parts[0] === 'www' && ROOT_DOMAIN_HOSTS.has(host)) {
+        return ROOT_TENANT_SUBDOMAIN;
     }
 
     // Return the subdomain (first part)
