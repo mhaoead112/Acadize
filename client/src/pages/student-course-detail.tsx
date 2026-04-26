@@ -157,7 +157,7 @@ export default function StudentCourseDetailPage() {
       // Fetch student progress for this course
       if (progressRes?.ok) {
         const progressData = await progressRes.json();
-        setProgress(progressData.progressPercentage ?? 75);
+        setProgress(progressData.progress?.progressPercentage ?? progressData.progressPercentage ?? 75);
       }
     } catch (error) {
       console.error("Error fetching course data:", error);

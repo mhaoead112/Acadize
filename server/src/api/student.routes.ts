@@ -42,14 +42,41 @@ router.get("/exams", ...requireAuth, isStudent, async (req, res) => {
       .where(eq(enrollments.studentId, studentId));
 
     if (studentEnrollments.length === 0) {
-      return res.status(200).json([]);
+      return res.status(200).json({ data: [] });
     }
 
     const courseIds = studentEnrollments.map(e => e.courseId);
 
-    // Get available exams from enrolled courses
+    // Get available exams from enrolled courses (whitelisted fields only)
     const availableExams = await db
-      .select()
+      .select({
+        id: exams.id,
+        organizationId: exams.organizationId,
+        courseId: exams.courseId,
+        title: exams.title,
+        description: exams.description,
+        instructions: exams.instructions,
+        status: exams.status,
+        scheduledStartAt: exams.scheduledStartAt,
+        scheduledEndAt: exams.scheduledEndAt,
+        duration: exams.duration,
+        totalPoints: exams.totalPoints,
+        passingScore: exams.passingScore,
+        attemptsAllowed: exams.attemptsAllowed,
+        maxAttempts: exams.maxAttempts,
+        shuffleQuestions: exams.shuffleQuestions,
+        shuffleOptions: exams.shuffleOptions,
+        showResults: exams.showResults,
+        showCorrectAnswers: exams.showCorrectAnswers,
+        allowReview: exams.allowReview,
+        allowBacktracking: exams.allowBacktracking,
+        antiCheatEnabled: exams.antiCheatEnabled,
+        requireWebcam: exams.requireWebcam,
+        requireFullscreen: exams.requireFullscreen,
+        lockBrowser: exams.lockBrowser,
+        createdAt: exams.createdAt,
+        updatedAt: exams.updatedAt,
+      })
       .from(exams)
       .where(
         and(
@@ -58,7 +85,7 @@ router.get("/exams", ...requireAuth, isStudent, async (req, res) => {
         )
       );
 
-    res.status(200).json(availableExams);
+    res.status(200).json({ data: availableExams });
   } catch (error) {
     console.error('Error fetching available exams:', error);
     res.status(500).json({ message: 'Failed to fetch available exams.' });
@@ -109,7 +136,7 @@ router.get("/attempts/active", ...requireAuth, isStudent, async (req, res) => {
       flaggedForReview: row.flagged_for_review,
     }));
 
-    res.status(200).json(attempts);
+    res.status(200).json({ data: attempts });
   } catch (error) {
     console.error('Error fetching student attempts:', error);
     res.status(500).json({ message: 'Failed to fetch exam attempts.' });
@@ -120,7 +147,7 @@ router.get("/attempts/active", ...requireAuth, isStudent, async (req, res) => {
 router.get("/retakes", ...requireAuth, isStudent, async (req, res) => {
   try {
     // For now, return empty array - full implementation would check mistake pool
-    res.status(200).json([]);
+    res.status(200).json({ data: [] });
   } catch (error) {
     console.error('Error fetching retakes:', error);
     res.status(500).json({ message: 'Failed to fetch retakes.' });
