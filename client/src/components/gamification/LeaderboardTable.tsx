@@ -11,8 +11,9 @@ import {
 } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
-import { Trophy, Users } from 'lucide-react';
+import { Trophy, Users, Medal } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { useTranslation } from 'react-i18next';
 
 interface LeaderboardTableProps {
   entries: GamificationLeaderboardEntry[];
@@ -29,6 +30,8 @@ export default function LeaderboardTable({
   enabled,
   isLoading,
 }: LeaderboardTableProps) {
+  const { t } = useTranslation('gamification');
+
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -51,8 +54,8 @@ export default function LeaderboardTable({
     return (
       <EmptyState
         icon={<Trophy className="h-12 w-12 text-muted-foreground" />}
-        title="Leaderboard Disabled"
-        description="Leaderboard is disabled for this course."
+        title={t('leaderboardPage.table.disabledTitle')}
+        description={t('leaderboardPage.table.disabledDesc')}
       />
     );
   }
@@ -61,8 +64,8 @@ export default function LeaderboardTable({
     return (
       <EmptyState
         icon={<Users className="h-12 w-12 text-muted-foreground" />}
-        title="No ranked peers yet"
-        description="There are no users to display on the leaderboard right now."
+        title={t('leaderboardPage.table.noPeersTitle')}
+        description={t('leaderboardPage.table.noPeersDesc')}
       />
     );
   }
@@ -70,13 +73,13 @@ export default function LeaderboardTable({
   const getRankBadge = (rank: number) => {
     switch (rank) {
       case 1:
-        return '🥇';
+        return <Trophy className="h-6 w-6 text-yellow-500 mx-auto" />;
       case 2:
-        return '🥈';
+        return <Medal className="h-6 w-6 text-slate-400 mx-auto" />;
       case 3:
-        return '🥉';
+        return <Medal className="h-6 w-6 text-amber-600 mx-auto" />;
       default:
-        return `#${rank}`;
+        return <span className="text-muted-foreground">#{rank}</span>;
     }
   };
 
@@ -113,8 +116,8 @@ export default function LeaderboardTable({
         <div className="flex-1 overflow-hidden">
           <div className="truncate font-medium">{entry.fullName}</div>
           <div className="flex gap-3 text-xs text-muted-foreground">
-            <span>Lvl {entry.currentLevelNumber}</span>
-            <span>{entry.badgeCount} badges</span>
+            <span>{t('leaderboardPage.table.lvl')} {entry.currentLevelNumber}</span>
+            <span>{entry.badgeCount} {t('leaderboardPage.table.badges')}</span>
           </div>
         </div>
         <div className="font-bold text-primary">{entry.totalPoints} XP</div>
@@ -131,7 +134,7 @@ export default function LeaderboardTable({
           <>
             <div className="my-2 border-t border-dashed" />
             <div className="flex items-center justify-between rounded-lg border-l-4 border-l-yellow-500 bg-yellow-500/10 p-4 dark:bg-yellow-500/5">
-              <span className="font-medium text-foreground">Your rank:</span>
+              <span className="font-medium text-foreground">{t('leaderboardPage.table.yourRank')}</span>
               <span className="font-bold">#{userRank}</span>
             </div>
           </>
@@ -143,11 +146,11 @@ export default function LeaderboardTable({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-20 text-center">Rank</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead className="text-center">Level</TableHead>
-              <TableHead className="text-center">Points</TableHead>
-              <TableHead className="text-center">Badges</TableHead>
+              <TableHead className="w-20 text-center">{t('leaderboardPage.table.colRank')}</TableHead>
+              <TableHead>{t('leaderboardPage.table.colName')}</TableHead>
+              <TableHead className="text-center">{t('leaderboardPage.table.colLevel')}</TableHead>
+              <TableHead className="text-center">{t('leaderboardPage.table.colPoints')}</TableHead>
+              <TableHead className="text-center">{t('leaderboardPage.table.colBadges')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -173,7 +176,7 @@ export default function LeaderboardTable({
                       <span className="font-medium">{entry.fullName}</span>
                       {isCurrentUser && (
                         <span className="ml-2 rounded bg-primary/20 px-2 py-0.5 text-xs font-medium text-primary">
-                          You
+                          {t('leaderboardPage.table.you')}
                         </span>
                       )}
                     </div>
@@ -189,7 +192,7 @@ export default function LeaderboardTable({
 
         {showPinnedUserRank && (
           <div className="flex items-center justify-between border-t border-l-4 border-dashed border-l-yellow-500 bg-yellow-500/10 px-6 py-4 dark:bg-yellow-500/5">
-            <span className="font-medium">Your rank:</span>
+            <span className="font-medium">{t('leaderboardPage.table.yourRank')}</span>
             <span className="font-bold">#{userRank}</span>
           </div>
         )}

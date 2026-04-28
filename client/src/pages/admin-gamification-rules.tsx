@@ -60,7 +60,7 @@ export default function AdminGamificationRules() {
         </Alert>
 
         {/* Main Content */}
-        <Card className="border-border shadow-sm">
+        <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-[#112240] shadow-sm">
           <CardContent className="p-0 sm:p-6">
             {isLoading ? (
               <div className="space-y-4">

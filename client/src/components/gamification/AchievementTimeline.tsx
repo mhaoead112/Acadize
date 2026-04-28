@@ -57,7 +57,7 @@ export default function AchievementTimeline({ events, isLoading }: AchievementTi
             <div className="absolute -left-8 top-1 flex h-7 w-7 items-center justify-center rounded-full border bg-background">
               <Skeleton className="h-4 w-4 rounded-full" />
             </div>
-            <div className="flex flex-col gap-2 rounded-lg border bg-card p-4">
+            <div className="flex flex-col gap-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#112240] p-4">
               <Skeleton className="h-4 w-3/4" />
               <Skeleton className="h-3 w-1/4" />
             </div>
@@ -89,7 +89,7 @@ export default function AchievementTimeline({ events, isLoading }: AchievementTi
             {getEventIcon(event.eventType)}
           </div>
 
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between rounded-lg border bg-card p-4 transition-all hover:bg-accent/50">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#112240] p-4 transition-all hover:bg-slate-50 dark:hover:bg-[#1A2D4F]">
             <div className="space-y-1">
               <p className="text-sm font-medium leading-none">
                 {getEventDescription(event)}

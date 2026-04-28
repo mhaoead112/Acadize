@@ -3,6 +3,7 @@ import { Award, Lock, Medal, Trophy } from 'lucide-react';
 import { format } from 'date-fns';
 
 import StudentLayout from '@/components/StudentLayout';
+import { useTranslation } from 'react-i18next';
 import { useMyBadges } from '@/hooks/useGamification';
 import {
   GamificationBadge,
@@ -23,6 +24,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Skeleton } from '@/components/ui/skeleton';
+import GamificationIcon from '@/components/gamification/GamificationIcon';
 
 const TAB_CATEGORIES: Record<string, GamificationCriteriaType[]> = {
   all: [],
@@ -33,6 +35,7 @@ const TAB_CATEGORIES: Record<string, GamificationCriteriaType[]> = {
 };
 
 export default function StudentAchievements() {
+  const { t } = useTranslation('gamification');
   const { data: badgesData, isLoading, error } = useMyBadges('all');
   const [activeTab, setActiveTab] = useState<string>('all');
   const [selectedBadge, setSelectedBadge] = useState<GamificationBadge | AwardedBadge | null>(null);
@@ -78,30 +81,30 @@ export default function StudentAchievements() {
 
   const getCriteriaDescription = (criteriaType: string, value: number) => {
     switch (criteriaType) {
-      case 'points': return `Earn ${value} points`;
-      case 'lesson_count': return `Complete ${value} lessons`;
-      case 'course_completion': return 'Complete a course';
-      case 'exam_score': return `Score ${value}% or higher on an exam`;
-      case 'assignment_count': return `Complete ${value} assignments`;
-      case 'streak': return `Maintain a ${value} day streak`;
-      case 'level_reached': return `Reach level ${value}`;
-      case 'first_action': return 'Complete your first action';
-      default: return `Complete criteria: ${criteriaType} (${value})`;
+      case 'points': return t('achievementsPage.criteriaEarnPoints', { value });
+      case 'lesson_count': return t('achievementsPage.criteriaCompleteLessons', { value });
+      case 'course_completion': return t('achievementsPage.criteriaCompleteCourse');
+      case 'exam_score': return t('achievementsPage.criteriaExamScore', { value });
+      case 'assignment_count': return t('achievementsPage.criteriaCompleteAssignments', { value });
+      case 'streak': return t('achievementsPage.criteriaStreak', { value });
+      case 'level_reached': return t('achievementsPage.criteriaLevelReached', { value });
+      case 'first_action': return t('achievementsPage.criteriaFirstAction');
+      default: return t('achievementsPage.criteriaDefault', { type: criteriaType, value });
     }
   };
 
   if (error) {
     return (
-      <StudentLayout>
+      
         <div className="mx-auto max-w-[1200px] p-6 text-center">
-          <p className="text-destructive">Failed to load badges. Please try again later.</p>
+          <p className="text-destructive">{t('failedToLoadBadges')}</p>
         </div>
-      </StudentLayout>
+      
     );
   }
 
   return (
-    <StudentLayout>
+    
       <div className="mx-auto max-w-[1200px] space-y-8 p-4 md:p-8">
         
         {/* 1. Page Header */}
@@ -109,17 +112,17 @@ export default function StudentAchievements() {
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
               <Medal className="h-8 w-8 text-primary" />
-              Achievements & Badges
+              {t('achievementsPage.title')}
             </h1>
             <p className="mt-2 text-muted-foreground">
-              Track your progress, earn badges, and showcase your milestones.
+              {t('achievementsPage.subtitle')}
             </p>
           </div>
           
           {!isLoading && (
             <Badge variant="secondary" className="px-4 py-2 text-sm">
               <Trophy className="mr-2 h-4 w-4 text-yellow-500" />
-              {badgesData?.earned.length || 0} Badges Earned
+              {t('achievementsPage.badgesEarned', { count: badgesData?.earned.length || 0 })}
             </Badge>
           )}
         </div>
@@ -143,14 +146,14 @@ export default function StudentAchievements() {
               <div className="space-y-4">
                 <h2 className="text-xl font-semibold flex items-center gap-2">
                   <Lock className="h-5 w-5 text-muted-foreground" />
-                  In Progress
+                  {t('achievementsPage.inProgress')}
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   {inProgressBadges.map((badge) => (
-                    <Card key={badge.id} className="bg-card/50">
+                    <Card key={badge.id} className="bg-white/50 dark:bg-[#112240]/50 border-slate-200 dark:border-slate-800">
                       <CardContent className="p-4 flex items-center gap-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary/30 text-2xl grayscale opacity-60">
-                          {badge.emoji || '🎖️'}
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary/30 grayscale opacity-60">
+                          <GamificationIcon name={badge.emoji} size={24} className="text-amber-500" />
                         </div>
                         <div className="flex-1">
                           <h4 className="text-sm font-bold line-clamp-1">{badge.name}</h4>
@@ -169,11 +172,11 @@ export default function StudentAchievements() {
             <div className="space-y-6">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className="w-full flex-wrap justify-start h-auto">
-                  <TabsTrigger value="all">All Badges</TabsTrigger>
-                  <TabsTrigger value="courses">Courses</TabsTrigger>
-                  <TabsTrigger value="exams">Exams</TabsTrigger>
-                  <TabsTrigger value="assignments">Assignments</TabsTrigger>
-                  <TabsTrigger value="milestones">Milestones</TabsTrigger>
+                  <TabsTrigger value="all">{t('achievementsPage.allBadges')}</TabsTrigger>
+                  <TabsTrigger value="courses">{t('courses')}</TabsTrigger>
+                  <TabsTrigger value="exams">{t('exams')}</TabsTrigger>
+                  <TabsTrigger value="assignments">{t('assignments')}</TabsTrigger>
+                  <TabsTrigger value="milestones">{t('milestones')}</TabsTrigger>
                 </TabsList>
               </Tabs>
 
@@ -181,8 +184,8 @@ export default function StudentAchievements() {
               {displayedBadges.length === 0 ? (
                 <EmptyState
                   icon={<Award className="h-12 w-12" />}
-                  title="No badges found"
-                  description={`There are no badges in the "${activeTab}" category.`}
+                  title={t('achievementsPage.noBadgesFound')}
+                  description={t('achievementsPage.noBadgesCategory', { category: activeTab })}
                 />
               ) : (
                 <BadgeGrid
@@ -205,9 +208,9 @@ export default function StudentAchievements() {
                 <>
                   <SheetHeader className="text-center sm:text-center mt-6">
                     <div className="mx-auto flex h-32 w-32 items-center justify-center rounded-full bg-secondary/20 mb-6">
-                      <span className={`text-6xl ${!isEarned ? 'grayscale opacity-60' : ''}`}>
-                        {selectedBadge.emoji || '🎖️'}
-                      </span>
+                      <div className={!isEarned ? 'grayscale opacity-60' : ''}>
+                        <GamificationIcon name={selectedBadge.emoji} size={64} className="text-amber-500" />
+                      </div>
                     </div>
                     <SheetTitle className="text-2xl font-bold">{selectedBadge.name}</SheetTitle>
                     <SheetDescription className="text-base mt-2">
@@ -216,8 +219,8 @@ export default function StudentAchievements() {
                   </SheetHeader>
                   
                   <div className="mt-8 space-y-6">
-                    <div className="rounded-lg bg-muted p-4">
-                      <h4 className="text-sm font-medium mb-1">How to earn</h4>
+                    <div className="rounded-lg bg-slate-100 dark:bg-[#1A2D4F] p-4">
+                      <h4 className="text-sm font-medium mb-1">{t('achievementsPage.howToEarn')}</h4>
                       <p className="text-sm text-muted-foreground">
                         {getCriteriaDescription(selectedBadge.criteriaType, selectedBadge.criteriaValue)}
                       </p>
@@ -227,20 +230,20 @@ export default function StudentAchievements() {
                       <div className="rounded-lg bg-emerald-500/10 p-4 border border-emerald-500/20 text-center">
                         <Award className="h-6 w-6 text-emerald-500 mx-auto mb-2" />
                         <h4 className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
-                          Badge Earned
+                          {t('achievementsPage.badgeEarned')}
                         </h4>
                         <p className="text-xs text-emerald-600/80 dark:text-emerald-400/80 mt-1">
-                          Earned on {format(new Date((selectedBadge as AwardedBadge).awardedAt), 'MMMM d, yyyy')}
+                          {t('achievementsPage.earnedOn', { date: format(new Date((selectedBadge as AwardedBadge).awardedAt), 'MMMM d, yyyy') })}
                         </p>
                       </div>
                     ) : (
-                      <div className="rounded-lg bg-secondary/10 p-4 border border-border text-center">
+                      <div className="rounded-lg bg-slate-50 dark:bg-[#1A2D4F] p-4 border border-slate-200 dark:border-slate-700 text-center">
                         <Lock className="h-6 w-6 text-muted-foreground mx-auto mb-2" />
                         <h4 className="text-sm font-semibold text-foreground">
-                          Not Yet Earned
+                          {t('notYetEarned')}
                         </h4>
                         <p className="text-xs text-muted-foreground mt-1">
-                          Keep going! Complete the criteria to unlock this achievement.
+                          {t('keepGoing')}
                         </p>
                       </div>
                     )}
@@ -251,6 +254,6 @@ export default function StudentAchievements() {
           </SheetContent>
         </Sheet>
       </div>
-    </StudentLayout>
+    
   );
 }

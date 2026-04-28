@@ -4,7 +4,8 @@ import AdminLayout from '@/components/AdminLayout';
 import { useAdminBadges, useCreateBadge, useUpdateBadge } from '@/hooks/useAdminGamification';
 import { useQuery } from '@tanstack/react-query';
 import { apiEndpoint } from '@/lib/config';
-import { Shield, Plus, Archive, Edit, ArchiveRestore, Trophy } from 'lucide-react';
+import { Shield, Plus, Archive, Edit, ArchiveRestore, Trophy, Search } from 'lucide-react';
+import GamificationIcon from '@/components/gamification/GamificationIcon';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -67,7 +68,7 @@ export default function AdminGamificationBadges() {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    emoji: '🏆',
+    emoji: 'medal',
     criteriaType: 'completion',
     criteriaValue: 1,
     courseId: 'global',
@@ -78,7 +79,7 @@ export default function AdminGamificationBadges() {
     setFormData({
       name: '',
       description: '',
-      emoji: '🏆',
+      emoji: 'medal',
       criteriaType: 'completion',
       criteriaValue: 1,
       courseId: 'global',
@@ -91,7 +92,7 @@ export default function AdminGamificationBadges() {
     setFormData({
       name: badge.name,
       description: badge.description || '',
-      emoji: badge.emoji || '🏆',
+      emoji: badge.emoji || 'medal',
       criteriaType: badge.criteriaType,
       criteriaValue: badge.criteriaValue,
       courseId: badge.courseId || 'global',
@@ -174,7 +175,7 @@ export default function AdminGamificationBadges() {
                 {[1,2,3,4].map(i => <Skeleton key={i} className="h-48 w-full" />)}
               </div>
             ) : activeBadges.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground border-2 border-dashed rounded-lg">
+              <div className="text-center py-12 text-slate-500 dark:text-slate-400 border-2 border-dashed border-slate-200 dark:border-slate-800 bg-white dark:bg-[#112240] rounded-lg">
                 <Trophy className="h-12 w-12 mx-auto mb-3 opacity-20" />
                 <p className="font-medium">No active badges</p>
                 <p className="text-sm mt-1">Click "Create Badge" to add one.</p>
@@ -197,7 +198,7 @@ export default function AdminGamificationBadges() {
                 {[1,2].map(i => <Skeleton key={i} className="h-48 w-full" />)}
               </div>
             ) : archivedBadges.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground border-2 border-dashed rounded-lg">
+              <div className="text-center py-12 text-slate-500 dark:text-slate-400 border-2 border-dashed border-slate-200 dark:border-slate-800 bg-white dark:bg-[#112240] rounded-lg">
                 <Archive className="h-12 w-12 mx-auto mb-3 opacity-20" />
                 <p className="font-medium">No archived badges</p>
               </div>
@@ -227,13 +228,18 @@ export default function AdminGamificationBadges() {
             <div className="space-y-6">
               <div className="flex gap-4">
                 <div className="space-y-2">
-                  <Label>Emoji</Label>
-                  <Input 
-                    className="w-16 text-center text-2xl" 
-                    value={formData.emoji} 
-                    onChange={e => setFormData({...formData, emoji: e.target.value})}
-                    maxLength={2}
-                  />
+                  <Label>Icon Name</Label>
+                  <div className="flex gap-2">
+                    <Input 
+                      className="flex-1" 
+                      value={formData.emoji} 
+                      onChange={e => setFormData({...formData, emoji: e.target.value})}
+                      placeholder="e.g. medal, star"
+                    />
+                    <div className="w-10 h-10 border rounded flex items-center justify-center bg-secondary/20">
+                      <GamificationIcon name={formData.emoji} size={20} />
+                    </div>
+                  </div>
                 </div>
                 <div className="space-y-2 flex-1">
                   <Label>Badge Name</Label>
@@ -349,7 +355,7 @@ function BadgeCard({ badge, onEdit, onArchive, isArchived = false }: {
   isArchived?: boolean
 }) {
   return (
-    <Card className={`relative overflow-hidden group transition-all duration-200 hover:shadow-md ${isArchived ? 'opacity-70 bg-muted/50' : ''}`}>
+    <Card className={`relative overflow-hidden group transition-all duration-200 hover:shadow-md border border-slate-200 bg-white dark:border-slate-800 dark:bg-[#112240] ${isArchived ? 'opacity-70 dark:opacity-60 bg-slate-50 dark:bg-[#0B1E2D]' : ''}`}>
       <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
         <Button size="icon" variant="secondary" className="h-7 w-7" onClick={onEdit}>
           <Edit className="h-3.5 w-3.5" />
@@ -360,8 +366,8 @@ function BadgeCard({ badge, onEdit, onArchive, isArchived = false }: {
       </div>
       
       <CardContent className="p-5 flex flex-col items-center text-center">
-        <div className="h-16 w-16 mb-3 rounded-full bg-secondary/30 flex items-center justify-center text-4xl shadow-inner">
-          {badge.emoji || '🏆'}
+        <div className="h-16 w-16 mb-3 rounded-full bg-slate-100 dark:bg-[#0B1E2D] flex items-center justify-center shadow-inner">
+          <GamificationIcon name={badge.emoji || 'medal'} size={32} className="text-amber-500" />
         </div>
         <h3 className="font-semibold line-clamp-1 w-full" title={badge.name}>{badge.name}</h3>
         <p className="text-xs text-muted-foreground mt-1 line-clamp-2 min-h-[32px]">

@@ -5,6 +5,7 @@ import StudentLayout from '@/components/StudentLayout';
 import { useStudentEnrollments } from '@/hooks/useStudentDashboard';
 import { useLeaderboard } from '@/hooks/useGamification';
 import { useAuth } from '@/hooks/useAuth';
+import { useTranslation } from 'react-i18next';
 
 import LeaderboardTable from '@/components/gamification/LeaderboardTable';
 import {
@@ -26,6 +27,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { EmptyState } from '@/components/ui/empty-state';
 
 export default function StudentLeaderboard() {
+  const { t } = useTranslation('gamification');
   const { user } = useAuth();
   const { data: enrollments, isLoading: enrollmentsLoading } = useStudentEnrollments();
   const [selectedCourseId, setSelectedCourseId] = useState<string>('');
@@ -44,7 +46,6 @@ export default function StudentLeaderboard() {
   const currentCourse = enrollments?.find((e) => e.courseId === selectedCourseId)?.course;
 
   return (
-    <StudentLayout>
       <div className="mx-auto max-w-[1000px] space-y-8 p-4 md:p-8">
         
         {/* 1. Page Header & Course Selector */}
@@ -52,10 +53,10 @@ export default function StudentLeaderboard() {
           <div>
             <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
               <Trophy className="h-8 w-8 text-yellow-500" />
-              Course Leaderboard
+              {t('courseLeaderboard')}
             </h1>
             <p className="mt-2 text-muted-foreground">
-              See how you rank against your peers in your enrolled courses.
+              {t('leaderboardPage.subtitle')}
             </p>
           </div>
 
@@ -65,7 +66,7 @@ export default function StudentLeaderboard() {
             ) : enrollments && enrollments.length > 0 ? (
               <Select value={selectedCourseId} onValueChange={setSelectedCourseId}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select a course..." />
+                  <SelectValue placeholder={t('leaderboardPage.selectCourse')} />
                 </SelectTrigger>
                 <SelectContent>
                   {enrollments.map((enrollment) => (
@@ -77,7 +78,7 @@ export default function StudentLeaderboard() {
               </Select>
             ) : (
               <Alert>
-                <AlertDescription>You are not enrolled in any courses yet.</AlertDescription>
+                <AlertDescription>{t('leaderboardPage.notEnrolled')}</AlertDescription>
               </Alert>
             )}
           </div>
@@ -87,8 +88,8 @@ export default function StudentLeaderboard() {
         {enrollments && enrollments.length === 0 && (
           <EmptyState
             icon={<Award className="h-12 w-12" />}
-            title="No Courses Found"
-            description="Enroll in a course to start earning XP and competing on the leaderboard."
+            title={t('leaderboardPage.noCoursesFound')}
+            description={t('leaderboardPage.enrollToStart')}
           />
         )}
 
@@ -101,24 +102,24 @@ export default function StudentLeaderboard() {
               {leaderboardLoading ? (
                 <Skeleton className="h-[120px] w-full rounded-xl" />
               ) : leaderboardData?.enabled ? (
-                <Card className="overflow-hidden border-2 border-yellow-500/20 bg-gradient-to-br from-yellow-500/10 via-background to-background dark:from-yellow-500/5">
+                <Card className="overflow-hidden border-2 border-yellow-500/20 bg-gradient-to-br from-yellow-500/10 via-white to-white dark:from-yellow-500/10 dark:via-[#112240] dark:to-[#112240]">
                   <CardContent className="p-6 md:p-8">
                     <div className="flex flex-col md:flex-row items-center gap-6 text-center md:text-left">
                       <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-yellow-500/20 text-4xl shadow-inner">
-                        {leaderboardData.userRank === 1 ? '🥇' : 
-                         leaderboardData.userRank === 2 ? '🥈' : 
-                         leaderboardData.userRank === 3 ? '🥉' : '🎖️'}
+                        {leaderboardData.userRank === 1 ? <Trophy className="h-10 w-10 text-yellow-500" /> : 
+                         leaderboardData.userRank === 2 ? <Medal className="h-10 w-10 text-slate-400" /> : 
+                         leaderboardData.userRank === 3 ? <Medal className="h-10 w-10 text-amber-600" /> : <Award className="h-10 w-10 text-muted-foreground" />}
                       </div>
                       <div className="space-y-1">
                         <h2 className="text-2xl font-bold">
                           {leaderboardData.userRank ? (
-                            <>Your Rank: <span className="text-yellow-600 dark:text-yellow-500">#{leaderboardData.userRank}</span></>
+                            <>{t('leaderboardPage.yourRank')}<span className="text-yellow-600 dark:text-yellow-500">#{leaderboardData.userRank}</span></>
                           ) : (
-                            'Not Ranked Yet'
+                            t('leaderboardPage.notRankedYet')
                           )}
                         </h2>
                         <p className="text-muted-foreground">
-                          in <span className="font-medium text-foreground">{currentCourse?.title}</span>
+                          {t('leaderboardPage.inCourse')}<span className="font-medium text-foreground">{currentCourse?.title}</span>
                         </p>
                       </div>
                     </div>
@@ -130,7 +131,7 @@ export default function StudentLeaderboard() {
               <div className="space-y-4">
                 <h3 className="text-xl font-semibold flex items-center gap-2">
                   <Star className="h-5 w-5 text-primary" />
-                  Top Performers
+                  {t('topPerformers')}
                 </h3>
                 <LeaderboardTable
                   entries={leaderboardData?.entries || []}
@@ -145,35 +146,35 @@ export default function StudentLeaderboard() {
             {/* Sidebar Area */}
             <div className="space-y-6">
               {/* 5. Privacy Messaging */}
-              <Alert className="bg-secondary/20">
+              <Alert className="bg-slate-50 dark:bg-[#1A2D4F] border-slate-200 dark:border-slate-800">
                 <ShieldAlert className="h-4 w-4 text-primary" />
                 <AlertDescription className="text-sm">
-                  Only active students enrolled in {currentCourse?.title || 'this course'} can view this leaderboard.
+                  {t('leaderboardPage.privacyMessaging', { course: currentCourse?.title || t('leaderboardPage.thisCourse') })}
                 </AlertDescription>
               </Alert>
 
               {/* 4. Explanation Panel */}
-              <Card>
+              <Card className="bg-white dark:bg-[#112240] border-slate-200 dark:border-slate-800">
                 <CardContent className="p-0">
                   <Accordion type="single" collapsible className="w-full px-4" defaultValue="how-it-works">
                     <AccordionItem value="how-it-works" className="border-b-0">
                       <AccordionTrigger className="text-sm font-semibold hover:no-underline">
                         <span className="flex items-center gap-2">
                           <Info className="h-4 w-4" />
-                          How rankings work
+                          {t('howRankingsWork')}
                         </span>
                       </AccordionTrigger>
                       <AccordionContent className="text-sm text-muted-foreground space-y-4 pt-2">
                         <p>
-                          Rankings are based on the total <strong>XP (Experience Points)</strong> you earn within this specific course.
+                          {t('leaderboardPage.rankingsExplanation1')}<strong>{t('leaderboardPage.rankingsExplanationXP')}</strong>{t('leaderboardPage.rankingsExplanation2')}
                         </p>
                         <ul className="space-y-2 list-disc pl-4">
-                          <li>Complete lessons to earn XP</li>
-                          <li>Score well on assignments and exams for bonus points</li>
-                          <li>Maintain your learning streak for multipliers</li>
+                          <li>{t('leaderboardPage.rankingsRule1')}</li>
+                          <li>{t('leaderboardPage.rankingsRule2')}</li>
+                          <li>{t('leaderboardPage.rankingsRule3')}</li>
                         </ul>
                         <p>
-                          The leaderboard updates in real-time as you and your peers hit new milestones. Keep learning to climb the ranks!
+                          {t('leaderboardPage.rankingsUpdateInfo')}
                         </p>
                       </AccordionContent>
                     </AccordionItem>
@@ -184,6 +185,5 @@ export default function StudentLeaderboard() {
           </div>
         )}
       </div>
-    </StudentLayout>
   );
 }

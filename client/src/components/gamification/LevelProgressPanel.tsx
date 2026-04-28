@@ -1,4 +1,5 @@
 import { useRef } from 'react';
+import * as LucideIcons from 'lucide-react';
 import { LazyMotion, domAnimation, m, useReducedMotion, useInView } from 'framer-motion';
 
 import { Card, CardContent } from '@/components/ui/card';
@@ -12,6 +13,7 @@ import {
 } from '@/lib/animations';
 
 import type { UserGamificationProfile, GamificationLevel } from '@shared/gamification.types';
+import GamificationIcon from './GamificationIcon';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -80,10 +82,10 @@ function MilestoneDot({ level, state, reduceMotion, delay }: MilestoneDotProps) 
                         ? 'h-8 w-8 bg-amber-500 text-white shadow-lg shadow-amber-500/30 dark:bg-[#FFD700] dark:text-slate-900'
                         : isPast
                           ? 'h-7 w-7 bg-emerald-500/20 text-emerald-400 ring-1 ring-emerald-500/40'
-                          : 'h-7 w-7 bg-slate-700 text-slate-500 dark:bg-[#1E293B]',
+                          : 'h-7 w-7 bg-slate-100 text-slate-400 dark:bg-[#1E293B]',
                 )}
             >
-                {isPast ? '✓' : isCurrent ? (level.badgeEmoji ?? '⭐') : '🔒'}
+                {isPast ? <LucideIcons.Check size={14} /> : isCurrent ? <GamificationIcon name={level.badgeEmoji} size={14} /> : <LucideIcons.Lock size={14} />}
             </div>
             {/* Label */}
             <span
@@ -165,7 +167,7 @@ export default function LevelProgressPanel({
     const isMaxLevel = profile.nextLevel === null;
     const progress = clamp(profile.nextLevelProgress);
 
-    const levelEmoji = profile.currentLevel?.badgeEmoji ?? '⭐';
+    const levelEmoji = profile.currentLevel?.badgeEmoji ?? 'medal';
     const levelName = profile.currentLevel?.name ?? `Level ${profile.currentLevelNumber}`;
 
     // Points display
@@ -219,7 +221,7 @@ export default function LevelProgressPanel({
                                 }
                                 aria-hidden="true"
                             >
-                                {isMaxLevel ? '👑' : levelEmoji}
+                                {isMaxLevel ? <GamificationIcon name="crown" size={32} className="text-amber-500" /> : <GamificationIcon name={levelEmoji} size={32} className="text-amber-500" />}
                             </m.div>
 
                             {/* Level text */}
@@ -252,11 +254,12 @@ export default function LevelProgressPanel({
                                         : { delay: 0.15, duration: premiumMotionDurations.standard }
                                 }
                             >
-                                <span className="text-2xl" aria-hidden="true">🏆</span>
+                                <GamificationIcon name="trophy" size={24} className="text-amber-500" />
                                 <div className="flex flex-col gap-1">
                                     <p className="text-sm font-bold text-slate-900 dark:text-white">
                                         You have reached the highest level!
                                     </p>
+                                    <LucideIcons.Medal className="h-4 w-4 text-emerald-500" />
                                     <p className="text-xs text-slate-500 dark:text-slate-400">
                                         You are among the top learners in this organization.
                                     </p>
@@ -299,7 +302,7 @@ export default function LevelProgressPanel({
                             {/* Motivational copy */}
                             {!isMaxLevel && profile.nextLevel && (
                                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                                    ✨{' '}
+                                    <LucideIcons.Sparkles className="h-3 w-3 text-amber-500 inline" />{' '}
                                     <span className="font-semibold text-slate-600 dark:text-slate-300">
                                         {xpToNext.toLocaleString()} more XP
                                     </span>{' '}

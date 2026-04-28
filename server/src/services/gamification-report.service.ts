@@ -41,6 +41,12 @@ type GamificationReportSummary = {
   levelDistribution: { levelNumber: number; levelName: string; count: number }[];
   topEarners: { userId: string; fullName: string; totalPoints: number }[];
   badgeIssuanceTrend: { date: string; count: number }[];
+  courseComparison: {
+    courseId: string;
+    courseTitle: string;
+    totalPointsEarned: number;
+    enrolledCount: number;
+  }[];
 };
 
 type ReportFilters = {
@@ -72,6 +78,7 @@ export async function getReportSummary(
     levelDistribution,
     topEarners,
     badgeIssuanceTrend,
+    courseComparison,
   ] = await Promise.all([
     safeQuery(() => queryTotalPointsAwarded(organizationId, courseId, startDate, endDate), 0),
     safeQuery(() => queryTotalBadgesIssued(organizationId, startDate, endDate), 0),
@@ -79,6 +86,7 @@ export async function getReportSummary(
     safeQuery(() => getLevelDistribution(organizationId), []),
     safeQuery(() => getTopEarners(organizationId, 5), []),
     safeQuery(() => getBadgeIssuanceTrend(organizationId, 30), []),
+    safeQuery(() => getCourseComparisonStats(organizationId), []),
   ]);
 
   return {
@@ -88,6 +96,7 @@ export async function getReportSummary(
     levelDistribution,
     topEarners,
     badgeIssuanceTrend,
+    courseComparison,
   };
 }
 

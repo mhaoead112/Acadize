@@ -169,7 +169,7 @@ export default function AdminGamificationSettings() {
           <div className="lg:col-span-2 space-y-8">
             
             {/* 1. Master Toggle */}
-            <Card className={`border-2 ${isMasterEnabled ? 'border-primary/50 bg-primary/5' : 'border-border bg-card'}`}>
+            <Card className={`border-2 ${isMasterEnabled ? 'border-primary/50 bg-primary/5' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-[#112240]'}`}>
               <CardContent className="p-6 flex items-center justify-between">
                 <div>
                   <h3 className="text-lg font-semibold text-foreground">Master Gamification Switch</h3>
@@ -186,14 +186,14 @@ export default function AdminGamificationSettings() {
             </Card>
 
             {/* 2. Feature Toggles Grid */}
-            <Card className={!isMasterEnabled ? 'opacity-50 pointer-events-none' : ''}>
+            <Card className={`${!isMasterEnabled ? 'opacity-50 pointer-events-none' : ''} border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#112240]`}>
               <CardHeader>
                 <CardTitle>Feature Toggles</CardTitle>
                 <CardDescription>Individually enable or disable gamification components.</CardDescription>
               </CardHeader>
               <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 
-                <div className="flex items-start space-x-4 p-4 rounded-lg border bg-card/50">
+                <div className="flex items-start space-x-4 p-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#0B1E2D]">
                   <Switch 
                     id="points" 
                     checked={editedSettings.pointsEnabled} 
@@ -207,7 +207,7 @@ export default function AdminGamificationSettings() {
                   </div>
                 </div>
 
-                <div className="flex items-start space-x-4 p-4 rounded-lg border bg-card/50">
+                <div className="flex items-start space-x-4 p-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#0B1E2D]">
                   <Switch 
                     id="levels" 
                     checked={editedSettings.levelsEnabled} 
@@ -225,7 +225,7 @@ export default function AdminGamificationSettings() {
                   </div>
                 </div>
 
-                <div className="flex items-start space-x-4 p-4 rounded-lg border bg-card/50">
+                <div className="flex items-start space-x-4 p-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#0B1E2D]">
                   <Switch 
                     id="badges" 
                     checked={editedSettings.badgesEnabled} 
@@ -239,7 +239,7 @@ export default function AdminGamificationSettings() {
                   </div>
                 </div>
 
-                <div className="flex items-start space-x-4 p-4 rounded-lg border bg-card/50">
+                <div className="flex items-start space-x-4 p-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#0B1E2D]">
                   <Switch 
                     id="leaderboard" 
                     checked={editedSettings.leaderboardEnabled} 
@@ -261,7 +261,7 @@ export default function AdminGamificationSettings() {
             </Card>
 
             {/* 3. Naming Controls */}
-            <Card className={!isMasterEnabled ? 'opacity-50 pointer-events-none' : ''}>
+            <Card className={`${!isMasterEnabled ? 'opacity-50 pointer-events-none' : ''} border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#112240]`}>
               <CardHeader>
                 <CardTitle>Naming & Branding</CardTitle>
                 <CardDescription>Customize the terminology used for gamification features in your organization.</CardDescription>
@@ -304,7 +304,7 @@ export default function AdminGamificationSettings() {
             </Card>
 
             {/* 4. Level Thresholds Table */}
-            <Card className={!isMasterEnabled || !editedSettings.levelsEnabled ? 'opacity-50 pointer-events-none' : ''}>
+            <Card className={`${!isMasterEnabled || !editedSettings.levelsEnabled ? 'opacity-50 pointer-events-none' : ''} border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#112240]`}>
               <CardHeader className="flex flex-row justify-between items-start">
                 <div>
                   <CardTitle>Level Thresholds</CardTitle>
@@ -313,7 +313,7 @@ export default function AdminGamificationSettings() {
                 <Badge variant="secondary">V1 Feature</Badge>
               </CardHeader>
               <CardContent>
-                <Alert className="bg-muted/50 border-border mb-6">
+                <Alert className="bg-slate-50 dark:bg-[#1A2D4F] border-slate-200 dark:border-slate-700 mb-6">
                   <AlertTitle className="text-sm font-semibold">Read-only view</AlertTitle>
                   <AlertDescription className="text-xs">
                     Custom level thresholds are currently managed by the platform administrators. Contact support to customize the progression curve for your organization.
@@ -325,8 +325,8 @@ export default function AdminGamificationSettings() {
                     // Simple mocked progression representation based on standard config
                     const points = level === 1 ? 0 : Math.floor(100 * Math.pow(level, 1.5));
                     return (
-                      <div key={level} className="p-3 border rounded-md bg-card/50 text-center">
-                        <div className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
+                      <div key={level} className="p-3 border border-slate-200 dark:border-slate-800 rounded-md bg-slate-50 dark:bg-[#0B1E2D] text-center">
+                        <div className="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wider">
                           {editedSettings.levelNaming || 'Level'} {level}
                         </div>
                         <div className="font-bold mt-1">
@@ -343,7 +343,7 @@ export default function AdminGamificationSettings() {
           {/* 5. Preview Panel (1/3 width) */}
           <div className="lg:col-span-1">
             <div className="sticky top-6">
-              <Card className="border-primary/20 shadow-lg overflow-hidden">
+              <Card className="border-primary/20 bg-white dark:bg-[#112240] shadow-lg overflow-hidden">
                 <CardHeader className="bg-primary/5 pb-4 border-b border-primary/10">
                   <CardTitle className="text-base flex items-center gap-2">
                     <Eye className="h-4 w-4 text-primary" />
@@ -424,7 +424,7 @@ export default function AdminGamificationSettings() {
                               Rank #3
                             </Badge>
                           </div>
-                          <div className="text-xs text-muted-foreground border rounded bg-card/50 p-2">
+                          <div className="text-xs text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-800 rounded bg-slate-50 dark:bg-[#0B1E2D] p-2">
                             Leaderboard is visible in courses
                           </div>
                         </div>

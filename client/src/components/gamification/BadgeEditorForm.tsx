@@ -9,11 +9,12 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { CheckCircle2, Save, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import GamificationIcon from './GamificationIcon';
 
 const badgeSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100, 'Max 100 characters'),
   description: z.string().max(300, 'Max 300 characters').optional().default(''),
-  emoji: z.string().min(1, 'Emoji is required').max(5, 'Too long (emojis only)').regex(/\p{Emoji}/u, 'Must contain an emoji'),
+  emoji: z.string().min(1, 'Icon name is required').max(100, 'Invalid icon name'),
   criteriaType: z.enum([
     'lesson_count',
     'course_completion',
@@ -58,7 +59,7 @@ export default function BadgeEditorForm({
     defaultValues: {
       name: badge?.name || '',
       description: badge?.description || '',
-      emoji: badge?.emoji || '🎖️',
+      emoji: badge?.emoji || 'medal',
       criteriaType: badge?.criteriaType || 'lesson_count',
       criteriaValue: badge?.criteriaValue || 1,
       courseId: badge?.courseId || '',
@@ -68,7 +69,7 @@ export default function BadgeEditorForm({
 
   const previewName = watch('name') || 'New Badge';
   const previewDesc = watch('description') || 'A short description of how to earn this badge.';
-  const previewEmoji = watch('emoji') || '🎖️';
+  const previewEmoji = watch('emoji') || 'medal';
   const previewIsActive = watch('isActive');
   const criteriaType = watch('criteriaType');
 
@@ -123,13 +124,13 @@ export default function BadgeEditorForm({
 
         <div className="flex gap-4">
           <div className="space-y-2 flex-1">
-            <label className="text-sm font-medium">Emoji <span className="text-destructive">*</span></label>
-            <Input className="text-xl h-12" placeholder="🔥" {...register('emoji')} />
+            <label className="text-sm font-medium">Icon Name <span className="text-destructive">*</span></label>
+            <Input className="h-12" placeholder="e.g. star, trophy, medal" {...register('emoji')} />
             {errors.emoji && <p className="text-xs text-destructive">{errors.emoji.message}</p>}
           </div>
           <div className="flex flex-col justify-end pb-2">
-            <div className="h-12 w-12 rounded-full border bg-secondary/50 flex items-center justify-center text-2xl">
-              {previewEmoji}
+            <div className="h-12 w-12 rounded-full border bg-secondary/50 flex items-center justify-center">
+              <GamificationIcon name={previewEmoji} size={24} />
             </div>
           </div>
         </div>
@@ -214,8 +215,8 @@ export default function BadgeEditorForm({
         >
           {/* Icon Container */}
           <div className="relative mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-secondary/30">
-            <div className="text-6xl transition-transform duration-300 group-hover:scale-110">
-              {previewEmoji}
+            <div className="transition-transform duration-300 group-hover:scale-110">
+              <GamificationIcon name={previewEmoji} size={48} className="text-amber-500" />
             </div>
             
             {/* Mock Earned Indicator overlay */}

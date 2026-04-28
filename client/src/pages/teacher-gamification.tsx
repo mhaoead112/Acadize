@@ -60,11 +60,11 @@ export default function TeacherGamificationPage() {
         
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-white flex items-center gap-2">
+            <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
               <Trophy className="h-8 w-8 text-primary" />
               Gamification Overview
             </h1>
-            <p className="text-slate-400 mt-1">
+            <p className="text-slate-600 dark:text-slate-400 mt-1">
               Monitor student engagement, achievements, and course leaderboard
             </p>
           </div>
@@ -75,10 +75,10 @@ export default function TeacherGamificationPage() {
               onValueChange={setSelectedCourseId}
               disabled={loadingCourses || !courses || courses.length === 0}
             >
-              <SelectTrigger className="bg-slate-800/50 border-slate-700 text-white w-full">
+              <SelectTrigger className="bg-white dark:bg-[#112240] border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white w-full">
                 <SelectValue placeholder={loadingCourses ? "Loading courses..." : "Select a course"} />
               </SelectTrigger>
-              <SelectContent className="bg-slate-800 border-slate-700 text-slate-200">
+              <SelectContent className="bg-white dark:bg-[#112240] border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-200">
                 {courses?.map((course) => (
                   <SelectItem key={course.id} value={course.id}>
                     {course.title}
@@ -96,7 +96,7 @@ export default function TeacherGamificationPage() {
 
         {/* Gamification Disabled Notice */}
         {isGamificationDisabled && !loadingOverview && (
-          <Alert variant="default" className="bg-slate-800/80 border-slate-700 text-slate-300">
+          <Alert variant="default" className="bg-white dark:bg-[#112240] border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-300">
             <Info className="h-4 w-4 text-blue-400" />
             <AlertTitle className="text-blue-400 font-semibold">Gamification is not enabled</AlertTitle>
             <AlertDescription>
@@ -106,11 +106,11 @@ export default function TeacherGamificationPage() {
         )}
 
         {!selectedCourseId && !loadingCourses && courses?.length === 0 ? (
-          <Card className="bg-slate-900/50 border-slate-800">
+          <Card className="bg-white dark:bg-[#112240] border-slate-200 dark:border-slate-800">
             <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-              <BookOpen className="h-12 w-12 text-slate-600 mb-4" />
-              <h3 className="text-xl font-semibold text-slate-300 mb-2">No Courses Found</h3>
-              <p className="text-slate-500 max-w-md">
+              <BookOpen className="h-12 w-12 text-slate-400 dark:text-slate-600 mb-4" />
+              <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-300 mb-2">No Courses Found</h3>
+              <p className="text-slate-600 dark:text-slate-500 max-w-md">
                 You need to create a course and enroll students before you can view gamification analytics.
               </p>
             </CardContent>
@@ -163,13 +163,13 @@ export default function TeacherGamificationPage() {
               
               {/* Leaderboard Table (2/3 width) */}
               <div className="lg:col-span-2 space-y-6">
-                <Card className="bg-slate-900 border-slate-800 shadow-xl overflow-hidden">
-                  <CardHeader className="border-b border-slate-800/60 pb-4 bg-slate-900/80">
-                    <CardTitle className="text-xl flex items-center gap-2">
+                <Card className="bg-white dark:bg-[#112240] border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden">
+                  <CardHeader className="border-b border-slate-200 dark:border-slate-800/60 pb-4 bg-slate-50 dark:bg-slate-900/80">
+                    <CardTitle className="text-xl flex items-center gap-2 text-slate-900 dark:text-white">
                       <Trophy className="h-5 w-5 text-amber-500" />
                       Class Leaderboard
                     </CardTitle>
-                    <CardDescription className="text-slate-400">
+                    <CardDescription className="text-slate-600 dark:text-slate-400">
                       Top performers in this course
                     </CardDescription>
                   </CardHeader>
@@ -185,9 +185,9 @@ export default function TeacherGamificationPage() {
                 </Card>
 
                 {/* Badge Distribution Chart */}
-                <Card className="bg-slate-900 border-slate-800 shadow-xl">
-                  <CardHeader className="border-b border-slate-800/60 pb-4 bg-slate-900/80">
-                    <CardTitle className="text-lg flex items-center gap-2">
+                <Card className="bg-white dark:bg-[#112240] border-slate-200 dark:border-slate-800 shadow-xl">
+                  <CardHeader className="border-b border-slate-200 dark:border-slate-800/60 pb-4 bg-slate-50 dark:bg-slate-900/80">
+                    <CardTitle className="text-lg flex items-center gap-2 text-slate-900 dark:text-white">
                       <Target className="h-5 w-5 text-indigo-400" />
                       Badge Distribution
                     </CardTitle>
@@ -235,9 +235,9 @@ export default function TeacherGamificationPage() {
               <div className="space-y-6">
                 
                 {/* Top Achievers */}
-                <Card className="bg-slate-900 border-slate-800 shadow-xl">
-                  <CardHeader className="border-b border-slate-800/60 pb-4 bg-slate-900/80">
-                    <CardTitle className="text-lg flex items-center gap-2">
+                <Card className="bg-white dark:bg-[#112240] border-slate-200 dark:border-slate-800 shadow-xl">
+                  <CardHeader className="border-b border-slate-200 dark:border-slate-800/60 pb-4 bg-slate-50 dark:bg-slate-900/80">
+                    <CardTitle className="text-lg flex items-center gap-2 text-slate-900 dark:text-white">
                       <Star className="h-5 w-5 text-amber-400" />
                       Top Achievers
                     </CardTitle>
@@ -245,31 +245,31 @@ export default function TeacherGamificationPage() {
                   <CardContent className="p-4 space-y-4">
                     {overview.topAchievers.length > 0 ? (
                       overview.topAchievers.slice(0, 5).map((student, i) => (
-                        <div key={student.userId} className="flex items-center justify-between p-3 rounded-lg bg-slate-800/50 border border-slate-700/50 hover:bg-slate-800 transition-colors">
+                        <div key={student.userId} className="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
                           <div className="flex items-center gap-3">
                             <div className="relative">
-                              <Avatar className="h-10 w-10 border border-slate-700">
+                              <Avatar className="h-10 w-10 border border-slate-200 dark:border-slate-700">
                                 <AvatarImage src={student.avatarUrl || undefined} />
-                                <AvatarFallback className="bg-slate-700 text-slate-300">
+                                <AvatarFallback className="bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
                                   {student.fullName.charAt(0)}
                                 </AvatarFallback>
                               </Avatar>
                               {i < 3 && (
-                                <div className="absolute -top-1 -right-1 bg-slate-900 rounded-full p-0.5">
+                                <div className="absolute -top-1 -right-1 bg-white dark:bg-slate-900 rounded-full p-0.5">
                                   <Medal className={`h-4 w-4 ${
                                     i === 0 ? "text-amber-400" : 
-                                    i === 1 ? "text-slate-300" : 
+                                    i === 1 ? "text-slate-400 dark:text-slate-300" : 
                                     "text-amber-700"
                                   }`} />
                                 </div>
                               )}
                             </div>
                             <div>
-                              <p className="font-medium text-slate-200 text-sm leading-tight">{student.fullName}</p>
+                              <p className="font-medium text-slate-900 dark:text-slate-200 text-sm leading-tight">{student.fullName}</p>
                               <div className="flex items-center gap-2 mt-1">
                                 <span className="text-xs text-primary font-medium">{student.totalPoints} XP</span>
-                                <span className="text-slate-600 text-[10px]">•</span>
-                                <span className="text-xs text-slate-400">{student.badgeCount} Badges</span>
+                                <span className="text-slate-300 dark:text-slate-600 text-[10px]">•</span>
+                                <span className="text-xs text-slate-500 dark:text-slate-400">{student.badgeCount} Badges</span>
                               </div>
                             </div>
                           </div>
@@ -282,34 +282,34 @@ export default function TeacherGamificationPage() {
                 </Card>
 
                 {/* Low Engagement Alerts */}
-                <Card className="bg-slate-900 border-rose-900/30 shadow-xl overflow-hidden relative">
+                <Card className="bg-white dark:bg-[#112240] border-rose-200 dark:border-rose-900/30 shadow-xl overflow-hidden relative">
                   <div className="absolute top-0 left-0 w-1 h-full bg-rose-500/50" />
-                  <CardHeader className="border-b border-slate-800/60 pb-4 bg-slate-900/80">
-                    <CardTitle className="text-lg flex items-center gap-2">
+                  <CardHeader className="border-b border-slate-200 dark:border-slate-800/60 pb-4 bg-slate-50 dark:bg-slate-900/80">
+                    <CardTitle className="text-lg flex items-center gap-2 text-slate-900 dark:text-white">
                       <AlertCircle className="h-5 w-5 text-rose-400" />
                       Low Engagement Alerts
                     </CardTitle>
-                    <CardDescription className="text-slate-400">
+                    <CardDescription className="text-slate-600 dark:text-slate-400">
                       Students who may need intervention
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="p-0">
-                    <div className="divide-y divide-slate-800/60">
+                    <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
                       {overview.lowEngagement.length > 0 ? (
                         overview.lowEngagement.slice(0, 5).map((student) => (
                           <Link 
                             key={student.userId} 
                             href={`/teacher/students/${student.userId}`}
                           >
-                            <div className="flex items-center justify-between p-4 hover:bg-slate-800/50 transition-colors cursor-pointer group">
+                            <div className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer group">
                               <div>
-                                <p className="font-medium text-slate-300 group-hover:text-primary transition-colors">{student.fullName}</p>
-                                <p className="text-xs text-rose-400/80 mt-1 flex items-center gap-1">
+                                <p className="font-medium text-slate-900 dark:text-slate-300 group-hover:text-primary transition-colors">{student.fullName}</p>
+                                <p className="text-xs text-rose-600 dark:text-rose-400/80 mt-1 flex items-center gap-1">
                                   <AlertCircle className="h-3 w-3" />
                                   {student.totalPoints === 0 ? "0 XP earned" : `Only ${student.totalPoints} XP earned`}
                                 </p>
                               </div>
-                              <Button variant="ghost" size="sm" className="h-8 text-slate-400 group-hover:text-white">
+                              <Button variant="ghost" size="sm" className="h-8 text-slate-500 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white">
                                 View Profile
                               </Button>
                             </div>
@@ -336,17 +336,17 @@ export default function TeacherGamificationPage() {
 
 function KpiCard({ title, value, subtitle, icon }: { title: string, value: string, subtitle: string, icon: React.ReactNode }) {
   return (
-    <Card className="bg-slate-900 border-slate-800 shadow-md">
+    <Card className="bg-white dark:bg-[#112240] border-slate-200 dark:border-slate-800 shadow-md">
       <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-        <CardTitle className="text-sm font-medium text-slate-400">
+        <CardTitle className="text-sm font-medium text-slate-500 dark:text-slate-400">
           {title}
         </CardTitle>
-        <div className="p-1.5 bg-slate-800 rounded-md">
+        <div className="p-1.5 bg-slate-50 dark:bg-slate-800 rounded-md">
           {icon}
         </div>
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold text-slate-100">{value}</div>
+        <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">{value}</div>
         <p className="text-xs text-slate-500 mt-1">
           {subtitle}
         </p>
@@ -360,17 +360,17 @@ function OverviewSkeleton() {
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {[1, 2, 3, 4].map(i => (
-          <Skeleton key={i} className="h-28 rounded-xl bg-slate-800" />
+          <Skeleton key={i} className="h-28 rounded-xl bg-slate-100 dark:bg-slate-800" />
         ))}
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          <Skeleton className="h-96 rounded-xl bg-slate-800" />
-          <Skeleton className="h-80 rounded-xl bg-slate-800" />
+          <Skeleton className="h-96 rounded-xl bg-slate-100 dark:bg-slate-800" />
+          <Skeleton className="h-80 rounded-xl bg-slate-100 dark:bg-slate-800" />
         </div>
         <div className="space-y-6">
-          <Skeleton className="h-80 rounded-xl bg-slate-800" />
-          <Skeleton className="h-80 rounded-xl bg-slate-800" />
+          <Skeleton className="h-80 rounded-xl bg-slate-100 dark:bg-slate-800" />
+          <Skeleton className="h-80 rounded-xl bg-slate-100 dark:bg-slate-800" />
         </div>
       </div>
     </div>

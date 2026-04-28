@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'wouter';
 import { LazyMotion, domAnimation, m } from 'framer-motion';
 import { format } from 'date-fns';
-import { Medal, ArrowRight } from 'lucide-react';
+import { Medal, ArrowRight, Sparkles } from 'lucide-react';
 
 import { 
   useGamificationProfile, 
@@ -22,6 +22,13 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 export default function StudentGamificationPage() {
   const { user } = useAuth();
@@ -128,7 +135,7 @@ export default function StudentGamificationPage() {
           </h1>
           <p className="text-muted-foreground flex items-center gap-2">
             Keep going, you're making excellent progress! 
-            <span className="text-xs font-medium px-2 py-1 bg-secondary rounded-full ml-auto hidden sm:inline-block">
+            <span className="text-xs font-medium px-2 py-1 bg-slate-100 dark:bg-[#1A2D4F] text-slate-700 dark:text-slate-200 rounded-full ml-auto hidden sm:inline-block">
               {format(new Date(), 'EEEE, MMMM do, yyyy')}
             </span>
           </p>
@@ -175,18 +182,21 @@ export default function StudentGamificationPage() {
               Class Leaderboard
             </h2>
             {courses.length > 0 && (
-              <select
-                className="flex h-10 w-full sm:w-[250px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                value={selectedCourseId || ''}
-                onChange={(e) => setSelectedCourseId(e.target.value)}
+              <Select 
+                value={selectedCourseId || ''} 
+                onValueChange={setSelectedCourseId}
               >
-                <option value="" disabled>Select a course</option>
-                {courses.map(course => (
-                  <option key={course.courseId} value={course.courseId}>
-                    {course.courseName}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger className="w-full sm:w-[250px] bg-background border-input dark:border-white/10">
+                  <SelectValue placeholder="Select a course" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Array.from(new Map(courses.map(c => [c.courseId, c])).values()).map(course => (
+                    <SelectItem key={course.courseId} value={course.courseId}>
+                      {course.courseName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             )}
           </div>
           

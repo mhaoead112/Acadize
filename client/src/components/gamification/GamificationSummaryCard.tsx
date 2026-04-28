@@ -1,4 +1,5 @@
 import { LazyMotion, domAnimation, m, useReducedMotion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { ArrowRight } from 'lucide-react';
 
 import { Card, CardContent } from '@/components/ui/card';
@@ -14,6 +15,7 @@ import {
 } from '@/lib/animations';
 
 import type { UserGamificationProfile, AwardedBadge } from '@shared/gamification.types';
+import GamificationIcon from './GamificationIcon';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -62,12 +64,13 @@ export default function GamificationSummaryCard({
     onNavigate,
     className,
 }: GamificationSummaryCardProps) {
+    const { t } = useTranslation('gamification');
     const prefersReducedMotion = useReducedMotion();
 
     // --- Derived display values ---
-    const pointLabel = 'XP';
-    const levelEmoji = profile.currentLevel?.badgeEmoji ?? '⭐';
-    const levelName = profile.currentLevel?.name ?? `Level ${profile.currentLevelNumber}`;
+    const pointLabel = t('xp');
+    const levelIconName = profile.currentLevel?.badgeEmoji ?? 'star';
+    const levelName = profile.currentLevel?.name ?? `${t('level')} ${profile.currentLevelNumber}`;
     const progress = Math.min(100, Math.max(0, profile.nextLevelProgress));
     const nextLevelName = profile.nextLevel?.name ?? null;
     const badgesToShow = recentBadges.slice(0, 3);
@@ -99,21 +102,19 @@ export default function GamificationSummaryCard({
                                     variant="secondary"
                                     className="gap-1.5 bg-slate-100 text-slate-700 dark:bg-[#1E293B] dark:text-slate-200"
                                 >
-                                    <span>{levelEmoji}</span>
+                                    <GamificationIcon name={levelIconName} size={14} className="text-amber-500" />
                                     <span className="text-xs font-semibold">{levelName}</span>
                                 </Badge>
 
                                 {badgesToShow.length > 0 && (
                                     <div className="flex items-center gap-1">
                                         {badgesToShow.map((badge) => (
-                                            <span
+                                            <GamificationIcon
                                                 key={badge.id}
-                                                title={badge.name}
-                                                className="text-sm leading-none"
-                                                aria-label={badge.name}
-                                            >
-                                                {badge.emoji ?? '🏅'}
-                                            </span>
+                                                name={badge.emoji}
+                                                size={16}
+                                                className="text-amber-500"
+                                            />
                                         ))}
                                     </div>
                                 )}
@@ -131,7 +132,9 @@ export default function GamificationSummaryCard({
                             <div className="space-y-1.5">
                                 <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
                                     <span>
-                                        {nextLevelName ? `Next: ${nextLevelName}` : 'Max level reached'}
+                                        {nextLevelName 
+                                          ? t('summaryCard.next', { level: nextLevelName }) 
+                                          : t('summaryCard.maxLevelReached')}
                                     </span>
                                     <span className="font-semibold text-slate-700 dark:text-slate-200">
                                         {progress}%
@@ -174,7 +177,7 @@ export default function GamificationSummaryCard({
                                 variant="secondary"
                                 className="w-fit gap-1.5 bg-slate-100 text-slate-700 dark:bg-[#1E293B] dark:text-slate-200"
                             >
-                                <span>{levelEmoji}</span>
+                                <GamificationIcon name={levelIconName} size={14} className="text-amber-500" />
                                 <span className="text-xs font-semibold">{levelName}</span>
                             </Badge>
                             <p className="text-3xl font-bold tracking-tight text-amber-500 dark:text-[#FFD700]">
@@ -190,8 +193,8 @@ export default function GamificationSummaryCard({
                             <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
                                 <span>
                                     {nextLevelName
-                                        ? `Progress to ${nextLevelName}`
-                                        : 'Max level reached 🎉'}
+                                        ? t('summaryCard.progressTo', { level: nextLevelName })
+                                        : t('summaryCard.maxLevelReached')}
                                 </span>
                                 <span className="font-semibold text-slate-700 dark:text-slate-200">
                                     {progress}%
@@ -209,7 +212,7 @@ export default function GamificationSummaryCard({
                             {badgesToShow.length > 0 && (
                                 <div className="flex items-center gap-1.5" aria-label="Recent badges">
                                     {badgesToShow.map((badge, i) => (
-                                        <m.span
+                                        <m.div
                                             key={badge.id}
                                             initial={prefersReducedMotion ? false : { opacity: 0, scale: 0.6 }}
                                             animate={{ opacity: 1, scale: 1 }}
@@ -223,11 +226,11 @@ export default function GamificationSummaryCard({
                                                       }
                                             }
                                             title={badge.name}
-                                            className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-base dark:bg-[#0B1E2D]"
+                                            className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 dark:bg-[#0B1E2D]"
                                             aria-label={badge.name}
                                         >
-                                            {badge.emoji ?? '🏅'}
-                                        </m.span>
+                                            <GamificationIcon name={badge.emoji} size={18} className="text-amber-500" />
+                                        </m.div>
                                     ))}
                                 </div>
                             )}
@@ -238,7 +241,7 @@ export default function GamificationSummaryCard({
                                     size="sm"
                                     className="h-9 gap-1.5 bg-slate-900 px-4 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
                                 >
-                                    View your hub
+                                    {t('summaryCard.viewYourHub')}
                                     <m.span
                                         className="inline-flex"
                                         animate={prefersReducedMotion ? undefined : { x: [0, 2, 0] }}

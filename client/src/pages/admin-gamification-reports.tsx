@@ -65,20 +65,15 @@ export default function AdminGamificationReports() {
     ? Math.max(...report.levelDistribution.map(l => l.levelNumber)) 
     : 0;
 
-  // Mock course comparison data (since it's not provided by API)
-  const mockCourseComparison = [
-    { courseName: 'Introduction to React', points: 12500, enrollments: 45 },
-    { courseName: 'Advanced TypeScript', points: 8400, enrollments: 30 },
-    { courseName: 'UI/UX Fundamentals', points: 15200, enrollments: 60 },
-    { courseName: 'Backend Development', points: 9100, enrollments: 35 },
-  ];
+  // We use the real course comparison data from the API report
+  const courseComparisonData = report?.courseComparison || [];
 
   return (
     <AdminLayout>
       <div className="max-w-7xl mx-auto p-4 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
         
         {/* Header & Filters */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 bg-card p-6 rounded-lg border shadow-sm">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 bg-white dark:bg-[#112240] p-6 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm">
           <div>
             <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
               <TrendingUp className="h-8 w-8 text-primary" />
@@ -146,7 +141,7 @@ export default function AdminGamificationReports() {
           <>
             {/* KPI Cards Row */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Card>
+              <Card className="bg-white dark:bg-[#112240] border-slate-200 dark:border-slate-800">
                 <CardContent className="p-6 flex items-center gap-4">
                   <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
                     <Star className="h-6 w-6 text-primary" />
@@ -162,7 +157,7 @@ export default function AdminGamificationReports() {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="bg-white dark:bg-[#112240] border-slate-200 dark:border-slate-800">
                 <CardContent className="p-6 flex items-center gap-4">
                   <div className="h-12 w-12 rounded-full bg-blue-500/10 flex items-center justify-center">
                     <Award className="h-6 w-6 text-blue-500" />
@@ -178,7 +173,7 @@ export default function AdminGamificationReports() {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="bg-white dark:bg-[#112240] border-slate-200 dark:border-slate-800">
                 <CardContent className="p-6 flex items-center gap-4">
                   <div className="h-12 w-12 rounded-full bg-emerald-500/10 flex items-center justify-center">
                     <Users className="h-6 w-6 text-emerald-500" />
@@ -194,7 +189,7 @@ export default function AdminGamificationReports() {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="bg-white dark:bg-[#112240] border-slate-200 dark:border-slate-800">
                 <CardContent className="p-6 flex items-center gap-4">
                   <div className="h-12 w-12 rounded-full bg-amber-500/10 flex items-center justify-center">
                     <Trophy className="h-6 w-6 text-amber-500" />
@@ -213,7 +208,7 @@ export default function AdminGamificationReports() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Badge Issuance Trend */}
-              <Card className="col-span-1">
+              <Card className="col-span-1 bg-white dark:bg-[#112240] border-slate-200 dark:border-slate-800">
                 <CardHeader>
                   <CardTitle>Badge Issuance Trend</CardTitle>
                   <CardDescription>Number of badges issued over time</CardDescription>
@@ -248,7 +243,7 @@ export default function AdminGamificationReports() {
               </Card>
 
               {/* Level Distribution */}
-              <Card className="col-span-1">
+              <Card className="col-span-1 bg-white dark:bg-[#112240] border-slate-200 dark:border-slate-800">
                 <CardHeader>
                   <CardTitle>Level Distribution</CardTitle>
                   <CardDescription>Number of learners currently at each level</CardDescription>
@@ -279,7 +274,7 @@ export default function AdminGamificationReports() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Top Earners Table */}
-              <Card className="col-span-1">
+              <Card className="col-span-1 bg-white dark:bg-[#112240] border-slate-200 dark:border-slate-800">
                 <CardHeader>
                   <CardTitle>Top Earners</CardTitle>
                   <CardDescription>Top 10 students by total XP</CardDescription>
@@ -305,7 +300,7 @@ export default function AdminGamificationReports() {
                           </tr>
                         </thead>
                         <tbody>
-                          {report.topEarners.slice(0, 10).map((earner, index) => (
+                          {report.topEarners.slice(0, 10).map((earner: any, index: number) => (
                             <tr key={earner.userId} className="border-b last:border-0 hover:bg-muted/50">
                               <td className="px-4 py-3 font-medium">
                                 {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`}
@@ -322,8 +317,8 @@ export default function AdminGamificationReports() {
                 </CardContent>
               </Card>
 
-              {/* Course Comparison Table (Mocked) */}
-              <Card className="col-span-1">
+              {/* Course Comparison Table */}
+              <Card className="col-span-1 bg-white dark:bg-[#112240] border-slate-200 dark:border-slate-800">
                 <CardHeader>
                   <CardTitle>Course Comparison</CardTitle>
                   <CardDescription>Points earned vs enrollment across courses</CardDescription>
@@ -333,6 +328,10 @@ export default function AdminGamificationReports() {
                     <div className="space-y-4">
                       {[1,2,3,4].map(i => <Skeleton key={i} className="h-12 w-full" />)}
                     </div>
+                  ) : courseComparisonData.length === 0 ? (
+                     <div className="text-center py-8 text-muted-foreground">
+                       No course data available
+                     </div>
                   ) : (
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm text-left">
@@ -345,12 +344,12 @@ export default function AdminGamificationReports() {
                           </tr>
                         </thead>
                         <tbody>
-                          {mockCourseComparison.map((course, index) => (
+                          {courseComparisonData.map((course: any, index: number) => (
                             <tr key={index} className="border-b last:border-0 hover:bg-muted/50">
-                              <td className="px-4 py-3 font-medium truncate max-w-[150px]" title={course.courseName}>{course.courseName}</td>
-                              <td className="px-4 py-3 text-right">{course.enrollments}</td>
-                              <td className="px-4 py-3 text-right text-primary font-semibold">{course.points.toLocaleString()}</td>
-                              <td className="px-4 py-3 text-right text-muted-foreground">{Math.round(course.points / course.enrollments)}</td>
+                              <td className="px-4 py-3 font-medium truncate max-w-[150px]" title={course.courseTitle}>{course.courseTitle}</td>
+                              <td className="px-4 py-3 text-right">{course.enrolledCount}</td>
+                              <td className="px-4 py-3 text-right text-primary font-semibold">{course.totalPointsEarned.toLocaleString()}</td>
+                              <td className="px-4 py-3 text-right text-muted-foreground">{course.enrolledCount > 0 ? Math.round(course.totalPointsEarned / course.enrolledCount) : 0}</td>
                             </tr>
                           ))}
                         </tbody>

@@ -3,6 +3,7 @@ import { GamificationBadge } from '@shared/gamification.types';
 import { EmptyState } from '@/components/ui/empty-state';
 import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
+import GamificationIcon from './GamificationIcon';
 
 interface BadgeGridProps {
   badges: GamificationBadge[];
@@ -88,11 +89,11 @@ export default function BadgeGrid({
               {/* If not earned, apply a grayscale and lower opacity */}
               <div
                 className={cn(
-                  'text-5xl transition-all duration-300 group-hover:scale-110',
+                  'transition-all duration-300 group-hover:scale-110',
                   !isEarned && 'grayscale opacity-60'
                 )}
               >
-                {badge.emoji || '🎖️'}
+                <GamificationIcon name={badge.emoji} size={40} className="text-amber-500" />
               </div>
 
               {/* Status Indicator Icon overlaying the main emoji circle */}
