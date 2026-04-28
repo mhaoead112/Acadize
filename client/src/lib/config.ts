@@ -100,7 +100,7 @@ export const getSubdomain = (): string => {
   }
 
   // localhost without subdomain
-  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+  if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === 'acadize') {
     return 'default';
   }
 
