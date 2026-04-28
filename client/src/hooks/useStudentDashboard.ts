@@ -124,7 +124,7 @@ export function useStudentProgress() {
 
             return {
                 overallProgress,
-                courseProgress: Array.isArray(courseProgress) ? courseProgress : [],
+                courseProgress: extractList<CourseProgress>(courseProgress),
             };
         },
         enabled: !!token,

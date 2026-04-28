@@ -272,7 +272,7 @@ export default function StudentDashboard() {
       if (progressCoursesRes?.ok) {
         const coursesData = await progressCoursesRes.json();
         const progress: Record<string, number> = {};
-        (Array.isArray(coursesData) ? coursesData : []).forEach((cp: any) => {
+        (Array.isArray(coursesData?.data) ? coursesData.data : (Array.isArray(coursesData) ? coursesData : [])).forEach((cp: any) => {
           if (cp?.courseId != null) progress[cp.courseId] = cp.progressPercentage ?? 0;
         });
         setCourseProgress(progress);

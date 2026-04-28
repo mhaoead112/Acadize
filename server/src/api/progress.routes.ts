@@ -115,7 +115,7 @@ router.get('/overall', ...requireAuth, async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching overall progress:', error);
-    res.status(500).json({ error: 'Failed to fetch progress' });
+    res.status(500).json({ message: 'Failed to fetch progress' });
   }
 });
 
@@ -211,10 +211,10 @@ router.get('/courses', ...requireAuth, async (req, res) => {
       })
     );
 
-    res.json(courseProgress);
+    res.json({ data: courseProgress });
   } catch (error) {
     console.error('Error fetching course progress:', error);
-    res.status(500).json({ error: 'Failed to fetch course progress' });
+    res.status(500).json({ message: 'Failed to fetch course progress' });
   }
 });
 
@@ -237,7 +237,7 @@ router.get('/course/:courseId', ...requireAuth, async (req, res) => {
       .limit(1);
 
     if (enrollment.length === 0) {
-      return res.status(403).json({ error: 'Not enrolled in this course' });
+      return res.status(403).json({ message: 'Not enrolled in this course' });
     }
 
     // Get course details
@@ -344,7 +344,7 @@ router.get('/course/:courseId', ...requireAuth, async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching course progress:', error);
-    res.status(500).json({ error: 'Failed to fetch course progress' });
+    res.status(500).json({ message: 'Failed to fetch course progress' });
   }
 });
 
