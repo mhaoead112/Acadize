@@ -12,6 +12,8 @@ import { getRedisClient } from "../db/redis.js";
 const isProduction = process.env.NODE_ENV === 'production';
 const ROOT_TENANT_SUBDOMAIN = 'acadize';
 const ROOT_DOMAIN_HOSTS = new Set(['acadize.com', 'www.acadize.com']);
+// Fallback org subdomain for single-org / non-subdomain deployments (e.g. *.onrender.com)
+const DEFAULT_ORG_SUBDOMAIN = process.env.DEFAULT_ORG_SUBDOMAIN || null;
 
 // Tenant context attached to each request
 export interface TenantContext {
@@ -240,7 +242,14 @@ export const tenantMiddleware = async (
     }
 
     // Lookup organization
-    const tenant = await lookupOrganization(subdomain, hostname);
+    let tenant = await lookupOrganization(subdomain, hostname);
+
+    // Fallback: if subdomain resolved to 'default' and no org found, try DEFAULT_ORG_SUBDOMAIN env var.
+    // This handles single-org deployments on generic hosts (*.onrender.com, *.railway.app, etc.)
+    if (!tenant && DEFAULT_ORG_SUBDOMAIN && subdomain === 'default') {
+        console.log('[TenantMiddleware] Falling back to DEFAULT_ORG_SUBDOMAIN:', DEFAULT_ORG_SUBDOMAIN);
+        tenant = await lookupOrganization(DEFAULT_ORG_SUBDOMAIN, hostname);
+    }
 
     if (!tenant) {
         return res.status(404).json({

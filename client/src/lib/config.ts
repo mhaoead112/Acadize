@@ -65,12 +65,30 @@ export const assetUrl = (path: string): string => {
 // ============================================
 
 /**
+ * Known generic deployment host suffixes.
+ * On these hosts the first subdomain part is an app name, NOT a tenant.
+ * We fall back to VITE_TENANT_SUBDOMAIN or 'default' instead.
+ */
+const GENERIC_DEPLOYMENT_SUFFIXES = [
+  '.onrender.com',
+  '.railway.app',
+  '.up.railway.app',
+  '.fly.dev',
+  '.vercel.app',
+  '.netlify.app',
+  '.herokuapp.com',
+  '.azurewebsites.net',
+  '.cloudflare.dev',
+];
+
+/**
  * Extract subdomain from the current hostname
  * Supports:
  *   - subdomain.lvh.me:port → subdomain
  *   - subdomain.localhost:port → subdomain
  *   - subdomain.acadize.com → subdomain
  *   - localhost:port → 'default'
+ *   - *.onrender.com / *.vercel.app etc → VITE_TENANT_SUBDOMAIN or 'default'
  */
 export const getSubdomain = (): string => {
   if (typeof window === 'undefined') return 'default';
@@ -84,6 +102,12 @@ export const getSubdomain = (): string => {
   // localhost without subdomain
   if (hostname === 'localhost' || hostname === '127.0.0.1') {
     return 'default';
+  }
+
+  // Generic deployment hosts (onrender, vercel, etc.) — the app name is NOT a tenant.
+  // Use the explicit env var if set, otherwise fall back to 'default'.
+  if (GENERIC_DEPLOYMENT_SUFFIXES.some(suffix => hostname.endsWith(suffix))) {
+    return (import.meta.env.VITE_TENANT_SUBDOMAIN as string | undefined) || 'default';
   }
 
   // Handle lvh.me (e.g., acme.lvh.me)
