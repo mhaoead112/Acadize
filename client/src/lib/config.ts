@@ -12,7 +12,7 @@ const getIsProduction = () => {
 };
 
 const isProduction = getIsProduction();
-const ROOT_TENANT_SUBDOMAIN = 'acadize';
+const ROOT_TENANT_SUBDOMAIN = 'default'; // DB stores the Acadize org with subdomain='default'
 const ROOT_DOMAIN_HOSTS = new Set(['acadize.com', 'www.acadize.com']);
 
 // In production, URLs MUST be set via env vars. In dev, fall back to localhost.
@@ -174,7 +174,12 @@ export const currentSubdomain = getSubdomain();
 
 // Log current tenant
 if (typeof window !== 'undefined') {
-  console.log('🏢 Tenant:', currentSubdomain);
+  console.groupCollapsed('%c🏢 Tenant Resolution', 'color: #6366f1; font-weight: bold;');
+  console.log('Hostname       :', window.location.hostname);
+  console.log('Subdomain sent :', currentSubdomain);
+  console.log('Header         :', `X-Tenant-Subdomain: ${currentSubdomain}`);
+  console.log('API URL        :', API_URL);
+  console.groupEnd();
 }
 
 // ============================================
