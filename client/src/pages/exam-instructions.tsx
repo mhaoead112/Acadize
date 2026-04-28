@@ -145,7 +145,11 @@ const ExamInstructions: React.FC = () => {
         throw new Error('Failed to check active attempts');
       }
 
-      const activeAttempts = await attemptsResponse.json();
+      const activeAttemptsRaw = await attemptsResponse.json();
+      // API now returns { data: [...] } — unwrap gracefully
+      const activeAttempts: any[] = Array.isArray(activeAttemptsRaw?.data)
+        ? activeAttemptsRaw.data
+        : Array.isArray(activeAttemptsRaw) ? activeAttemptsRaw : [];
       const hasActiveAttempt = activeAttempts.some((a: any) => a.examId === exam.id);
 
       if (hasActiveAttempt) {
