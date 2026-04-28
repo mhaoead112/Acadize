@@ -1,0 +1,154 @@
+name: 🐛 Bug Report
+description: Report a bug found while testing the platform
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Thanks for reporting! 🙏
+        Fill in every section as completely as possible. The more detail you provide, the faster the bug gets fixed.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: 📋 Summary
+      description: One sentence describing what went wrong.
+      placeholder: "e.g. Clicking 'Submit Exam' shows a blank screen instead of the results page."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: role
+    attributes:
+      label: 👤 Role
+      description: What account role were you logged in as?
+      options:
+        - Student
+        - Teacher
+        - Admin
+    validations:
+      required: true
+
+  - type: input
+    id: email
+    attributes:
+      label: 📧 Email / Account Used
+      placeholder: "e.g. test@example.com"
+    validations:
+      required: false
+
+  - type: input
+    id: page
+    attributes:
+      label: 📍 Page / URL
+      description: The full URL or route where the bug occurred.
+      placeholder: "e.g. /student/exam/attempt/123 or https://acadize.com/student/dashboard"
+    validations:
+      required: true
+
+  - type: input
+    id: browser
+    attributes:
+      label: 🌐 Browser & Version
+      placeholder: "e.g. Chrome 124, Safari 17, Firefox 125"
+    validations:
+      required: true
+
+  - type: input
+    id: device
+    attributes:
+      label: 💻 Device & OS
+      placeholder: "e.g. Windows 11 laptop, iPhone 15 iOS 17, Android Samsung S23"
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: 🔁 Steps to Reproduce
+      description: List the exact steps to trigger the bug.
+      placeholder: |
+        1. Log in as **Student** with email `...`
+        2. Navigate to **[page]**
+        3. Click / fill in **[action]**
+        4. 💥 Bug occurs
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: ✅ Expected Behaviour
+      description: What should have happened?
+      placeholder: "e.g. The results page should appear showing the score."
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: ❌ Actual Behaviour
+      description: What actually happened?
+      placeholder: "e.g. A blank white screen appeared with no error message."
+    validations:
+      required: true
+
+  - type: textarea
+    id: console_errors
+    attributes:
+      label: 🖥️ Console Errors
+      description: |
+        Open **DevTools → Console tab** and paste any red errors here.
+        *(Right-click the page → Inspect → Console)*
+      render: shell
+      placeholder: "Paste console errors here..."
+    validations:
+      required: false
+
+  - type: textarea
+    id: network_errors
+    attributes:
+      label: 🌐 Network Errors
+      description: |
+        Open **DevTools → Network tab**, filter by **Fetch/XHR**, look for red failed requests.
+        Paste the URL, status code, and response body.
+      placeholder: |
+        URL: /api/exam/submit
+        Status: 500
+        Response: { "message": "Internal server error" }
+    validations:
+      required: false
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: 📸 Screenshots / Recording
+      description: Drag and drop screenshots or a screen recording here.
+      placeholder: "Attach images or paste links to recordings..."
+    validations:
+      required: false
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: 🔢 Severity
+      description: How badly does this affect the user experience?
+      options:
+        - "🔴 Critical — App crashes / data loss / can't log in"
+        - "🟠 High — Major feature broken, no workaround"
+        - "🟡 Medium — Feature partially broken, workaround exists"
+        - "🟢 Low — Visual glitch / minor inconvenience"
+    validations:
+      required: true
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: 📝 Extra Notes
+      description: Anything else that might help — does it happen consistently? Only on mobile? After a specific action?
+      placeholder: "e.g. Only happens when logged in as a student who has not enrolled in any course."
+    validations:
+      required: false
