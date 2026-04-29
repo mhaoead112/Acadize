@@ -282,7 +282,7 @@ export default function StudentAssignments() {
                   className={`flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full px-5 transition-colors font-medium text-sm ${
                     filterStatus === "all"
                       ? 'bg-secondary dark:bg-white text-white dark:text-secondary shadow-md shadow-secondary/10'
-                      : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 shadow-sm'
+                      : 'bg-yellow-400 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 shadow-sm'
                   }`}
                 >
                   All
@@ -292,7 +292,7 @@ export default function StudentAssignments() {
                   className={`flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full px-5 transition-colors text-sm ${
                     filterStatus === "todo"
                       ? 'bg-secondary dark:bg-white text-white dark:text-secondary shadow-md shadow-secondary/10 font-medium'
-                      : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 shadow-sm'
+                      : 'bg-yellow-400 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 shadow-sm'
                   }`}
                 >
                   To Do
@@ -303,7 +303,7 @@ export default function StudentAssignments() {
                   className={`flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full px-5 transition-colors text-sm ${
                     filterStatus === "inprogress"
                       ? 'bg-secondary dark:bg-white text-white dark:text-secondary shadow-md shadow-secondary/10 font-medium'
-                      : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 shadow-sm'
+                      : 'bg-yellow-400 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 shadow-sm'
                   }`}
                 >
                   In Progress
@@ -314,7 +314,7 @@ export default function StudentAssignments() {
                   className={`flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full px-5 transition-colors text-sm ${
                     filterStatus === "graded"
                       ? 'bg-secondary dark:bg-white text-white dark:text-secondary shadow-md shadow-secondary/10 font-medium'
-                      : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 shadow-sm'
+                      : 'bg-yellow-400 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 shadow-sm'
                   }`}
                 >
                   Graded
@@ -324,7 +324,7 @@ export default function StudentAssignments() {
                   className={`flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full px-5 transition-colors text-sm ${
                     filterStatus === "overdue"
                       ? 'bg-secondary dark:bg-white text-white dark:text-secondary shadow-md shadow-secondary/10 font-medium'
-                      : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 shadow-sm'
+                      : 'bg-yellow-400 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 shadow-sm'
                   }`}
                 >
                   Overdue
