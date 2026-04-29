@@ -22,6 +22,7 @@ import sessionRoutes from './session.routes.js';
 import zoomWebhookRoutes from './zoom-webhook.routes.js';
 import { gamificationRouter, teacherGamificationRouter } from './gamification.routes.js';
 import adminGamificationRouter from './admin-gamification.routes.js';
+import skillTreeRouter from './skill-tree.routes.js';
 
 export function registerRoutes(app: express.Application) {
   // API routes
@@ -58,6 +59,9 @@ export function registerRoutes(app: express.Application) {
   app.use('/api/gamification', gamificationRouter);
   app.use('/api/teacher/gamification', teacherGamificationRouter);
   app.use('/api/admin/gamification', adminGamificationRouter);
+
+  // Sprint C: Skill Tree
+  app.use('/api/skill-tree', skillTreeRouter);
 
   // 404 handler for API routes
   app.use('/api/*', (req, res) => {

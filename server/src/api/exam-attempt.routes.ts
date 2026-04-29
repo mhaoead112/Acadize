@@ -217,8 +217,28 @@ router.post('/:attemptId/submit', ...requireAuth, isStudent, async (req: Request
       finalAnswers,
     });
 
+    let xpResult = undefined;
+    try {
+      const orgId = req.tenant?.organizationId || req.user?.organizationId;
+      if (orgId) {
+        const { awardXp } = await import('../services/xp.service.js');
+        const { checkAndUpdateQuests } = await import('../services/quest.service.js');
+        
+        xpResult = await awardXp(req.user!.id, orgId, 'exam_complete', 50, attemptId, 'exam_attempt');
+        
+        // Check for quest completions (using quiz_pass for now to match default templates)
+        const completedQuests = await checkAndUpdateQuests(req.user!.id, orgId, 'quiz_pass');
+        if (completedQuests.length > 0) {
+          (result as any).completedQuests = completedQuests;
+        }
+      }
+    } catch (gamErr) {
+      console.warn('[Gamification] Error awarding XP on exam submit:', gamErr);
+    }
+
     res.status(200).json({
       ...result,
+      xp: xpResult,
       message: 'Exam submitted successfully. Your answers are being processed.',
     });
   } catch (error: any) {

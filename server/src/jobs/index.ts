@@ -54,12 +54,16 @@ import { handleSendEmail } from './workers/email.worker.js';
 import { handlePushNotification } from './workers/push.worker.js';
 import { handleRetakeGeneration } from './workers/retake.worker.js';
 import { handleAttendanceNotification } from './workers/attendance.worker.js';
+import { handleWeeklyXpReset } from './workers/gamification.worker.js';
+import { startStreakNudgeJob, JOB_STREAK_NUDGE } from './streak-nudge.job.js';
 
 export const JOB_SEND_EMAIL = 'send_email';
 export const JOB_PUSH_NOTIFICATION = 'push_notification';
 export const JOB_RETAKE_GENERATION = 'retake_generation';
 export const JOB_ATTENDANCE_NOTIFICATION = 'attendance_notification';
 export const JOB_CLEANUP_TOKENS = 'cleanup_tokens';
+export const JOB_WEEKLY_XP_RESET = 'weekly_xp_reset';
+export { JOB_STREAK_NUDGE };
 
 async function registerWorkers() {
     if (!boss) return;
@@ -70,46 +74,62 @@ async function registerWorkers() {
         boss.createQueue(JOB_RETAKE_GENERATION),
         boss.createQueue(JOB_ATTENDANCE_NOTIFICATION),
         boss.createQueue(JOB_CLEANUP_TOKENS),
+        boss.createQueue(JOB_WEEKLY_XP_RESET),
+        boss.createQueue(JOB_STREAK_NUDGE),
     ]);
 
-    await boss.work(JOB_SEND_EMAIL, async (job: any) => {
-        try {
-            await handleSendEmail(job.data as any);
-        } catch (error: any) {
-            logger.error(`[Job ${JOB_SEND_EMAIL}] Failed`, { error: error.message });
-            throw error;
-        }
+    // ── pg-boss v12: handler receives Job[] (array), not a single Job ──────────
+
+    await boss.work(JOB_SEND_EMAIL, async (jobs: any[]) => {
+        await Promise.allSettled(jobs.map(async (job) => {
+            if (!job?.data) return;
+            try {
+                await handleSendEmail(job.data);
+            } catch (error: any) {
+                logger.error(`[Job ${JOB_SEND_EMAIL}] Failed`, { error: error.message });
+                throw error;
+            }
+        }));
     });
 
-    await boss.work(JOB_PUSH_NOTIFICATION, async (job: any) => {
-        try {
-            await handlePushNotification(job.data as any);
-        } catch (error: any) {
-            logger.error(`[Job ${JOB_PUSH_NOTIFICATION}] Failed`, { error: error.message });
-            throw error;
-        }
+    await boss.work(JOB_PUSH_NOTIFICATION, async (jobs: any[]) => {
+        await Promise.allSettled(jobs.map(async (job) => {
+            if (!job?.data) return;
+            try {
+                await handlePushNotification(job.data);
+            } catch (error: any) {
+                logger.error(`[Job ${JOB_PUSH_NOTIFICATION}] Failed`, { error: error.message });
+                throw error;
+            }
+        }));
     });
 
-    await boss.work(JOB_RETAKE_GENERATION, async (job: any) => {
-        try {
-            await handleRetakeGeneration(job.data as any);
-        } catch (error: any) {
-            logger.error(`[Job ${JOB_RETAKE_GENERATION}] Failed`, { error: error.message });
-            throw error;
-        }
+    await boss.work(JOB_RETAKE_GENERATION, async (jobs: any[]) => {
+        await Promise.allSettled(jobs.map(async (job) => {
+            if (!job?.data) return;
+            try {
+                await handleRetakeGeneration(job.data);
+            } catch (error: any) {
+                logger.error(`[Job ${JOB_RETAKE_GENERATION}] Failed`, { error: error.message });
+                throw error;
+            }
+        }));
     });
 
-    await boss.work(JOB_ATTENDANCE_NOTIFICATION, async (job: any) => {
-        try {
-            await handleAttendanceNotification(job.data as any);
-        } catch (error: any) {
-            logger.error(`[Job ${JOB_ATTENDANCE_NOTIFICATION}] Failed`, { error: error.message });
-            throw error;
-        }
+    await boss.work(JOB_ATTENDANCE_NOTIFICATION, async (jobs: any[]) => {
+        await Promise.allSettled(jobs.map(async (job) => {
+            if (!job?.data) return;
+            try {
+                await handleAttendanceNotification(job.data);
+            } catch (error: any) {
+                logger.error(`[Job ${JOB_ATTENDANCE_NOTIFICATION}] Failed`, { error: error.message });
+                throw error;
+            }
+        }));
     });
 
-    // Register cleanup job
-    await boss.work(JOB_CLEANUP_TOKENS, async () => {
+    // Register cleanup job (no per-job data needed)
+    await boss.work(JOB_CLEANUP_TOKENS, async (_jobs: any[]) => {
         try {
             const { TokenService } = await import('../services/token.service.js');
             await TokenService.cleanupExpiredTokens();
@@ -119,8 +139,24 @@ async function registerWorkers() {
         }
     });
 
+    // Register gamification weekly reset job (no per-job data needed)
+    await boss.work(JOB_WEEKLY_XP_RESET, async (_jobs: any[]) => {
+        try {
+            await handleWeeklyXpReset();
+        } catch (error: any) {
+            logger.error(`[Job ${JOB_WEEKLY_XP_RESET}] Failed`, { error: error.message });
+            throw error;
+        }
+    });
+
     // Schedule the token cleanup job to run every night at midnight
     await boss.schedule(JOB_CLEANUP_TOKENS, '0 0 * * *');
+    
+    // Schedule the weekly XP reset to run at Sunday 23:59 (or Monday 00:00)
+    await boss.schedule(JOB_WEEKLY_XP_RESET, '59 23 * * 0');
+
+    // Sprint D: Streak Nudge Cron — every 30 minutes, all orgs
+    await startStreakNudgeJob(boss);
 
     logger.info('[pg-boss] Registered workers and schedules');
 }

@@ -739,11 +739,11 @@ router.post('/:courseId/complete', ...requireAuth, async (req, res) => {
             gamResult = await awardPoints({
                 userId: user.id,
                 organizationId: orgId,
-                eventType: 'course_completion',
+                eventType: 'course_complete',
                 entityId: courseId,
                 entityType: 'course',
             });
-            void evaluateBadges(user.id, orgId, 'course_completion');
+            void evaluateBadges(user.id, orgId, 'course_complete');
         } catch (gamErr) {
             // Intentionally swallowed — gamification must never break the course flow
             console.warn('[Gamification] course_completion hook failed silently:', gamErr);

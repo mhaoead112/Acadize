@@ -862,6 +862,24 @@ router.post("/:assignmentId/submit", ...requireAuth, upload.single('file'), asyn
         .returning();
     }
 
+    let xpResult = undefined;
+    try {
+      if (!existingSubmission) { // Only award XP on first submission
+        const { awardXp } = await import('../services/xp.service.js');
+        const { checkAndUpdateQuests } = await import('../services/quest.service.js');
+        
+        xpResult = await awardXp(user.id, orgId, 'assignment_complete', 20, submission.id, 'assignment_submission');
+        
+        // Check for daily/weekly quest completions
+        const completedQuests = await checkAndUpdateQuests(user.id, orgId, 'assignment_submit');
+        if (completedQuests.length > 0) {
+          (res.locals as any) = { ...(res.locals || {}), completedQuests };
+        }
+      }
+    } catch (gamErr) {
+      console.warn('[Gamification] Error awarding XP on assignment submit:', gamErr);
+    }
+
     res.status(201).json({
       message: existingSubmission ? "Assignment resubmitted successfully" : "Assignment submitted successfully",
       submission: {
@@ -871,7 +889,9 @@ router.post("/:assignmentId/submit", ...requireAuth, upload.single('file'), asyn
         fileName: submission.fileName,
         submittedAt: submission.submittedAt,
         status: submission.status,
-      }
+      },
+      xp: xpResult,
+      completedQuests: (res.locals as any)?.completedQuests
     });
   } catch (error: any) {
     console.error("Error submitting assignment:", error);

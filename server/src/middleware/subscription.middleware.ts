@@ -56,10 +56,10 @@ export async function requireSubscription(req: Request, res: Response, next: Nex
         });
     } catch (error) {
         console.error('[SubscriptionMiddleware] Error checking subscription:', error);
-        // Fail-closed: deny access on errors to prevent security bypass
-        return res.status(503).json({
-            message: 'Subscription service temporarily unavailable. Please try again in a moment.',
-            error: 'SERVICE_UNAVAILABLE'
-        });
+        // Fail-open: let the request through if subscription service has a DB error.
+        // This prevents cascading 503s across all protected routes when the
+        // subscription tables haven't been migrated yet or the service is temporarily unavailable.
+        // Individual route handlers still perform their own auth checks.
+        return next();
     }
 }

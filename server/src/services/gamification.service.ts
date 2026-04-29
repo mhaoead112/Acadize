@@ -20,8 +20,13 @@ import {
   gamificationEvents,
   userGamificationProfiles,
   userBadges,
+  userFeaturedBadges,
   users,
   enrollments,
+  studyStreaks,
+  dailyChallenges,
+  userChallengeCompletions,
+  userBuffs,
 } from '../db/schema.js';
 import {
   eq,
@@ -30,13 +35,14 @@ import {
   sql,
   count,
   inArray,
+  gte,
+  lte,
 } from 'drizzle-orm';
 import { createId } from '@paralleldrive/cuid2';
 import { logger } from '../utils/logger.js';
 
 // ---------------------------------------------------------------------------
 // Local type aliases (mirrors shared/gamification.types.ts for server use)
-// No cross-rootDir imports required — server tsconfig rootDir is server/
 // ---------------------------------------------------------------------------
 
 type GamificationSettings = {
@@ -77,8 +83,30 @@ type GamificationLeaderboardEntry = {
   fullName: string;
   avatarUrl: string | null;
   totalPoints: number;
+  totalXp: number;
+  xpThisWeek: number;
+  currentStreak: number;
   currentLevelNumber: number;
   badgeCount: number;
+  tier: string;
+};
+
+type UserBuff = {
+  id: string;
+  userId: string;
+  buffType: 'xp_multiplier';
+  buffValue: string;
+  startsAt: string;
+  expiresAt: string;
+  sourceId: string | null;
+};
+
+type DailyChallengeProgress = {
+  challenge: any | null;
+  completed: boolean;
+  completedAt: string | null;
+  progress: number;
+  remainingSeconds: number;
 };
 
 type GamificationMeResponse = {
@@ -93,19 +121,59 @@ type GamificationMeResponse = {
   updatedAt: string | null;
   recentBadges: any[];
   recentEvents: any[];
+  activeBuffs: UserBuff[];
+  dailyChallenge: DailyChallengeProgress | null;
 };
 
 // ---------------------------------------------------------------------------
 // Default point values used when seeding a fresh org
 // ---------------------------------------------------------------------------
 const DEFAULT_POINT_RULES = [
-  { eventType: 'lesson_completion',      points: 10  },
-  { eventType: 'quiz_completion',        points: 25  },
-  { eventType: 'exam_completion',        points: 50  },
-  { eventType: 'assignment_submission',  points: 15  },
+  { eventType: 'lesson_complete',        points: 10  },
+  { eventType: 'quiz_complete',          points: 25  },
+  { eventType: 'exam_complete',          points: 50  },
+  { eventType: 'assignment_submit',      points: 15  },
   { eventType: 'assignment_graded_pass', points: 20  },
-  { eventType: 'course_completion',      points: 100 },
+  { eventType: 'course_complete',        points: 100 },
 ] as const;
+
+let userGamificationProfileColumnsPromise: Promise<Set<string>> | null = null;
+
+async function getUserGamificationProfileColumns(): Promise<Set<string>> {
+  if (!userGamificationProfileColumnsPromise) {
+    userGamificationProfileColumnsPromise = pool
+      .query(
+        `SELECT column_name
+           FROM information_schema.columns
+          WHERE table_schema = 'public'
+            AND table_name = 'user_gamification_profiles'`,
+      )
+      .then((result) => new Set(result.rows.map((row) => String(row.column_name))));
+  }
+
+  return userGamificationProfileColumnsPromise;
+}
+
+function mapProfileRow(
+  row: Record<string, unknown>,
+  userId: string,
+  organizationId: string,
+): typeof userGamificationProfiles.$inferSelect {
+  return {
+    id: String(row.id ?? ''),
+    userId,
+    organizationId,
+    totalPoints: Number(row.total_points ?? 0),
+    totalXp: Number(row.total_xp ?? row.total_points ?? 0),
+    currentLevel: Number(row.current_level ?? 1),
+    xpThisWeek: Number(row.xp_this_week ?? 0),
+    xpWeekResetAt: (row.xp_week_reset_at as Date | null) ?? null,
+    currentLevelId: (row.current_level_id as string | null) ?? null,
+    currentLevelNumber: Number(row.current_level_number ?? row.current_level ?? 0),
+    createdAt: (row.created_at as Date) ?? new Date(),
+    updatedAt: (row.updated_at as Date | null) ?? null,
+  };
+}
 
 // ---------------------------------------------------------------------------
 // 1. ensureProfile
@@ -120,7 +188,57 @@ export async function ensureProfile(
   organizationId: string,
 ): Promise<typeof userGamificationProfiles.$inferSelect> {
   try {
-    // Try to fetch existing profile
+    const columns = await getUserGamificationProfileColumns();
+    const selectColumns = [
+      'id',
+      'user_id',
+      'organization_id',
+      'total_points',
+      'created_at',
+      'updated_at',
+      columns.has('total_xp') ? 'total_xp' : null,
+      columns.has('current_level') ? 'current_level' : null,
+      columns.has('xp_this_week') ? 'xp_this_week' : null,
+      columns.has('xp_week_reset_at') ? 'xp_week_reset_at' : null,
+      columns.has('current_level_id') ? 'current_level_id' : null,
+      columns.has('current_level_number') ? 'current_level_number' : null,
+    ].filter(Boolean).join(', ');
+
+    const existingResult = await pool.query(
+      `SELECT ${selectColumns}
+         FROM user_gamification_profiles
+        WHERE user_id = $1 AND organization_id = $2
+        LIMIT 1`,
+      [userId, organizationId],
+    );
+
+    if (existingResult.rows[0]) {
+      return mapProfileRow(existingResult.rows[0], userId, organizationId);
+    }
+
+    await pool.query(
+      `INSERT INTO user_gamification_profiles (id, user_id, organization_id)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (user_id, organization_id) DO NOTHING`,
+      [createId(), userId, organizationId],
+    );
+
+    const insertedResult = await pool.query(
+      `SELECT ${selectColumns}
+         FROM user_gamification_profiles
+        WHERE user_id = $1 AND organization_id = $2
+        LIMIT 1`,
+      [userId, organizationId],
+    );
+
+    if (insertedResult.rows[0]) {
+      return mapProfileRow(insertedResult.rows[0], userId, organizationId);
+    }
+
+    throw new Error('Profile row could not be fetched after insert attempt.');
+
+    // Legacy Drizzle path retained below for reference; compatibility mode
+    // should always return before reaching this branch.
     const [existing] = await db
       .select()
       .from(userGamificationProfiles)
@@ -171,6 +289,10 @@ export async function ensureProfile(
       userId,
       organizationId,
       totalPoints: 0,
+      totalXp: 0,
+      currentLevel: 1,
+      xpThisWeek: 0,
+      xpWeekResetAt: null,
       currentLevelNumber: 0,
       currentLevelId: null,
       createdAt: new Date(),
@@ -227,10 +349,26 @@ export async function awardPoints(params: {
       )
       .limit(1);
 
-    const pointsToAward =
+    let pointsToAward =
       settings.enabled && settings.pointsEnabled && rule?.isActive
         ? (rule.points ?? 0)
         : 0;
+
+    // Apply active multipliers (Sprint B)
+    if (pointsToAward > 0) {
+      try {
+        const activeBuffs = await getActiveBuffs(userId, 'xp_multiplier');
+        for (const buff of activeBuffs) {
+          const multiplier = parseFloat(buff.buffValue);
+          if (!isNaN(multiplier)) {
+            pointsToAward = Math.round(pointsToAward * multiplier);
+            logger.debug(`[Gamification] Applied multiplier ${multiplier} to award. New points: ${pointsToAward}`);
+          }
+        }
+      } catch (buffErr) {
+        logger.error('[Gamification] Failed to apply multipliers', { userId, error: String(buffErr) });
+      }
+    }
 
     // -- 3. Insert event (idempotent — ON CONFLICT DO NOTHING) ------------
     // Persist the milestone even when gamification is disabled so lesson
@@ -305,6 +443,17 @@ export async function awardPoints(params: {
         newLevel: newLevel.levelNumber,
         levelName: newLevel.name,
       });
+    }
+
+    // -- 6. Check Daily Challenge Progress (Sprint B) ----------------------
+    // We trigger this after the event is recorded so progress is calculated correctly.
+    // Skip if the event itself was a challenge completion to avoid recursion.
+    if (eventType !== 'challenge_completion') {
+      try {
+        await checkDailyChallengeProgress(userId, organizationId);
+      } catch (chalErr) {
+        logger.error('[Gamification] checkDailyChallengeProgress failed during awardPoints', { userId, error: String(chalErr) });
+      }
     }
 
     logger.info('[Gamification] Points awarded', {
@@ -404,12 +553,12 @@ export async function evaluateBadges(
 
     // Map event types to relevant badge criteria types
     const criteriaTypesByEvent: Record<string, string[]> = {
-      lesson_completion:      ['lesson_count', 'first_action'],
-      assignment_submission:  ['assignment_count', 'first_action'],
+      lesson_complete:      ['lesson_count', 'first_action'],
+      assignment_submit:  ['assignment_count', 'first_action'],
       assignment_graded_pass: ['assignment_count'],
-      exam_completion:        ['first_action'],
-      course_completion:      ['course_completion', 'first_action'],
-      quiz_completion:        ['first_action'],
+      exam_complete:        ['first_action'],
+      course_complete:      ['course_completion', 'first_action'],
+      quiz_complete:        ['first_action'],
     };
 
     const relevantCriteriaTypes = criteriaTypesByEvent[eventType] ?? ['first_action'];
@@ -509,11 +658,11 @@ async function checkBadgeCriteria(
       return total >= 1;
     }
     case 'lesson_count': {
-      const total = await countUserEvents(userId, organizationId, 'lesson_completion');
+      const total = await countUserEvents(userId, organizationId, 'lesson_complete');
       return total >= criteriaValue;
     }
     case 'assignment_count': {
-      const total = await countUserEvents(userId, organizationId, 'assignment_submission');
+      const total = await countUserEvents(userId, organizationId, 'assignment_submit');
       return total >= criteriaValue;
     }
     case 'course_completion': {
@@ -653,6 +802,8 @@ export async function getLearnerProfile(
         createdAt: gamificationBadges.createdAt,
         updatedAt: gamificationBadges.updatedAt,
         awardedAt: userBadges.awardedAt,
+        rarity: gamificationBadges.rarity,
+        storyText: gamificationBadges.storyText,
       })
       .from(userBadges)
       .innerJoin(gamificationBadges, eq(userBadges.badgeId, gamificationBadges.id))
@@ -664,6 +815,32 @@ export async function getLearnerProfile(
       )
       .orderBy(desc(userBadges.awardedAt))
       .limit(5);
+
+    // Featured badges (max 3)
+    const featuredBadgeRows = await db
+      .select({
+        id: gamificationBadges.id,
+        name: gamificationBadges.name,
+        description: gamificationBadges.description,
+        storyText: gamificationBadges.storyText,
+        emoji: gamificationBadges.emoji,
+        rarity: gamificationBadges.rarity,
+        awardedAt: userBadges.awardedAt,
+        displayOrder: userFeaturedBadges.displayOrder,
+      })
+      .from(userFeaturedBadges)
+      .innerJoin(gamificationBadges, eq(userFeaturedBadges.badgeId, gamificationBadges.id))
+      .innerJoin(userBadges, and(
+        eq(userBadges.userId, userFeaturedBadges.userId),
+        eq(userBadges.badgeId, userFeaturedBadges.badgeId)
+      ))
+      .where(
+        and(
+          eq(userFeaturedBadges.userId, userId),
+        )
+      )
+      .orderBy(userFeaturedBadges.displayOrder)
+      .limit(3);
 
     // Serialize dates to ISO strings for the API response
     const toISO = (d: Date | null | undefined) => d?.toISOString() ?? null;
@@ -700,20 +877,19 @@ export async function getLearnerProfile(
         occurredAt: toISO(e.occurredAt)!,
       })),
       recentBadges: recentBadgeRows.map((b) => ({
-        id: b.id,
-        organizationId: b.organizationId,
-        name: b.name,
-        description: b.description,
-        emoji: b.emoji,
+        ...b,
         criteriaType: b.criteriaType as any,
-        criteriaValue: b.criteriaValue,
-        courseId: b.courseId,
-        isActive: b.isActive,
         archivedAt: toISO(b.archivedAt),
         createdAt: toISO(b.createdAt)!,
         updatedAt: toISO(b.updatedAt),
         awardedAt: toISO(b.awardedAt)!,
       })),
+      featuredBadges: featuredBadgeRows.map((b) => ({
+        ...b,
+        awardedAt: toISO(b.awardedAt)!,
+      })),
+      activeBuffs: await getActiveBuffs(userId, 'xp_multiplier'),
+      dailyChallenge: await checkDailyChallengeProgress(userId, organizationId),
     };
   } catch (err) {
     logger.error('[Gamification] getLearnerProfile failed', {
@@ -726,18 +902,27 @@ export async function getLearnerProfile(
 }
 
 // ---------------------------------------------------------------------------
-// 7. getLeaderboard
 // ---------------------------------------------------------------------------
+// Tier helper
+// ---------------------------------------------------------------------------
+function getTier(xp: number): string {
+  if (xp >= 30000) return 'diamond';
+  if (xp >= 11000) return 'platinum';
+  if (xp >= 3000)  return 'gold';
+  if (xp >= 500)   return 'silver';
+  return 'bronze';
+}
 
 /**
- * Returns a ranked list of learners for a specific course, ordered by total
- * points descending. Returns an empty array if leaderboards are disabled for
- * the organization or if the setting row doesn't exist yet.
+ * Returns a ranked list of learners for a specific course.
+ * Supports mode: 'all_time' | 'weekly' | 'streak'
+ * Returns an empty array if leaderboards are disabled for the org.
  */
 export async function getLeaderboard(
   organizationId: string,
   courseId: string,
-  limit = 50,
+  limit = 200,
+  mode: 'all_time' | 'weekly' | 'streak' = 'all_time',
 ): Promise<GamificationLeaderboardEntry[]> {
   try {
     const settings = await getOrgSettings(organizationId);
@@ -759,17 +944,28 @@ export async function getLeaderboard(
 
     const enrolledIds = enrolledRows.map((r) => r.studentId);
 
-    // Fetch profiles for enrolled users ordered by points DESC
+    // Determine ORDER BY column based on mode
+    const orderCol = mode === 'weekly'
+      ? userGamificationProfiles.xpThisWeek
+      : mode === 'streak'
+      ? studyStreaks.currentStreak
+      : userGamificationProfiles.totalXp;
+
+    // Fetch profiles with streak data
     const rows = await db
       .select({
         userId: userGamificationProfiles.userId,
         totalPoints: userGamificationProfiles.totalPoints,
+        totalXp: userGamificationProfiles.totalXp,
+        xpThisWeek: userGamificationProfiles.xpThisWeek,
         currentLevelNumber: userGamificationProfiles.currentLevelNumber,
         fullName: users.fullName,
         avatarUrl: users.profilePicture,
+        currentStreak: studyStreaks.currentStreak,
       })
       .from(userGamificationProfiles)
       .innerJoin(users, eq(userGamificationProfiles.userId, users.id))
+      .leftJoin(studyStreaks, eq(studyStreaks.userId, userGamificationProfiles.userId))
       .where(
         and(
           eq(userGamificationProfiles.organizationId, organizationId),
@@ -778,7 +974,7 @@ export async function getLeaderboard(
             : sql`false`,
         ),
       )
-      .orderBy(desc(userGamificationProfiles.totalPoints))
+      .orderBy(desc(orderCol))
       .limit(limit);
 
     // Count badges per user in a single query
@@ -806,8 +1002,12 @@ export async function getLeaderboard(
       fullName: row.fullName,
       avatarUrl: row.avatarUrl ?? null,
       totalPoints: row.totalPoints,
+      totalXp: row.totalXp ?? 0,
+      xpThisWeek: row.xpThisWeek ?? 0,
+      currentStreak: row.currentStreak ?? 0,
       currentLevelNumber: row.currentLevelNumber,
       badgeCount: badgeCountMap.get(row.userId) ?? 0,
+      tier: getTier(row.totalXp ?? 0),
     }));
   } catch (err) {
     logger.error('[Gamification] getLeaderboard failed', {
@@ -818,6 +1018,7 @@ export async function getLeaderboard(
     return [];
   }
 }
+
 
 // ---------------------------------------------------------------------------
 // 8. getOrgSettings
@@ -916,3 +1117,253 @@ export async function ensureDefaultRules(organizationId: string): Promise<void> 
     });
   }
 }
+
+/**
+ * Toggles a badge's featured status on the user's profile.
+ * Limit of 3 featured badges per user.
+ */
+export async function toggleBadgeFeatured(userId: string, badgeId: string): Promise<{ featured: boolean }> {
+  try {
+    // 1. Check if badge is earned
+    const [earned] = await db
+      .select()
+      .from(userBadges)
+      .where(and(eq(userBadges.userId, userId), eq(userBadges.badgeId, badgeId)));
+
+    if (!earned) {
+      throw new Error("Cannot feature a badge you haven't earned yet.");
+    }
+
+    // 2. Check if already featured
+    const [existing] = await db
+      .select()
+      .from(userFeaturedBadges)
+      .where(and(eq(userFeaturedBadges.userId, userId), eq(userFeaturedBadges.badgeId, badgeId)));
+
+    if (existing) {
+      // Remove it
+      await db
+        .delete(userFeaturedBadges)
+        .where(and(eq(userFeaturedBadges.userId, userId), eq(userFeaturedBadges.badgeId, badgeId)));
+      return { featured: false };
+    } else {
+      // Add it - check limit first
+      const featured = await db
+        .select()
+        .from(userFeaturedBadges)
+        .where(eq(userFeaturedBadges.userId, userId));
+
+      if (featured.length >= 3) {
+        throw new Error("You can only feature up to 3 badges on your profile.");
+      }
+
+      await db.insert(userFeaturedBadges).values({
+        userId,
+        badgeId,
+        displayOrder: featured.length,
+      });
+      return { featured: true };
+    }
+  } catch (err) {
+    console.error('[toggleBadgeFeatured]', err);
+    throw err;
+  }
+}
+
+/**
+ * Returns all active buffs of a specific type for a user.
+ * (Sprint B: Used for XP multipliers)
+ */
+export async function getActiveBuffs(userId: string, buffType: string): Promise<UserBuff[]> {
+  try {
+    const rows = await db
+      .select()
+      .from(userBuffs)
+      .where(
+        and(
+          eq(userBuffs.userId, userId),
+          eq(userBuffs.buffType, buffType),
+          gte(userBuffs.expiresAt, new Date())
+        )
+      );
+
+    return rows.map(r => ({
+      id: r.id,
+      userId: r.userId,
+      buffType: r.buffType as 'xp_multiplier',
+      buffValue: r.buffValue,
+      startsAt: r.startsAt.toISOString(),
+      expiresAt: r.expiresAt.toISOString(),
+      sourceId: r.sourceId
+    }));
+  } catch (err) {
+    logger.error('[Gamification] getActiveBuffs failed', { userId, buffType, error: String(err) });
+    return [];
+  }
+}
+
+/**
+ * Ensures a daily challenge exists for the given organization and date.
+ * If not, creates one from a random selection of templates or defaults.
+ */
+export async function ensureDailyChallengeExists(organizationId: string, dateStr: string): Promise<any> {
+  try {
+    const [existing] = await db
+      .select()
+      .from(dailyChallenges)
+      .where(
+        and(
+          eq(dailyChallenges.organizationId, organizationId),
+          eq(dailyChallenges.date, dateStr)
+        )
+      )
+      .limit(1);
+
+    if (existing) return existing;
+
+    // Create a new one
+    // In a real app, you'd pick from templates. Here we'll generate one.
+    const challenges = [
+      { title: 'Morning Sprint', description: 'Complete 3 lessons today', type: 'lesson_completion', val: 3 },
+      { title: 'Quiz Master', description: 'Complete 2 quizzes today', type: 'quiz_completion', val: 2 },
+      { title: 'Active Learner', description: 'Submit 2 assignments today', type: 'assignment_submission', val: 2 },
+    ];
+    
+    const template = challenges[Math.floor(Math.random() * challenges.length)];
+    
+    const [created] = await db
+      .insert(dailyChallenges)
+      .values({
+        id: createId(),
+        organizationId,
+        date: dateStr,
+        title: template.title,
+        description: template.description,
+        conditionType: template.type,
+        conditionValue: template.val,
+        xpReward: 50,
+        buffType: 'xp_multiplier',
+        buffValue: '2',
+        buffDurationMinutes: 60
+      })
+      .returning();
+
+    return created;
+  } catch (err) {
+    logger.error('[Gamification] ensureDailyChallengeExists failed', { organizationId, dateStr, error: String(err) });
+    return null;
+  }
+}
+
+/**
+ * Checks progress for the daily challenge and grants rewards if completed.
+ * (Sprint B)
+ */
+export async function checkDailyChallengeProgress(userId: string, organizationId: string): Promise<DailyChallengeProgress | null> {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const challenge = await ensureDailyChallengeExists(organizationId, today);
+    if (!challenge) return null;
+
+    // Check completion
+    const [completion] = await db
+      .select()
+      .from(userChallengeCompletions)
+      .where(
+        and(
+          eq(userChallengeCompletions.userId, userId),
+          eq(userChallengeCompletions.challengeId, challenge.id)
+        )
+      )
+      .limit(1);
+
+    // Get progress (count events of specific type today)
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    
+    const [progressResult] = await db
+      .select({ count: count() })
+      .from(gamificationEvents)
+      .where(
+        and(
+          eq(gamificationEvents.userId, userId),
+          eq(gamificationEvents.eventType, challenge.conditionType),
+          gte(gamificationEvents.occurredAt, todayStart)
+        )
+      );
+
+    const progressCount = Number(progressResult?.count ?? 0);
+    const isJustCompleted = !completion && progressCount >= challenge.conditionValue;
+
+    // If just completed, record it and award buff
+    if (isJustCompleted) {
+      await db
+        .insert(userChallengeCompletions)
+        .values({
+          id: createId(),
+          userId,
+          challengeId: challenge.id
+        })
+        .onConflictDoNothing();
+
+      // Award XP Reward (the XP itself doesn't get multiplied as it's a completion reward)
+      await awardPoints({
+        userId,
+        organizationId,
+        eventType: 'challenge_completion',
+        entityId: challenge.id,
+        entityType: 'daily_challenge',
+        metadata: { challengeTitle: challenge.title }
+      });
+
+      // Award Buff (Multiplier)
+      if (challenge.buffType === 'xp_multiplier') {
+        const expiresAt = new Date();
+        expiresAt.setMinutes(expiresAt.getMinutes() + (challenge.buffDurationMinutes ?? 60));
+        
+        await db
+          .insert(userBuffs)
+          .values({
+            id: createId(),
+            userId,
+            buffType: 'xp_multiplier',
+            buffValue: challenge.buffValue,
+            expiresAt,
+            sourceId: challenge.id
+          });
+        
+        logger.info('[Gamification] Awarded XP multiplier buff', { userId, multiplier: challenge.buffValue });
+      }
+    }
+
+    // Seconds until end of day
+    const endOfDay = new Date();
+    endOfDay.setHours(23, 59, 59, 999);
+    const remainingSeconds = Math.max(0, Math.floor((endOfDay.getTime() - Date.now()) / 1000));
+
+    return {
+      challenge: {
+        id: challenge.id,
+        organizationId: challenge.organizationId,
+        date: challenge.date,
+        title: challenge.title,
+        description: challenge.description,
+        conditionType: challenge.conditionType,
+        conditionValue: challenge.conditionValue,
+        xpReward: challenge.xpReward,
+        buffType: challenge.buffType,
+        buffValue: challenge.buffValue,
+        buffDurationMinutes: challenge.buffDurationMinutes,
+        createdAt: challenge.createdAt.toISOString()
+      },
+      completed: !!(completion || isJustCompleted),
+      completedAt: completion?.completedAt?.toISOString() ?? (isJustCompleted ? new Date().toISOString() : null),
+      progress: progressCount,
+      remainingSeconds
+    };
+  } catch (err) {
+    logger.error('[Gamification] checkDailyChallengeProgress failed', { userId, organizationId, error: String(err) });
+    return null;
+  }
+}
+

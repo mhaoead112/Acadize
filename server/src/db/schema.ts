@@ -1,4 +1,4 @@
-import { pgTable, text, boolean, timestamp, varchar, pgEnum, date, integer, real, jsonb, index, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, text, boolean, timestamp, varchar, pgEnum, date, integer, real, jsonb, index, uniqueIndex, primaryKey } from "drizzle-orm/pg-core";
 import { createId } from "@paralleldrive/cuid2";
 import { desc } from "drizzle-orm";
 import { z } from "zod";
@@ -527,6 +527,15 @@ export const studyStreaks = pgTable("study_streaks", {
   totalActiveDays: integer("total_active_days").default(0).notNull(), // Total days with activity
   weeklyGoalHours: real("weekly_goal_hours").default(10).notNull(), // User's weekly goal
   currentWeekHours: real("current_week_hours").default(0).notNull(), // Hours this week
+  
+  // Streak Shield & Comeback columns
+  streakShields: integer("streak_shields").default(0).notNull(), // 0-2 shields
+  weeklyStreak: integer("weekly_streak").default(0).notNull(), // Consecutive weeks active
+  weeklyActiveDays: integer("weekly_active_days").default(0).notNull(), // Days active this week
+  lastWeeklyCheck: timestamp("last_weekly_check"),
+  lastShieldEarnedAt: timestamp("last_shield_earned_at"),
+  comebackBonusEarnedAt: timestamp("comeback_bonus_earned_at"),
+  
   updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
 });
 
@@ -1266,6 +1275,9 @@ export const attendanceNotifications = pgTable("attendance_notifications", {
   typeIdx: index("att_notif_type_idx").on(table.type),
 }));
 
+// Badge rarity enum
+export const badgeRarityEnum = pgEnum('badge_rarity', ['common', 'uncommon', 'rare', 'epic', 'legendary']);
+
 // =====================================================
 // GAMIFICATION
 // =====================================================
@@ -1314,11 +1326,14 @@ export const gamificationBadges = pgTable("gamification_badges", {
   organizationId: text("organization_id").notNull().references(() => organizations.id, { onDelete: 'cascade' }),
   name: varchar("name", { length: 100 }).notNull(),
   description: text("description").notNull(),
+  storyText: text("story_text"), // Narrative/lore description
   emoji: varchar("emoji", { length: 10 }),
+  rarity: badgeRarityEnum("rarity").default("common").notNull(),
   criteriaType: varchar("criteria_type", { length: 50 }).notNull(),
   criteriaValue: integer("criteria_value").notNull(),
   courseId: text("course_id").references(() => courses.id, { onDelete: 'cascade' }),
   isActive: boolean("is_active").default(true).notNull(),
+  isHidden: boolean("is_hidden").default(false).notNull(), // Secret badges
   archivedAt: timestamp("archived_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
@@ -1332,6 +1347,10 @@ export const userGamificationProfiles = pgTable("user_gamification_profiles", {
   userId: text("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
   organizationId: text("organization_id").notNull().references(() => organizations.id, { onDelete: 'cascade' }),
   totalPoints: integer("total_points").default(0).notNull(),
+  totalXp: integer("total_xp").default(0).notNull(),
+  currentLevel: integer("current_level").default(1).notNull(),
+  xpThisWeek: integer("xp_this_week").default(0).notNull(),
+  xpWeekResetAt: timestamp("xp_week_reset_at"),
   currentLevelId: text("current_level_id").references(() => gamificationLevels.id, { onDelete: 'set null' }),
   currentLevelNumber: integer("current_level_number").default(0).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -1339,6 +1358,22 @@ export const userGamificationProfiles = pgTable("user_gamification_profiles", {
 }, (table) => ({
   userOrgUniqueIdx: uniqueIndex("user_gamification_profiles_user_org_unique_idx").on(table.userId, table.organizationId),
   leaderboardIdx: index("user_gamification_profiles_org_total_points_idx").on(table.organizationId, desc(table.totalPoints)),
+}));
+
+export const xpTransactions = pgTable("xp_transactions", {
+  id: text("id").primaryKey().$defaultFn(() => createId()),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  organizationId: text("organization_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
+  amount: integer("amount").notNull(),
+  reason: varchar("reason", { length: 100 }).notNull(),
+  sourceId: text("source_id"),
+  sourceType: varchar("source_type", { length: 50 }),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (t) => ({
+  userOrgIdx: index("xp_tx_user_org_idx").on(t.userId, t.organizationId),
+  sourceIdx: index("xp_tx_source_idx").on(t.sourceId, t.reason),
+  dedupeIdx: uniqueIndex("xp_tx_dedupe_idx").on(t.userId, t.reason, t.sourceId),
 }));
 
 export const gamificationEvents = pgTable("gamification_events", {
@@ -1366,6 +1401,114 @@ export const userBadges = pgTable("user_badges", {
 }, (table) => ({
   userBadgeUniqueIdx: uniqueIndex("user_badges_user_badge_unique_idx").on(table.userId, table.badgeId),
   userOrgIdx: index("user_badges_user_org_idx").on(table.userId, table.organizationId),
+}));
+
+export const userFeaturedBadges = pgTable("user_featured_badges", {
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  badgeId: text("badge_id").notNull().references(() => gamificationBadges.id, { onDelete: 'cascade' }),
+  displayOrder: integer("display_order").notNull(),
+}, (table) => ({
+  pk: primaryKey({ columns: [table.userId, table.badgeId] }),
+}));
+
+// =====================================================
+// RETENTION & MULTIPLIERS (Sprint B)
+// =====================================================
+
+/**
+ * Global Daily Challenges - One per organization per day.
+ * Completing these can trigger XP multipliers or other buffs.
+ */
+export const dailyChallenges = pgTable("daily_challenges", {
+  id: text("id").primaryKey().$defaultFn(() => createId()),
+  organizationId: text("organization_id").notNull().references(() => organizations.id, { onDelete: 'cascade' }),
+  date: date("date").notNull(), // Format YYYY-MM-DD
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description").notNull(),
+  conditionType: varchar("condition_type", { length: 50 }).notNull(),
+  conditionValue: integer("condition_value").notNull(),
+  xpReward: integer("xp_reward").notNull(),
+  buffType: varchar("buff_type", { length: 50 }), // e.g. 'xp_multiplier'
+  buffValue: varchar("buff_value", { length: 50 }), // e.g. '2'
+  buffDurationMinutes: integer("buff_duration_minutes").default(60),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  orgDateUniqueIdx: uniqueIndex("daily_challenges_org_date_unique_idx").on(table.organizationId, table.date),
+}));
+
+/**
+ * Tracks which users have completed which daily challenge.
+ */
+export const userChallengeCompletions = pgTable("user_challenge_completions", {
+  id: text("id").primaryKey().$defaultFn(() => createId()),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  challengeId: text("challenge_id").notNull().references(() => dailyChallenges.id, { onDelete: 'cascade' }),
+  completedAt: timestamp("completed_at").defaultNow().notNull(),
+}, (table) => ({
+  userChallengeUniqueIdx: uniqueIndex("user_challenge_unique_idx").on(table.userId, table.challengeId),
+}));
+
+/**
+ * Active temporary buffs for users (e.g. 2x XP multiplier).
+ */
+export const userBuffs = pgTable("user_buffs", {
+  id: text("id").primaryKey().$defaultFn(() => createId()),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  buffType: varchar("buff_type", { length: 50 }).notNull(), // 'xp_multiplier'
+  buffValue: varchar("buff_value", { length: 50 }).notNull(), // e.g. '2'
+  startsAt: timestamp("starts_at").defaultNow().notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  sourceId: text("source_id"), // challenge_id or event_id
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  userBuffTypeIdx: index("user_buffs_user_type_idx").on(table.userId, table.buffType),
+  activeBuffsIdx: index("user_buffs_active_idx").on(table.userId, table.expiresAt),
+}));
+
+// =====================================================
+// QUEST SYSTEM
+// =====================================================
+
+// Quest template catalog (org-configurable, seeded with defaults)
+export const questTemplates = pgTable("quest_templates", {
+  id: text("id").primaryKey().$defaultFn(() => createId()),
+  organizationId: text("organization_id").notNull()
+    .references(() => organizations.id, { onDelete: "cascade" }),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  questType: varchar("quest_type", { length: 20 }).notNull(), // 'daily' | 'weekly' | 'story'
+  conditionType: varchar("condition_type", { length: 50 }).notNull(),
+  // 'lesson_complete', 'quiz_pass', 'quiz_above_pct', 'assignment_submit', 'login_streak', 'exam_complete'
+  conditionValue: integer("condition_value").default(1).notNull(),
+  conditionMeta: jsonb("condition_meta"), // e.g. { minScore: 80 } for quiz_above_pct
+  xpReward: integer("xp_reward").notNull(),
+  badgeReward: text("badge_reward").references(() => gamificationBadges.id, { onDelete: "set null" }),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (t) => ({
+  orgTypeIdx: index("qt_org_type_idx").on(t.organizationId, t.questType),
+}));
+
+// Per-user active quest assignments with progress tracking
+export const userQuestProgress = pgTable("user_quest_progress", {
+  id: text("id").primaryKey().$defaultFn(() => createId()),
+  userId: text("user_id").notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  organizationId: text("organization_id").notNull()
+    .references(() => organizations.id, { onDelete: "cascade" }),
+  questTemplateId: text("quest_template_id").notNull()
+    .references(() => questTemplates.id, { onDelete: "cascade" }),
+  questType: varchar("quest_type", { length: 20 }).notNull(),
+  progress: integer("progress").default(0).notNull(),
+  conditionValue: integer("condition_value").notNull(), // snapshot at assignment time
+  completed: boolean("completed").default(false).notNull(),
+  completedAt: timestamp("completed_at"),
+  xpAwarded: integer("xp_awarded"),
+  assignedAt: timestamp("assigned_at").defaultNow().notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+}, (t) => ({
+  userOrgIdx: index("uqp_user_org_idx").on(t.userId, t.organizationId),
+  activeIdx: index("uqp_active_idx").on(t.userId, t.completed, t.expiresAt),
 }));
 
 export const auditLogs = pgTable("audit_logs", {
@@ -1428,6 +1571,12 @@ export type GamificationBadge = typeof gamificationBadges.$inferSelect;
 export type UserGamificationProfile = typeof userGamificationProfiles.$inferSelect;
 export type GamificationEvent = typeof gamificationEvents.$inferSelect;
 export type UserBadge = typeof userBadges.$inferSelect;
+export type XpTransaction = typeof xpTransactions.$inferSelect;
+export type NewXpTransaction = typeof xpTransactions.$inferInsert;
+export type QuestTemplate = typeof questTemplates.$inferSelect;
+export type NewQuestTemplate = typeof questTemplates.$inferInsert;
+export type UserQuestProgress = typeof userQuestProgress.$inferSelect;
+export type NewUserQuestProgress = typeof userQuestProgress.$inferInsert;
 export type Announcement = typeof announcements.$inferSelect;
 export type NewAnnouncement = typeof announcements.$inferInsert;
 export type Event = typeof events.$inferSelect;
@@ -1448,3 +1597,43 @@ export type QuestionType = (typeof questionTypeEnum.enumValues)[number];
 export type AttemptStatus = (typeof attemptStatusEnum.enumValues)[number];
 export type ConversationType = (typeof conversationTypeEnum.enumValues)[number];
 export type MessageType = (typeof messageTypeEnum.enumValues)[number];
+
+// =====================================================
+// SKILL TREE (Sprint C)
+// =====================================================
+
+/**
+ * Skill tree nodes — one per lesson per course.
+ * Teachers can optionally set x/y for canvas layout.
+ * prereqNodeId creates an ordered chain (locked → unlocked).
+ * sectionLabel groups nodes into visual "chapters" (e.g., "Fundamentals").
+ */
+export const skillTreeNodes = pgTable("skill_tree_nodes", {
+  id: text("id").primaryKey().$defaultFn(() => createId()),
+  courseId: text("course_id")
+    .notNull()
+    .references(() => courses.id, { onDelete: "cascade" }),
+  lessonId: text("lesson_id")
+    .notNull()
+    .references(() => lessons.id, { onDelete: "cascade" }),
+  organizationId: text("organization_id")
+    .notNull()
+    .references(() => organizations.id, { onDelete: "cascade" }),
+  /** The immediately preceding node (null = start node) */
+  prereqNodeId: text("prereq_node_id"),
+  /** Order within the tree (used when prereqNodeId is null to sort start nodes) */
+  position: integer("position").default(0).notNull(),
+  /** Optional grouping label — displayed as a section header on the map */
+  sectionLabel: varchar("section_label", { length: 120 }),
+  /** Canvas X coordinate (relative, 0–1000 range) for 2-D layout */
+  posX: integer("pos_x").default(0).notNull(),
+  /** Canvas Y coordinate */
+  posY: integer("pos_y").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  courseNodeIdx: index("skill_tree_nodes_course_idx").on(table.courseId),
+  lessonNodeUniqueIdx: uniqueIndex("skill_tree_nodes_lesson_unique_idx").on(table.lessonId),
+}));
+
+export type SkillTreeNode = typeof skillTreeNodes.$inferSelect;
+export type NewSkillTreeNode = typeof skillTreeNodes.$inferInsert;

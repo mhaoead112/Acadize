@@ -746,12 +746,14 @@ export class ExamAttemptService {
 
       // -- Gamification: exam_completion (fire-and-forget) ------------------
       try {
-        // Re-fetch attempt so we have examId, studentId, and organizationId
+        // Re-fetch attempt so we have examId, studentId, organizationId, passed, percentage
         const [completedAttempt] = await db
           .select({
             studentId:      examAttempts.studentId,
             examId:         examAttempts.examId,
             organizationId: exams.organizationId,
+            passed:         examAttempts.passed,
+            percentage:     examAttempts.percentage,
           })
           .from(examAttempts)
           .innerJoin(exams, eq(examAttempts.examId, exams.id))
@@ -759,17 +761,33 @@ export class ExamAttemptService {
           .limit(1);
 
         if (completedAttempt) {
-          await gamificationService.awardPoints({
+          const { awardPoints, evaluateBadges } = await import('./gamification.service.js');
+          const { awardXp } = await import('./xp.service.js');
+          await awardPoints({
             userId:         completedAttempt.studentId,
             organizationId: completedAttempt.organizationId,
-            eventType:      'exam_completion',
+            eventType:      'exam_complete',
             entityId:       completedAttempt.examId,
             entityType:     'exam',
           });
-          void gamificationService.evaluateBadges(
+          
+          if (completedAttempt.passed) {
+            const pct = completedAttempt.percentage ? Number(completedAttempt.percentage) : 0;
+            const amount = pct >= 90 ? 350 : 200;
+            await awardXp(
+              completedAttempt.studentId,
+              completedAttempt.organizationId,
+              pct >= 90 ? 'exam_pass_above_90pct' : 'exam_pass',
+              amount,
+              completedAttempt.examId,
+              'exam'
+            );
+          }
+
+          void evaluateBadges(
             completedAttempt.studentId,
             completedAttempt.organizationId,
-            'exam_completion',
+            'exam_complete',
           );
         }
       } catch (gamErr) {

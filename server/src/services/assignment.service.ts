@@ -147,11 +147,11 @@ export async function submitAssignment(data: SubmitAssignmentInput) {
     await gamificationService.awardPoints({
       userId: data.studentId,
       organizationId: orgId,
-      eventType: 'assignment_submission',
+      eventType: 'assignment_submit',
       entityId: data.assignmentId,
       entityType: 'assignment',
     });
-    void gamificationService.evaluateBadges(data.studentId, orgId, 'assignment_submission');
+    void gamificationService.evaluateBadges(data.studentId, orgId, 'assignment_submit');
   } catch (gamErr) {
     // Intentionally swallowed — gamification must never break submission flow
   }

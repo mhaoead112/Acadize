@@ -81,6 +81,9 @@ export type GamificationLevel = {
 // Badges
 // ---------------------------------------------------------------------------
 
+/** Badge rarity tiers. */
+export type BadgeRarity = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
+
 /** The criteria type that governs when a badge is automatically awarded. */
 export type GamificationCriteriaType =
   | 'lesson_count'
@@ -97,13 +100,18 @@ export type GamificationBadge = {
   organizationId: string;
   name: string;
   description: string;
+  /** Narrative or lore description. */
+  storyText: string | null;
   emoji: string | null;
+  rarity: BadgeRarity;
   criteriaType: GamificationCriteriaType;
   /** Meaning depends on criteriaType: lesson count, level number reached, etc. */
   criteriaValue: number;
   /** When set, the badge is only awarded within this specific course. */
   courseId: string | null;
   isActive: boolean;
+  /** Hidden/secret badges until earned. */
+  isHidden: boolean;
   archivedAt: string | null;
   createdAt: string;
   updatedAt: string | null;
@@ -205,10 +213,50 @@ export type GamificationReportSummary = {
 // API response wrappers
 // ---------------------------------------------------------------------------
 
-/** Response shape for GET /api/gamification/me */
+// ---------------------------------------------------------------------------
+// Daily Challenges & Buffs (Sprint B)
+// ---------------------------------------------------------------------------
+
+export type DailyChallenge = {
+  id: string;
+  organizationId: string;
+  date: string; // YYYY-MM-DD
+  title: string;
+  description: string;
+  conditionType: string;
+  conditionValue: number;
+  xpReward: number;
+  buffType: string | null;
+  buffValue: string | null;
+  buffDurationMinutes: number | null;
+  createdAt: string;
+};
+
+export type UserBuff = {
+  id: string;
+  userId: string;
+  buffType: 'xp_multiplier';
+  buffValue: string;
+  startsAt: string;
+  expiresAt: string;
+  sourceId: string | null;
+};
+
+export type DailyChallengeProgress = {
+  challenge: DailyChallenge | null;
+  completed: boolean;
+  completedAt: string | null;
+  progress: number;
+  /** Seconds remaining until the challenge expires (end of day) */
+  remainingSeconds: number;
+};
+
 export type GamificationMeResponse = UserGamificationProfile & {
   recentBadges: AwardedBadge[];
+  featuredBadges: (AwardedBadge & { displayOrder: number })[];
   recentEvents: GamificationEvent[];
+  activeBuffs: UserBuff[];
+  dailyChallenge: DailyChallengeProgress | null;
 };
 
 /** Response shape for GET /api/gamification/me/badges */
@@ -252,7 +300,6 @@ export type TeacherGamificationOverviewResponse = {
   }[];
 };
 
-/** Result returned from the internal awardPoints() service call. */
 export type PointAwardResult = {
   /** false when the event was a duplicate (idempotency) or gamification is disabled. */
   awarded: boolean;
@@ -260,4 +307,54 @@ export type PointAwardResult = {
   newTotal: number;
   levelUp: boolean;
   newLevel: GamificationLevel | null;
+};
+
+// ---------------------------------------------------------------------------
+// Quests
+// ---------------------------------------------------------------------------
+
+export type QuestType = 'daily' | 'weekly';
+
+export type QuestConditionType = 
+  | 'lesson_completion' 
+  | 'exam_completion' 
+  | 'assignment_submission' 
+  | 'total_xp' 
+  | 'streak_days';
+
+/** An org-scoped quest template definition. */
+export type QuestTemplate = {
+  id: string;
+  organizationId: string;
+  title: string;
+  description: string;
+  questType: QuestType;
+  conditionType: QuestConditionType;
+  conditionValue: number;
+  xpReward: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string | null;
+};
+
+/** Progress of a specific student on an assigned quest. */
+export type UserQuestProgress = {
+  id: string;
+  organizationId: string;
+  userId: string;
+  questTemplateId: string;
+  questType: QuestType;
+  conditionType: QuestConditionType;
+  conditionValue: number;
+  progress: number;
+  completed: boolean;
+  assignedAt: string;
+  expiresAt: string;
+  completedAt: string | null;
+};
+
+/** Response shape for GET /api/gamification/quests */
+export type GamificationQuestsResponse = {
+  daily: (UserQuestProgress & { title: string; description: string; xpReward: number; pct: number })[];
+  weekly: (UserQuestProgress & { title: string; description: string; xpReward: number; pct: number })[];
 };

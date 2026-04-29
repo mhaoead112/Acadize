@@ -4,6 +4,7 @@
 
 import { WebSocketServer, WebSocket } from 'ws';
 import { Server } from 'http';
+import jwt from 'jsonwebtoken';
 import { WS_CHAT_PATH } from '../realtime.config.js';
 import { logger } from '../utils/logger.js';
 
@@ -11,6 +12,11 @@ interface WebSocketClient {
     userId: string;
     role: string;
     ws: WebSocket;
+}
+
+interface AuthTokenPayload {
+    id: string;
+    role: string;
 }
 
 export class WebSocketService {
@@ -52,12 +58,47 @@ export class WebSocketService {
      * Handle incoming messages
      */
     private static handleMessage(ws: WebSocket, data: any): void {
-        const { type, userId, role, token } = data;
+        const { type, token } = data;
 
         if (type === 'auth') {
-            // TODO: Verify JWT token
-            this.registerClient(userId, role, ws);
-            ws.send(JSON.stringify({ type: 'auth_success', userId }));
+            const user = this.verifyAuthToken(token);
+
+            if (!user) {
+                ws.send(JSON.stringify({ type: 'auth_error', message: 'Authentication failed' }));
+                ws.close(1008, 'Authentication failed');
+                return;
+            }
+
+            this.registerClient(user.id, user.role, ws);
+            ws.send(JSON.stringify({ type: 'auth_success', userId: user.id }));
+        }
+    }
+
+    private static verifyAuthToken(token: unknown): AuthTokenPayload | null {
+        if (typeof token !== 'string' || !token) {
+            return null;
+        }
+
+        const secret = process.env.JWT_SECRET;
+        if (!secret) {
+            logger.error('[WebSocketService] JWT_SECRET is not configured');
+            return null;
+        }
+
+        try {
+            const decoded = jwt.verify(token, secret) as Partial<AuthTokenPayload>;
+
+            if (!decoded.id || !decoded.role) {
+                return null;
+            }
+
+            return {
+                id: decoded.id,
+                role: decoded.role,
+            };
+        } catch (error) {
+            logger.warn('[WebSocketService] Invalid auth token', { error: String(error) });
+            return null;
         }
     }
 

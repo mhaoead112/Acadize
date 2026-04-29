@@ -154,8 +154,26 @@ router.get('/:id', ...requireAuth, async (req, res) => {
       return res.status(401).json({ message: 'Unauthorized' });
     }
 
-    // Allow teachers/admins to view any student, students to view themselves
-    if (requestingUser.role !== 'teacher' && requestingUser.role !== 'admin' && requestingUser.id !== id) {
+    // Get target user to check their role
+    const [targetUser] = await db
+      .select({ role: users.role })
+      .from(users)
+      .where(eq(users.id, id))
+      .limit(1);
+
+    if (!targetUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Allow viewing if:
+    // 1. Requesting user is teacher/admin
+    // 2. Requesting user is viewing themselves
+    // 3. Requesting user is a student and target user is a teacher/admin (to see instructor info)
+    const isSelf = requestingUser.id === id;
+    const isStaffRequest = requestingUser.role === 'teacher' || requestingUser.role === 'admin';
+    const isTargetStaff = targetUser.role === 'teacher' || targetUser.role === 'admin';
+
+    if (!isStaffRequest && !isSelf && !isTargetStaff) {
       return res.status(403).json({ message: 'Access denied' });
     }
 

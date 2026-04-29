@@ -21,11 +21,17 @@ import {
   gamificationBadges,
   userBadges,
   userGamificationProfiles,
+  userQuestProgress,
+  questTemplates,
   enrollments,
   users,
+  xpTransactions,
 } from '../db/schema.js';
-import { eq, and, desc, count, sql, inArray } from 'drizzle-orm';
+import { eq, and, desc, count, sql, inArray, gt } from 'drizzle-orm';
 import * as gamificationService from '../services/gamification.service.js';
+import { assignDailyQuests, assignWeeklyQuest } from '../services/quest.service.js';
+import { buildCoachContext, generateCoachMessage } from '../services/coach.service.js';
+
 
 // ---------------------------------------------------------------------------
 // Org helper — mirrors the pattern used across existing route files
@@ -153,15 +159,36 @@ gamificationRouter.get('/me/badges', ...requireAuth, async (req: any, res) => {
 });
 
 // ---------------------------------------------------------------------------
+// POST /api/gamification/badges/:id/feature
+// Toggles the featured status of a badge for the current user.
+// ---------------------------------------------------------------------------
+gamificationRouter.post('/badges/:id/feature', ...requireAuth, async (req: any, res) => {
+  try {
+    const userId = req.user?.id;
+    const badgeId = req.params.id;
+
+    if (!userId) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    const result = await gamificationService.toggleBadgeFeatured(userId, badgeId);
+    return res.status(200).json(result);
+  } catch (err: any) {
+    return res.status(400).json({ message: err.message || 'Failed to toggle featured status.' });
+  }
+});
+
+// ---------------------------------------------------------------------------
 // GET /api/gamification/leaderboard
 // Returns ranked leaderboard for a course. Accessible by students and teachers.
-// Query: ?courseId (required)
+// Query: ?courseId (required), ?mode (optional: all_time|weekly|streak)
 // ---------------------------------------------------------------------------
 gamificationRouter.get('/leaderboard', ...requireAuth, async (req: any, res) => {
   try {
-    const userId = req.user?.id;
-    const orgId  = getOrgId(req);
+    const userId  = req.user?.id;
+    const orgId   = getOrgId(req);
     const courseId = req.query.courseId as string | undefined;
+    const mode     = (req.query.mode ?? 'all_time') as 'all_time' | 'weekly' | 'streak';
 
     if (!userId || !orgId) {
       return res.status(400).json({ message: 'User and organization context required.' });
@@ -172,20 +199,37 @@ gamificationRouter.get('/leaderboard', ...requireAuth, async (req: any, res) => 
 
     const settings = await gamificationService.getOrgSettings(orgId);
     if (!settings.enabled || !settings.leaderboardEnabled) {
-      return res.status(200).json({ entries: [], userRank: null, enabled: false });
+      return res.status(200).json({ entries: [], nearMe: [], userRank: null, enabled: false });
     }
 
-    const entries = await gamificationService.getLeaderboard(orgId, courseId, 50);
+    const entries = await gamificationService.getLeaderboard(orgId, courseId, 200, mode);
 
-    // Find the requesting user's rank in this leaderboard
-    const userRank = entries.find(e => e.userId === userId)?.rank ?? null;
+    const userEntry = entries.find(e => e.userId === userId);
+    const userRank  = userEntry?.rank ?? null;
 
-    return res.status(200).json({ entries, userRank, enabled: true });
+    // Near-me slice: 2 above + me + 2 below; always prepend rank 1 if not in range
+    let nearMe: typeof entries = [];
+    if (userRank !== null) {
+      const idx   = userRank - 1;
+      const start = Math.max(0, idx - 2);
+      const end   = Math.min(entries.length, idx + 3);
+      nearMe = entries.slice(start, end);
+      if (start > 0) nearMe = [entries[0], ...nearMe];
+    }
+
+    return res.status(200).json({
+      entries: entries.slice(0, 10), // top 10 for podium
+      nearMe,
+      userRank,
+      mode,
+      enabled: true,
+    });
   } catch (err) {
     console.error('[GET /gamification/leaderboard]', err);
     return res.status(500).json({ message: 'Failed to fetch leaderboard.' });
   }
 });
+
 
 // ---------------------------------------------------------------------------
 // GET /api/gamification/activity
@@ -251,6 +295,146 @@ gamificationRouter.get('/activity', ...requireAuth, async (req: any, res) => {
     return res.status(500).json({ message: 'Failed to fetch activity.' });
   }
 });
+
+// ---------------------------------------------------------------------------
+// GET /api/gamification/xp/history
+// Returns a paginated log of XP transactions for the student.
+// Query: ?limit=20&offset=0
+// ---------------------------------------------------------------------------
+gamificationRouter.get('/xp/history', ...requireAuth, async (req: any, res) => {
+  try {
+    const userId = req.user?.id;
+    const orgId = getOrgId(req);
+
+    if (!userId || !orgId) {
+      return res.status(400).json({ message: 'User and organization context required.' });
+    }
+
+    const limit = Math.min(parseInt(String(req.query.limit ?? '20'), 10) || 20, 100);
+    const offset = Math.max(parseInt(String(req.query.offset ?? '0'), 10) || 0, 0);
+
+    const [{ total }] = await db
+      .select({ total: count() })
+      .from(xpTransactions)
+      .where(
+        and(
+          eq(xpTransactions.userId, userId),
+          eq(xpTransactions.organizationId, orgId)
+        )
+      );
+
+    const rows = await db
+      .select()
+      .from(xpTransactions)
+      .where(
+        and(
+          eq(xpTransactions.userId, userId),
+          eq(xpTransactions.organizationId, orgId)
+        )
+      )
+      .orderBy(desc(xpTransactions.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+    return res.status(200).json({ transactions: rows, total: Number(total), limit, offset });
+  } catch (err) {
+    console.error('[GET /gamification/xp/history]', err);
+    return res.status(500).json({ message: 'Failed to fetch XP history.' });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// GET /api/gamification/quests
+// Returns active daily + weekly quests with progress for the student.
+// ---------------------------------------------------------------------------
+gamificationRouter.get('/quests', ...requireAuth, async (req: any, res) => {
+  try {
+    const userId = req.user?.id;
+    const orgId = getOrgId(req);
+
+    if (!userId || !orgId) {
+      return res.status(400).json({ message: 'User and organization context required.' });
+    }
+
+    // Auto-assign daily and weekly quests if not yet assigned for this period
+    await assignDailyQuests(userId, orgId);
+    await assignWeeklyQuest(userId, orgId);
+
+    const now = new Date();
+    const quests = await db
+      .select({ 
+        uqp: userQuestProgress, 
+        template: questTemplates 
+      })
+      .from(userQuestProgress)
+      .innerJoin(questTemplates, eq(userQuestProgress.questTemplateId, questTemplates.id))
+      .where(
+        and(
+          eq(userQuestProgress.userId, userId),
+          eq(userQuestProgress.organizationId, orgId),
+          gt(userQuestProgress.expiresAt, now),
+        )
+      )
+      .orderBy(userQuestProgress.assignedAt);
+
+    const formatQuest = ({ uqp, template }: any) => ({
+      id: uqp.id,
+      title: template.title,
+      description: template.description,
+      questType: uqp.questType,
+      progress: uqp.progress,
+      goal: uqp.conditionValue,
+      xpReward: template.xpReward,
+      completed: uqp.completed,
+      expiresAt: uqp.expiresAt ? new Date(uqp.expiresAt).toISOString() : null,
+      pct: Math.round((uqp.progress / uqp.conditionValue) * 100),
+    });
+
+    return res.status(200).json({
+      daily: quests.filter(q => q.uqp.questType === 'daily').map(formatQuest),
+      weekly: quests.filter(q => q.uqp.questType === 'weekly').map(formatQuest),
+    });
+  } catch (err) {
+    console.error('[GET /gamification/quests]', err);
+    return res.status(500).json({ message: 'Failed to fetch quests.' });
+  }
+});
+
+
+// ---------------------------------------------------------------------------
+// GET /api/gamification/coach-message
+// Returns a personalized AI coach message from "Alex" based on the student's
+// current streak, recent quiz scores, and quest progress.
+// Response: { message: string; persona: string; generatedAt: string; cached: boolean }
+// ---------------------------------------------------------------------------
+gamificationRouter.get('/coach-message', ...requireAuth, async (req: any, res) => {
+  try {
+    const userId = req.user?.id;
+    const orgId  = getOrgId(req);
+
+    if (!userId || !orgId) {
+      return res.status(400).json({ message: 'User and organization context required.' });
+    }
+
+    const context = await buildCoachContext(userId, orgId);
+    const { message, generatedAt } = await generateCoachMessage(userId, context);
+
+    return res.status(200).json({
+      message,
+      persona: 'Alex',
+      generatedAt,
+    });
+  } catch (err) {
+    // Absolute last-resort — should never happen because generateCoachMessage never throws
+    console.error('[GET /gamification/coach-message]', err);
+    return res.status(200).json({
+      message: "Keep pushing — every lesson brings you closer to mastery! 🚀",
+      persona: 'Alex',
+      generatedAt: new Date().toISOString(),
+    });
+  }
+});
+
 
 // ===========================================================================
 // Teacher router  →  mounted at /api/teacher/gamification

@@ -25,6 +25,7 @@ import {
   gamificationSettings,
   gamificationPointRules,
   gamificationBadges,
+  questTemplates,
 } from '../db/schema.js';
 import { eq, and, sql } from 'drizzle-orm';
 import { createId } from '@paralleldrive/cuid2';
@@ -36,12 +37,12 @@ import * as reportService from '../services/gamification-report.service.js';
 // ---------------------------------------------------------------------------
 
 const VALID_EVENT_TYPES = [
-  'lesson_completion',
-  'quiz_completion',
-  'exam_completion',
-  'assignment_submission',
+  'lesson_complete',
+  'quiz_complete',
+  'exam_complete',
+  'assignment_submit',
   'assignment_graded_pass',
-  'course_completion',
+  'course_complete',
 ] as const;
 
 type ValidEventType = (typeof VALID_EVENT_TYPES)[number];
@@ -486,6 +487,73 @@ router.put('/badges/:id', async (req: any, res) => {
   } catch (err) {
     console.error('[PUT /admin/gamification/badges/:id]', err);
     return res.status(500).json({ message: 'Failed to update badge.' });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// GET /api/admin/gamification/quests
+// ---------------------------------------------------------------------------
+
+router.get('/quests', async (req: any, res) => {
+  try {
+    const orgId = getOrgId(req);
+    if (!orgId) return res.status(400).json({ message: 'Organization context required.' });
+
+    const templates = await db
+      .select()
+      .from(questTemplates)
+      .where(eq(questTemplates.organizationId, orgId))
+      .orderBy(questTemplates.questType, questTemplates.id);
+
+    return res.status(200).json(templates);
+  } catch (err) {
+    console.error('[GET /admin/gamification/quests]', err);
+    return res.status(500).json({ message: 'Failed to fetch quest templates.' });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// PATCH /api/admin/gamification/quests/:id
+// ---------------------------------------------------------------------------
+
+router.patch('/quests/:id', async (req: any, res) => {
+  try {
+    const orgId = getOrgId(req);
+    if (!orgId) return res.status(400).json({ message: 'Organization context required.' });
+
+    const { id } = req.params;
+    const body = req.body;
+
+    // Verify template belongs to org
+    const [existing] = await db
+      .select()
+      .from(questTemplates)
+      .where(and(eq(questTemplates.id, id), eq(questTemplates.organizationId, orgId)))
+      .limit(1);
+
+    if (!existing) {
+      return res.status(404).json({ message: 'Quest template not found.' });
+    }
+
+    const updateFields: Record<string, any> = {};
+    if ('title' in body) updateFields.title = body.title;
+    if ('description' in body) updateFields.description = body.description;
+    if ('xpReward' in body) updateFields.xpReward = Number(body.xpReward);
+    if ('conditionValue' in body) updateFields.conditionValue = Number(body.conditionValue);
+    if ('isActive' in body) updateFields.isActive = !!body.isActive;
+
+    await db
+      .update(questTemplates)
+      .set({
+        ...updateFields,
+        updatedAt: new Date(),
+      })
+      .where(eq(questTemplates.id, id));
+
+    return res.status(200).json({ message: 'Quest template updated successfully.' });
+  } catch (err) {
+    console.error('[PATCH /admin/gamification/quests/:id]', err);
+    return res.status(500).json({ message: 'Failed to update quest template.' });
   }
 });
 

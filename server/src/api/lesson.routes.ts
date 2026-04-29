@@ -565,16 +565,27 @@ router.post('/:id/complete', ...requireAuth, async (req, res) => {
         let gamResult: { awarded: boolean; pointsAwarded: number; newTotal: number; levelUp: boolean } = {
             awarded: false, pointsAwarded: 0, newTotal: 0, levelUp: false,
         };
+        let xpResult = undefined;
         try {
             const { awardPoints, evaluateBadges } = await import('../services/gamification.service.js');
+            const { awardXp } = await import('../services/xp.service.js');
+            const { checkAndUpdateQuests } = await import('../services/quest.service.js');
             gamResult = await awardPoints({
                 userId: user.id,
                 organizationId: orgId,
-                eventType: 'lesson_completion',
+                eventType: 'lesson_complete',
                 entityId: lessonId,
                 entityType: 'lesson',
             });
-            void evaluateBadges(user.id, orgId, 'lesson_completion');
+            xpResult = await awardXp(user.id, orgId, 'lesson_complete', 50, lessonId, 'lesson');
+            
+            // Check for daily/weekly quest completions
+            const completedQuests = await checkAndUpdateQuests(user.id, orgId, 'lesson_complete');
+            if (completedQuests.length > 0) {
+                (gamResult as any).completedQuests = completedQuests;
+            }
+
+            void evaluateBadges(user.id, orgId, 'lesson_complete');
         } catch (gamErr) {
             // Intentionally swallowed — gamification must never break the lesson flow
             logger.warn('[Gamification] lesson_completion hook failed silently', { lessonId, error: String(gamErr) });
@@ -585,6 +596,7 @@ router.post('/:id/complete', ...requireAuth, async (req, res) => {
             message: 'Lesson marked as complete.',
             lessonId,
             gamification: gamResult,
+            xp: xpResult,
         });
     } catch (error) {
         logger.error('Error marking lesson complete:', error);

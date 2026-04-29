@@ -28,12 +28,47 @@ router.get('/me', ...requireAuth, async (req, res) => {
 router.post('/login', ...requireAuth, async (req, res) => {
   try {
     const userId = req.user!.id;
-    await recordLoginStreak(userId);
+    const orgId = req.tenant?.organizationId || req.user?.organizationId;
+    const { extendedToday, shieldUsed, streakReset, comebackBonus } = await recordLoginStreak(userId, orgId) as any;
     const updatedStreak = await getStreakInfo(userId);
+
+    let xpResult = undefined;
+    let completedQuests: any[] = [];
+    
+    if (extendedToday && orgId) {
+      try {
+        const streakBonus = Math.min(updatedStreak.currentStreak, 15);
+        const { awardXp } = await import('../services/xp.service.js');
+        const { checkAndUpdateQuests } = await import('../services/quest.service.js');
+        
+        xpResult = await awardXp(
+          userId, 
+          orgId, 
+          'daily_login', 
+          5 + streakBonus, 
+          'streak-' + new Date().toISOString().split('T')[0], 
+          'streak'
+        );
+
+        // Check for login streak quests
+        completedQuests = await checkAndUpdateQuests(userId, orgId, 'login_streak', { streak: updatedStreak.currentStreak });
+        
+        // Check for daily login quests
+        const dailyQuests = await checkAndUpdateQuests(userId, orgId, 'daily_login');
+        completedQuests = [...completedQuests, ...dailyQuests];
+      } catch (gamError) {
+        console.error('Failed to process gamification for login:', gamError);
+      }
+    }
 
     res.json({
       message: 'Login streak recorded successfully',
       streak: updatedStreak,
+      xp: xpResult,
+      shieldUsed,
+      streakReset,
+      comebackBonus,
+      completedQuests: completedQuests.length > 0 ? completedQuests : undefined,
     });
   } catch (error) {
     console.error('Error recording login streak:', error);
@@ -45,6 +80,7 @@ router.post('/login', ...requireAuth, async (req, res) => {
 router.post('/activity', ...requireAuth, async (req, res) => {
   try {
     const userId = req.user!.id;
+    const orgId = req.tenant?.organizationId || req.user?.organizationId;
     const { activityType, durationMinutes } = req.body;
 
     if (!activityType) {
@@ -74,9 +110,14 @@ router.post('/activity', ...requireAuth, async (req, res) => {
     }
 
     // 3. Also record a login streak (so activity counts toward streak)
-    await recordLoginStreak(userId);
+    const { shieldUsed, streakReset, comebackBonus } = await recordLoginStreak(userId, orgId) as any;
 
-    res.json({ message: 'Activity recorded' });
+    res.json({ 
+      message: 'Activity recorded',
+      shieldUsed,
+      streakReset,
+      comebackBonus
+    });
   } catch (error) {
     console.error('Error recording activity:', error);
     res.status(500).json({ message: 'Failed to record activity' });
