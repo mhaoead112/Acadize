@@ -36,7 +36,7 @@ const studyBuddies: StudyBuddy[] = [
     description: "Makes learning fun with jokes, memes, and entertaining explanations!",
     icon: Sparkles,
     color: "from-yellow-500 to-orange-500",
-    welcomeMessage: "Hey there, superstar! 🌟 I'm Alex, your fun-loving study buddy! Ready to turn boring lessons into exciting adventures? Let's make learning so fun, you'll forget you're even studying! What awesome topic should we dive into today? 🚀"
+    welcomeMessage: "Hey there, superstar! I'm Alex, your fun-loving study buddy! Ready to turn boring lessons into exciting adventures? Let's make learning so fun, you'll forget you're even studying! What awesome topic should we dive into today?"
   },
   {
     id: "serious",
@@ -54,7 +54,7 @@ const studyBuddies: StudyBuddy[] = [
     description: "Your personal cheerleader who keeps you motivated and confident!",
     icon: Target,
     color: "from-green-500 to-emerald-500",
-    welcomeMessage: "Hey champion! 💪 I'm Coach Inspire, and I believe in YOU! Every great achiever started exactly where you are right now. You've got incredible potential, and I'm here to help you unlock it! Remember: You don't have to be perfect, you just have to start! What goal are we crushing today? 🏆"
+    welcomeMessage: "Hey champion! I'm Coach Inspire, and I believe in YOU! Every great achiever started exactly where you are right now. You've got incredible potential, and I'm here to help you unlock it! Remember: You don't have to be perfect, you just have to start! What goal are we crushing today?"
   }
 ];
 
@@ -173,7 +173,7 @@ export default function AiChat() {
     switch (personality) {
       case 'funny':
         return [
-          "Tell me a math joke! 😂",
+          "Tell me a math joke!",
           "Make chemistry fun to learn!",
           "What's the weirdest fact about space?",
           "Turn history into a fun story!"
@@ -260,7 +260,7 @@ export default function AiChat() {
             <div className="w-20 h-20 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-6">
               <Bot className="text-white" size={48} />
             </div>
-            <h1 className="text-4xl font-luxury text-white/90 mb-4 drop-shadow-2xl">🤖 EduVerse AI Study Buddy</h1>
+            <h1 className="text-4xl font-luxury text-white/90 mb-4 drop-shadow-2xl">EduVerse AI Study Buddy</h1>
             <p className="text-xl text-white/80 max-w-3xl mx-auto font-elegant drop-shadow-lg">
               Meet your new AI study companion! Choose your perfect learning buddy with a unique personality 
               that matches your style. They'll help with homework, explain concepts, and support your 
@@ -306,7 +306,7 @@ export default function AiChat() {
                           data-testid={`button-select-${buddy.id}`}
                         >
                           <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 via-transparent to-yellow-400/20 animate-pulse"></div>
-                          <span className="relative z-10">Choose {buddy.name.split(' ')[0]} ✨</span>
+                          <span className="relative z-10">Choose {buddy.name.split(' ')[0]}</span>
                         </Button>
                       </CardContent>
                     </Card>
@@ -457,9 +457,9 @@ export default function AiChat() {
                   <div className="flex-1">
                     <Input
                       type="text"
-                      placeholder={selectedBuddy.personality === 'funny' ? "Ask me anything! Let's make learning fun! 🎉" :
+                      placeholder={selectedBuddy.personality === 'funny' ? "Ask me anything! Let's make learning fun!" :
                                    selectedBuddy.personality === 'serious' ? "Present your academic inquiry for thorough analysis." :
-                                   "What challenge are we conquering today? 💪"}
+                                   "What challenge are we conquering today?"}
                       value={inputMessage}
                       onChange={(e) => setInputMessage(e.target.value)}
                       disabled={chatMutation.isPending}
@@ -481,9 +481,9 @@ export default function AiChat() {
                 {/* Buddy-Specific Suggested Questions */}
                 <div className="mt-4">
                   <p className="text-sm text-gray-500 mb-2">
-                    {selectedBuddy.personality === 'funny' ? '🎈 Fun questions to try:' :
-                     selectedBuddy.personality === 'serious' ? '📋 Recommended academic inquiries:' :
-                     '🎯 Let\'s tackle these together:'}
+                    {selectedBuddy.personality === 'funny' ? 'Fun questions to try:' :
+                     selectedBuddy.personality === 'serious' ? 'Recommended academic inquiries:' :
+                     'Let\'s tackle these together:'}
                   </p>
                   <div className="flex flex-wrap gap-2 max-h-20 overflow-y-auto">
                     {getBuddyQuestions(selectedBuddy.personality).map((question, index) => (

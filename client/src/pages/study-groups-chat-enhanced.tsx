@@ -260,6 +260,7 @@ interface DirectMessage {
 
 interface Message {
   id: string;
+  localId?: string;          // optimistic temp id (before server response)
   conversationId: string;
   senderId: string;
   senderName: string;
@@ -272,6 +273,7 @@ interface Message {
   fileType?: string;
   createdAt: string;
   isRead?: boolean;
+  status?: 'sending' | 'sent' | 'delivered' | 'read' | 'failed';
 }
 
 interface User {
@@ -360,8 +362,8 @@ export default function StudyGroupsChatPage() {
         credentials: "include",
       });
       if (response.ok) {
-        const data = await response.json();
-        setStudyGroups(data);
+        const body = await response.json();
+        setStudyGroups(Array.isArray(body) ? body : (body?.data ?? []));
       }
     } catch (error) {
       console.error("Failed to fetch study groups:", error);
@@ -375,8 +377,8 @@ export default function StudyGroupsChatPage() {
         credentials: "include",
       });
       if (response.ok) {
-        const data = await response.json();
-        setDirectMessages(data);
+        const body = await response.json();
+        setDirectMessages(Array.isArray(body) ? body : (body?.data ?? body?.conversations ?? []));
       }
     } catch (error) {
       console.error("Failed to fetch direct messages:", error);
@@ -390,14 +392,15 @@ export default function StudyGroupsChatPage() {
         credentials: "include",
       });
       if (response.ok) {
-        const data = await response.json();
-        setMessages(data);
+        const body = await response.json();
+        const msgs: Message[] = Array.isArray(body) ? body : (body?.data ?? body?.messages ?? []);
+        setMessages(msgs);
         
         // Extract media files and links
-        const media = data.filter((m: Message) => m.type === 'image' || m.type === 'file');
+        const media = msgs.filter((m: Message) => m.type === 'image' || m.type === 'file');
         setMediaFiles(media);
         
-        const links = data
+        const links = msgs
           .filter((m: Message) => m.content && m.content.includes('http'))
           .map((m: Message) => m.content!)
           .filter(Boolean);
@@ -419,8 +422,9 @@ export default function StudyGroupsChatPage() {
       });
       if (response.ok) {
         const data = await response.json();
+        const rawMembers: GroupMember[] = Array.isArray(data.members) ? data.members : (Array.isArray(data) ? data : []);
         const membersWithPresence = await Promise.all(
-          data.members.map(async (member: GroupMember) => {
+          rawMembers.map(async (member: GroupMember) => {
             const presenceResponse = await fetch(apiEndpoint(`/api/study-groups/presence/${member.id}`), {
               headers: getAuthHeaders(),
               credentials: "include",
@@ -446,8 +450,9 @@ export default function StudyGroupsChatPage() {
         credentials: "include",
       });
       if (response.ok) {
-        const data = await response.json();
-        setAvailableUsers(data.filter((u: User) => u.id !== user?.id));
+        const body = await response.json();
+        const list: User[] = Array.isArray(body) ? body : (body?.data ?? body?.users ?? []);
+        setAvailableUsers(list.filter((u: User) => u.id !== user?.id));
       }
     } catch (error) {
       console.error("Failed to fetch users:", error);
@@ -499,12 +504,27 @@ export default function StudyGroupsChatPage() {
 
   // Message handlers
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !selectedConversation?.conversationId || isSending) return;
-    
+    if (!newMessage.trim() || !selectedConversation?.conversationId || isUploading) return;
+
     const messageContent = newMessage;
-    setNewMessage(""); // Clear input immediately
-    setIsSending(true);
-    
+    const localId = `local-${Date.now()}-${Math.random()}`;
+    setNewMessage(''); // Clear input immediately — never block typing
+
+    // Optimistic message — shows instantly while HTTP is in-flight
+    const optimisticMessage: Message = {
+      id: localId,
+      localId,
+      conversationId: selectedConversation.conversationId,
+      senderId: user?.id ?? '',
+      senderName: user?.fullName ?? '',
+      senderUsername: user?.username ?? '',
+      content: messageContent,
+      type: 'text',
+      createdAt: new Date().toISOString(),
+      status: 'sending',
+    };
+    setMessages(prev => [...prev, optimisticMessage]);
+
     try {
       const response = await fetch(apiEndpoint(`/api/conversations/${selectedConversation.conversationId}/messages`), {
         method: 'POST',
@@ -512,7 +532,7 @@ export default function StudyGroupsChatPage() {
           ...getAuthHeaders(),
           'Content-Type': 'application/json',
         },
-        credentials: "include",
+        credentials: 'include',
         body: JSON.stringify({
           type: 'text',
           content: messageContent,
@@ -520,49 +540,63 @@ export default function StudyGroupsChatPage() {
       });
 
       if (response.ok) {
-        const message = await response.json();
+        const serverMessage = await response.json();
 
-        // Add message to local state immediately for instant feedback
-        // (WebSocket echo is unreliable when WS keeps reconnecting)
-        setMessages(prev => [...prev, message]);
+        // Replace optimistic message with real server message (status = 'sent')
+        setMessages(prev =>
+          prev.map(m => m.localId === localId
+            ? { ...serverMessage, localId, status: 'sent' as const }
+            : m
+          )
+        );
 
         // Also send via WebSocket for real-time delivery to other participants
         wsSendMessage({
           type: 'message',
           conversationId: selectedConversation.conversationId,
-          content: message.content,
+          content: serverMessage.content,
           messageType: 'text',
         });
-        
-        // Stop typing indicator
+
         sendTypingIndicator(false);
-        
-        // Update last message in conversation list
+
+        // Update conversation list preview
         if (conversationType === 'group') {
-          setStudyGroups(groups => 
-            groups.map(g => g.conversationId === selectedConversation.conversationId 
-              ? {...g, lastMessage: message.content, lastMessageTime: message.createdAt}
+          setStudyGroups(groups =>
+            groups.map(g => g.conversationId === selectedConversation.conversationId
+              ? { ...g, lastMessage: serverMessage.content, lastMessageTime: serverMessage.createdAt }
               : g
             )
           );
         } else {
           setDirectMessages(dms =>
             dms.map(dm => dm.conversationId === selectedConversation.conversationId
-              ? {...dm, lastMessage: message.content, lastMessageTime: message.createdAt}
+              ? { ...dm, lastMessage: serverMessage.content, lastMessageTime: serverMessage.createdAt }
               : dm
             )
           );
         }
+      } else {
+        // Mark as failed — don't remove, let user see it
+        setMessages(prev =>
+          prev.map(m => m.localId === localId ? { ...m, status: 'failed' as const } : m)
+        );
+        toast({
+          title: t('error'),
+          description: t('failedToSendMessage'),
+          variant: 'destructive',
+        });
       }
     } catch (error) {
-      console.error("Failed to send message:", error);
+      console.error('Failed to send message:', error);
+      setMessages(prev =>
+        prev.map(m => m.localId === localId ? { ...m, status: 'failed' as const } : m)
+      );
       toast({
         title: t('error'),
         description: t('failedToSendMessage'),
-        variant: "destructive",
+        variant: 'destructive',
       });
-    } finally {
-      setIsSending(false);
     }
   };
 
@@ -874,8 +908,24 @@ export default function StudyGroupsChatPage() {
 
   const handleWebSocketMessage = (data: any) => {
     if (data.type === 'new_message') {
+      // Send delivered receipt if message is not from us
+      if (data.message.senderId !== user?.id) {
+        wsSendMessage({
+          type: 'delivered',
+          messageIds: [data.message.id]
+        });
+      }
+
       // Handle new message from WebSocket
       if (data.message.conversationId === selectedConversation?.conversationId) {
+        // Since we are viewing this conversation, send read receipt
+        if (data.message.senderId !== user?.id) {
+          wsSendMessage({
+            type: 'read',
+            conversationId: data.message.conversationId
+          });
+        }
+
         setMessages(prev => {
           // Avoid duplicates
           if (prev.some(m => m.id === data.message.id)) {
@@ -930,6 +980,19 @@ export default function StudyGroupsChatPage() {
       } else if (conversationType === 'group') {
         setGroupMembers(members =>
           members.map(m => m.id === data.userId ? {...m, isOnline: data.status === 'online'} : m)
+        );
+      }
+    } else if (data.type === 'message_delivered') {
+      setMessages(prev =>
+        prev.map(m => m.id === data.messageId ? { ...m, status: 'delivered' as const } : m)
+      );
+    } else if (data.type === 'read' || data.type === 'messages_read') {
+      const convId = data.conversationId;
+      const readUserId = data.userId || data.readBy;
+      
+      if (convId === selectedConversation?.conversationId && readUserId !== user?.id) {
+        setMessages(prev => 
+          prev.map(m => (m.senderId === user?.id && m.status !== 'read') ? { ...m, status: 'read' as const } : m)
         );
       }
     }
@@ -1089,7 +1152,7 @@ export default function StudyGroupsChatPage() {
                         <Users className="h-5 w-5" />
                       </button>
                     </DialogTrigger>
-                  <DialogContent className="bg-slate-800 border-white/10 text-white sm:max-w-[500px]">
+                  <DialogContent className="bg-slate-800 border-white/10  sm:max-w-[500px]">
                     <DialogHeader>
                       <DialogTitle>{t('createNewGroup')}</DialogTitle>
                       <DialogDescription className="text-slate-400">
@@ -1104,7 +1167,7 @@ export default function StudyGroupsChatPage() {
                           placeholder={t('enterGroupName')}
                           value={groupName}
                           onChange={(e) => setGroupName(e.target.value)}
-                          className="bg-slate-700 border-white/10 text-white placeholder:text-slate-500"
+                          className="bg-slate-700 border-white/10 dark:text-white placeholder:text-slate-500"
                         />
                       </div>
                       <div className="space-y-2">
@@ -1115,7 +1178,7 @@ export default function StudyGroupsChatPage() {
                           value={groupDescription}
                           onChange={(e) => setGroupDescription(e.target.value)}
                           rows={3}
-                          className="bg-slate-700 border-white/10 text-white placeholder:text-slate-500"
+                          className="bg-slate-700 border-white/10 dark:text-white placeholder:text-slate-500"
                         />
                       </div>
                       <div className="space-y-2">
@@ -1145,7 +1208,7 @@ export default function StudyGroupsChatPage() {
                                   </AvatarFallback>
                                 </Avatar>
                                 <div className="flex-1">
-                                  <p className="text-sm font-medium text-white">{user.fullName}</p>
+                                  <p className="text-sm font-medium dark:text-white">{user.fullName}</p>
                                   <p className="text-xs text-slate-400">@{user.username}</p>
                                 </div>
                               </label>
@@ -1172,7 +1235,7 @@ export default function StudyGroupsChatPage() {
                       <MessageCircle className="h-5 w-5" />
                     </button>
                   </DialogTrigger>
-                  <DialogContent className="bg-slate-800 border-white/10 text-white sm:max-w-[500px]">
+                  <DialogContent className="bg-slate-800 border-white/10 dark:text-white sm:max-w-[500px]">
                     <DialogHeader>
                       <DialogTitle>{t('startDirectMessage')}</DialogTitle>
                       <DialogDescription className="text-slate-400">
@@ -1188,7 +1251,7 @@ export default function StudyGroupsChatPage() {
                             placeholder={t('typeNameOrUsername')}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="pl-10 bg-slate-700 border-white/10 text-white placeholder:text-slate-500"
+                            className="pl-10 bg-slate-700 border-white/10 dark:text-white placeholder:text-slate-500"
                           />
                         </div>
                       </div>
@@ -1209,7 +1272,7 @@ export default function StudyGroupsChatPage() {
                               </AvatarFallback>
                             </Avatar>
                             <div className="flex-1">
-                              <p className="text-sm font-medium text-white">{user.fullName}</p>
+                              <p className="text-sm font-medium dark:text-white">{user.fullName}</p>
                               <p className="text-xs text-slate-400">@{user.username}</p>
                             </div>
                           </button>
@@ -1283,7 +1346,7 @@ export default function StudyGroupsChatPage() {
                 >
                   <div className="relative">
                     <Avatar className="h-12 w-12 border-2 border-slate-800">
-                      <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-500 text-white font-bold">
+                      <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-500 dark:text-white font-bold">
                         {dm.fullName.split(' ').map(n => n[0]).join('').substring(0, 2)}
                       </AvatarFallback>
                     </Avatar>
@@ -1293,7 +1356,7 @@ export default function StudyGroupsChatPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-0.5">
-                      <h4 className="font-bold text-white text-sm truncate">
+                      <h4 className="font-bold dark:text-white text-sm truncate">
                         {dm.fullName}
                       </h4>
                       {dm.lastMessageTime && (
@@ -1330,15 +1393,15 @@ export default function StudyGroupsChatPage() {
                   <div className="relative">
                     <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0 border-2 border-slate-800">
                       {group.isPrivate ? (
-                        <Lock className="h-5 w-5 text-white" />
+                        <Lock className="h-5 w-5 dark:text-white" />
                       ) : (
-                        <Hash className="h-5 w-5 text-white" />
+                        <Hash className="h-5 w-5 dark:text-white" />
                       )}
                     </div>
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-0.5">
-                      <h4 className="font-bold text-white text-sm truncate">
+                      <h4 className="font-bold dark:text-white text-sm truncate">
                         {group.name}
                       </h4>
                       {group.lastMessageTime && (
@@ -1379,7 +1442,7 @@ export default function StudyGroupsChatPage() {
                     variant="ghost"
                     size="sm"
                     onClick={() => setShowMobileChat(false)}
-                    className="md:hidden p-2 h-8 w-8 flex-shrink-0 text-white hover:bg-white/10"
+                    className="md:hidden p-2 h-8 w-8 flex-shrink-0 dark:text-white hover:bg-white/10"
                   >
                     <ArrowLeft className="h-4 w-4" />
                   </Button>
@@ -1407,9 +1470,9 @@ export default function StudyGroupsChatPage() {
                     <>
                       <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0 border-2 border-slate-800">
                         {selectedConversation.isPrivate ? (
-                          <Lock className="h-5 w-5 text-white" />
+                          <Lock className="h-5 w-5 dark:text-white" />
                         ) : (
-                          <Hash className="h-5 w-5 text-white" />
+                          <Hash className="h-5 w-5 dark:text-white" />
                         )}
                       </div>
                       <div className="min-w-0">
@@ -1440,7 +1503,7 @@ export default function StudyGroupsChatPage() {
                       <div className={`size-8 shrink-0 mt-auto mb-1 ${!showAvatar && 'invisible'}`}>
                         {!isOwn && showAvatar && (
                           <Avatar className="size-8">
-                            <AvatarFallback className="bg-slate-700 text-white text-xs">
+                            <AvatarFallback className="bg-slate-700 dark:text-white text-xs">
                               {message.senderName?.split(' ').map(n => n[0]).join('').substring(0, 2)}
                             </AvatarFallback>
                           </Avatar>
@@ -1496,10 +1559,32 @@ export default function StudyGroupsChatPage() {
                           )}
                         </div>
                         
-                        <span className="text-slate-500 text-[10px] mx-1 flex items-center gap-1">
+                        <span className={`text-[10px] mx-1 flex items-center gap-1 ${
+                          message.status === 'failed' ? 'text-red-400' : 'text-slate-500'
+                        }`}>
                           {formatTimestamp(message.createdAt)}
                           {isOwn && (
-                            <CheckCheck className="h-3 w-3" />
+                            <span className="inline-flex items-center">
+                              {message.status === 'sending' && (
+                                <Loader2 className="h-3 w-3 animate-spin text-slate-400" />
+                              )}
+                              {message.status === 'sent' && (
+                                <Check className="h-3 w-3 text-slate-400" />
+                              )}
+                              {message.status === 'delivered' && (
+                                <CheckCheck className="h-3 w-3 text-slate-400" />
+                              )}
+                              {message.status === 'read' && (
+                                <CheckCheck className="h-3 w-3 text-blue-400" />
+                              )}
+                              {message.status === 'failed' && (
+                                <span className="text-[10px] text-red-400 font-medium">!</span>
+                              )}
+                              {/* Legacy messages from server (no status field) show double-check */}
+                              {!message.status && (
+                                <CheckCheck className="h-3 w-3 text-slate-400" />
+                              )}
+                            </span>
                           )}
                         </span>
                       </div>
@@ -1612,14 +1697,10 @@ export default function StudyGroupsChatPage() {
                   
                   <button 
                     onClick={handleSendMessage}
-                    disabled={!newMessage.trim() || isSending || isUploading}
+                    disabled={!newMessage.trim() || isUploading}
                     className="size-10 flex items-center justify-center rounded-full bg-primary text-black hover:bg-primary/90 transition-colors duration-300 shadow-lg shadow-primary/20 shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {isSending ? (
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                    ) : (
                       <Send className="h-5 w-5" />
-                    )}
                   </button>
                 </div>
                 <div className="text-center mt-2">

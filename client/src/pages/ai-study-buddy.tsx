@@ -85,7 +85,7 @@ export default function AIStudyBuddy() {
       {
         role: "assistant",
         content:
-          "Hi there! 👋 I'm your AI Study Buddy — ask me anything about your lessons and I'll help you understand it better! 📚",
+          "Hi there! I'm your AI Study Buddy — ask me anything about your lessons and I'll help you understand it better!",
       },
     ]);
   }, []);
@@ -158,7 +158,7 @@ export default function AIStudyBuddy() {
     setMessages([
       {
         role: "assistant",
-        content: "Chat cleared! Fire away with your next question. 🎯",
+        content: "Chat cleared! Fire away with your next question.",
       },
     ]);
   };
@@ -337,7 +337,7 @@ export default function AIStudyBuddy() {
             className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors"
           >
             <span className="flex items-center gap-2">
-              <span>💡</span> Tips for better answers
+              <Lightbulb className="h-4 w-4" /> Tips for better answers
             </span>
             <motion.div animate={{ rotate: showTips ? 180 : 0 }} transition={{ duration: 0.2 }}>
               <ChevronDown className="h-4 w-4" />

@@ -27,7 +27,7 @@ i18n
   .init({
     fallbackLng: DEFAULT_LANG,
     defaultNS: "common",
-    ns: ["common", "auth", "dashboard", "courses", "assignments", "landing", "teacher", "parent", "admin"],
+    ns: ["common", "auth", "dashboard", "courses", "assignments", "landing", "teacher", "parent", "admin", "gamification"],
     load: "currentOnly",
     backend: {
       loadPath: "/locales/{{lng}}/{{ns}}.json",

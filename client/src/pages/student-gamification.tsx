@@ -8,8 +8,10 @@ import {
   useGamificationProfile, 
   useLeaderboard, 
   useGamificationActivity, 
-  useMyBadges 
+  useMyBadges,
+  useToggleFeatureBadge,
 } from '@/hooks/useGamification';
+import { CoachMessageWidget } from '@/components/gamification/CoachMessageWidget';
 import { useStudentDashboard } from '@/hooks/useStudentDashboard';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -82,6 +84,7 @@ export default function StudentGamificationPage() {
   }, [isProfileError, isDashboardError, toast]);
 
   const isLoading = isLoadingProfile || isLoadingStats;
+  const { mutate: toggleFeature } = useToggleFeatureBadge();
 
   // Render Full-page skeleton while initial loading
   if (isLoading) {
@@ -118,7 +121,20 @@ export default function StudentGamificationPage() {
   const profile = profileData!;
   const courses = courseProgress;
   const earnedBadges = badgesData?.earned || [];
+  const featuredBadges = profile.featuredBadges || [];
   const recentEvents = activityData?.events || [];
+
+  const handleToggleFeature = (badgeId: string) => {
+    toggleFeature(badgeId, {
+      onError: (err: any) => {
+        toast({
+          title: "Action failed",
+          description: err.message,
+          variant: "destructive"
+        });
+      }
+    });
+  };
 
   return (
     <LazyMotion features={domAnimation}>
@@ -140,6 +156,25 @@ export default function StudentGamificationPage() {
             </span>
           </p>
         </header>
+
+        {/* 1b. AI Coach Widget */}
+        <CoachMessageWidget />
+
+        {/* 2. Featured Badges Showcase */}
+        {featuredBadges.length > 0 && (
+          <section className="space-y-6">
+             <h2 className="text-xl font-bold tracking-tight flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-amber-500" />
+              Featured Achievements
+            </h2>
+            <BadgeGrid 
+              badges={featuredBadges}
+              earnedBadgeIds={earnedBadges.map(b => b.id)}
+              featuredBadgeIds={featuredBadges.map(b => b.id)}
+              onToggleFeature={handleToggleFeature}
+            />
+          </section>
+        )}
 
         {/* 2. Gamification Summary Card */}
         <section>
@@ -171,6 +206,8 @@ export default function StudentGamificationPage() {
           <BadgeGrid 
             badges={earnedBadges.slice(0, 8)} 
             earnedBadgeIds={earnedBadges.map(b => b.id)} 
+            featuredBadgeIds={featuredBadges.map(b => b.id)}
+            onToggleFeature={handleToggleFeature}
             filter="earned"
           />
         </section>

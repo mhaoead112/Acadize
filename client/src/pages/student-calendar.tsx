@@ -85,8 +85,12 @@ export default function StudentCalendar() {
       const tempEvents: CalendarEvent[] = [];
 
       if (assignmentsRes.ok) {
-        const assignments = await assignmentsRes.json();
-        assignments.forEach((assignment: any) => {
+        const assignmentsBody = await assignmentsRes.json();
+        // API returns { data: [...], pagination: {...} } — unwrap .data
+        const assignmentsList: any[] = Array.isArray(assignmentsBody)
+          ? assignmentsBody
+          : (assignmentsBody?.data ?? []);
+        assignmentsList.forEach((assignment: any) => {
           if (assignment.dueDate) {
             const dueDate = new Date(assignment.dueDate);
             tempEvents.push({
@@ -111,7 +115,11 @@ export default function StudentCalendar() {
 
       if (eventsRes.ok) {
         const calendarEvents = await eventsRes.json();
-        calendarEvents.forEach((event: any) => {
+        // API may return array or wrapped { data: [...] }
+        const eventsList: any[] = Array.isArray(calendarEvents)
+          ? calendarEvents
+          : (calendarEvents?.data ?? calendarEvents?.events ?? []);
+        eventsList.forEach((event: any) => {
           tempEvents.push({
             id: event.id,
             title: event.title,
@@ -127,6 +135,9 @@ export default function StudentCalendar() {
             participants: event.participants,
           });
         });
+      } else {
+        // Non-critical: org events unavailable (e.g. no tenant ctx) — skip gracefully
+        console.warn('[Calendar] /api/events responded with', eventsRes.status, '— skipping org events');
       }
 
       setEvents(tempEvents);

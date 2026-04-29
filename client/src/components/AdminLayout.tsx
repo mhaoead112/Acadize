@@ -10,9 +10,10 @@ import { usePortalI18n } from '@/hooks/usePortalI18n';
 
 interface NavItem {
   label: string;
-  icon: string;
-  path: string;
+  icon?: string;
+  path?: string;
   badge?: string;
+  isHeader?: boolean;
 }
 
 const navItems: NavItem[] = [
@@ -22,6 +23,11 @@ const navItems: NavItem[] = [
   { label: 'nav.studentParentLinks', icon: 'link', path: '/admin/student-parent-link' },
   { label: 'nav.reports', icon: 'analytics', path: '/admin/reports' },
   { label: 'nav.calendar', icon: 'calendar_month', path: '/admin/calendar' },
+  { label: 'Gamification', isHeader: true },
+  { label: 'Settings', icon: 'settings', path: '/admin/gamification/settings' },
+  { label: 'Points & Rules', icon: 'rule', path: '/admin/gamification/rules' },
+  { label: 'Badges', icon: 'military_tech', path: '/admin/gamification/badges' },
+  { label: 'Reports', icon: 'bar_chart', path: '/admin/gamification/reports' },
 ];
 
 interface AdminLayoutProps {
@@ -134,13 +140,22 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
         {/* Navigation */}
         <nav className="flex flex-col gap-2 px-4 flex-1 overflow-y-auto">
-          {navItems.map((item) => {
+          {navItems.map((item, index) => {
+            if (item.isHeader) {
+              return (
+                <div key={`header-${index}`} className={`pt-4 pb-2 px-4 ${isSidebarCollapsed ? 'hidden' : 'block'}`}>
+                  <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                    {item.label}
+                  </span>
+                </div>
+              );
+            }
             if (item.path === '/admin/student-parent-link' && branding.features && !branding.features.enableParentPortal) {
               return null;
             }
             const isActive = location === item.path || location.startsWith(item.path + '/');
             return (
-              <Link key={item.path} to={item.path}>
+              <Link key={item.path} to={item.path!}>
                 <div
                   title={isSidebarCollapsed ? t(item.label) : undefined}
                   className={`flex items-center ${isSidebarCollapsed ? 'justify-center mx-2' : 'gap-3 px-4'} py-3 rounded-lg transition-all cursor-pointer group ${
@@ -152,7 +167,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                   <span className="material-symbols-outlined text-xl">{item.icon}</span>
                   {!isSidebarCollapsed && (
                     <>
-                      <span className="font-medium text-sm flex-1">{t(item.label)}</span>
+                      <span className="font-medium text-sm flex-1">{t(item.label) !== item.label ? t(item.label) : item.label}</span>
                       {item.badge && (
                         <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
                           {item.badge}
@@ -244,13 +259,22 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         </div>
 
         <nav className="flex flex-col gap-2 px-4 flex-1 overflow-y-auto">
-          {navItems.map((item) => {
+          {navItems.map((item, index) => {
+            if (item.isHeader) {
+              return (
+                <div key={`mobile-header-${index}`} className="pt-4 pb-2 px-4">
+                  <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                    {item.label}
+                  </span>
+                </div>
+              );
+            }
             if (item.path === '/admin/student-parent-link' && branding.features && !branding.features.enableParentPortal) {
               return null;
             }
             const isActive = location === item.path || location.startsWith(item.path + '/');
             return (
-              <Link key={item.path} to={item.path}>
+              <Link key={item.path} to={item.path!}>
                 <div
                   onClick={() => setIsMobileSidebarOpen(false)}
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all cursor-pointer group ${
@@ -260,7 +284,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                   }`}
                 >
                   <span className="material-symbols-outlined text-xl">{item.icon}</span>
-                  <span className="font-medium text-sm flex-1">{t(item.label)}</span>
+                  <span className="font-medium text-sm flex-1">{t(item.label) !== item.label ? t(item.label) : item.label}</span>
                   {item.badge && (
                     <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
                       {item.badge}

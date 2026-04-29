@@ -4,7 +4,7 @@ import { format } from 'date-fns';
 
 import StudentLayout from '@/components/StudentLayout';
 import { useTranslation } from 'react-i18next';
-import { useMyBadges } from '@/hooks/useGamification';
+import { useMyBadges, useToggleFeatureBadge, useGamificationProfile } from '@/hooks/useGamification';
 import {
   GamificationBadge,
   AwardedBadge,
@@ -12,6 +12,7 @@ import {
 } from '@shared/gamification.types';
 
 import BadgeGrid from '@/components/gamification/BadgeGrid';
+import { useToast } from '@/hooks/use-toast';
 import {
   Sheet,
   SheetContent,
@@ -36,9 +37,31 @@ const TAB_CATEGORIES: Record<string, GamificationCriteriaType[]> = {
 
 export default function StudentAchievements() {
   const { t } = useTranslation('gamification');
-  const { data: badgesData, isLoading, error } = useMyBadges('all');
+  const { toast } = useToast();
+  const { data: badgesData, isLoading: isLoadingBadges, error } = useMyBadges('all');
+  const { data: profileData } = useGamificationProfile();
+  const { mutate: toggleFeature } = useToggleFeatureBadge();
   const [activeTab, setActiveTab] = useState<string>('all');
   const [selectedBadge, setSelectedBadge] = useState<GamificationBadge | AwardedBadge | null>(null);
+
+  const featuredBadgeIds = useMemo(() => 
+    profileData?.featuredBadges?.map(b => b.id) || [], 
+    [profileData]
+  );
+
+  const handleToggleFeature = (badgeId: string) => {
+    toggleFeature(badgeId, {
+      onError: (err: any) => {
+        toast({
+          title: "Action failed",
+          description: err.message,
+          variant: "destructive"
+        });
+      }
+    });
+  };
+
+  const isLoading = isLoadingBadges;
 
   // Combine and deduplicate badges for display
   const { allBadges, earnedBadgeIds, earnedBadgesMap } = useMemo(() => {
@@ -191,7 +214,9 @@ export default function StudentAchievements() {
                 <BadgeGrid
                   badges={displayedBadges}
                   earnedBadgeIds={earnedBadgeIds}
+                  featuredBadgeIds={featuredBadgeIds}
                   onBadgeClick={handleBadgeClick}
+                  onToggleFeature={handleToggleFeature}
                   filter="all" // Handling filter locally to support groupings
                 />
               )}

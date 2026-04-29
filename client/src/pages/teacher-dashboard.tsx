@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, Link } from "wouter";
+import * as LucideIcons from "lucide-react";
 import { 
   BookOpen, Clock, Users, FileText, Calendar,
-  TrendingUp, Bell, Plus
+  TrendingUp, Bell, Plus, Trophy, Star, Medal
 } from "lucide-react";
+import { useTeacherGamificationOverview } from "@/hooks/useTeacherGamification";
 import TeacherLayout from "@/components/TeacherLayout";
 import { DashboardStatsSkeleton } from "@/components/skeletons/DashboardStatsSkeleton";
 import { CardSkeleton } from "@/components/skeletons/CardSkeleton";
@@ -62,6 +64,10 @@ export default function TeacherDashboard() {
     { id: '2', title: 'Advanced Calculus', time: '11:30 AM', course: 'MAT-201' },
     { id: '3', title: 'Organic Chemistry', time: '2:00 PM', course: 'CHM-305' }
   ]);
+
+  const firstCourseId = courses.length > 0 ? courses[0].id : null;
+  const { data: gamOverview, error: gamError } = useTeacherGamificationOverview(firstCourseId);
+  const isGamificationDisabled = gamError?.message?.toLowerCase().includes("disabled");
 
   useEffect(() => {
     if (token && isAuthenticated) {
@@ -180,18 +186,18 @@ export default function TeacherDashboard() {
   const getIconForCourse = (title: string) => {
     const lower = title.toLowerCase();
     if (lower.includes('math') || lower.includes('algebra') || lower.includes('calculus')) {
-      return '📐';
+      return <LucideIcons.Calculator className="h-6 w-6 text-emerald-600" />;
     }
     if (lower.includes('science') || lower.includes('chemistry') || lower.includes('physics')) {
-      return '🧪';
+      return <LucideIcons.FlaskConical className="h-6 w-6 text-emerald-600" />;
     }
     if (lower.includes('writing') || lower.includes('english') || lower.includes('literature')) {
-      return '✍️';
+      return <LucideIcons.FileEdit className="h-6 w-6 text-emerald-600" />;
     }
     if (lower.includes('history')) {
-      return '📜';
+      return <LucideIcons.History className="h-6 w-6 text-emerald-600" />;
     }
-    return '📚';
+    return <LucideIcons.BookOpen className="h-6 w-6 text-emerald-600" />;
   };
 
   if (loading) {
@@ -411,6 +417,61 @@ export default function TeacherDashboard() {
                 )}
               </div>
             </section>
+
+            {/* Gamification Snapshot Section */}
+            {gamOverview && !isGamificationDisabled && (
+              <section>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-navy dark:text-white text-[20px] font-bold leading-tight tracking-[-0.015em] flex items-center gap-2">
+                    <Trophy className="h-5 w-5 text-amber-500" />
+                    {t('gamification.classSnapshot')}
+                  </h2>
+                  <Link href="/teacher/gamification" className="text-navy dark:text-gold text-sm font-medium hover:underline flex items-center gap-1">
+                    {t('gamification.viewFullInsights')}
+                  </Link>
+                </div>
+                <div className="rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-slate-800 p-5 shadow-sm transition-colors duration-300">
+                  <div className="flex flex-col sm:flex-row gap-6 items-center">
+                    <div className="flex-1 flex flex-col justify-center gap-2 sm:border-r border-slate-100 dark:border-gray-800 pr-0 sm:pr-6">
+                      <p className="text-slate-500 dark:text-gray-400 text-sm font-medium">{t('gamification.totalCourseXP')}</p>
+                      <div className="flex items-center gap-3">
+                        <div className="p-3 bg-amber-100 dark:bg-amber-900/30 rounded-full flex-shrink-0">
+                          <Trophy className="h-6 w-6 text-amber-500" />
+                        </div>
+                        <p className="text-3xl font-bold text-navy dark:text-white">
+                          {gamOverview.leaderboard.reduce((sum, entry) => sum + entry.totalPoints, 0).toLocaleString()} XP
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex-[2] w-full">
+                      <h3 className="text-sm font-semibold text-slate-700 dark:text-gray-300 mb-3 flex items-center gap-1.5">
+                        <Star className="h-4 w-4 text-amber-400" /> {t('gamification.topAchievers')}
+                      </h3>
+                      {gamOverview.topAchievers.length > 0 ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                          {gamOverview.topAchievers.slice(0, 3).map((achiever, i) => (
+                            <div key={achiever.userId} className="flex items-center gap-2 p-2.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-gray-800">
+                              <div className="bg-white dark:bg-slate-800 rounded-full p-1.5 shadow-sm flex-shrink-0">
+                                <Medal className={`h-4 w-4 ${i === 0 ? 'text-amber-500' : i === 1 ? 'text-slate-400' : 'text-amber-700'}`} />
+                              </div>
+                              <div className="min-w-0">
+                                <p className="text-sm font-semibold text-navy dark:text-white truncate" title={achiever.fullName}>{achiever.fullName}</p>
+                                <p className="text-xs text-primary font-medium">{achiever.totalPoints} XP</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-slate-500 dark:text-gray-400 italic bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-dashed border-slate-200 dark:border-slate-800">
+                          {t('gamification.noPointsYet')}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </section>
+            )}
           </div>
 
           {/* Sidebar - Takes 1 column */}

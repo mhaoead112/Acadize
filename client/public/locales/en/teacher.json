@@ -656,5 +656,12 @@
       "absent": "Absent",
       "excused": "Excused"
     }
+  },
+  "gamification": {
+    "classSnapshot": "Class Gamification Snapshot",
+    "viewFullInsights": "View Full Insights",
+    "totalCourseXP": "Total Course XP",
+    "topAchievers": "Top Achievers",
+    "noPointsYet": "No points awarded yet in this course."
   }
 }

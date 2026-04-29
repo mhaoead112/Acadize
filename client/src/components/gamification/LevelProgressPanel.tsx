@@ -190,7 +190,7 @@ export default function LevelProgressPanel({
             >
                 <Card
                     className={cn(
-                        'border border-slate-200 bg-white dark:border-slate-700 dark:bg-[#112240]',
+                        'border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900/60',
                         className,
                     )}
                 >

@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
 import { apiEndpoint } from '@/lib/config';
 import type {
@@ -117,5 +117,37 @@ export function useGamificationActivity(page = 1, limit = 20) {
         enabled: !!token,
         staleTime: 60 * 1000,
         placeholderData: (previousData) => previousData, // keep old page visible while fetching next
+    });
+}
+// ---------------------------------------------------------------------------
+// Mutation: useToggleFeatureBadge
+// POST /api/gamification/badges/:id/feature
+// ---------------------------------------------------------------------------
+
+/**
+ * Toggles a badge's featured status on the learner's profile.
+ * Invalidates the profile query on success.
+ */
+export function useToggleFeatureBadge() {
+    const { token } = useAuth();
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (badgeId: string) => {
+            if (!token) throw new Error('No auth token');
+            const res = await fetch(apiEndpoint(`/api/gamification/badges/${badgeId}/feature`), {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}` },
+                credentials: 'include',
+            });
+            if (!res.ok) {
+              const err = await res.json();
+              throw new Error(err.message || 'Failed to toggle featured status');
+            }
+            return res.json();
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['gamification', 'profile'] });
+        },
     });
 }

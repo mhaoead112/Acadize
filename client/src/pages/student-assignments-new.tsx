@@ -104,12 +104,25 @@ export default function StudentAssignments() {
 
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['studentAssignments'] });
       toast({
         title: "Assignment submitted successfully",
         description: "Your work has been submitted for review.",
       });
+      if (data?.xp) {
+        import('@/hooks/useXPAward').then(({ triggerXPAward, triggerQuestCompletion }) => {
+          triggerXPAward(data.xp);
+          if (Array.isArray(data.completedQuests)) {
+            data.completedQuests.forEach((quest: any) => {
+              triggerQuestCompletion({
+                title: quest.title,
+                xpAwarded: quest.xpAward
+              });
+            });
+          }
+        });
+      }
       setIsSubmitDialogOpen(false);
       setSubmissionContent("");
       setSubmissionFile(null);

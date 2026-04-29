@@ -28,6 +28,7 @@ const navItems: NavItem[] = [
   { label: 'nav.reportCards', icon: 'assessment', path: '/teacher/report-cards' },
   { label: 'nav.messages', icon: 'message', path: '/teacher/messages' },
   { label: 'nav.analytics', icon: 'analytics', path: '/teacher/analytics' },
+  { label: 'Class Gamification', icon: 'electric_bolt', path: '/teacher/gamification' },
 ];
 
 interface TeacherLayoutProps {

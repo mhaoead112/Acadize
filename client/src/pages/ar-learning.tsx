@@ -14,7 +14,7 @@ import {
   Flame, 
   BookOpen 
 } from "lucide-react";
-import { Sun, Moon, Earth, Rocket, Globe, Circle } from "lucide-react";
+import { Sun, Moon, Earth, Rocket, Globe, Circle, Beaker, Landmark, Dna, Calculator, Wind, ThermometerSnowflake, User, GraduationCap, Microscope, Book } from "lucide-react";
 
 interface Planet {
   id: string;
@@ -267,7 +267,9 @@ export default function ARLearning() {
         ) : (
           <Card className="bg-gray-900 border-gray-700 text-white max-w-2xl mx-auto">
             <CardContent className="text-center py-12">
-              <div className="text-6xl mb-4">🪐</div>
+              <div className="flex justify-center mb-4">
+                <Globe className="text-gray-600 animate-pulse" size={64} />
+              </div>
               <h3 className="text-xl font-bold mb-2">Explore the Solar System!</h3>
               <p className="text-gray-400">
                 Click on any planet to learn fascinating facts about it.
@@ -292,7 +294,7 @@ export default function ARLearning() {
             <Card className="bg-gradient-to-br from-purple-800 to-indigo-800 border-0 text-white hover:scale-105 transition-transform duration-300" data-testid="example-space">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-eduverse-gold">
-                  <span className="text-2xl">🚀</span>
+                  <Rocket className="text-eduverse-gold" size={24} />
                   Space Science
                 </CardTitle>
               </CardHeader>
@@ -303,9 +305,18 @@ export default function ARLearning() {
                     <Sparkles size={16} className="text-yellow-400" />
                     <span>Scale comparisons between planets</span>
                   </div>
-                  <div className="flex items-center gap-2">🌍 <span>Earth-Moon distance visualization</span></div>
-                  <div className="flex items-center gap-2">🪐 <span>Saturn's ring composition</span></div>
-                  <div className="flex items-center gap-2">☄️ <span>Asteroid belt navigation</span></div>
+                  <div className="flex items-center gap-2">
+                    <Earth size={16} className="text-blue-400" /> 
+                    <span>Earth-Moon distance visualization</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Circle size={16} className="text-yellow-600" />
+                    <span>Saturn's ring composition</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Star size={16} className="text-gray-400" />
+                    <span>Asteroid belt navigation</span>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -314,20 +325,29 @@ export default function ARLearning() {
             <Card className="bg-gradient-to-br from-green-800 to-emerald-800 border-0 text-white hover:scale-105 transition-transform duration-300" data-testid="example-chemistry">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-eduverse-gold">
-                  <span className="text-2xl">⚗️</span>
+                  <Beaker className="text-eduverse-gold" size={24} />
                   Chemistry Lab
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-gray-200 mb-4">3D molecular structures and chemical reactions</p>
                 <div className="space-y-2 text-sm">
-                  <div className="flex items-center gap-2">🧪 <span>Water molecule (H₂O) structure</span></div>
-                  <div className="flex items-center gap-2">💎 <span>Carbon crystal formations</span></div>
+                  <div className="flex items-center gap-2">
+                    <Beaker size={16} className="text-blue-400" />
+                    <span>Water molecule (H₂O) structure</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Target size={16} className="text-gray-400" />
+                    <span>Carbon crystal formations</span>
+                  </div>
                   <div className="flex items-center gap-2">
                     <Flame size={16} className="text-orange-500" />
                     <span>Combustion reaction animations</span>
                   </div>
-                  <div className="flex items-center gap-2">⚛️ <span>Electron orbital patterns</span></div>
+                  <div className="flex items-center gap-2">
+                    <Sparkles size={16} className="text-purple-400" />
+                    <span>Electron orbital patterns</span>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -336,17 +356,17 @@ export default function ARLearning() {
             <Card className="bg-gradient-to-br from-amber-800 to-orange-800 border-0 text-white hover:scale-105 transition-transform duration-300" data-testid="example-history">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-eduverse-gold">
-                  <span className="text-2xl">🏛️</span>
+                  <Landmark className="text-eduverse-gold" size={24} />
                   Ancient History
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-gray-200 mb-4">Walk through historical sites and events</p>
                 <div className="space-y-2 text-sm">
-                  <div className="flex items-center gap-2">🗿 <span>Egyptian pyramid construction</span></div>
-                  <div className="flex items-center gap-2">🏺 <span>Roman Colosseum gladiator battles</span></div>
-                  <div className="flex items-center gap-2">🏰 <span>Medieval castle architecture</span></div>
-                  <div className="flex items-center gap-2">🗺️ <span>Ancient trade route mapping</span></div>
+                  <div className="flex items-center gap-2"><Landmark size={16} className="text-amber-400" /> <span>Egyptian pyramid construction</span></div>
+                  <div className="flex items-center gap-2"><Target size={16} className="text-red-400" /> <span>Roman Colosseum gladiator battles</span></div>
+                  <div className="flex items-center gap-2"><Landmark size={16} className="text-gray-400" /> <span>Medieval castle architecture</span></div>
+                  <div className="flex items-center gap-2"><Globe size={16} className="text-blue-400" /> <span>Ancient trade route mapping</span></div>
                 </div>
               </CardContent>
             </Card>
@@ -355,7 +375,7 @@ export default function ARLearning() {
             <Card className="bg-gradient-to-br from-red-800 to-pink-800 border-0 text-white hover:scale-105 transition-transform duration-300" data-testid="example-biology">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-eduverse-gold">
-                  <span className="text-2xl">🧬</span>
+                  <Dna className="text-eduverse-gold" size={24} />
                   Human Biology
                 </CardTitle>
               </CardHeader>
@@ -366,9 +386,9 @@ export default function ARLearning() {
                     <Heart size={16} className="text-red-500" />
                     <span>Heart pumping blood circulation</span>
                   </div>
-                  <div className="flex items-center gap-2">🧠 <span>Brain neuron firing patterns</span></div>
-                  <div className="flex items-center gap-2">🫁 <span>Respiratory system breathing</span></div>
-                  <div className="flex items-center gap-2">🦴 <span>Skeletal system movement</span></div>
+                  <div className="flex items-center gap-2"><Brain size={16} className="text-pink-400" /> <span>Brain neuron firing patterns</span></div>
+                  <div className="flex items-center gap-2"><Wind size={16} className="text-blue-200" /> <span>Respiratory system breathing</span></div>
+                  <div className="flex items-center gap-2"><Target size={16} className="text-gray-300" /> <span>Skeletal system movement</span></div>
                 </div>
               </CardContent>
             </Card>
@@ -377,17 +397,17 @@ export default function ARLearning() {
             <Card className="bg-gradient-to-br from-blue-800 to-cyan-800 border-0 text-white hover:scale-105 transition-transform duration-300" data-testid="example-geography">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-eduverse-gold">
-                  <span className="text-2xl">🌍</span>
+                  <Globe className="text-eduverse-gold" size={24} />
                   Geography
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-gray-200 mb-4">Explore Earth's geography in 3D detail</p>
                 <div className="space-y-2 text-sm">
-                  <div className="flex items-center gap-2">🏔️ <span>Mountain formation processes</span></div>
-                  <div className="flex items-center gap-2">🌊 <span>Ocean current flow patterns</span></div>
-                  <div className="flex items-center gap-2">🌋 <span>Volcanic eruption simulations</span></div>
-                  <div className="flex items-center gap-2">🌪️ <span>Weather system development</span></div>
+                  <div className="flex items-center gap-2"><Landmark size={16} className="text-amber-600" /> <span>Mountain formation processes</span></div>
+                  <div className="flex items-center gap-2"><Wind size={16} className="text-blue-400" /> <span>Ocean current flow patterns</span></div>
+                  <div className="flex items-center gap-2"><Flame size={16} className="text-red-500" /> <span>Volcanic eruption simulations</span></div>
+                  <div className="flex items-center gap-2"><Wind size={16} className="text-gray-200" /> <span>Weather system development</span></div>
                 </div>
               </CardContent>
             </Card>
@@ -396,20 +416,20 @@ export default function ARLearning() {
             <Card className="bg-gradient-to-br from-violet-800 to-purple-800 border-0 text-white hover:scale-105 transition-transform duration-300" data-testid="example-math">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-eduverse-gold">
-                  <span className="text-2xl">📐</span>
+                  <Calculator className="text-eduverse-gold" size={24} />
                   Mathematics
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-gray-200 mb-4">Visualize complex mathematical concepts</p>
                 <div className="space-y-2 text-sm">
-                  <div className="flex items-center gap-2">📊 <span>3D geometric shape properties</span></div>
+                  <div className="flex items-center gap-2"><Circle size={16} className="text-blue-400" /> <span>3D geometric shape properties</span></div>
                   <div className="flex items-center gap-2">
                     <TrendingUp size={16} className="text-green-500" />
                     <span>Function graphing in 3D space</span>
                   </div>
-                  <div className="flex items-center gap-2">🔢 <span>Algebra equation solving steps</span></div>
-                  <div className="flex items-center gap-2">∞ <span>Calculus limit visualizations</span></div>
+                  <div className="flex items-center gap-2"><Calculator size={16} className="text-gray-300" /> <span>Algebra equation solving steps</span></div>
+                  <div className="flex items-center gap-2"><Target size={16} className="text-purple-400" /> <span>Calculus limit visualizations</span></div>
                 </div>
               </CardContent>
             </Card>
@@ -433,11 +453,11 @@ export default function ARLearning() {
                     Interactive Features
                   </h4>
                   <ul className="space-y-2 text-gray-200">
-                    <li className="flex items-center gap-2">👆 <span>Tap to interact with 3D objects</span></li>
-                    <li className="flex items-center gap-2">🔄 <span>Rotate and zoom for different angles</span></li>
-                    <li className="flex items-center gap-2">📏 <span>Scale objects for size comparison</span></li>
-                    <li className="flex items-center gap-2">🎬 <span>Watch animations and simulations</span></li>
-                    <li className="flex items-center gap-2">🧠 <span>Quiz yourself on what you learned</span></li>
+                    <li className="flex items-center gap-2"><Target size={16} className="text-blue-400" /> <span>Tap to interact with 3D objects</span></li>
+                    <li className="flex items-center gap-2"><RotateCcw size={16} className="text-green-400" /> <span>Rotate and zoom for different angles</span></li>
+                    <li className="flex items-center gap-2"><TrendingUp size={16} className="text-yellow-400" /> <span>Scale objects for size comparison</span></li>
+                    <li className="flex items-center gap-2"><Sparkles size={16} className="text-purple-400" /> <span>Watch animations and simulations</span></li>
+                    <li className="flex items-center gap-2"><Brain size={16} className="text-orange-400" /> <span>Quiz yourself on what you learned</span></li>
                   </ul>
                 </div>
                 <div>
@@ -447,16 +467,16 @@ export default function ARLearning() {
                   </h4>
                   <div className="space-y-3 text-gray-200">
                     <div className="p-3 bg-black/30 rounded-lg">
-                      <strong className="text-red-400">Step 1:</strong> Tap Mars 🔴 to select it
+                      <strong className="text-red-400">Step 1:</strong> Tap Mars (Red Planet) to select it
                     </div>
                     <div className="p-3 bg-black/30 rounded-lg">
-                      <strong className="text-orange-400">Step 2:</strong> View size comparison with Earth 🌍
+                      <strong className="text-orange-400">Step 2:</strong> View size comparison with Earth
                     </div>
                     <div className="p-3 bg-black/30 rounded-lg">
-                      <strong className="text-yellow-400">Step 3:</strong> Learn about Olympus Mons volcano 🌋
+                      <strong className="text-yellow-400">Step 3:</strong> Learn about Olympus Mons volcano
                     </div>
                     <div className="p-3 bg-black/30 rounded-lg">
-                      <strong className="text-green-400">Step 4:</strong> Explore temperature: -65°C average ❄️
+                      <strong className="text-green-400">Step 4:</strong> Explore temperature: -65°C average
                     </div>
                   </div>
                 </div>
@@ -470,24 +490,24 @@ export default function ARLearning() {
           <Card className="bg-gradient-to-r from-yellow-900 to-orange-900 border-0 text-white">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-center justify-center">
-                <span className="text-2xl">🌟</span>
+                <Star className="text-yellow-400 fill-yellow-400" size={24} />
                 Student Success with AR Learning
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid md:grid-cols-3 gap-6">
                 <div className="text-center">
-                  <div className="text-4xl mb-3">📚</div>
+                  <div className="flex justify-center mb-3"><Book className="text-eduverse-gold" size={48} /></div>
                   <h4 className="font-bold text-eduverse-gold mb-2">Sarah, Age 12</h4>
                   <p className="text-gray-200 text-sm">"I finally understood how DNA works by seeing the double helix in 3D! Now biology is my favorite subject."</p>
                 </div>
                 <div className="text-center">
-                  <div className="text-4xl mb-3">🔬</div>
+                  <div className="flex justify-center mb-3"><Microscope className="text-eduverse-gold" size={48} /></div>
                   <h4 className="font-bold text-eduverse-gold mb-2">Marcus, Age 15</h4>
                   <p className="text-gray-200 text-sm">"Chemistry made no sense until I could manipulate molecules with my hands. Now I want to be a scientist!"</p>
                 </div>
                 <div className="text-center">
-                  <div className="text-4xl mb-3">🏛️</div>
+                  <div className="flex justify-center mb-3"><Landmark className="text-eduverse-gold" size={48} /></div>
                   <h4 className="font-bold text-eduverse-gold mb-2">Emma, Age 14</h4>
                   <p className="text-gray-200 text-sm">"Walking through ancient Rome in AR helped me ace my history test. It felt like time travel!"</p>
                 </div>

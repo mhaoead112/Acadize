@@ -94,15 +94,15 @@ const getAvatarForName = (name: string): Avatar => {
   const nameSum = nameUpper.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
   
   // Special cases for demo (as requested in user example)
-  if (nameUpper.includes('OMAR')) return avatarTypes[0]; // 🧑‍🚀 Astronaut Explorer
-  if (nameUpper.includes('SARA') || nameUpper.includes('SARAH')) return avatarTypes[1]; // 🧙‍♀️ Knowledge Wizard  
-  if (nameUpper.includes('ALI')) return avatarTypes[2]; // 🦸‍♂️ Study Superhero
-  if (nameUpper.includes('AHMED')) return avatarTypes[3]; // 🧑‍🔬 Science Pioneer
-  if (nameUpper.includes('FATIMA')) return avatarTypes[4]; // 🎭 Creative Artist
-  if (nameUpper.includes('HASSAN')) return avatarTypes[5]; // 🧑‍💻 Tech Genius
-  if (nameUpper.includes('LAYLA') || nameUpper.includes('LEILA')) return avatarTypes[6]; // 🌟 Bright Star
-  if (nameUpper.includes('MARYAM') || nameUpper.includes('MARIAM')) return avatarTypes[7]; // 🦋 Graceful Learner
-  if (nameUpper.includes('YUSUF') || nameUpper.includes('JOSEPH')) return avatarTypes[8]; // 🏆 Champion Scholar
+  if (nameUpper.includes('OMAR')) return avatarTypes[0]; // Astronaut Explorer
+  if (nameUpper.includes('SARA') || nameUpper.includes('SARAH')) return avatarTypes[1]; // Knowledge Wizard  
+  if (nameUpper.includes('ALI')) return avatarTypes[2]; // Study Superhero
+  if (nameUpper.includes('AHMED')) return avatarTypes[3]; // Science Pioneer
+  if (nameUpper.includes('FATIMA')) return avatarTypes[4]; // Creative Artist
+  if (nameUpper.includes('HASSAN')) return avatarTypes[5]; // Tech Genius
+  if (nameUpper.includes('LAYLA') || nameUpper.includes('LEILA')) return avatarTypes[6]; // Bright Star
+  if (nameUpper.includes('MARYAM') || nameUpper.includes('MARIAM')) return avatarTypes[7]; // Graceful Learner
+  if (nameUpper.includes('YUSUF') || nameUpper.includes('JOSEPH')) return avatarTypes[8]; // Champion Scholar
   
   // Algorithm for other names
   const index = nameSum % avatarTypes.length;
@@ -334,19 +334,19 @@ export default function Avatars() {
           <div className="mt-8 text-center">
             <Card className="bg-gradient-to-r from-eduverse-blue to-eduverse-gold text-white">
               <CardContent className="py-6">
-                <h3 className="text-xl font-bold mb-4">🎯 How Avatar Assignment Works</h3>
+                <h3 className="text-xl font-bold mb-4">How Avatar Assignment Works</h3>
                 <div className="grid md:grid-cols-2 gap-6 text-sm">
                   <div className="text-left">
-                    <h4 className="font-semibold mb-2">📝 Special Names:</h4>
+                    <h4 className="font-semibold mb-2">Special Names:</h4>
                     <ul className="space-y-1">
-                      <li>• Omar → 🧑‍🚀 Astronaut Explorer</li>
-                      <li>• Sara → 🧙‍♀️ Knowledge Wizard</li>
-                      <li>• Ali → 🦸‍♂️ Study Superhero</li>
-                      <li>• Ahmed → 🧑‍🔬 Science Pioneer</li>
+                      <li className="flex items-center gap-2">• Omar → <Rocket size={14} className="text-blue-500" /> Astronaut Explorer</li>
+                      <li className="flex items-center gap-2">• Sara → <Wand2 size={14} className="text-purple-500" /> Knowledge Wizard</li>
+                      <li className="flex items-center gap-2">• Ali → <Shield size={14} className="text-red-500" /> Study Superhero</li>
+                      <li className="flex items-center gap-2">• Ahmed → <FlaskConical size={14} className="text-green-500" /> Science Pioneer</li>
                     </ul>
                   </div>
                   <div className="text-left">
-                    <h4 className="font-semibold mb-2">🧮 Algorithm:</h4>
+                    <h4 className="font-semibold mb-2">Algorithm:</h4>
                     <ul className="space-y-1">
                       <li>• Analyzes name characteristics</li>
                       <li>• Assigns based on letter patterns</li>

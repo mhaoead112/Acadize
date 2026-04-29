@@ -244,6 +244,21 @@ export default function StudentCourseLessonsPage() {
       });
 
       const pointsAwarded = result?.gamification?.pointsAwarded ?? 0;
+      
+      if (result?.xp) {
+        import('@/hooks/useXPAward').then(({ triggerXPAward, triggerQuestCompletion }) => {
+          triggerXPAward(result.xp);
+          if (Array.isArray(result.gamification?.completedQuests)) {
+            result.gamification.completedQuests.forEach((quest: any) => {
+              triggerQuestCompletion({
+                title: quest.title,
+                xpAwarded: quest.xpAwarded
+              });
+            });
+          }
+        });
+      }
+
       toast({
         title: pointsAwarded > 0 ? "Lesson completed" : "Marked as complete",
         description: pointsAwarded > 0

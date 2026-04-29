@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "wouter";
 import { motion } from "framer-motion";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
@@ -9,6 +10,7 @@ import AdminLayout from "@/components/AdminLayout";
 import { DashboardStatsSkeleton } from "@/components/skeletons/DashboardStatsSkeleton";
 import { TableSkeleton } from "@/components/skeletons/TableSkeleton";
 import { useAuth } from "@/hooks/useAuth";
+import { useGamificationReport } from "@/hooks/useAdminGamification";
 import { useToast } from "@/hooks/use-toast";
 import { apiEndpoint } from "@/lib/config";
 import {
@@ -148,6 +150,11 @@ export default function AdminDashboard() {
     enabled: !!token,
   });
 
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  const { data: gamReport, error: gamError } = useGamificationReport({ startDate: thirtyDaysAgo.toISOString() });
+  const isGamificationDisabled = gamError?.message?.toLowerCase().includes("disabled") || (!gamReport && gamError);
+
   const isLoading = statsLoading || userStatsLoading;
 
   if (isLoading) {
@@ -209,6 +216,31 @@ export default function AdminDashboard() {
             icon="flag"
             isPositive={false}
           />
+          {gamReport && !isGamificationDisabled && (
+            <>
+              <StatCard
+                label={t("xpAwarded30d")}
+                value={gamReport.totalPointsAwarded.toLocaleString()}
+                growth="Active"
+                icon="military_tech"
+                isPositive={true}
+              />
+              <StatCard
+                label={t("badgesIssued30d")}
+                value={gamReport.totalBadgesIssued.toLocaleString()}
+                growth="Active"
+                icon="workspace_premium"
+                isPositive={true}
+              />
+              <StatCard
+                label={t("activeLearners")}
+                value={gamReport.activeLearnersCount.toLocaleString()}
+                growth="Engaged"
+                icon="local_fire_department"
+                isPositive={true}
+              />
+            </>
+          )}
         </div>
 
         {/* Main Content Grid */}
@@ -400,6 +432,39 @@ export default function AdminDashboard() {
                     </motion.div>
                   ))}
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Quick Actions */}
+            <Card className="border border-slate-200 dark:border-white/10 bg-white dark:bg-[#112240] rounded-[2rem] shadow-xl">
+              <CardHeader className="border-b border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#0a192f]/30">
+                <div className="flex items-center gap-3">
+                  <div className="bg-[#FFD700]/20 p-3 rounded-xl text-[#FFD700]">
+                    <Target className="h-5 w-5" />
+                  </div>
+                  <CardTitle className="text-slate-900 dark:text-white">Quick Actions</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="p-6">
+                <Link href="/admin/gamification/reports">
+                  <a className="block cursor-pointer">
+                    <motion.div 
+                      whileHover={{ x: 4 }}
+                      className="p-4 rounded-xl bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-500/30 flex items-center justify-between"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-purple-100 dark:bg-purple-800/50 rounded-lg text-purple-600 dark:text-purple-400">
+                          <Award className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <p className="font-bold text-purple-900 dark:text-purple-200">{t("gamificationReports")}</p>
+                          <p className="text-xs text-purple-700 dark:text-purple-400">{t("gamificationReportsDesc")}</p>
+                        </div>
+                      </div>
+                      <ArrowUpRight className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                    </motion.div>
+                  </a>
+                </Link>
               </CardContent>
             </Card>
           </div>

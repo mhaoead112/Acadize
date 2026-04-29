@@ -6,7 +6,7 @@ import {
   BookOpen, Calendar, Flame,
   FlaskConical, FileEdit, Calculator, BookOpenCheck,
   CheckCircle2, Circle, Megaphone, FileText,
-  ArrowRight, MoreHorizontal
+  ArrowRight, MoreHorizontal, Trophy
 } from "lucide-react";
 
 import { DashboardStatsSkeleton } from "@/components/skeletons/DashboardStatsSkeleton";
@@ -31,6 +31,12 @@ import {
   premiumMotionSpring,
   premiumStaggerVariants
 } from '@/lib/animations';
+
+import GamificationSummaryCard from "@/components/gamification/GamificationSummaryCard";
+import { DailyQuestPanel } from "@/components/gamification/DailyQuestPanel";
+import { StreakCard } from "@/components/gamification/StreakCard";
+import { GlobalChallengeBanner } from "@/components/gamification/GlobalChallengeBanner";
+import { useGamificationProfile } from "@/hooks/useGamification";
 
 const VersaFloatingChat = lazy(() => import("@/components/VersaFloatingChat"));
 
@@ -78,6 +84,8 @@ export default function StudentDashboard() {
   const { checkProgressNudges } = useNotifications();
   const prefersReducedMotion = useReducedMotion();
   
+  const { data: gamProfile } = useGamificationProfile();
+
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
@@ -99,7 +107,11 @@ export default function StudentDashboard() {
     weeklyGoalHours: 10,
     currentWeekHours: 0,
     weeklyProgress: 0,
+    streakShields: 0,
+    weeklyStreak: 0,
   });
+  const [comebackBonus, setComebackBonus] = useState(0);
+  const [shieldUsed, setShieldUsed] = useState(false);
   const [showGoalDialog, setShowGoalDialog] = useState(false);
   const [weeklyGoal, setWeeklyGoal] = useState(10);
 
@@ -132,7 +144,8 @@ export default function StudentDashboard() {
           headers: authHeaders,
           credentials: "include",
         }).catch(() => null),
-        fetch(apiEndpoint("/api/streaks/me"), {
+        fetch(apiEndpoint("/api/streaks/login"), {
+          method: 'POST',
           headers: authHeaders,
           credentials: "include",
         }).catch(() => null),
@@ -281,16 +294,28 @@ export default function StudentDashboard() {
       // Handle streak data if available
       if (streakRes?.ok) {
         const streakData = await streakRes.json();
+        const rawStreak = streakData.streak ?? streakData;
         const nextStreak = {
-          currentStreak: streakData.currentStreak ?? 0,
-          longestStreak: streakData.longestStreak ?? 0,
-          totalActiveDays: streakData.totalActiveDays ?? 0,
-          weeklyGoalHours: streakData.weeklyGoalHours ?? 10,
-          currentWeekHours: streakData.currentWeekHours ?? 0,
-          weeklyProgress: streakData.weeklyProgress ?? 0,
+          currentStreak: rawStreak.currentStreak ?? 0,
+          longestStreak: rawStreak.longestStreak ?? 0,
+          totalActiveDays: rawStreak.totalActiveDays ?? 0,
+          weeklyGoalHours: rawStreak.weeklyGoalHours ?? 10,
+          currentWeekHours: rawStreak.currentWeekHours ?? 0,
+          weeklyProgress: rawStreak.weeklyProgress ?? 0,
+          streakShields: rawStreak.streakShields ?? 0,
+          weeklyStreak: rawStreak.weeklyStreak ?? 0,
         };
         setStreakInfo(nextStreak);
-        checkWeeklyGoalPrompt(streakData);
+
+        // Shield / comeback states from the login response
+        if (streakData.shieldUsed) setShieldUsed(true);
+        if (streakData.comebackBonus > 0) setComebackBonus(streakData.comebackBonus);
+        
+        if (streakData.xp) {
+          import('@/hooks/useXPAward').then(({ triggerXPAward }) => triggerXPAward(streakData.xp));
+        }
+
+        checkWeeklyGoalPrompt(rawStreak);
         checkProgressNudges(nextOverall, nextStreak, enrollmentsList);
       }
 
@@ -453,6 +478,13 @@ export default function StudentDashboard() {
       icon: Calendar,
       color: 'orange' as const,
       onClick: () => setLocation('/student/courses')
+    },
+    {
+      title: t('myXP'),
+      description: t('viewProgress'),
+      icon: Trophy,
+      color: 'purple' as const,
+      onClick: () => setLocation('/student/gamification')
     }
   ], [t, announcements.length, setLocation]);
 
@@ -520,6 +552,15 @@ export default function StudentDashboard() {
               </div>
             </m.section>
 
+            {gamProfile?.dailyChallenge && (
+              <m.section variants={premiumEnterVariants}>
+                <GlobalChallengeBanner 
+                  challengeProgress={gamProfile.dailyChallenge} 
+                  activeBuffs={gamProfile.activeBuffs || []} 
+                />
+              </m.section>
+            )}
+
             <m.section variants={premiumEnterVariants} className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
               <m.article className="premium-surface premium-surface-interactive p-5" whileHover={prefersReducedMotion ? undefined : "hover"} whileTap={prefersReducedMotion ? undefined : "tap"} variants={premiumCardVariants}>
                 <p className="premium-kpi-label">{t('overallProgress')}</p>
@@ -544,6 +585,16 @@ export default function StudentDashboard() {
                 <p className="premium-muted mt-1.5">{t('pending')}</p>
               </m.article>
             </m.section>
+
+            {gamProfile && (
+              <m.section variants={premiumEnterVariants}>
+                <GamificationSummaryCard 
+                  profile={gamProfile} 
+                  compact={false}
+                  onNavigate={() => setLocation('/student/gamification')} 
+                />
+              </m.section>
+            )}
 
             <m.section variants={premiumEnterVariants} className="flex flex-col gap-3">
               <h2 className="text-base font-semibold text-slate-900 dark:text-white">{t('quickActions')}</h2>
@@ -715,6 +766,10 @@ export default function StudentDashboard() {
                   <Progress value={Math.min(100, streakInfo.weeklyProgress)} className="mt-3 h-2 bg-slate-200 dark:bg-[#233554]" indicatorClassName="bg-slate-900 dark:bg-[#FFD700]" />
                 </m.div>
 
+                <m.div variants={premiumCardVariants}>
+                  <DailyQuestPanel />
+                </m.div>
+
                 <m.div className="premium-surface p-5" variants={premiumCardVariants}>
                   <h3 className="font-semibold text-slate-900 dark:text-white mb-3">{t('recentAssignments')}</h3>
                   <div className="space-y-2.5">
@@ -762,18 +817,14 @@ export default function StudentDashboard() {
                   </div>
                 </m.div>
 
-                <m.div className="premium-surface premium-surface-interactive flex items-center justify-between p-5" variants={premiumCardVariants} whileHover={prefersReducedMotion ? undefined : "hover"} whileTap={prefersReducedMotion ? undefined : "tap"}>
-                  <div>
-                    <p className="premium-kpi-label">{t('dayStreak')}</p>
-                    <p className="premium-kpi-value">{streakInfo.currentStreak}</p>
-                  </div>
-                  <m.div
-                    className="flex h-11 w-11 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/25"
-                    animate={prefersReducedMotion ? undefined : { scale: [1, 1.04, 1] }}
-                    transition={prefersReducedMotion ? undefined : { duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
-                  >
-                    <Flame className="h-5 w-5 text-orange-500" />
-                  </m.div>
+                <m.div variants={premiumCardVariants}>
+                  <StreakCard
+                    currentStreak={streakInfo.currentStreak}
+                    shields={streakInfo.streakShields}
+                    longestStreak={streakInfo.longestStreak}
+                    weeklyStreak={streakInfo.weeklyStreak}
+                    shieldUsed={shieldUsed}
+                  />
                 </m.div>
               </div>
             </m.div>
@@ -821,6 +872,32 @@ export default function StudentDashboard() {
         </Dialog>
 
         <Suspense fallback={null}><VersaFloatingChat /></Suspense>
+
+        {/* Comeback Bonus Modal */}
+        {comebackBonus > 0 && (
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 backdrop-blur-sm">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl p-8 text-center max-w-sm mx-4 shadow-2xl animate-in zoom-in-95 duration-300">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-b from-yellow-300 via-orange-400 to-red-500 flex items-center justify-center shadow-[0_0_24px_8px_rgba(251,146,60,0.4)]">
+                <Flame className="h-8 w-8 text-white" strokeWidth={2.5} />
+              </div>
+              <h2 className="text-2xl font-black text-slate-800 dark:text-white mb-2">
+                {comebackBonus >= 300 ? 'Legendary Return!' : comebackBonus >= 200 ? 'Rising from the Ashes!' : comebackBonus >= 100 ? "You're Back!" : 'Welcome Back!'}
+              </h2>
+              <p className="text-slate-500 dark:text-slate-400 mb-4">Your streak reset, but we're glad you returned.</p>
+              <div className="bg-amber-50 dark:bg-yellow-900/30 rounded-xl p-4 mb-4">
+                <p className="text-3xl font-black text-amber-600 dark:text-yellow-400">+{comebackBonus} XP</p>
+                <p className="text-sm text-amber-700 dark:text-yellow-500">Comeback Bonus</p>
+              </div>
+              <button
+                onClick={() => setComebackBonus(0)}
+                className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-xl font-bold transition-colors flex items-center justify-center gap-2"
+              >
+                <Flame className="h-4 w-4" />
+                Let's Go!
+              </button>
+            </div>
+          </div>
+        )}
     </>
   );
 }

@@ -657,5 +657,12 @@
       "absent": "غائب",
       "excused": "بعذر"
     }
+  },
+  "gamification": {
+    "classSnapshot": "ملخص تحفيز الفصل",
+    "viewFullInsights": "عرض التفاصيل الكاملة",
+    "totalCourseXP": "إجمالي نقاط المادة",
+    "topAchievers": "الأوائل",
+    "noPointsYet": "لم يتم منح أي نقاط في هذه المادة بعد."
   }
 }

@@ -71,9 +71,13 @@ const fetchAssignments = async (token: string): Promise<{ data: APIAssignment[];
 };
 
 export default function StudentAssignments() {
-  const { t } = useTranslation('assignments');
+  const { t, ready } = useTranslation('assignments');
   const { token, user } = useAuth();
   const { toast } = useToast();
+
+  // Helper: returns translated text or an English fallback while namespace loads
+  const tSafe = (key: string, fallback: string, opts?: Record<string, unknown>) =>
+    ready ? t(key, opts as any) : fallback;
   
   // State
   const [searchQuery, setSearchQuery] = useState("");
@@ -288,10 +292,10 @@ export default function StudentAssignments() {
           <motion.div className="space-y-6" variants={fadeInUpVariants}>
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
               <motion.div variants={fadeInUpVariants}>
-                <h1 className="text-4xl md:text-5xl font-black tracking-tight text-secondary dark:text-white mb-2 font-display">{t('myAssignments')}</h1>
-                <p className="text-slate-600 dark:text-slate-300 text-lg">{t('trackProgress')}</p>
+                <h1 className="text-4xl md:text-5xl font-black tracking-tight text-secondary dark:text-white mb-2 font-display">{tSafe('myAssignments', 'My Assignments')}</h1>
+                <p className="text-slate-600 dark:text-slate-300 text-lg">{tSafe('trackProgress', 'Track your progress and stay on top of deadlines.')}</p>
               </motion.div>
-              <motion.div 
+              {/* <motion.div 
                 className="flex gap-2"
                 variants={fadeInUpVariants}
               >
@@ -303,9 +307,9 @@ export default function StudentAssignments() {
                   whileTap="tap"
                 >
                   <span className="material-symbols-outlined text-[20px]">add</span>
-                  {t('submitExternalWork')}
+                  {tSafe('submitExternalWork', 'Submit External Work')}
                 </motion.button>
-              </motion.div>
+              </motion.div> */}
             </div>
 
             <motion.div 
@@ -319,68 +323,68 @@ export default function StudentAssignments() {
                   onClick={() => setFilterStatus("all")}
                   className={`flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full px-5 transition-colors font-medium text-sm ${
                     filterStatus === "all"
-                      ? 'bg-secondary dark:bg-white text-white dark:text-secondary shadow-md shadow-secondary/10'
+                      ? 'bg-secondary dark:bg-white  dark:text-secondary shadow-md shadow-secondary/10'
                       : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 shadow-sm'
                   }`}
                   variants={buttonVariants}
                   whileHover="hover"
                   whileTap="tap"
 >
-                  {t('all')}
+                  {tSafe('all', 'All')}
                 </motion.button>
                 <motion.button
                   onClick={() => setFilterStatus("todo")}
                   className={`flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full px-5 transition-colors text-sm ${
                     filterStatus === "todo"
-                      ? 'bg-secondary dark:bg-white text-white dark:text-secondary shadow-md shadow-secondary/10 font-medium'
+                      ? 'bg-secondary dark:bg-white  dark:text-secondary shadow-md shadow-secondary/10 font-medium'
                       : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 shadow-sm'
                   }`}
                   variants={buttonVariants}
                   whileHover="hover"
                   whileTap="tap"
                 >
-                  {t('toDo')}
+                  {tSafe('toDo', 'To Do')}
                   <span className="bg-slate-100 dark:bg-white/10 text-xs px-1.5 py-0.5 rounded-md ml-1 font-semibold">{stats.todo}</span>
                 </motion.button>
                 <motion.button 
                   onClick={() => setFilterStatus("inprogress")}
                   className={`flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full px-5 transition-colors text-sm ${
                     filterStatus === "inprogress"
-                      ? 'bg-secondary dark:bg-white text-white dark:text-secondary shadow-md shadow-secondary/10 font-medium'
+                      ? 'bg-secondary dark:bg-white  dark:text-secondary shadow-md shadow-secondary/10 font-medium'
                       : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 shadow-sm'
                   }`}
                   variants={buttonVariants}
                   whileHover="hover"
                   whileTap="tap"
                 >
-                  {t('inProgress')}
+                  {tSafe('inProgress', 'In Progress')}
                   <span className="bg-slate-100 dark:bg-white/10 text-xs px-1.5 py-0.5 rounded-md ml-1 font-semibold">{stats.inProgress}</span>
                 </motion.button>
                 <motion.button 
                   onClick={() => setFilterStatus("graded")}
                   className={`flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full px-5 transition-colors text-sm ${
                     filterStatus === "graded"
-                      ? 'bg-secondary dark:bg-white text-white dark:text-secondary shadow-md shadow-secondary/10 font-medium'
+                      ? 'bg-secondary dark:bg-white  dark:text-secondary shadow-md shadow-secondary/10 font-medium'
                       : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 shadow-sm'
                   }`}
                   variants={buttonVariants}
                   whileHover="hover"
                   whileTap="tap"
 >
-                  {t('graded')}
+                  {tSafe('graded', 'Graded')}
                 </motion.button>
                 <motion.button
                   onClick={() => setFilterStatus("overdue")}
                   className={`flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full px-5 transition-colors text-sm ${
                     filterStatus === "overdue"
-                      ? 'bg-secondary dark:bg-white text-white dark:text-secondary shadow-md shadow-secondary/10 font-medium'
+                      ? 'bg-secondary dark:bg-white  dark:text-secondary shadow-md shadow-secondary/10 font-medium'
                       : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 shadow-sm'
                   }`}
                   variants={buttonVariants}
                   whileHover="hover"
                   whileTap="tap"
                 >
-                  {t('overdue')}
+                  {tSafe('overdue', 'Overdue')}
                   {stats.overdue > 0 && (
                     <span className="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-xs px-1.5 py-0.5 rounded-md ml-1 font-semibold">{stats.overdue}</span>
                   )}
@@ -561,7 +565,7 @@ export default function StudentAssignments() {
                     ) : (
                       <motion.button 
                         onClick={() => handleSubmit(assignment)}
-                        className="w-full bg-secondary dark:bg-white text-white dark:text-secondary font-bold py-2 rounded-lg text-sm hover:opacity-90 transition-opacity shadow-md"
+                        className="w-full bg-secondary dark:bg-white  dark:text-secondary font-bold py-2 rounded-lg text-sm hover:opacity-90 transition-opacity shadow-md"
                         variants={buttonVariants}
                         whileHover="hover"
                         whileTap="tap"
@@ -674,9 +678,9 @@ export default function StudentAssignments() {
 
       {/* View Submission Dialog */}
       <Dialog open={isViewSubmissionDialogOpen} onOpenChange={setIsViewSubmissionDialogOpen}>
-        <DialogContent className="sm:max-w-[600px] bg-white dark:bg-slate-800">
+        <DialogContent className="sm:max-w-[600px] bg-white dark:bg-slate-800 ">
           <DialogHeader>
-            <DialogTitle className="text-2xl">{t('submissionDetails')}</DialogTitle>
+            <DialogTitle className="text-2xl dark:text-white">{t('submissionDetails')}</DialogTitle>
             <DialogDescription className="text-base">
               {t('reviewSubmission', { title: selectedAssignment?.title ?? '' })}
             </DialogDescription>

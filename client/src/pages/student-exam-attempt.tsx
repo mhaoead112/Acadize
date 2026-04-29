@@ -642,6 +642,20 @@ const StudentExamAttempt: React.FC = () => {
 
           if (response.ok) {
             // Success - navigate to results
+            const data = await response.json().catch(() => null);
+            if (data?.xp) {
+              import('@/hooks/useXPAward').then(({ triggerXPAward, triggerQuestCompletion }) => {
+                triggerXPAward(data.xp);
+                if (Array.isArray(data.completedQuests)) {
+                  data.completedQuests.forEach((quest: any) => {
+                    triggerQuestCompletion({
+                      title: quest.title,
+                      xpAwarded: quest.xpAward
+                    });
+                  });
+                }
+              });
+            }
             setLocation(`/student/exams/${examId}/results/${attemptId}`);
             return;
           }

@@ -54,10 +54,10 @@ export default function AchievementTimeline({ events, isLoading }: AchievementTi
         <div className="absolute bottom-0 left-3.5 top-2 w-[2px] bg-border" />
         {[1, 2, 3, 4].map((i) => (
           <div key={i} className="relative">
-            <div className="absolute -left-8 top-1 flex h-7 w-7 items-center justify-center rounded-full border bg-background">
+            <div className="absolute -left-8 top-1 flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
               <Skeleton className="h-4 w-4 rounded-full" />
             </div>
-            <div className="flex flex-col gap-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#112240] p-4">
+            <div className="flex flex-col gap-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-4">
               <Skeleton className="h-4 w-3/4" />
               <Skeleton className="h-3 w-1/4" />
             </div>
@@ -85,11 +85,11 @@ export default function AchievementTimeline({ events, isLoading }: AchievementTi
       {events.map((event) => (
         <div key={event.id} className="relative group">
           {/* Timeline marker */}
-          <div className="absolute -left-8 top-1.5 flex h-7 w-7 items-center justify-center rounded-full border bg-background shadow-sm transition-colors group-hover:border-primary group-hover:text-primary z-10">
+          <div className="absolute -left-8 top-1.5 flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm transition-colors group-hover:border-primary group-hover:text-primary z-10">
             {getEventIcon(event.eventType)}
           </div>
 
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#112240] p-4 transition-all hover:bg-slate-50 dark:hover:bg-[#1A2D4F]">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-4 transition-all hover:bg-slate-50 dark:hover:bg-slate-800/60">
             <div className="space-y-1">
               <p className="text-sm font-medium leading-none">
                 {getEventDescription(event)}

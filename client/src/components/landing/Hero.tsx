@@ -1,171 +1,227 @@
 import React, { useRef } from 'react';
-import { Link } from "wouter";
+import { Link } from 'wouter';
 import { useTranslation } from 'react-i18next';
-import { ArrowDown, Calendar, CheckCircle } from "lucide-react";
-import { motion, useScroll, useTransform, useSpring } from "framer-motion";
+import { ArrowRight, CalendarDays, Sparkles, BookOpen, Users, BarChart3, GraduationCap } from 'lucide-react';
+import { motion, useScroll, useTransform } from 'framer-motion';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+/* ─────────────────────────────────────────────────────────────
+   Incident.io Style Abstract Glow
+───────────────────────────────────────────────────────────────*/
+function AbstractGlow() {
+  return (
+    <div className="absolute inset-0 z-0 flex items-center justify-center overflow-hidden pointer-events-none">
+      {/* Primary yellow/gold glow */}
+      <div 
+        className="absolute top-1/4 w-[800px] h-[600px] rounded-full blur-[120px] mix-blend-multiply dark:mix-blend-screen opacity-40 dark:opacity-20 translate-x-1/4"
+        style={{ background: 'var(--color-primary, #F2D00D)' }}
+      />
+      {/* Secondary accent glow */}
+      <div 
+        className="absolute top-1/3 w-[600px] h-[500px] rounded-full blur-[100px] mix-blend-multiply dark:mix-blend-screen opacity-30 dark:opacity-10 -translate-x-1/4"
+        style={{ background: '#3b82f6' }}
+      />
+    </div>
+  );
+}
 
-const Hero: React.FC = () => {
-  const { t } = useTranslation('landing');
-  const ref = useRef(null);
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start start", "end start"]
-  });
-
-  // 3D Parallax effects
-  const y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
-  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
-  const scale = useTransform(scrollYProgress, [0, 1], [1, 0.8]);
+/* ─────────────────────────────────────────────────────────────
+   Animated Stacked Screenshots (Mobile, Tablet, Desktop)
+───────────────────────────────────────────────────────────────*/
+function StackedScreenshots({ scrollYProgress }: { scrollYProgress: any }) {
+  // Parallax unstacking values
+  // Mobile (Left) moves further left as we scroll
+  const mobileX = useTransform(scrollYProgress, [0, 1], [20, -40]);
   
-  // Smooth spring physics
-  const ySpring = useSpring(y, { stiffness: 100, damping: 30 });
-  const scaleSpring = useSpring(scale, { stiffness: 100, damping: 30 });
+  // Tablet (Middle) stays mostly central
+  const tabletX = useTransform(scrollYProgress, [0, 1], [0, 0]);
+
+  // Desktop (Right) moves further right as we scroll
+  const desktopX = useTransform(scrollYProgress, [0, 1], [-20, 60]);
 
   return (
-    <section ref={ref} className="relative overflow-hidden pt-16 pb-20 lg:pt-24 lg:pb-32">
-      <motion.div 
-        className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10"
-        style={{ opacity }}
-      >
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
-          
-          {/* Left Column: Content */}
-          <motion.div 
-            className="flex flex-col gap-6 max-w-2xl"
-            initial={{ opacity: 0, x: -50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, ease: [0.6, -0.05, 0.01, 0.99] }}
-          >
-            <motion.div 
-              className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 w-fit"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.2, duration: 0.5 }}
-            >
-              <span className="flex size-2 rounded-full bg-primary animate-pulse"></span>
-              <span className="text-xs font-semibold text-primary uppercase tracking-wide">{t('featureTour')}</span>
-            </motion.div>
-            
-            <motion.h1 
-              className="text-4xl lg:text-6xl font-black leading-[1.1] tracking-tight text-slate-900 dark:text-white"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3, duration: 0.8 }}
-            >
-              {t('heroTitle')} <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-yellow-200">{t('heroTitleHighlight')}</span>
-            </motion.h1>
-            
-            <motion.p 
-              className="text-lg text-slate-600 dark:text-text-muted leading-relaxed max-w-lg"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4, duration: 0.8 }}
-            >
-              {t('heroSubtitle')}
-            </motion.p>
-            
-            <motion.div 
-              className="flex flex-col sm:flex-row gap-4 mt-2"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5, duration: 0.8 }}
-            >
-              <motion.button 
-                onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
-                className="flex h-12 items-center justify-center gap-2 rounded-lg bg-primary px-8 text-base font-bold text-background-dark transition-all shadow-lg shadow-primary/20"
-                whileHover={{ scale: 1.05, boxShadow: "0 20px 40px rgba(255, 215, 0, 0.3)" }}
-                whileTap={{ scale: 0.98 }}
-              >
-                {t('exploreFeatures')}
-                <ArrowDown className="h-5 w-5" />
-              </motion.button>
-              <Link href="/contact">
-                <motion.button 
-                  className="flex h-12 items-center justify-center gap-2 rounded-lg border border-slate-300 dark:border-white/20 bg-white dark:bg-slate-900 px-8 text-base font-bold text-slate-900 dark:text-white transition-all"
-                  whileHover={{ scale: 1.05, borderColor: "rgba(255, 215, 0, 0.4)" }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <Calendar className="h-5 w-5" />
-                  {t('bookDemo')}
-                </motion.button>
-              </Link>
-            </motion.div>
-          </motion.div>
-
-          {/* Right Column: Image/Visual with 3D Effect */}
-          <motion.div 
-            className="relative lg:h-auto"
-            initial={{ opacity: 0, x: 50, rotateY: -15 }}
-            animate={{ opacity: 1, x: 0, rotateY: 0 }}
-            transition={{ duration: 1, ease: [0.6, -0.05, 0.01, 0.99] }}
-            style={{ 
-              y: ySpring,
-              scale: scaleSpring,
-              transformStyle: "preserve-3d",
-              perspective: "1000px"
-            }}
-          >
-            <div className="absolute -inset-4 bg-primary/20 blur-3xl rounded-full opacity-30"></div>
-            <motion.div 
-              className="relative rounded-xl border border-white/10 bg-slate-900 shadow-2xl overflow-hidden aspect-[4/3] group"
-              whileHover={{ 
-                scale: 1.02,
-                boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)"
-              }}
-              transition={{ duration: 0.5 }}
-              style={{ transformStyle: "preserve-3d" }}
-            >
-              {/* Fake Browser Header */}
-              <div className="flex items-center gap-2 border-b border-white/10 bg-slate-950/50 px-4 py-3">
-                <div className="flex gap-1.5">
-                  <div className="size-3 rounded-full bg-red-500/80"></div>
-                  <div className="size-3 rounded-full bg-yellow-500/80"></div>
-                  <div className="size-3 rounded-full bg-green-500/80"></div>
-                </div>
-                <div className="mx-auto w-1/2 h-2 rounded-full bg-white/5"></div>
-              </div>
-
-              {/* Dashboard Image */}
-              <div 
-                className="h-full w-full bg-cover bg-center " 
-                style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuB8oBVzm-Moy4WIoOg-DjxVynnmB8aTJDd8wjMYjKfRPcYmZqg_iTqjsxUjblNxKTdVFl2lCnikIT6fzERWWicj5pOtCM2Rvj7sOAKn_je42kiA5LYuIbApV0HLkktP44UlbsR7focfIcOQSp32gDGqEqVASHIx5SszzwXnSUnrdNHgZ5abhNGiwSowNN12po2cfuX2p_bbMOG6k_ykbpjVYjoeLQqueo6qNPI0bvZ-8Ah4EUpdbrJqUUK6jkaLVH9UYsaXwAerKMo')" }}
-                aria-label="LMS Dashboard Interface showing charts and course lists"
-              >
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-transparent to-transparent opacity-60"></div>
-              </div>
-
-              {/* Floating Cards */}
-              <div className="absolute top-8 right-8 flex flex-col gap-2">
-                <FloatingBadge icon={<CheckCircle className="h-4 w-4 text-primary" />} text="Live Attendance" delay={0.6} />
-                <FloatingBadge icon={<CheckCircle className="h-4 w-4 text-primary" />} text="Auto-Grading" delay={0.7} />
-                <FloatingBadge icon={<CheckCircle className="h-4 w-4 text-primary" />} text="Resource Library" delay={0.8} />
-              </div>
-            </motion.div>
-          </motion.div>
-        </div>
-      </motion.div>
+    <div className="relative w-full max-w-[1200px] h-[350px] sm:h-[450px] md:h-[550px] mx-auto overflow-hidden sm:overflow-visible mt-6 sm:mt-12 perspective-[1200px]">
       
-      {/* Background Decoration with Parallax */}
+      {/* 
+        INSTRUCTION: Screenshot Placements
+        To use your actual screenshots, place your image files in:
+        `client/public/assets/images/`
+        Then update the `src` attributes below to point to those files.
+      */}
+
+      {/* Mobile Layer (Left - Animates in 1st) */}
       <motion.div 
-        className="absolute top-0 right-0 -z-10 h-[600px] w-[600px] bg-blue-900/10 blur-[120px] rounded-full"
-        style={{ y: ySpring, scale: scaleSpring }}
-      ></motion.div>
+        className="absolute left-[2%] sm:left-[15%] bottom-0 z-30 h-[85%] aspect-[9/19]"
+        style={{ x: mobileX }}
+      >
+        <motion.div
+          initial={{ y: -80, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.7, delay: 0.4, ease: 'easeOut' }}
+          className="w-full h-full rounded-[1.5rem] sm:rounded-[2rem] border-[6px] sm:border-[10px] border-slate-900 dark:border-black bg-slate-900 shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden"
+        >
+          {/* Mobile Notch */}
+          <div className="absolute top-0 inset-x-0 h-4 sm:h-5 flex justify-center z-10">
+              <div className="w-1/2 h-3 sm:h-4 bg-slate-900 dark:bg-black rounded-b-lg sm:rounded-b-2xl" />
+          </div>
+          <img 
+            src="/assets/images/mobile-mockup.png" 
+            onError={(e) => { e.currentTarget.src = "https://placehold.co/400x800/1e293b/FFFFFF/png?text=Mobile" }}
+            alt="Mobile app preview" 
+            className="w-full h-full object-cover"
+          />
+        </motion.div>
+      </motion.div>
+
+      {/* Tablet Layer (Middle - Animates in 2nd) */}
+      <motion.div 
+        className="absolute left-[35%] sm:left-[40%] bottom-0 z-20 h-[92%] aspect-[4/3]"
+        style={{ x: tabletX }}
+      >
+        <motion.div
+          initial={{ y: -80, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.7, delay: 0.6, ease: 'easeOut' }}
+          className="w-full h-full rounded-[1rem] sm:rounded-[1.5rem] border-[6px] sm:border-[10px] border-slate-900 dark:border-black bg-slate-900 shadow-[0_20px_50px_rgba(0,0,0,0.4)] overflow-hidden"
+        >
+          {/* Tablet Camera Hole (Landscape) */}
+          <div className="absolute top-0 bottom-0 left-2 my-auto w-2 h-2 rounded-full bg-black/50 z-10 hidden sm:block" />
+          
+          <img 
+            src="/assets/images/tablet-mockup.png" 
+            onError={(e) => { e.currentTarget.src = "https://placehold.co/800x600/f8fafc/0f172a/png?text=Tablet" }}
+            alt="Tablet interface preview" 
+            className="w-full h-full object-cover"
+          />
+        </motion.div>
+      </motion.div>
+
+      {/* Desktop Layer (Right - Animates in 3rd) */}
+      <motion.div 
+        className="absolute right-[-10%] sm:right-[-5%] bottom-0 z-10 h-full aspect-[16/10]"
+        style={{ x: desktopX }}
+      >
+        <motion.div
+          initial={{ y: -80, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.7, delay: 0.8, ease: 'easeOut' }}
+          className="w-full h-full rounded-[1rem] sm:rounded-[1.5rem] border-[6px] sm:border-[10px] border-slate-900 dark:border-black bg-slate-950 shadow-[0_20px_50px_rgba(0,0,0,0.3)] overflow-hidden"
+        >
+          {/* Desktop Webcam Hole */}
+          <div className="absolute top-2 inset-x-0 mx-auto w-2 h-2 rounded-full bg-black/50 z-10 hidden sm:block" />
+          
+          <img 
+            src="/assets/images/desktop-mockup.png" 
+            onError={(e) => { e.currentTarget.src = "https://placehold.co/1200x800/f8fafc/0f172a/png?text=Desktop" }}
+            alt="Desktop dashboard preview" 
+            className="w-full h-full object-cover"
+          />
+        </motion.div>
+      </motion.div>
+
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Main Hero Export
+───────────────────────────────────────────────────────────────*/
+const Hero: React.FC = () => {
+  const { t } = useTranslation('landing');
+  const sectionRef = useRef<HTMLElement>(null);
+
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ['start start', 'end start'],
+  });
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
+  const heroY       = useTransform(scrollYProgress, [0, 0.5], [0, 100]);
+  const mockupScale = useTransform(scrollYProgress, [0, 0.5], [1, 1.05]);
+
+  return (
+    <section
+      ref={sectionRef}
+      className="relative overflow-hidden bg-white dark:bg-slate-950 pt-28 sm:pt-36 pb-0 flex flex-col items-center"
+      style={{ fontFamily: "var(--font-sans)" }}
+    >
+      
+      {/* ── Hero Content ── */}
+      <motion.div
+        className="relative z-10 mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 text-center flex flex-col items-center"
+        style={{ opacity: heroOpacity, y: heroY }}
+      >
+        {/* Announcement pill */}
+        
+
+        {/* Headline */}
+        <motion.h1
+          className="max-w-4xl text-5xl sm:text-6xl md:text-7xl lg:text-[5rem] font-bold leading-[1.05] tracking-tight text-slate-900 dark:text-white"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.1, ease: 'easeOut' }}
+        >
+          {t('heroTitle')}{' '}
+          <span 
+            className="inline-block relative"
+            style={{ color: 'var(--color-primary, #F2D00D)' }}
+          >
+            {t('heroTitleHighlight')}
+            <svg className="absolute w-full h-3 -bottom-1 left-0 opacity-80" viewBox="0 0 100 10" preserveAspectRatio="none">
+               <path d="M0 5 Q 50 10 100 5" stroke="currentColor" strokeWidth="2" fill="none" />
+            </svg>
+          </span>
+        </motion.h1>
+
+        {/* Subheadline */}
+        <motion.p
+          className="mt-8 max-w-2xl text-lg sm:text-xl leading-relaxed text-slate-500 dark:text-slate-400"
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2, ease: 'easeOut' }}
+        >
+          {t('heroSubtitle')}
+        </motion.p>
+
+        {/* CTA Buttons */}
+        <motion.div
+          className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 w-full"
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.3, ease: 'easeOut' }}
+        >
+          <Link href="/register">
+            <Button
+              size="lg"
+              className="w-full sm:w-auto h-12 rounded-xl text-slate-900 px-8 font-bold text-base shadow-sm hover:scale-105 transition-transform"
+              style={{ backgroundColor: 'var(--color-primary, #F2D00D)' }}
+            >
+              {t('getStarted')}
+            </Button>
+          </Link>
+          <Link href="/contact">
+            <Button
+              size="lg"
+              variant="outline"
+              className="w-full sm:w-auto h-12 rounded-xl border-2 border-slate-200 dark:border-slate-800 bg-transparent px-8 font-semibold text-base text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors"
+            >
+              {t('bookDemo')}
+            </Button>
+          </Link>
+        </motion.div>
+      </motion.div>
+
+      {/* ── Product Screenshot Frame ── */}
+      <motion.div
+        className="relative z-10 w-full max-w-[1200px] px-4 sm:px-6 lg:px-8 mt-20 sm:mt-24 mb-[-100px] sm:mb-[-150px]"
+        initial={{ opacity: 0, scale: 0.95, y: 40 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.8, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
+        style={{ scale: mockupScale }}
+      >
+        <StackedScreenshots scrollYProgress={scrollYProgress} />
+      </motion.div>
     </section>
   );
 };
-
-const FloatingBadge: React.FC<{ icon: React.ReactNode; text: string; delay: number }> = ({ icon, text, delay }) => (
-  <motion.div 
-    className="bg-white/90 dark:bg-slate-950/90 backdrop-blur border border-slate-200 dark:border-white/10 px-3 py-1.5 rounded-lg flex items-center gap-2 shadow-lg"
-    initial={{ x: 48, opacity: 0 }}
-    animate={{ x: 0, opacity: 1 }}
-    transition={{ delay, duration: 0.5, ease: "easeOut" }}
-    whileHover={{ scale: 1.05, x: -4 }}
-  >
-    {icon}
-    <span className="text-xs font-bold text-slate-900 dark:text-white">{text}</span>
-  </motion.div>
-);
 
 export default Hero;

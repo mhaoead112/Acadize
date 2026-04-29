@@ -1,12 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from "wouter";
 import { useTranslation } from 'react-i18next';
-import { Menu } from "lucide-react";
+import { Menu, Radio, Zap, Sparkles, BarChart, Blocks, LineChart, BookOpen, ArrowRight } from "lucide-react";
 import { AcadizeLogo } from "@/components/AcadizeLogo";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/contexts/ThemeContext";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  navigationMenuTriggerStyle,
+} from "@/components/ui/navigation-menu";
 
 const Navbar: React.FC = () => {
   const { t } = useTranslation('landing');
@@ -84,45 +93,198 @@ const Navbar: React.FC = () => {
           </Link>
 
           {/* Desktop Menu */}
-          <div className="hidden md:flex items-center gap-8">
-            <Link href={isHome ? "#features" : "/"}>
-              <motion.span 
-                className="text-sm font-semibold text-slate-700 dark:text-slate-300 hover:text-primary dark:hover:text-primary transition-colors cursor-pointer"
-                onClick={handleFeaturesClick}
-                whileHover={{ y: -2 }}
-                whileTap={{ y: 0 }}
-              >
-                {t('features')}
-              </motion.span>
-            </Link>
-            <Link href="/pricing">
-              <motion.span 
-                className={`text-sm font-semibold transition-colors cursor-pointer ${location === '/pricing' ? 'text-primary' : 'text-slate-700 dark:text-slate-300 hover:text-primary dark:hover:text-primary'}`}
-                whileHover={{ y: -2 }}
-                whileTap={{ y: 0 }}
-              >
-                {t('pricingTitle')}
-              </motion.span>
-            </Link>
-            <Link href="/docs">
-              <motion.span 
-                className={`text-sm font-semibold transition-colors cursor-pointer ${location === '/docs' ? 'text-primary' : 'text-slate-700 dark:text-slate-300 hover:text-primary dark:hover:text-primary'}`}
-                whileHover={{ y: -2 }}
-                whileTap={{ y: 0 }}
-              >
-                {t('docs')}
-              </motion.span>
-            </Link>
-            <Link href="/contact">
-              <motion.span 
-                className={`text-sm font-semibold transition-colors cursor-pointer ${location === '/contact' ? 'text-primary' : 'text-slate-700 dark:text-slate-300 hover:text-primary dark:hover:text-primary'}`}
-                whileHover={{ y: -2 }}
-                whileTap={{ y: 0 }}
-              >
-                {t('contact')}
-              </motion.span>
-            </Link>
+          <div className="hidden md:flex flex-1 items-center justify-center">
+            <NavigationMenu>
+              <NavigationMenuList className="gap-2">
+                
+                {/* Products Dropdown */}
+                <NavigationMenuItem>
+                  <NavigationMenuTrigger className="bg-transparent hover:bg-transparent data-[state=open]:bg-transparent text-primary hover:text-primary data-[state=open]:text-primary font-semibold text-sm">
+                    Products
+                  </NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <div className="grid grid-cols-[1.5fr_1.5fr_1.5fr] gap-8 p-6 md:w-[850px] lg:w-[950px] bg-[#FAF9F5] dark:bg-slate-900 border-none rounded-xl">
+                      
+                      {/* Products Col */}
+                      <div>
+                        <h4 className="text-sm font-medium text-slate-400 mb-4 px-2 tracking-wide font-serif">Products</h4>
+                        <ul className="space-y-2">
+                          <li>
+                            <Link href="/products/on-call" className="group flex items-start gap-4 p-2 rounded-lg hover:bg-white dark:hover:bg-slate-800 transition-colors">
+                              <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[#FFF5E6] text-[#FF5A25]">
+                                <Radio className="h-4 w-4" />
+                              </div>
+                              <div>
+                                <h5 className="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-[#FF5A25] transition-colors">On-call</h5>
+                                <p className="text-xs text-slate-500 leading-tight mt-0.5">On-call scheduling and alerting</p>
+                              </div>
+                            </Link>
+                          </li>
+                          <li>
+                            <Link href="/products/response" className="group flex items-start gap-4 p-2 rounded-lg hover:bg-white dark:hover:bg-slate-800 transition-colors">
+                              <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[#FFF5E6] text-[#FF5A25]">
+                                <Zap className="h-4 w-4" />
+                              </div>
+                              <div>
+                                <h5 className="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-[#FF5A25] transition-colors">Response</h5>
+                                <p className="text-xs text-slate-500 leading-tight mt-0.5">Respond to incidents in Slack or Teams</p>
+                              </div>
+                            </Link>
+                          </li>
+                          <li>
+                            <Link href="/products/ai-sre" className="group flex items-start gap-4 p-2 rounded-lg hover:bg-white dark:hover:bg-slate-800 transition-colors">
+                              <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[#FFF5E6] text-[#FF5A25]">
+                                <Sparkles className="h-4 w-4" />
+                              </div>
+                              <div>
+                                <h5 className="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-[#FF5A25] transition-colors">AI SRE</h5>
+                                <p className="text-xs text-slate-500 leading-tight mt-0.5">Resolve incidents in record time</p>
+                              </div>
+                            </Link>
+                          </li>
+                          <li>
+                            <Link href="/products/status-pages" className="group flex items-start gap-4 p-2 rounded-lg hover:bg-white dark:hover:bg-slate-800 transition-colors">
+                              <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[#FFF5E6] text-[#FF5A25]">
+                                <BarChart className="h-4 w-4" />
+                              </div>
+                              <div>
+                                <h5 className="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-[#FF5A25] transition-colors">Status Pages</h5>
+                                <p className="text-xs text-slate-500 leading-tight mt-0.5">Share updates with your customers</p>
+                              </div>
+                            </Link>
+                          </li>
+                        </ul>
+                      </div>
+
+                      {/* Platform Col */}
+                      <div>
+                        <h4 className="text-sm font-medium text-slate-400 mb-4 px-2 tracking-wide font-serif">Platform</h4>
+                        <ul className="space-y-2">
+                          <li>
+                            <Link href="/platform/ai" className="group flex items-start gap-4 p-2 rounded-lg hover:bg-white dark:hover:bg-slate-800 transition-colors">
+                              <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[#FFF5E6] text-[#FF5A25]">
+                                <Sparkles className="h-4 w-4" />
+                              </div>
+                              <div>
+                                <h5 className="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-[#FF5A25] transition-colors">AI Platform</h5>
+                                <p className="text-xs text-slate-500 leading-tight mt-0.5">AI-powered incident management</p>
+                              </div>
+                            </Link>
+                          </li>
+                          <li>
+                            <Link href="/platform/integrations" className="group flex items-start gap-4 p-2 rounded-lg hover:bg-white dark:hover:bg-slate-800 transition-colors">
+                              <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[#FFF5E6] text-[#FF5A25]">
+                                <Blocks className="h-4 w-4" />
+                              </div>
+                              <div>
+                                <h5 className="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-[#FF5A25] transition-colors">Integrations</h5>
+                                <p className="text-xs text-slate-500 leading-tight mt-0.5">Connect with your existing tools</p>
+                              </div>
+                            </Link>
+                          </li>
+                          <li>
+                            <Link href="/platform/insights" className="group flex items-start gap-4 p-2 rounded-lg hover:bg-white dark:hover:bg-slate-800 transition-colors">
+                              <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[#FFF5E6] text-[#FF5A25]">
+                                <LineChart className="h-4 w-4" />
+                              </div>
+                              <div>
+                                <h5 className="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-[#FF5A25] transition-colors">Insights</h5>
+                                <p className="text-xs text-slate-500 leading-tight mt-0.5">Learn from your incidents</p>
+                              </div>
+                            </Link>
+                          </li>
+                          <li>
+                            <Link href="/platform/catalog" className="group flex items-start gap-4 p-2 rounded-lg hover:bg-white dark:hover:bg-slate-800 transition-colors">
+                              <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[#FFF5E6] text-[#FF5A25]">
+                                <BookOpen className="h-4 w-4" />
+                              </div>
+                              <div>
+                                <h5 className="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-[#FF5A25] transition-colors">Catalog</h5>
+                                <p className="text-xs text-slate-500 leading-tight mt-0.5">Powerful routing for your organization</p>
+                              </div>
+                            </Link>
+                          </li>
+                        </ul>
+                      </div>
+
+                      {/* Changelog Col */}
+                      <div className="flex flex-col">
+                        <NavigationMenuLink asChild>
+                          <Link href="/changelog" className="flex items-center text-sm font-medium text-slate-400 hover:text-slate-600 mb-4 px-2 tracking-wide font-serif transition-colors">
+                            Changelog <ArrowRight className="ml-1 h-3 w-3" />
+                          </Link>
+                        </NavigationMenuLink>
+                        <NavigationMenuLink asChild>
+                          <Link href="/changelog/team-scoped-api-keys" className="group block h-full bg-[#F3F0E6] dark:bg-slate-800 rounded-xl p-6 transition-transform hover:-translate-y-1">
+                            <div className="flex justify-center mb-6">
+                              <div className="relative">
+                                {/* Add a simplified illustration resembling the team scoped api keys */}
+                                <div className="bg-[#DFD8C8] dark:bg-slate-700 w-16 h-12 rounded-lg absolute -inset-2 opacity-50 transform -rotate-6" />
+                                <div className="bg-white dark:bg-slate-900 px-4 py-2 rounded-lg shadow-sm relative z-10 flex items-center justify-center font-serif text-lg text-slate-900 dark:text-white whitespace-nowrap">
+                                  Team-scoped
+                                  <br/>API keys
+                                </div>
+                              </div>
+                            </div>
+                            <div>
+                              <h5 className="text-sm font-semibold text-slate-900 dark:text-white mb-2">Team-scoped API keys</h5>
+                              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                                API keys can now either have global permissions and/or team-scoped permissions. Plus, check out ...
+                              </p>
+                            </div>
+                          </Link>
+                        </NavigationMenuLink>
+                      </div>
+                      
+                    </div>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
+
+                {/* Other standard items */}
+                <NavigationMenuItem>
+                  <NavigationMenuLink asChild className="group inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-semibold text-slate-800 dark:text-slate-200 transition-colors hover:bg-slate-100/50 hover:text-slate-900 dark:hover:bg-slate-800/50 dark:hover:text-slate-50 focus:bg-slate-100/50 focus:text-slate-900 focus:outline-none disabled:pointer-events-none disabled:opacity-50">
+                    <Link href="/solutions">
+                      Solutions
+                    </Link>
+                  </NavigationMenuLink>
+                </NavigationMenuItem>
+
+                <NavigationMenuItem>
+                  <NavigationMenuLink asChild className="group inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-semibold text-slate-800 dark:text-slate-200 transition-colors hover:bg-slate-100/50 hover:text-slate-900 dark:hover:bg-slate-800/50 dark:hover:text-slate-50 focus:bg-slate-100/50 focus:text-slate-900 focus:outline-none disabled:pointer-events-none disabled:opacity-50">
+                    <Link href="/resources">
+                      Resources
+                    </Link>
+                  </NavigationMenuLink>
+                </NavigationMenuItem>
+
+                <NavigationMenuItem>
+                  <NavigationMenuLink asChild className="group inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-semibold text-slate-800 dark:text-slate-200 transition-colors hover:bg-slate-100/50 hover:text-slate-900 dark:hover:bg-slate-800/50 dark:hover:text-slate-50 focus:bg-slate-100/50 focus:text-slate-900 focus:outline-none disabled:pointer-events-none disabled:opacity-50">
+                    <Link href="/customers">
+                      Customers
+                    </Link>
+                  </NavigationMenuLink>
+                </NavigationMenuItem>
+
+                <NavigationMenuItem>
+                  <NavigationMenuLink asChild className="group inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-semibold text-slate-800 dark:text-slate-200 transition-colors hover:bg-slate-100/50 hover:text-slate-900 dark:hover:bg-slate-800/50 dark:hover:text-slate-50 focus:bg-slate-100/50 focus:text-slate-900 focus:outline-none disabled:pointer-events-none disabled:opacity-50">
+                    <Link href="/pricing">
+                      Pricing
+                    </Link>
+                  </NavigationMenuLink>
+                </NavigationMenuItem>
+
+                <NavigationMenuItem>
+                  <NavigationMenuLink asChild className="group inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-semibold text-slate-800 dark:text-slate-200 transition-colors hover:bg-slate-100/50 hover:text-slate-900 dark:hover:bg-slate-800/50 dark:hover:text-slate-50 focus:bg-slate-100/50 focus:text-slate-900 focus:outline-none disabled:pointer-events-none disabled:opacity-50">
+                    <Link href="/careers">
+                      Careers
+                    </Link>
+                  </NavigationMenuLink>
+                </NavigationMenuItem>
+
+              </NavigationMenuList>
+            </NavigationMenu>
           </div>
+
 
           {/* Auth Buttons */}
           <div className="flex items-center gap-3">

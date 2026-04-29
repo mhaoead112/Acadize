@@ -16,6 +16,14 @@ interface UseWebSocketReturn {
   reconnect: () => void;
 }
 
+function buildWebSocketUrl(baseUrl: string, token: string | null): string {
+  if (!token) return baseUrl;
+
+  const url = new URL(baseUrl);
+  url.searchParams.set('token', token);
+  return url.toString();
+}
+
 export function useWebSocket(onMessage?: (data: WSMessage) => void): UseWebSocketReturn {
   const [socket, setSocket] = useState<WebSocket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
@@ -32,7 +40,7 @@ export function useWebSocket(onMessage?: (data: WSMessage) => void): UseWebSocke
 
     try {
       const token = getStoredToken();
-      const wsUrl = token ? `${WS_URL}/?token=${token}` : WS_URL;
+      const wsUrl = buildWebSocketUrl(WS_URL, token);
       const ws = new WebSocket(wsUrl);
 
       ws.onopen = () => {

@@ -16,17 +16,21 @@ import {
 } from '@/lib/animations';
 import { AcadizeLogo } from './AcadizeLogo';
 import { LanguageSwitcher } from './LanguageSwitcher';
+import { XPLevelBar } from './gamification/XPLevelBar';
+import { XPToast } from './gamification/XPToast';
+import { QuestToast } from './gamification/QuestToast';
+import { useXPAward, triggerQuestCompletion } from '@/hooks/useXPAward';
 
 interface NavItem {
   label: string;
-  icon: string;
-  path: string;
+  icon?: string;
+  path?: string;
   badge?: string;
+  isHeader?: boolean;
 }
 
 const navItems: NavItem[] = [
   { label: 'nav.dashboard', icon: 'dashboard', path: '/student/dashboard' },
-  { label: 'nav.gamification', icon: 'emoji_events', path: '/student/gamification' },
   { label: 'nav.courses', icon: 'school', path: '/student/courses' },
   { label: 'nav.attendance', icon: 'how_to_reg', path: '/student/attendance' },
   { label: 'nav.assignments', icon: 'task', path: '/student/assignments' },
@@ -35,6 +39,10 @@ const navItems: NavItem[] = [
   { label: 'nav.messages', icon: 'message', path: '/student/messages' },
   { label: 'nav.exams', icon: 'quiz', path: '/student/exams' },
   { label: 'nav.mistakes', icon: 'psychology', path: '/student/mistakes' },
+  { label: 'My Progress', isHeader: true },
+  { label: 'nav.gamification', icon: 'emoji_events', path: '/student/gamification' },
+  { label: 'Achievements', icon: 'military_tech', path: '/student/achievements' },
+  { label: 'Leaderboard', icon: 'leaderboard', path: '/student/leaderboard' },
 ];
 
 interface StudentLayoutProps {
@@ -50,6 +58,7 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isDesktopHeader, setIsDesktopHeader] = useState(() => typeof window !== 'undefined' ? window.innerWidth >= 1024 : false);
+  const { toast, dismissToast, questToast, dismissQuestToast } = useXPAward();
   // Initialize from URL if available
   const [searchQuery, setSearchQuery] = useState(() => {
     const params = new URLSearchParams(window.location.search);
@@ -188,14 +197,28 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
               </div>
             </motion.div>
           </Link>
+          
+          <div className="mt-4">
+            <XPLevelBar />
+          </div>
         </div>
 
         {/* Navigation */}
         <nav className="flex flex-col gap-2 px-4 flex-1 overflow-y-auto">
           {navItems.map((item, index) => {
+            if (item.isHeader) {
+              return (
+                <div key={`header-${index}`} className={`pt-4 pb-2 px-4 ${isSidebarCollapsed ? 'hidden' : 'block'}`}>
+                  <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                    {item.label}
+                  </span>
+                </div>
+              );
+            }
+            
             const isActive = location === item.path || location.startsWith(item.path + '/');
             return (
-              <Link key={item.path} to={item.path}>
+              <Link key={item.path} to={item.path!}>
                 <motion.div
                   title={isSidebarCollapsed ? t(item.label) : undefined}
                   className={`flex items-center ${isSidebarCollapsed ? 'justify-center mx-1 text-xl' : 'gap-3 px-4'} py-3 rounded-lg cursor-pointer group relative overflow-hidden ${
@@ -346,13 +369,27 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
               </div>
             </div>
           </Link>
+          
+          <div className="mt-4">
+            <XPLevelBar />
+          </div>
         </div>
 
         <nav className="flex flex-col gap-2 px-4 flex-1 overflow-y-auto">
           {navItems.map((item, index) => {
+            if (item.isHeader) {
+              return (
+                <div key={`mobile-header-${index}`} className="pt-4 pb-2 px-4">
+                  <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                    {item.label}
+                  </span>
+                </div>
+              );
+            }
+
             const isActive = location === item.path || location.startsWith(item.path + '/');
             return (
-              <Link key={item.path} to={item.path}>
+              <Link key={item.path} to={item.path!}>
                 <motion.div
                   onClick={() => setIsMobileSidebarOpen(false)}
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer group relative overflow-hidden ${
@@ -526,6 +563,23 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
 
         {children}
       </div>
+      
+      {toast && (
+        <XPToast 
+          {...toast} 
+          onDismiss={dismissToast} 
+        />
+      )}
+
+      <AnimatePresence>
+        {questToast && (
+          <QuestToast
+            title={questToast.title}
+            xpAwarded={questToast.xpAwarded}
+            onDismiss={dismissQuestToast}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

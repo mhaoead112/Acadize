@@ -67,5 +67,10 @@
   "eventCreatedShort": "Event Created",
   "eventUpdatedShort": "Event Updated",
   "activated": "activated",
-  "deactivated": "deactivated"
+  "deactivated": "deactivated",
+  "xpAwarded30d": "XP Awarded (30d)",
+  "badgesIssued30d": "Badges Issued (30d)",
+  "activeLearners": "Active Learners",
+  "gamificationReports": "Gamification Reports",
+  "gamificationReportsDesc": "View analytics & engagement"
 }

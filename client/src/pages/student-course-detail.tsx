@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useRoute, Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
+import { CourseSkillTree } from "@/components/gamification/CourseSkillTree";
 
 import { useToast } from "@/hooks/use-toast";
 import { apiEndpoint } from "@/lib/config";
@@ -84,6 +85,7 @@ export default function StudentCourseDetailPage() {
   const tabs = [
     { name: t('overview'), key: 'overview', icon: 'grid_view' },
     { name: t('lessons'), key: 'lessons', icon: 'book_2' },
+    { name: 'Skill Map', key: 'skillmap', icon: 'account_tree' },
     { name: t('assignments'), key: 'assignments', icon: 'assignment' },
     { name: t('announcements'), key: 'announcements', icon: 'campaign' },
   ];
@@ -723,6 +725,32 @@ export default function StudentCourseDetailPage() {
                 </motion.div>
               )}
             </motion.div>
+          </motion.div>
+        )}
+        </AnimatePresence>
+
+        {/* Tab Content: Skill Map */}
+        <AnimatePresence mode="wait">
+        {activeTab === 'skillmap' && courseId && (
+          <motion.div
+            className="pb-10"
+            key="skillmap"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={springConfigs.gentle}
+          >
+            <div className="mb-5">
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white">Your Learning Path</h3>
+              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                Follow the nodes in order — complete each lesson to unlock the next.
+                Active nodes glow blue; completed ones glow green.
+              </p>
+            </div>
+            <CourseSkillTree
+              courseId={courseId}
+              onLessonClick={() => setLocation(`/student/courses/${courseId}/lessons`)}
+            />
           </motion.div>
         )}
         </AnimatePresence>

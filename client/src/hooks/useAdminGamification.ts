@@ -108,6 +108,7 @@ const QK = {
     rules: ['gamification-rules'] as const,
     badges: (includeArchived: boolean) => ['gamification-badges', includeArchived] as const,
     report: (filters: ReportFilters) => ['gamification-report', filters] as const,
+    quests: ['gamification-quests-admin'] as const,
 } as const;
 
 // ===========================================================================
@@ -352,5 +353,50 @@ export function useGamificationReport(filters: ReportFilters = {}) {
         queryFn: () => fetchWithAuth(url, token),
         enabled: !!token,
         staleTime: 5 * 60 * 1000, // reports can be cached longer
+    });
+}
+
+// ===========================================================================
+// 9. useQuestTemplates  —  GET /api/admin/gamification/quests
+// ===========================================================================
+
+/** Fetches all quest templates for the organization. */
+export function useQuestTemplates() {
+    const { token } = useAuth();
+
+    return useQuery<any[]>({
+        queryKey: QK.quests,
+        queryFn: () => fetchWithAuth('/api/admin/gamification/quests', token),
+        enabled: !!token,
+        staleTime: 5 * 60 * 1000,
+    });
+}
+
+// ===========================================================================
+// 10. useUpdateQuestTemplate  —  PATCH /api/admin/gamification/quests/:id
+// ===========================================================================
+
+/** Updates a quest template. */
+export function useUpdateQuestTemplate() {
+    const { token } = useAuth();
+    const { toast } = useToast();
+    const queryClient = useQueryClient();
+
+    return useMutation<void, Error, { id: string; payload: any }>({
+        mutationFn: ({ id, payload }) =>
+            mutateWithAuth(`/api/admin/gamification/quests/${id}`, 'PATCH', token, payload),
+        onSuccess: () => {
+            toast({
+                title: 'Quest updated',
+                description: 'The quest template has been saved successfully.',
+            });
+            queryClient.invalidateQueries({ queryKey: QK.quests });
+        },
+        onError: (err) =>
+            toast({
+                title: 'Failed to update quest',
+                description: err.message,
+                variant: 'destructive',
+            }),
     });
 }

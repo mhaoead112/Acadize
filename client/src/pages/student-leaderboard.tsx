@@ -7,7 +7,7 @@ import { useLeaderboard } from '@/hooks/useGamification';
 import { useAuth } from '@/hooks/useAuth';
 import { useTranslation } from 'react-i18next';
 
-import LeaderboardTable from '@/components/gamification/LeaderboardTable';
+import { Leaderboard } from '@/components/gamification/Leaderboard';
 import {
   Select,
   SelectContent,
@@ -127,18 +127,11 @@ export default function StudentLeaderboard() {
                 </Card>
               ) : null}
 
-              {/* 3. LeaderboardTable */}
+              {/* 3. Leaderboard (near-me + tab modes) */}
               <div className="space-y-4">
-                <h3 className="text-xl font-semibold flex items-center gap-2">
-                  <Star className="h-5 w-5 text-primary" />
-                  {t('topPerformers')}
-                </h3>
-                <LeaderboardTable
-                  entries={leaderboardData?.entries || []}
+                <Leaderboard
+                  courseId={selectedCourseId}
                   currentUserId={user?.id || ''}
-                  userRank={leaderboardData?.userRank || null}
-                  enabled={leaderboardData?.enabled ?? true}
-                  isLoading={leaderboardLoading}
                 />
               </div>
             </div>

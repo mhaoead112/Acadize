@@ -457,5 +457,7 @@
   "quizMe": "Quiz me",
   "studyTips": "Study tips",
   "askMeAnythingPlaceholder": "Ask me anything...",
-  "poweredByGemini": "Powered by Google Gemini AI"
+  "poweredByGemini": "Powered by Google Gemini AI",
+  "myXP": "My XP",
+  "viewProgress": "View your progress"
 }

@@ -67,5 +67,10 @@
   "eventCreatedShort": "تم إنشاء الحدث",
   "eventUpdatedShort": "تم تحديث الحدث",
   "activated": "مُفعّل",
-  "deactivated": "غير مُفعّل"
+  "deactivated": "غير مُفعّل",
+  "xpAwarded30d": "نقاط الخبرة الممنوحة (30 يوم)",
+  "badgesIssued30d": "الأوسمة الصادرة (30 يوم)",
+  "activeLearners": "المتعلمون النشطون",
+  "gamificationReports": "تقارير نظام التحفيز",
+  "gamificationReportsDesc": "عرض التحليلات والتفاعل"
 }

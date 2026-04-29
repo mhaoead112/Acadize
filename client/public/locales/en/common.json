@@ -1,4 +1,4 @@
-﻿{
+{
     "nav": {
         "home": "Home",
         "courses": "Courses",
@@ -99,5 +99,7 @@
     "aria": {
         "toggleTheme": "Toggle theme",
         "userAvatar": "Profile"
-    }
+    },
+    "Achievements": "Achievements",
+    "Leaderboard": "Leaderboard"
 }
