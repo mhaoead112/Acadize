@@ -1,0 +1,39 @@
+{
+  "traceId": "trace-20250425-student-tutor-001",
+  "task": {
+    "type": "student_tutor",
+    "question": "Can you explain photosynthesis in simple terms?",
+    "lessonId": "lesson-biology-101",
+    "courseId": "course-science-12",
+    "persona": "alex",
+    "context": "Currently studying Chapter 5 on photosynthesis"
+  },
+  "context": {
+    "userId": "student-12345",
+    "userRole": "student",
+    "organizationId": "org-school-01",
+    "lessonId": "lesson-biology-101",
+    "courseId": "course-science-12",
+    "language": "en",
+    "preferences": {
+      "verbose": false,
+      "includeExamples": true,
+      "includeResources": false
+    }
+  },
+  "config": {
+    "enableFallback": true,
+    "disableAI": false,
+    "timeout": 30000,
+    "enableCache": true,
+    "cacheTTL": 3600,
+    "debug": false
+  },
+  "metadata": {
+    "source": "web",
+    "version": "1.0.0",
+    "platform": "student_portal",
+    "userAgent": "Mozilla/5.0..."
+  },
+  "createdAt": "2025-04-25T10:30:00Z"
+}

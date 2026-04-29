@@ -1,0 +1,326 @@
+{
+  "info": {
+    "name": "AI Orchestration Integration Tests",
+    "description": "Complete test collection for AI Orchestration Layer",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Login (Get JWT)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Tenant-Subdomain",
+                "value": "school1"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"student@school.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/auth/login",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Checkpoint 1: Authenticated Requests",
+      "item": [
+        {
+          "name": "Student Tutor - Primary Path",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{JWT_TOKEN}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Tenant-Subdomain",
+                "value": "school1"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"traceId\": \"trace-checkpoint1-001\",\n  \"task\": {\n    \"type\": \"student_tutor\",\n    \"question\": \"What is photosynthesis and why is it important?\",\n    \"lessonId\": \"lesson-bio-101\",\n    \"courseId\": \"course-science-101\",\n    \"persona\": \"alex\"\n  },\n  \"context\": {\n    \"lessonId\": \"lesson-bio-101\",\n    \"courseId\": \"course-science-101\",\n    \"language\": \"en\"\n  },\n  \"config\": {\n    \"enableFallback\": true,\n    \"timeout\": 30000,\n    \"debug\": false\n  }\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/ai/orchestrate",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "ai", "orchestrate"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Checkpoint 2: Lesson Context",
+      "item": [
+        {
+          "name": "With Lesson Context",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{JWT_TOKEN}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Tenant-Subdomain",
+                "value": "school1"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"traceId\": \"trace-checkpoint2-001\",\n  \"task\": {\n    \"type\": \"student_tutor\",\n    \"question\": \"Explain the photosynthesis equation\",\n    \"lessonId\": \"lesson-bio-101\"\n  },\n  \"context\": {\n    \"lessonId\": \"lesson-bio-101\",\n    \"courseId\": \"course-science-101\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/ai/orchestrate",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "ai", "orchestrate"]
+            }
+          }
+        },
+        {
+          "name": "Without Lesson Context",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{JWT_TOKEN}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Tenant-Subdomain",
+                "value": "school1"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"traceId\": \"trace-checkpoint2-002\",\n  \"task\": {\n    \"type\": \"student_tutor\",\n    \"question\": \"What is mitosis?\"\n  },\n  \"context\": {}\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/ai/orchestrate",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "ai", "orchestrate"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Checkpoint 3: Fallback Paths",
+      "item": [
+        {
+          "name": "Stub Mode (Disabled AI)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{JWT_TOKEN}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Tenant-Subdomain",
+                "value": "school1"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"traceId\": \"trace-checkpoint3-001\",\n  \"task\": {\n    \"type\": \"student_tutor\",\n    \"question\": \"What is DNA?\"\n  },\n  \"context\": {\n    \"lessonId\": \"lesson-bio-102\"\n  },\n  \"config\": {\n    \"disableAI\": true,\n    \"enableFallback\": true\n  }\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/ai/stub-test",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "ai", "stub-test"]
+            }
+          }
+        },
+        {
+          "name": "Fallback Test",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{JWT_TOKEN}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Tenant-Subdomain",
+                "value": "school1"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"traceId\": \"trace-checkpoint3-002\",\n  \"task\": {\n    \"type\": \"student_tutor\",\n    \"question\": \"Explain mitochondria\"\n  },\n  \"context\": {\n    \"lessonId\": \"lesson-bio-101\"\n  },\n  \"config\": {\n    \"enableFallback\": true,\n    \"timeout\": 1000\n  }\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/ai/fallback-test",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "ai", "fallback-test"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Checkpoint 6: Multi-Task Types",
+      "item": [
+        {
+          "name": "Content Generation - Summary",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{JWT_TOKEN}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Tenant-Subdomain",
+                "value": "school1"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"traceId\": \"trace-content-gen-001\",\n  \"task\": {\n    \"type\": \"content_generation\",\n    \"contentType\": \"summary\",\n    \"sourceId\": \"lesson-math-101\",\n    \"depth\": \"intermediate\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/ai/orchestrate",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "ai", "orchestrate"]
+            }
+          }
+        },
+        {
+          "name": "Mistake Remediation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{JWT_TOKEN}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Tenant-Subdomain",
+                "value": "school1"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"traceId\": \"trace-remediation-001\",\n  \"task\": {\n    \"type\": \"mistake_remediation\",\n    \"mistakeId\": \"mistake-123\",\n    \"examAttemptId\": \"attempt-456\",\n    \"questionId\": \"question-789\",\n    \"studentAnswer\": \"The answer is 42\",\n    \"correctAnswer\": \"The answer is 24\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/ai/orchestrate",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "ai", "orchestrate"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Utility Endpoints",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{BASE_URL}}/api/ai/health",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "ai", "health"]
+            }
+          }
+        },
+        {
+          "name": "Schema Documentation",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{BASE_URL}}/api/ai/schema",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "ai", "schema"]
+            }
+          }
+        },
+        {
+          "name": "Validate Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{JWT_TOKEN}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"task\": {\n    \"type\": \"student_tutor\",\n    \"question\": \"test question\"\n  },\n  \"context\": {\n    \"lessonId\": \"lesson-123\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/ai/validate",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "ai", "validate"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "BASE_URL",
+      "value": "http://localhost:3001"
+    },
+    {
+      "key": "JWT_TOKEN",
+      "value": "",
+      "description": "Set this after login"
+    }
+  ]
+}

@@ -1,0 +1,602 @@
+[
+  {
+    "rank": 1,
+    "source": "../../node_modules/@tensorflow/tfjs-core/dist/tf-core.esm.js",
+    "bytes": 528383,
+    "kb": 516
+  },
+  {
+    "rank": 2,
+    "source": "../../node_modules/html5-qrcode/third_party/zxing-js.umd.js",
+    "bytes": 295259,
+    "kb": 288.34
+  },
+  {
+    "rank": 3,
+    "source": "../../node_modules/katex/dist/katex.mjs",
+    "bytes": 265387,
+    "kb": 259.17
+  },
+  {
+    "rank": 4,
+    "source": "../../node_modules/react-quill/node_modules/quill/dist/quill.js",
+    "bytes": 217881,
+    "kb": 212.77
+  },
+  {
+    "rank": 5,
+    "source": "../../node_modules/react-dom/cjs/react-dom.production.min.js",
+    "bytes": 130357,
+    "kb": 127.3
+  },
+  {
+    "rank": 6,
+    "source": "../../../node_modules/zod/lib/index.mjs",
+    "bytes": 61316,
+    "kb": 59.88
+  },
+  {
+    "rank": 7,
+    "source": "../../node_modules/i18next/dist/esm/i18next.js",
+    "bytes": 45102,
+    "kb": 44.04
+  },
+  {
+    "rank": 8,
+    "source": "../../node_modules/@dnd-kit/core/dist/core.esm.js",
+    "bytes": 40147,
+    "kb": 39.21
+  },
+  {
+    "rank": 9,
+    "source": "../../src/pages/teacher-messages.tsx",
+    "bytes": 40126,
+    "kb": 39.19
+  },
+  {
+    "rank": 10,
+    "source": "../../src/pages/parent-messages.tsx",
+    "bytes": 38116,
+    "kb": 37.22
+  },
+  {
+    "rank": 11,
+    "source": "../../../node_modules/recharts/es6/chart/generateCategoricalChart.js",
+    "bytes": 33584,
+    "kb": 32.8
+  },
+  {
+    "rank": 12,
+    "source": "../../src/pages/teacher-course-manage.tsx",
+    "bytes": 32922,
+    "kb": 32.15
+  },
+  {
+    "rank": 13,
+    "source": "../../../node_modules/react-day-picker/dist/index.esm.js",
+    "bytes": 30830,
+    "kb": 30.11
+  },
+  {
+    "rank": 14,
+    "source": "../../src/pages/teacher-exam-create.tsx",
+    "bytes": 29380,
+    "kb": 28.69
+  },
+  {
+    "rank": 15,
+    "source": "../../src/pages/student-course-detail.tsx",
+    "bytes": 27755,
+    "kb": 27.1
+  },
+  {
+    "rank": 16,
+    "source": "../../src/pages/teacher-profile.tsx",
+    "bytes": 27637,
+    "kb": 26.99
+  },
+  {
+    "rank": 17,
+    "source": "../../../node_modules/react-hook-form/dist/index.esm.mjs",
+    "bytes": 26025,
+    "kb": 25.42
+  },
+  {
+    "rank": 18,
+    "source": "../../src/pages/admin-calendar.tsx",
+    "bytes": 25439,
+    "kb": 24.84
+  },
+  {
+    "rank": 19,
+    "source": "../../src/pages/admin-organizations.tsx",
+    "bytes": 25410,
+    "kb": 24.81
+  },
+  {
+    "rank": 20,
+    "source": "../../src/pages/student-exam-attempt.tsx",
+    "bytes": 25409,
+    "kb": 24.81
+  },
+  {
+    "rank": 21,
+    "source": "../../src/pages/teacher-sessions.tsx",
+    "bytes": 24986,
+    "kb": 24.4
+  },
+  {
+    "rank": 22,
+    "source": "../../src/pages/teacher-attempt-review.tsx",
+    "bytes": 24695,
+    "kb": 24.12
+  },
+  {
+    "rank": 23,
+    "source": "../../src/pages/student-attendance.tsx",
+    "bytes": 23727,
+    "kb": 23.17
+  },
+  {
+    "rank": 24,
+    "source": "../../src/pages/admin-settings.tsx",
+    "bytes": 23574,
+    "kb": 23.02
+  },
+  {
+    "rank": 25,
+    "source": "../../src/pages/student-assignments.tsx",
+    "bytes": 22506,
+    "kb": 21.98
+  },
+  {
+    "rank": 26,
+    "source": "../../src/pages/student-dashboard.tsx",
+    "bytes": 22362,
+    "kb": 21.84
+  },
+  {
+    "rank": 27,
+    "source": "../../../node_modules/framer-motion/dist/es/projection/node/create-projection-node.mjs",
+    "bytes": 22295,
+    "kb": 21.77
+  },
+  {
+    "rank": 28,
+    "source": "../../src/pages/admin-users.tsx",
+    "bytes": 21702,
+    "kb": 21.19
+  },
+  {
+    "rank": 29,
+    "source": "../../src/pages/teacher-session-live.tsx",
+    "bytes": 21650,
+    "kb": 21.14
+  },
+  {
+    "rank": 30,
+    "source": "../../src/pages/teacher-communication.tsx",
+    "bytes": 20831,
+    "kb": 20.34
+  },
+  {
+    "rank": 31,
+    "source": "../../src/pages/emotional-learning.tsx",
+    "bytes": 20731,
+    "kb": 20.25
+  },
+  {
+    "rank": 32,
+    "source": "../../src/pages/student-profile.tsx",
+    "bytes": 20686,
+    "kb": 20.2
+  },
+  {
+    "rank": 33,
+    "source": "../../src/pages/teacher-exam-edit.tsx",
+    "bytes": 20659,
+    "kb": 20.17
+  },
+  {
+    "rank": 34,
+    "source": "../../src/pages/student-course-lessons.tsx",
+    "bytes": 20652,
+    "kb": 20.17
+  },
+  {
+    "rank": 35,
+    "source": "../../src/pages/admin-attendance.tsx",
+    "bytes": 20484,
+    "kb": 20
+  },
+  {
+    "rank": 36,
+    "source": "../../src/pages/teacher-content.tsx",
+    "bytes": 20318,
+    "kb": 19.84
+  },
+  {
+    "rank": 37,
+    "source": "../../src/pages/teacher-student-profile.tsx",
+    "bytes": 20156,
+    "kb": 19.68
+  },
+  {
+    "rank": 38,
+    "source": "../../../node_modules/tailwind-merge/dist/bundle-mjs.mjs",
+    "bytes": 20114,
+    "kb": 19.64
+  },
+  {
+    "rank": 39,
+    "source": "../../src/pages/teacher-analytics.tsx",
+    "bytes": 19660,
+    "kb": 19.2
+  },
+  {
+    "rank": 40,
+    "source": "../../src/content/blog/posts.ts",
+    "bytes": 19611,
+    "kb": 19.15
+  },
+  {
+    "rank": 41,
+    "source": "../../src/pages/docs.tsx",
+    "bytes": 19518,
+    "kb": 19.06
+  },
+  {
+    "rank": 42,
+    "source": "../../src/pages/student-calendar.tsx",
+    "bytes": 19511,
+    "kb": 19.05
+  },
+  {
+    "rank": 43,
+    "source": "../../src/components/attendance/CreateSessionModal.tsx",
+    "bytes": 19418,
+    "kb": 18.96
+  },
+  {
+    "rank": 44,
+    "source": "../../src/pages/teacher-exam-questions.tsx",
+    "bytes": 19096,
+    "kb": 18.65
+  },
+  {
+    "rank": 45,
+    "source": "../../src/pages/student-exams.tsx",
+    "bytes": 18976,
+    "kb": 18.53
+  },
+  {
+    "rank": 46,
+    "source": "../../src/pages/help-center.tsx",
+    "bytes": 18708,
+    "kb": 18.27
+  },
+  {
+    "rank": 47,
+    "source": "../../src/pages/teacher-exams.tsx",
+    "bytes": 18530,
+    "kb": 18.1
+  },
+  {
+    "rank": 48,
+    "source": "../../../node_modules/@radix-ui/react-select/dist/index.mjs",
+    "bytes": 18153,
+    "kb": 17.73
+  },
+  {
+    "rank": 49,
+    "source": "../../src/pages/teacher-calendar.tsx",
+    "bytes": 18097,
+    "kb": 17.67
+  },
+  {
+    "rank": 50,
+    "source": "../../src/pages/teacher-assignments.tsx",
+    "bytes": 18021,
+    "kb": 17.6
+  },
+  {
+    "rank": 51,
+    "source": "../../src/pages/teacher-exam-manage.tsx",
+    "bytes": 17199,
+    "kb": 16.8
+  },
+  {
+    "rank": 52,
+    "source": "../../src/pages/teacher-assessments.tsx",
+    "bytes": 16866,
+    "kb": 16.47
+  },
+  {
+    "rank": 53,
+    "source": "../../node_modules/qrcode.react/lib/esm/index.js",
+    "bytes": 16797,
+    "kb": 16.4
+  },
+  {
+    "rank": 54,
+    "source": "../../node_modules/html5-qrcode/esm/html5-qrcode.js",
+    "bytes": 16532,
+    "kb": 16.14
+  },
+  {
+    "rank": 55,
+    "source": "../../src/pages/ar-learning.tsx",
+    "bytes": 16397,
+    "kb": 16.01
+  },
+  {
+    "rank": 56,
+    "source": "../../src/pages/parent-dashboard-modern.tsx",
+    "bytes": 15943,
+    "kb": 15.57
+  },
+  {
+    "rank": 57,
+    "source": "../../src/pages/admin-dashboard.tsx",
+    "bytes": 15921,
+    "kb": 15.55
+  },
+  {
+    "rank": 58,
+    "source": "../../src/components/registration/RegisterStep4.tsx",
+    "bytes": 15886,
+    "kb": 15.51
+  },
+  {
+    "rank": 59,
+    "source": "../../src/pages/ai-chat.tsx",
+    "bytes": 15777,
+    "kb": 15.41
+  },
+  {
+    "rank": 60,
+    "source": "../../src/pages/portal-landing.tsx",
+    "bytes": 15437,
+    "kb": 15.08
+  },
+  {
+    "rank": 61,
+    "source": "../../src/components/StudentLayout.tsx",
+    "bytes": 15174,
+    "kb": 14.82
+  },
+  {
+    "rank": 62,
+    "source": "../../src/pages/create-course.tsx",
+    "bytes": 15054,
+    "kb": 14.7
+  },
+  {
+    "rank": 63,
+    "source": "../../src/pages/admin-analytics.tsx",
+    "bytes": 14663,
+    "kb": 14.32
+  },
+  {
+    "rank": 64,
+    "source": "../../src/pages/teacher-students.tsx",
+    "bytes": 14340,
+    "kb": 14
+  },
+  {
+    "rank": 65,
+    "source": "../../src/components/attendance/QrScanner.tsx",
+    "bytes": 14336,
+    "kb": 14
+  },
+  {
+    "rank": 66,
+    "source": "../../src/pages/teacher-create-assignment.tsx",
+    "bytes": 14309,
+    "kb": 13.97
+  },
+  {
+    "rank": 67,
+    "source": "../../src/pages/student-exam-preview.tsx",
+    "bytes": 14196,
+    "kb": 13.86
+  },
+  {
+    "rank": 68,
+    "source": "../../../node_modules/recharts/es6/util/ChartUtils.js",
+    "bytes": 14064,
+    "kb": 13.73
+  },
+  {
+    "rank": 69,
+    "source": "../../src/pages/teacher-dashboard.tsx",
+    "bytes": 13729,
+    "kb": 13.41
+  },
+  {
+    "rank": 70,
+    "source": "../../src/pages/settings.tsx",
+    "bytes": 13553,
+    "kb": 13.24
+  },
+  {
+    "rank": 71,
+    "source": "../../src/pages/subjects.tsx",
+    "bytes": 13529,
+    "kb": 13.21
+  },
+  {
+    "rank": 72,
+    "source": "../../src/pages/parent-attendance.tsx",
+    "bytes": 13449,
+    "kb": 13.13
+  },
+  {
+    "rank": 73,
+    "source": "../../src/pages/lms-structure.tsx",
+    "bytes": 13302,
+    "kb": 12.99
+  },
+  {
+    "rank": 74,
+    "source": "../../../node_modules/decimal.js-light/decimal.mjs",
+    "bytes": 13108,
+    "kb": 12.8
+  },
+  {
+    "rank": 75,
+    "source": "../../../node_modules/@radix-ui/react-menu/dist/index.mjs",
+    "bytes": 12802,
+    "kb": 12.5
+  },
+  {
+    "rank": 76,
+    "source": "../../src/pages/lesson-management.tsx",
+    "bytes": 12781,
+    "kb": 12.48
+  },
+  {
+    "rank": 77,
+    "source": "../../src/components/TeacherLayout.tsx",
+    "bytes": 12728,
+    "kb": 12.43
+  },
+  {
+    "rank": 78,
+    "source": "../../src/pages/events.tsx",
+    "bytes": 12444,
+    "kb": 12.15
+  },
+  {
+    "rank": 79,
+    "source": "../../src/pages/activate.tsx",
+    "bytes": 12370,
+    "kb": 12.08
+  },
+  {
+    "rank": 80,
+    "source": "../../src/components/ParentLayout.tsx",
+    "bytes": 12253,
+    "kb": 11.97
+  },
+  {
+    "rank": 81,
+    "source": "../../../node_modules/recharts/es6/cartesian/Brush.js",
+    "bytes": 11943,
+    "kb": 11.66
+  },
+  {
+    "rank": 82,
+    "source": "../../src/pages/student-grades.tsx",
+    "bytes": 11932,
+    "kb": 11.65
+  },
+  {
+    "rank": 83,
+    "source": "../../src/pages/contact.tsx",
+    "bytes": 11878,
+    "kb": 11.6
+  },
+  {
+    "rank": 84,
+    "source": "../../../node_modules/@radix-ui/react-scroll-area/dist/index.mjs",
+    "bytes": 11814,
+    "kb": 11.54
+  },
+  {
+    "rank": 85,
+    "source": "../../src/pages/admin-student-parent-link.tsx",
+    "bytes": 11716,
+    "kb": 11.44
+  },
+  {
+    "rank": 86,
+    "source": "../../src/pages/parent-attendance-history.tsx",
+    "bytes": 11656,
+    "kb": 11.38
+  },
+  {
+    "rank": 87,
+    "source": "../../src/lib/subjects.ts",
+    "bytes": 11649,
+    "kb": 11.38
+  },
+  {
+    "rank": 88,
+    "source": "../../src/pages/admin-announcements.tsx",
+    "bytes": 11288,
+    "kb": 11.02
+  },
+  {
+    "rank": 89,
+    "source": "../../src/pages/teacher-course-lesson-create.tsx",
+    "bytes": 11176,
+    "kb": 10.91
+  },
+  {
+    "rank": 90,
+    "source": "../../src/pages/student-schedule.tsx",
+    "bytes": 11120,
+    "kb": 10.86
+  },
+  {
+    "rank": 91,
+    "source": "../../src/components/group-chat/ChatArea.tsx",
+    "bytes": 11084,
+    "kb": 10.82
+  },
+  {
+    "rank": 92,
+    "source": "../../../node_modules/recharts/es6/polar/Pie.js",
+    "bytes": 11066,
+    "kb": 10.81
+  },
+  {
+    "rank": 93,
+    "source": "../../src/pages/student-mistakes.tsx",
+    "bytes": 11032,
+    "kb": 10.77
+  },
+  {
+    "rank": 94,
+    "source": "../../src/pages/student-courses.tsx",
+    "bytes": 10853,
+    "kb": 10.6
+  },
+  {
+    "rank": 95,
+    "source": "../../../node_modules/recharts/es6/cartesian/Line.js",
+    "bytes": 10825,
+    "kb": 10.57
+  },
+  {
+    "rank": 96,
+    "source": "../../../node_modules/@radix-ui/react-toast/dist/index.mjs",
+    "bytes": 10733,
+    "kb": 10.48
+  },
+  {
+    "rank": 97,
+    "source": "../../../node_modules/recharts/es6/cartesian/Area.js",
+    "bytes": 10684,
+    "kb": 10.43
+  },
+  {
+    "rank": 98,
+    "source": "../../src/components/AdminLayout.tsx",
+    "bytes": 10673,
+    "kb": 10.42
+  },
+  {
+    "rank": 99,
+    "source": "../../node_modules/mdast-util-from-markdown/lib/index.js",
+    "bytes": 10653,
+    "kb": 10.4
+  },
+  {
+    "rank": 100,
+    "source": "../../src/pages/programs.tsx",
+    "bytes": 10648,
+    "kb": 10.4
+  }
+]

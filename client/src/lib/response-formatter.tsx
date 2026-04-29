@@ -1,4 +1,5 @@
 import { ReactNode } from 'react';
+import { Lightbulb, Target, Brain, Palette, Star, Rocket, Sparkles, Terminal, FunctionSquare } from 'lucide-react';
 
 // Code syntax highlighting patterns
 const codeKeywords = [
@@ -43,7 +44,7 @@ function HighlightedCode({ code, language = 'javascript' }: HighlightedCodeProps
     <div className="eduverse-code-block">
       <div className="flex items-center justify-between mb-2 text-xs text-gray-400">
         <span>{language}</span>
-        <span>💻 Code Example</span>
+        <span className="flex items-center gap-1"><Terminal size={12} /> Code Example</span>
       </div>
       <pre>
         <code dangerouslySetInnerHTML={{ __html: highlightedCode }} />
@@ -60,7 +61,7 @@ function MathEquation({ equation }: MathEquationProps) {
   return (
     <div className="eduverse-math-equation">
       <div className="flex items-center justify-center mb-2 text-xs text-eduverse-blue">
-        <span>📊 Mathematical Expression</span>
+        <span className="flex items-center gap-1"><FunctionSquare size={12} /> Mathematical Expression</span>
       </div>
       <div className="text-center font-mono text-lg">
         {equation}
@@ -73,29 +74,45 @@ interface LearningWidgetProps {
   type: 'tip' | 'example' | 'practice' | 'visual';
   title: string;
   content: string;
-  icon: string;
 }
 
-function LearningWidget({ type, title, content, icon }: LearningWidgetProps) {
+function LearningWidget({ type, title, content }: LearningWidgetProps) {
   const getWidgetStyles = () => {
     switch (type) {
       case 'tip':
-        return 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 text-green-800';
+        return {
+          classes: 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200 text-green-800',
+          icon: <Lightbulb className="text-green-600" size={20} />
+        };
       case 'example':
-        return 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 text-blue-800';
+        return {
+          classes: 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 text-blue-800',
+          icon: <Target className="text-blue-600" size={20} />
+        };
       case 'practice':
-        return 'bg-gradient-to-r from-purple-50 to-violet-50 border-purple-200 text-purple-800';
+        return {
+          classes: 'bg-gradient-to-r from-purple-50 to-violet-50 border-purple-200 text-purple-800',
+          icon: <Brain className="text-purple-600" size={20} />
+        };
       case 'visual':
-        return 'bg-gradient-to-r from-orange-50 to-amber-50 border-orange-200 text-orange-800';
+        return {
+          classes: 'bg-gradient-to-r from-orange-50 to-amber-50 border-orange-200 text-orange-800',
+          icon: <Palette className="text-orange-600" size={20} />
+        };
       default:
-        return 'bg-gray-50 border-gray-200 text-gray-800';
+        return {
+          classes: 'bg-gray-50 border-gray-200 text-gray-800',
+          icon: <Sparkles className="text-gray-600" size={20} />
+        };
     }
   };
 
+  const style = getWidgetStyles();
+
   return (
-    <div className={`border-l-4 p-4 my-4 rounded-r-lg ${getWidgetStyles()} eduverse-interactive-hover`}>
+    <div className={`border-l-4 p-4 my-4 rounded-r-lg ${style.classes} eduverse-interactive-hover`}>
       <div className="flex items-center mb-2">
-        <span className="text-lg mr-2">{icon}</span>
+        <span className="mr-2">{style.icon}</span>
         <h4 className="font-semibold">{title}</h4>
       </div>
       <p className="text-sm leading-relaxed">{content}</p>
@@ -146,7 +163,7 @@ export function formatEducationalResponse(response: string): ReactNode {
   while ((match = tipRegex.exec(response)) !== null) {
     widgets.push({
       match: match[0],
-      component: <LearningWidget key={match.index} type="tip" title={match[1]} content={match[2]} icon="💡" />,
+      component: <LearningWidget key={match.index} type="tip" title={match[1]} content={match[2]} />,
       index: match.index
     });
   }
@@ -155,7 +172,7 @@ export function formatEducationalResponse(response: string): ReactNode {
   while ((match = exampleRegex.exec(response)) !== null) {
     widgets.push({
       match: match[0],
-      component: <LearningWidget key={match.index} type="example" title={match[1]} content={match[2]} icon="🎯" />,
+      component: <LearningWidget key={match.index} type="example" title={match[1]} content={match[2]} />,
       index: match.index
     });
   }
@@ -164,7 +181,7 @@ export function formatEducationalResponse(response: string): ReactNode {
   while ((match = practiceRegex.exec(response)) !== null) {
     widgets.push({
       match: match[0],
-      component: <LearningWidget key={match.index} type="practice" title={match[1]} content={match[2]} icon="🤔" />,
+      component: <LearningWidget key={match.index} type="practice" title={match[1]} content={match[2]} />,
       index: match.index
     });
   }
@@ -173,7 +190,7 @@ export function formatEducationalResponse(response: string): ReactNode {
   while ((match = visualRegex.exec(response)) !== null) {
     widgets.push({
       match: match[0],
-      component: <LearningWidget key={match.index} type="visual" title={match[1]} content={match[2]} icon="🎨" />,
+      component: <LearningWidget key={match.index} type="visual" title={match[1]} content={match[2]} />,
       index: match.index
     });
   }
@@ -247,7 +264,7 @@ export function StudyProgressTracker({ progress = 0, subject = 'General', streak
       <div className="flex items-center justify-between">
         <div>
           <h4 className="font-semibold text-eduverse-blue">{subject} Progress</h4>
-          <p className="text-sm text-gray-600">Keep it up! 🌟</p>
+          <p className="text-sm text-gray-600 flex items-center gap-1">Keep it up! <Star size={12} className="text-yellow-500 fill-yellow-500" /></p>
         </div>
         
         <div className="flex items-center space-x-4">

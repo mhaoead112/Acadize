@@ -1,0 +1,66 @@
+{
+  "traceId": "trace-20250425-student-tutor-001",
+  "status": "success",
+  "response": {
+    "content": "Photosynthesis is like a plant's kitchen! 🌱\n\nHere's what happens:\n1. Plant leaves catch sunlight (energy)\n2. They take in water from roots and CO2 from air\n3. Magic happens: light energy turns these into glucose (plant food) and oxygen\n4. The plant eats the glucose to grow, and releases oxygen for us to breathe!\n\nThink of it as: **Sunlight + Water + CO2 = Plant Food + Oxygen**\n\nThe cool part? This happens billions of times every day, and it's why plants are so important for our planet!",
+    "type": "student_tutor",
+    "isFallback": false,
+    "data": {
+      "lessonId": "lesson-biology-101",
+      "generatedAt": "2025-04-25T10:30:05Z"
+    },
+    "metadata": {
+      "model": "google/gemini-2.5-flash-lite-preview-09-2025",
+      "tokensUsed": 342,
+      "sources": ["lesson-biology-101", "course-science-12"],
+      "generatedAt": "2025-04-25T10:30:05Z"
+    },
+    "suggestions": [
+      "Would you like me to explain the chemical equation?",
+      "Should I show you how plants use oxygen?",
+      "Do you want to know about different types of photosynthesis?"
+    ]
+  },
+  "trace": {
+    "requestId": "trace-20250425-student-tutor-001",
+    "timeline": [
+      {
+        "type": "start",
+        "timestamp": "2025-04-25T10:30:00.000Z",
+        "description": "Orchestration request received"
+      },
+      {
+        "type": "validation",
+        "timestamp": "2025-04-25T10:30:00.050Z",
+        "description": "Payload and auth validation passed",
+        "duration": 50
+      },
+      {
+        "type": "cache_hit",
+        "timestamp": "2025-04-25T10:30:00.100Z",
+        "description": "Found similar question in cache",
+        "duration": 50
+      },
+      {
+        "type": "complete",
+        "timestamp": "2025-04-25T10:30:00.150Z",
+        "description": "Response generation completed (from cache)",
+        "duration": 150
+      }
+    ],
+    "totalExecutionTime": 150,
+    "executionPath": "primary",
+    "dependencyStatus": {
+      "aiServiceAvailable": true,
+      "lessonContextAvailable": true,
+      "cacheHit": true
+    },
+    "validations": {
+      "payloadValid": true,
+      "authValid": true,
+      "contextValid": true,
+      "reasons": []
+    }
+  },
+  "generatedAt": "2025-04-25T10:30:00.150Z"
+}

@@ -1,0 +1,504 @@
+﻿
+> rest-express@1.0.0 check
+> tsc
+
+client/src/components/attendance/CreateSessionModal.tsx(186,86): error TS2345: Argument of type 'void' is not assignable to parameter of type 'number'.
+client/src/components/attendance/QrScanner.tsx(335,21): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+client/src/components/attendance/QrScanner.tsx(337,21): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+client/src/components/group-chat/ChatArea.tsx(33,15): error TS2305: Module '"@shared/schema"' has no exported member 'Group'.
+client/src/components/group-chat/ChatArea.tsx(33,22): error TS2724: '"@shared/schema"' has no exported member named 'User'. Did you mean 'users'?
+client/src/components/group-chat/ChatArea.tsx(33,28): error TS2305: Module '"@shared/schema"' has no exported member 'GroupMessage'.
+client/src/components/group-chat/ChatArea.tsx(65,28): error TS2554: Expected 1 arguments, but got 0.
+client/src/components/group-chat/ChatArea.tsx(292,88): error TS2322: Type '{ className: string; title: string; }' is not assignable to type 'IntrinsicAttributes & Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>'.
+  Property 'title' does not exist on type 'IntrinsicAttributes & Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>'.
+client/src/components/group-chat/ChatArea.tsx(294,89): error TS2322: Type '{ className: string; title: string; }' is not assignable to type 'IntrinsicAttributes & Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>'.
+  Property 'title' does not exist on type 'IntrinsicAttributes & Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>'.
+client/src/components/group-chat/ChatArea.tsx(390,17): error TS2322: Type '{ key: any; message: GroupMessage; currentUser: any; isFirstInGroup: boolean; isLastInGroup: boolean; onReply: () => void; replyToMessage: any; }' is not assignable to type 'IntrinsicAttributes & MessageBubbleProps'.
+  Property 'onReply' does not exist on type 'IntrinsicAttributes & MessageBubbleProps'.
+client/src/components/group-chat/CreateGroupModal.tsx(15,15): error TS2724: '"@shared/schema"' has no exported member named 'User'. Did you mean 'users'?
+client/src/components/group-chat/CreateGroupModal.tsx(250,19): error TS2322: Type 'Dispatch<SetStateAction<boolean>>' is not assignable to type '(checked: CheckedState) => void'.
+  Types of parameters 'value' and 'checked' are incompatible.
+    Type 'CheckedState' is not assignable to type 'SetStateAction<boolean>'.
+      Type '"indeterminate"' is not assignable to type 'SetStateAction<boolean>'.
+client/src/components/group-chat/CreateGroupModal.tsx(262,19): error TS2322: Type 'Dispatch<SetStateAction<boolean>>' is not assignable to type '(checked: CheckedState) => void'.
+  Types of parameters 'value' and 'checked' are incompatible.
+    Type 'CheckedState' is not assignable to type 'SetStateAction<boolean>'.
+      Type '"indeterminate"' is not assignable to type 'SetStateAction<boolean>'.
+client/src/components/group-chat/GroupChatLayout.tsx(7,15): error TS2305: Module '"@shared/schema"' has no exported member 'Group'.
+client/src/components/group-chat/GroupChatLayout.tsx(7,22): error TS2724: '"@shared/schema"' has no exported member named 'User'. Did you mean 'users'?
+client/src/components/group-chat/GroupChatLayout.tsx(16,5): error TS2339: Property 'joinGroup' does not exist on type 'UseWebSocketReturn'.
+client/src/components/group-chat/GroupChatLayout.tsx(17,5): error TS2339: Property 'leaveGroup' does not exist on type 'UseWebSocketReturn'.
+client/src/components/group-chat/GroupChatLayout.tsx(19,5): error TS2339: Property 'onlineUsers' does not exist on type 'UseWebSocketReturn'.
+client/src/components/group-chat/GroupChatLayout.tsx(20,5): error TS2339: Property 'messages' does not exist on type 'UseWebSocketReturn'.
+client/src/components/group-chat/GroupChatLayout.tsx(21,5): error TS2339: Property 'typingUsers' does not exist on type 'UseWebSocketReturn'.
+client/src/components/group-chat/GroupMembersModal.tsx(27,15): error TS2305: Module '"@shared/schema"' has no exported member 'Group'.
+client/src/components/group-chat/GroupMembersModal.tsx(27,22): error TS2724: '"@shared/schema"' has no exported member named 'User'. Did you mean 'users'?
+client/src/components/group-chat/GroupMembersModal.tsx(27,40): error TS2724: '"@shared/schema"' has no exported member named 'GroupMember'. Did you mean 'groupMembers'?
+client/src/components/group-chat/GroupMembersModal.tsx(152,59): error TS2551: Property 'userId' does not exist on type 'GroupMemberWithUser'. Did you mean 'user'?
+client/src/components/group-chat/GroupMembersModal.tsx(152,88): error TS2339: Property 'role' does not exist on type 'GroupMemberWithUser'.
+client/src/components/group-chat/GroupMembersModal.tsx(271,31): error TS2339: Property 'id' does not exist on type 'GroupMemberWithUser'.
+client/src/components/group-chat/GroupMembersModal.tsx(273,54): error TS2551: Property 'userId' does not exist on type 'GroupMemberWithUser'. Did you mean 'user'?
+client/src/components/group-chat/GroupMembersModal.tsx(277,61): error TS7006: Parameter 'n' implicitly has an 'any' type.
+client/src/components/group-chat/GroupMembersModal.tsx(285,33): error TS2551: Property 'userId' does not exist on type 'GroupMemberWithUser'. Did you mean 'user'?
+client/src/components/group-chat/GroupMembersModal.tsx(289,97): error TS2339: Property 'role' does not exist on type 'GroupMemberWithUser'.
+client/src/components/group-chat/GroupMembersModal.tsx(291,47): error TS2339: Property 'role' does not exist on type 'GroupMemberWithUser'.
+client/src/components/group-chat/GroupMembersModal.tsx(292,35): error TS2339: Property 'role' does not exist on type 'GroupMemberWithUser'.
+client/src/components/group-chat/GroupMembersModal.tsx(303,47): error TS2551: Property 'userId' does not exist on type 'GroupMemberWithUser'. Did you mean 'user'?
+client/src/components/group-chat/GroupMembersModal.tsx(306,39): error TS2339: Property 'role' does not exist on type 'GroupMemberWithUser'.
+client/src/components/group-chat/GroupMembersModal.tsx(307,77): error TS2551: Property 'userId' does not exist on type 'GroupMemberWithUser'. Did you mean 'user'?
+client/src/components/group-chat/GroupMembersModal.tsx(325,66): error TS2551: Property 'userId' does not exist on type 'GroupMemberWithUser'. Did you mean 'user'?
+client/src/components/group-chat/GroupMembersModal.tsx(328,62): error TS2551: Property 'userId' does not exist on type 'GroupMemberWithUser'. Did you mean 'user'?
+client/src/components/group-chat/GroupSettingsModal.tsx(28,15): error TS2305: Module '"@shared/schema"' has no exported member 'Group'.
+client/src/components/group-chat/GroupSettingsModal.tsx(28,22): error TS2724: '"@shared/schema"' has no exported member named 'User'. Did you mean 'users'?
+client/src/components/group-chat/GroupSidebar.tsx(15,15): error TS2305: Module '"@shared/schema"' has no exported member 'Group'.
+client/src/components/group-chat/GroupSidebar.tsx(15,22): error TS2724: '"@shared/schema"' has no exported member named 'User'. Did you mean 'users'?
+client/src/components/group-chat/GroupSidebar.tsx(151,47): error TS7006: Parameter 'n' implicitly has an 'any' type.
+client/src/components/group-chat/MessageBubble.tsx(7,15): error TS2305: Module '"@shared/schema"' has no exported member 'GroupMessage'.
+client/src/components/group-chat/MessageBubble.tsx(7,29): error TS2724: '"@shared/schema"' has no exported member named 'User'. Did you mean 'users'?
+client/src/components/group-chat/MessageBubble.tsx(26,44): error TS7006: Parameter 'n' implicitly has an 'any' type.
+client/src/components/group-chat/PollModal.tsx(11,15): error TS2305: Module '"@shared/schema"' has no exported member 'Group'.
+client/src/components/group-chat/PollModal.tsx(11,22): error TS2724: '"@shared/schema"' has no exported member named 'User'. Did you mean 'users'?
+client/src/components/ProtectedRoute.tsx(4,15): error TS2305: Module '"@shared/schema"' has no exported member 'UserRole'.
+client/src/components/RoleManagement.tsx(35,3): error TS2724: '"@shared/permissions"' has no exported member named 'TEACHER_ROLES'. Did you mean 'NEW_TEACHER_ROLE'?
+client/src/components/RoleManagement.tsx(36,3): error TS2305: Module '"@shared/permissions"' has no exported member 'TEACHER_PERMISSIONS'.
+client/src/components/RoleManagement.tsx(259,43): error TS7006: Parameter 'role' implicitly has an 'any' type.
+client/src/components/RoleManagement.tsx(308,49): error TS7006: Parameter 'r' implicitly has an 'any' type.
+client/src/components/RoleManagement.tsx(374,35): error TS7006: Parameter 'role' implicitly has an 'any' type.
+client/src/components/RoleManagement.tsx(392,76): error TS7006: Parameter 'p' implicitly has an 'any' type.
+client/src/components/RoleManagement.tsx(404,56): error TS7006: Parameter 'permission' implicitly has an 'any' type.
+client/src/components/RoleManagement.tsx(404,68): error TS7006: Parameter 'index' implicitly has an 'any' type.
+client/src/components/RoleManagement.tsx(461,41): error TS7006: Parameter 'r' implicitly has an 'any' type.
+client/src/components/RoleManagement.tsx(473,41): error TS7006: Parameter 'role' implicitly has an 'any' type.
+client/src/components/ui/breadcrumb.tsx(51,6): error TS2322: Type '{ id?: string | undefined; role?: AriaRole | undefined; dir?: string | undefined; title?: string | undefined; content?: string | undefined; type?: string | undefined; color?: string | undefined; ... 280 more ...; className: string; }' is not assignable to type 'SlotProps'.
+  Types of property 'children' are incompatible.
+    Type 'ReactI18NextChildren | Iterable<ReactI18NextChildren>' is not assignable to type 'ReactNode'.
+      Type 'bigint' is not assignable to type 'ReactNode'.
+client/src/components/ui/button.tsx(46,8): error TS2322: Type '{ disabled?: boolean | undefined; form?: string | undefined; formAction?: string | ((formData: FormData) => void | Promise<void>) | undefined; formEncType?: string | undefined; ... 284 more ...; ref: ForwardedRef<...>; }' is not assignable to type 'SlotProps'.
+  Types of property 'children' are incompatible.
+    Type 'ReactI18NextChildren | Iterable<ReactI18NextChildren>' is not assignable to type 'ReactNode'.
+      Type 'bigint' is not assignable to type 'ReactNode'.
+client/src/components/ui/input-otp.tsx(35,44): error TS2345: Argument of type 'import("D:/VIisual Studio Code/Eduverse-redesign/node_modules/@types/react/index").Context<import("D:/VIisual Studio Code/Eduverse-redesign/node_modules/input-otp/dist/index").RenderProps>' is not assignable to parameter of type 'React.Context<import("D:/VIisual Studio Code/Eduverse-redesign/node_modules/input-otp/dist/index").RenderProps>'.
+  Property '$$typeof' is missing in type 'import("D:/VIisual Studio Code/Eduverse-redesign/node_modules/@types/react/index").Context<import("D:/VIisual Studio Code/Eduverse-redesign/node_modules/input-otp/dist/index").RenderProps>' but required in type 'React.Context<import("D:/VIisual Studio Code/Eduverse-redesign/node_modules/input-otp/dist/index").RenderProps>'.
+client/src/components/ui/sidebar.tsx(206,13): error TS2322: Type 'CSSProperties' is not assignable to type 'Properties<string | number, string & {}>'.
+  Types of property 'borderBlockStyle' are incompatible.
+    Type 'import("D:/VIisual Studio Code/Eduverse-redesign/client/node_modules/csstype/index").Property.BorderBlockStyle | undefined' is not assignable to type 'import("D:/VIisual Studio Code/Eduverse-redesign/node_modules/csstype/index").Property.BorderBlockStyle | undefined'.
+      Type 'string & {}' is not assignable to type 'BorderBlockStyle | undefined'.
+client/src/components/ui/sidebar.tsx(446,6): error TS2322: Type '{ id?: string | undefined; role?: AriaRole | undefined; dir?: string | undefined; title?: string | undefined; content?: string | undefined; color?: string | undefined; children?: ReactI18NextChildren | Iterable<...>; ... 273 more ...; className: string; }' is not assignable to type 'SlotProps'.
+  Types of property 'children' are incompatible.
+    Type 'ReactI18NextChildren | Iterable<ReactI18NextChildren>' is not assignable to type 'ReactNode'.
+      Type 'bigint' is not assignable to type 'ReactNode'.
+client/src/components/ui/sidebar.tsx(467,6): error TS2322: Type '{ id?: string | undefined; name?: string | undefined; role?: AriaRole | undefined; dir?: string | undefined; title?: string | undefined; content?: string | undefined; type?: "button" | ... 2 more ... | undefined; ... 283 more ...; className: string; }' is not assignable to type 'SlotProps'.
+  Types of property 'children' are incompatible.
+    Type 'ReactI18NextChildren | Iterable<ReactI18NextChildren>' is not assignable to type 'ReactNode'.
+      Type 'bigint' is not assignable to type 'ReactNode'.
+client/src/components/ui/sidebar.tsx(568,8): error TS2322: Type '{ id?: string | undefined; name?: string | undefined; role?: AriaRole | undefined; dir?: string | undefined; title?: string | undefined; content?: string | undefined; type?: "button" | ... 2 more ... | undefined; ... 285 more ...; className: string; }' is not assignable to type 'SlotProps'.
+  Types of property 'children' are incompatible.
+    Type 'ReactI18NextChildren | Iterable<ReactI18NextChildren>' is not assignable to type 'ReactNode'.
+      Type 'bigint' is not assignable to type 'ReactNode'.
+client/src/components/ui/sidebar.tsx(613,6): error TS2322: Type '{ id?: string | undefined; name?: string | undefined; role?: AriaRole | undefined; dir?: string | undefined; title?: string | undefined; content?: string | undefined; type?: "button" | ... 2 more ... | undefined; ... 283 more ...; className: string; }' is not assignable to type 'SlotProps'.
+  Types of property 'children' are incompatible.
+    Type 'ReactI18NextChildren | Iterable<ReactI18NextChildren>' is not assignable to type 'ReactNode'.
+      Type 'bigint' is not assignable to type 'ReactNode'.
+client/src/components/ui/sidebar.tsx(727,6): error TS2322: Type '{ id?: string | undefined; role?: AriaRole | undefined; dir?: string | undefined; title?: string | undefined; content?: string | undefined; type?: string | undefined; color?: string | undefined; ... 283 more ...; className: string; }' is not assignable to type 'SlotProps'.
+  Types of property 'children' are incompatible.
+    Type 'ReactI18NextChildren | Iterable<ReactI18NextChildren>' is not assignable to type 'ReactNode'.
+      Type 'bigint' is not assignable to type 'ReactNode'.
+client/src/components/ui/toaster.tsx(22,35): error TS2322: Type 'string | number | bigint | true | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<...>' is not assignable to type 'ReactNode'.
+  Type 'bigint' is not assignable to type 'ReactNode'.
+client/src/components/ui/toaster.tsx(25,13): error TS2322: Type 'ToastActionElement | undefined' is not assignable to type 'ReactNode'.
+  Type 'ToastActionElement' is not assignable to type 'ReactNode'.
+    Property 'children' is missing in type 'ReactElement<ForwardRefExoticComponent<Omit<ToastActionProps & RefAttributes<HTMLButtonElement>, "ref"> & RefAttributes<never>>, string | JSXElementConstructor<...>>' but required in type 'ReactPortal'.
+client/src/contexts/AuthContext.tsx(2,15): error TS2724: '"@shared/schema"' has no exported member named 'User'. Did you mean 'users'?
+client/src/hooks/usePushNotifications.ts(18,55): error TS2315: Type 'Uint8Array' is not generic.
+client/src/hooks/usePushNotifications.ts(25,57): error TS2315: Type 'Uint8Array' is not generic.
+client/src/hooks/useWebcamProctoring.ts(367,9): error TS2322: Type 'RefObject<HTMLVideoElement | null>' is not assignable to type 'RefObject<HTMLVideoElement>'.
+  Type 'HTMLVideoElement | null' is not assignable to type 'HTMLVideoElement'.
+    Type 'null' is not assignable to type 'HTMLVideoElement'.
+client/src/hooks/useWebcamProctoring.ts(368,9): error TS2322: Type 'RefObject<HTMLCanvasElement | null>' is not assignable to type 'RefObject<HTMLCanvasElement>'.
+  Type 'HTMLCanvasElement | null' is not assignable to type 'HTMLCanvasElement'.
+    Type 'null' is not assignable to type 'HTMLCanvasElement'.
+client/src/i18n/config.ts(27,4): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(callback?: Callback | undefined): Promise<TFunction<"translation", undefined>>', gave the following error.
+    Object literal may only specify known properties, and 'fallbackLng' does not exist in type 'Callback'.
+  Overload 2 of 2, '(options: InitOptions<{ loadPath: string; }>, callback?: Callback | undefined): Promise<TFunction<"translation", undefined>>', gave the following error.
+    Argument of type '{ saveMissing?: true | undefined; missingKeyHandler?: ((lngs: string[], ns: string, key: string, fallback: string) => void) | undefined; fallbackLng: string; defaultNS: string; ns: string[]; ... 4 more ...; react: { ...; }; }' is not assignable to parameter of type 'InitOptions<{ loadPath: string; }>'.
+      Types of property 'missingKeyHandler' are incompatible.
+        Type '((lngs: string[], ns: string, key: string, fallback: string) => void) | undefined' is not assignable to type 'false | ((lngs: readonly string[], ns: string, key: string, fallbackValue: string, updateMissing: boolean, options: any) => void) | undefined'.
+          Type '(lngs: string[], ns: string, key: string, fallback: string) => void' is not assignable to type 'false | ((lngs: readonly string[], ns: string, key: string, fallbackValue: string, updateMissing: boolean, options: any) => void) | undefined'.
+            Type '(lngs: string[], ns: string, key: string, fallback: string) => void' is not assignable to type '(lngs: readonly string[], ns: string, key: string, fallbackValue: string, updateMissing: boolean, options: any) => void'.
+              Types of parameters 'lngs' and 'lngs' are incompatible.
+                The type 'readonly string[]' is 'readonly' and cannot be assigned to the mutable type 'string[]'.
+client/src/lib/api-client.ts(5,15): error TS2724: '"@shared/schema"' has no exported member named 'User'. Did you mean 'users'?
+client/src/pages/about.tsx(31,21): error TS2304: Cannot find name 'heroRef'.
+client/src/pages/about.tsx(32,10): error TS2304: Cannot find name 'motion'.
+client/src/pages/about.tsx(35,20): error TS2304: Cannot find name 'heroInView'.
+client/src/pages/about.tsx(38,10): error TS2304: Cannot find name 'motion'.
+client/src/pages/about.tsx(53,14): error TS2304: Cannot find name 'motion'.
+client/src/pages/about.tsx(56,24): error TS2304: Cannot find name 'heroInView'.
+client/src/pages/about.tsx(80,15): error TS2304: Cannot find name 'motion'.
+client/src/pages/about.tsx(92,21): error TS2304: Cannot find name 'missionRef'.
+client/src/pages/about.tsx(94,12): error TS2304: Cannot find name 'motion'.
+client/src/pages/about.tsx(97,22): error TS2304: Cannot find name 'missionInView'.
+client/src/pages/about.tsx(107,13): error TS2304: Cannot find name 'motion'.
+client/src/pages/admin-analytics.tsx(288,20): error TS2741: Property 'data' is missing in type '{}' but required in type 'UserGrowthChartProps'.
+client/src/pages/admin-analytics.tsx(305,20): error TS2741: Property 'data' is missing in type '{}' but required in type 'RevenueChartProps'.
+client/src/pages/admin-analytics.tsx(323,18): error TS2741: Property 'data' is missing in type '{}' but required in type 'EngagementChartProps'.
+client/src/pages/admin-analytics.tsx(343,36): error TS7006: Parameter 'course' implicitly has an 'any' type.
+client/src/pages/admin-analytics.tsx(343,44): error TS7006: Parameter 'index' implicitly has an 'any' type.
+client/src/pages/admin-analytics.tsx(399,47): error TS7006: Parameter 'instructor' implicitly has an 'any' type.
+client/src/pages/admin-analytics.tsx(399,59): error TS7006: Parameter 'index' implicitly has an 'any' type.
+client/src/pages/admin-attendance.tsx(417,54): error TS7006: Parameter 'c' implicitly has an 'any' type.
+client/src/pages/admin-attendance.tsx(417,57): error TS7006: Parameter 'i' implicitly has an 'any' type.
+client/src/pages/admin-settings.tsx(612,46): error TS2339: Property 'siteUrl' does not exist on type '{ siteName: string; siteDescription: string; timezone: string; dateFormat: string; timeFormat: string; }'.
+client/src/pages/admin-settings.tsx(613,81): error TS2353: Object literal may only specify known properties, and 'siteUrl' does not exist in type 'SetStateAction<{ siteName: string; siteDescription: string; timezone: string; dateFormat: string; timeFormat: string; }>'.
+client/src/pages/admin-settings.tsx(622,46): error TS2339: Property 'contactEmail' does not exist on type '{ siteName: string; siteDescription: string; timezone: string; dateFormat: string; timeFormat: string; }'.
+client/src/pages/admin-settings.tsx(623,81): error TS2353: Object literal may only specify known properties, and 'contactEmail' does not exist in type 'SetStateAction<{ siteName: string; siteDescription: string; timezone: string; dateFormat: string; timeFormat: string; }>'.
+client/src/pages/admin-settings.tsx(632,46): error TS2339: Property 'adminEmail' does not exist on type '{ siteName: string; siteDescription: string; timezone: string; dateFormat: string; timeFormat: string; }'.
+client/src/pages/admin-settings.tsx(633,81): error TS2353: Object literal may only specify known properties, and 'adminEmail' does not exist in type 'SetStateAction<{ siteName: string; siteDescription: string; timezone: string; dateFormat: string; timeFormat: string; }>'.
+client/src/pages/admin-settings.tsx(654,52): error TS2339: Property 'language' does not exist on type '{ siteName: string; siteDescription: string; timezone: string; dateFormat: string; timeFormat: string; }'.
+client/src/pages/admin-settings.tsx(654,129): error TS2353: Object literal may only specify known properties, and 'language' does not exist in type 'SetStateAction<{ siteName: string; siteDescription: string; timezone: string; dateFormat: string; timeFormat: string; }>'.
+client/src/pages/admin-settings.tsx(679,46): error TS2339: Property 'maintenanceMode' does not exist on type '{ siteName: string; siteDescription: string; timezone: string; dateFormat: string; timeFormat: string; }'.
+client/src/pages/admin-settings.tsx(680,92): error TS2353: Object literal may only specify known properties, and 'maintenanceMode' does not exist in type 'SetStateAction<{ siteName: string; siteDescription: string; timezone: string; dateFormat: string; timeFormat: string; }>'.
+client/src/pages/admin-settings.tsx(716,77): error TS2322: Type 'string' is not assignable to type 'number'.
+client/src/pages/admin-settings.tsx(735,44): error TS2339: Property 'smtpPassword' does not exist on type '{ smtpEnabled: boolean; smtpHost: string; smtpPort: number; smtpUser: string; fromEmail: string; fromName: string; }'.
+client/src/pages/admin-settings.tsx(736,77): error TS2353: Object literal may only specify known properties, and 'smtpPassword' does not exist in type 'SetStateAction<{ smtpEnabled: boolean; smtpHost: string; smtpPort: number; smtpUser: string; fromEmail: string; fromName: string; }>'.
+client/src/pages/admin-settings.tsx(790,51): error TS2339: Property 'newUserRegistration' does not exist on type '{ emailNotifications: boolean; assignmentReminders: boolean; gradeNotifications: boolean; announcementNotifications: boolean; messageNotifications: boolean; reminderHoursBefore: number; }'.
+client/src/pages/admin-settings.tsx(791,102): error TS2353: Object literal may only specify known properties, and 'newUserRegistration' does not exist in type 'SetStateAction<{ emailNotifications: boolean; assignmentReminders: boolean; gradeNotifications: boolean; announcementNotifications: boolean; messageNotifications: boolean; reminderHoursBefore: number; }>'.
+client/src/pages/admin-settings.tsx(801,51): error TS2339: Property 'newCourseCreated' does not exist on type '{ emailNotifications: boolean; assignmentReminders: boolean; gradeNotifications: boolean; announcementNotifications: boolean; messageNotifications: boolean; reminderHoursBefore: number; }'.
+client/src/pages/admin-settings.tsx(802,102): error TS2353: Object literal may only specify known properties, and 'newCourseCreated' does not exist in type 'SetStateAction<{ emailNotifications: boolean; assignmentReminders: boolean; gradeNotifications: boolean; announcementNotifications: boolean; messageNotifications: boolean; reminderHoursBefore: number; }>'.
+client/src/pages/admin-settings.tsx(812,51): error TS2339: Property 'reportSubmitted' does not exist on type '{ emailNotifications: boolean; assignmentReminders: boolean; gradeNotifications: boolean; announcementNotifications: boolean; messageNotifications: boolean; reminderHoursBefore: number; }'.
+client/src/pages/admin-settings.tsx(813,102): error TS2353: Object literal may only specify known properties, and 'reportSubmitted' does not exist in type 'SetStateAction<{ emailNotifications: boolean; assignmentReminders: boolean; gradeNotifications: boolean; announcementNotifications: boolean; messageNotifications: boolean; reminderHoursBefore: number; }>'.
+client/src/pages/admin-settings.tsx(823,51): error TS2339: Property 'paymentReceived' does not exist on type '{ emailNotifications: boolean; assignmentReminders: boolean; gradeNotifications: boolean; announcementNotifications: boolean; messageNotifications: boolean; reminderHoursBefore: number; }'.
+client/src/pages/admin-settings.tsx(824,102): error TS2353: Object literal may only specify known properties, and 'paymentReceived' does not exist in type 'SetStateAction<{ emailNotifications: boolean; assignmentReminders: boolean; gradeNotifications: boolean; announcementNotifications: boolean; messageNotifications: boolean; reminderHoursBefore: number; }>'.
+client/src/pages/admin-settings.tsx(834,51): error TS2339: Property 'systemErrors' does not exist on type '{ emailNotifications: boolean; assignmentReminders: boolean; gradeNotifications: boolean; announcementNotifications: boolean; messageNotifications: boolean; reminderHoursBefore: number; }'.
+client/src/pages/admin-settings.tsx(835,102): error TS2353: Object literal may only specify known properties, and 'systemErrors' does not exist in type 'SetStateAction<{ emailNotifications: boolean; assignmentReminders: boolean; gradeNotifications: boolean; announcementNotifications: boolean; messageNotifications: boolean; reminderHoursBefore: number; }>'.
+client/src/pages/admin-settings.tsx(873,49): error TS2339: Property 'enable2FA' does not exist on type '{ allowRegistration: boolean; requireEmailVerification: boolean; sessionTimeout: number; maxLoginAttempts: number; lockoutDuration: number; passwordMinLength: number; }'.
+client/src/pages/admin-settings.tsx(874,96): error TS2353: Object literal may only specify known properties, and 'enable2FA' does not exist in type 'SetStateAction<{ allowRegistration: boolean; requireEmailVerification: boolean; sessionTimeout: number; maxLoginAttempts: number; lockoutDuration: number; passwordMinLength: number; }>'.
+client/src/pages/admin-settings.tsx(884,49): error TS2339: Property 'requireStrongPassword' does not exist on type '{ allowRegistration: boolean; requireEmailVerification: boolean; sessionTimeout: number; maxLoginAttempts: number; lockoutDuration: number; passwordMinLength: number; }'.
+client/src/pages/admin-settings.tsx(885,96): error TS2353: Object literal may only specify known properties, and 'requireStrongPassword' does not exist in type 'SetStateAction<{ allowRegistration: boolean; requireEmailVerification: boolean; sessionTimeout: number; maxLoginAttempts: number; lockoutDuration: number; passwordMinLength: number; }>'.
+client/src/pages/admin-settings.tsx(897,83): error TS2322: Type 'string' is not assignable to type 'number'.
+client/src/pages/admin-settings.tsx(907,83): error TS2322: Type 'string' is not assignable to type 'number'.
+client/src/pages/admin-settings.tsx(917,83): error TS2322: Type 'string' is not assignable to type 'number'.
+client/src/pages/admin-student-parent-link.tsx(453,72): error TS2345: Argument of type 'string' is not assignable to parameter of type 'number'.
+client/src/pages/admissions.tsx(11,15): error TS2305: Module '"@shared/schema"' has no exported member 'InsertApplication'.
+client/src/pages/admissions.tsx(71,17): error TS7006: Parameter 'prev' implicitly has an 'any' type.
+client/src/pages/announcements.tsx(85,9): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(input: string | URL | Request, init?: RequestInit | undefined): Promise<Response>', gave the following error.
+    Type '{ Authorization?: undefined; } | { Authorization: string; }' is not assignable to type 'HeadersInit | undefined'.
+      Type '{ Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+        Type '{ Authorization?: undefined; }' is not assignable to type 'Record<string, string>'.
+          Property 'Authorization' is incompatible with index signature.
+            Type 'undefined' is not assignable to type 'string'.
+  Overload 2 of 2, '(input: URL | RequestInfo, init?: RequestInit | undefined): Promise<Response>', gave the following error.
+    Type '{ Authorization?: undefined; } | { Authorization: string; }' is not assignable to type 'HeadersInit | undefined'.
+      Type '{ Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+        Type '{ Authorization?: undefined; }' is not assignable to type 'Record<string, string>'.
+          Property 'Authorization' is incompatible with index signature.
+            Type 'undefined' is not assignable to type 'string'.
+client/src/pages/announcements.tsx(101,9): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(input: string | URL | Request, init?: RequestInit | undefined): Promise<Response>', gave the following error.
+    Type '{ Authorization?: undefined; } | { Authorization: string; }' is not assignable to type 'HeadersInit | undefined'.
+      Type '{ Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+        Type '{ Authorization?: undefined; }' is not assignable to type 'Record<string, string>'.
+          Property 'Authorization' is incompatible with index signature.
+            Type 'undefined' is not assignable to type 'string'.
+  Overload 2 of 2, '(input: URL | RequestInfo, init?: RequestInit | undefined): Promise<Response>', gave the following error.
+    Type '{ Authorization?: undefined; } | { Authorization: string; }' is not assignable to type 'HeadersInit | undefined'.
+      Type '{ Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+        Type '{ Authorization?: undefined; }' is not assignable to type 'Record<string, string>'.
+          Property 'Authorization' is incompatible with index signature.
+            Type 'undefined' is not assignable to type 'string'.
+client/src/pages/announcements.tsx(139,9): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(input: string | URL | Request, init?: RequestInit | undefined): Promise<Response>', gave the following error.
+    Type '{ "Content-Type": string; Authorization?: undefined; } | { "Content-Type": string; Authorization: string; }' is not assignable to type 'HeadersInit | undefined'.
+      Type '{ "Content-Type": string; Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+        Type '{ "Content-Type": string; Authorization?: undefined; }' is not assignable to type 'undefined'.
+  Overload 2 of 2, '(input: URL | RequestInfo, init?: RequestInit | undefined): Promise<Response>', gave the following error.
+    Type '{ "Content-Type": string; Authorization?: undefined; } | { "Content-Type": string; Authorization: string; }' is not assignable to type 'HeadersInit | undefined'.
+      Type '{ "Content-Type": string; Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+        Type '{ "Content-Type": string; Authorization?: undefined; }' is not assignable to type 'undefined'.
+client/src/pages/announcements.tsx(188,9): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(input: string | URL | Request, init?: RequestInit | undefined): Promise<Response>', gave the following error.
+    Type '{ "Content-Type": string; Authorization?: undefined; } | { "Content-Type": string; Authorization: string; }' is not assignable to type 'HeadersInit | undefined'.
+      Type '{ "Content-Type": string; Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+        Type '{ "Content-Type": string; Authorization?: undefined; }' is not assignable to type 'undefined'.
+  Overload 2 of 2, '(input: URL | RequestInfo, init?: RequestInit | undefined): Promise<Response>', gave the following error.
+    Type '{ "Content-Type": string; Authorization?: undefined; } | { "Content-Type": string; Authorization: string; }' is not assignable to type 'HeadersInit | undefined'.
+      Type '{ "Content-Type": string; Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+        Type '{ "Content-Type": string; Authorization?: undefined; }' is not assignable to type 'undefined'.
+client/src/pages/announcements.tsx(224,9): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(input: string | URL | Request, init?: RequestInit | undefined): Promise<Response>', gave the following error.
+    Type '{ "Content-Type": string; Authorization?: undefined; } | { "Content-Type": string; Authorization: string; }' is not assignable to type 'HeadersInit | undefined'.
+      Type '{ "Content-Type": string; Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+        Type '{ "Content-Type": string; Authorization?: undefined; }' is not assignable to type 'undefined'.
+  Overload 2 of 2, '(input: URL | RequestInfo, init?: RequestInit | undefined): Promise<Response>', gave the following error.
+    Type '{ "Content-Type": string; Authorization?: undefined; } | { "Content-Type": string; Authorization: string; }' is not assignable to type 'HeadersInit | undefined'.
+      Type '{ "Content-Type": string; Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+        Type '{ "Content-Type": string; Authorization?: undefined; }' is not assignable to type 'undefined'.
+client/src/pages/announcements.tsx(259,9): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(input: string | URL | Request, init?: RequestInit | undefined): Promise<Response>', gave the following error.
+    Type '{ Authorization?: undefined; } | { Authorization: string; }' is not assignable to type 'HeadersInit | undefined'.
+      Type '{ Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+        Type '{ Authorization?: undefined; }' is not assignable to type 'Record<string, string>'.
+          Property 'Authorization' is incompatible with index signature.
+            Type 'undefined' is not assignable to type 'string'.
+  Overload 2 of 2, '(input: URL | RequestInfo, init?: RequestInit | undefined): Promise<Response>', gave the following error.
+    Type '{ Authorization?: undefined; } | { Authorization: string; }' is not assignable to type 'HeadersInit | undefined'.
+      Type '{ Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+        Type '{ Authorization?: undefined; }' is not assignable to type 'Record<string, string>'.
+          Property 'Authorization' is incompatible with index signature.
+            Type 'undefined' is not assignable to type 'string'.
+client/src/pages/contact.tsx(20,15): error TS2305: Module '"@shared/schema"' has no exported member 'InsertContact'.
+client/src/pages/contact.tsx(87,17): error TS7006: Parameter 'prev' implicitly has an 'any' type.
+client/src/pages/emotional-learning.tsx(5,334): error TS2305: Module '"lucide-react"' has no exported member 'Vase'.
+client/src/pages/emotional-learning.tsx(5,395): error TS2305: Module '"lucide-react"' has no exported member 'Volcano'.
+client/src/pages/emotional-learning.tsx(398,18): error TS2304: Cannot find name 'TrendingUp'.
+client/src/pages/emotional-learning.tsx(445,20): error TS2304: Cannot find name 'TrendingUp'.
+client/src/pages/my-progress.tsx(16,30): error TS2307: Cannot find module '@mui/icons-material' or its corresponding type declarations.
+client/src/pages/news.tsx(13,15): error TS2724: '"@shared/schema"' has no exported member named 'NewsArticle'. Did you mean 'newsArticles'?
+client/src/pages/parent-courses.tsx(124,32): error TS2339: Property 'name' does not exist on type 'Child'.
+client/src/pages/parent-courses.tsx(150,33): error TS2339: Property 'name' does not exist on type 'Child'.
+client/src/pages/parent-dashboard-modern.tsx(541,105): error TS2339: Property 'isPlaceholder' does not exist on type '{ id: string; user: string; description: string; time: string; avatar: string; } | { id: string; user: string; description: string; time: string; avatar: string; isPlaceholder: boolean; }'.
+  Property 'isPlaceholder' does not exist on type '{ id: string; user: string; description: string; time: string; avatar: string; }'.
+client/src/pages/settings.tsx(196,48): error TS7006: Parameter 'n' implicitly has an 'any' type.
+client/src/pages/staff.tsx(22,15): error TS2724: '"@shared/schema"' has no exported member named 'StaffProfile'. Did you mean 'staffProfiles'?
+client/src/pages/student-all-announcements.tsx(54,9): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(input: string | URL | Request, init?: RequestInit | undefined): Promise<Response>', gave the following error.
+    Type '{ Authorization?: undefined; } | { Authorization: string; }' is not assignable to type 'HeadersInit | undefined'.
+      Type '{ Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+        Type '{ Authorization?: undefined; }' is not assignable to type 'Record<string, string>'.
+          Property 'Authorization' is incompatible with index signature.
+            Type 'undefined' is not assignable to type 'string'.
+  Overload 2 of 2, '(input: URL | RequestInfo, init?: RequestInit | undefined): Promise<Response>', gave the following error.
+    Type '{ Authorization?: undefined; } | { Authorization: string; }' is not assignable to type 'HeadersInit | undefined'.
+      Type '{ Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+        Type '{ Authorization?: undefined; }' is not assignable to type 'Record<string, string>'.
+          Property 'Authorization' is incompatible with index signature.
+            Type 'undefined' is not assignable to type 'string'.
+client/src/pages/student-all-announcements.tsx(80,15): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(input: string | URL | Request, init?: RequestInit | undefined): Promise<Response>', gave the following error.
+    Type '{ Authorization?: undefined; } | { Authorization: string; }' is not assignable to type 'HeadersInit | undefined'.
+      Type '{ Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+        Type '{ Authorization?: undefined; }' is not assignable to type 'Record<string, string>'.
+          Property 'Authorization' is incompatible with index signature.
+            Type 'undefined' is not assignable to type 'string'.
+  Overload 2 of 2, '(input: URL | RequestInfo, init?: RequestInit | undefined): Promise<Response>', gave the following error.
+    Type '{ Authorization?: undefined; } | { Authorization: string; }' is not assignable to type 'HeadersInit | undefined'.
+      Type '{ Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+        Type '{ Authorization?: undefined; }' is not assignable to type 'Record<string, string>'.
+          Property 'Authorization' is incompatible with index signature.
+            Type 'undefined' is not assignable to type 'string'.
+client/src/pages/student-course-detail.tsx(570,28): error TS2345: Argument of type '["dashboard:pointsLabel", { count: string; }]' is not assignable to parameter of type '[key: string | string[], options: TOptionsBase & $Dictionary & { defaultValue: string; }] | [key: string | string[], defaultValue: string, options?: (TOptionsBase & $Dictionary) | undefined] | [key: ...]'.
+  Type '["dashboard:pointsLabel", { count: string; }]' is not assignable to type '[key: "dashboard:pointsLabel" | "dashboard:pointsLabel"[], options?: (TOptionsBase & $Dictionary) | undefined]'.
+    Type at position 1 in source is not compatible with type at position 1 in target.
+      Type '{ count: string; }' is not assignable to type 'TOptionsBase & $Dictionary'.
+        Type '{ count: string; }' is not assignable to type 'TOptionsBase'.
+          Types of property 'count' are incompatible.
+            Type 'string' is not assignable to type 'number'.
+client/src/pages/student-course-detail.tsx(770,36): error TS2345: Argument of type '["dashboard:pointsLabel", { count: string; }]' is not assignable to parameter of type '[key: string | string[], options: TOptionsBase & $Dictionary & { defaultValue: string; }] | [key: string | string[], defaultValue: string, options?: (TOptionsBase & $Dictionary) | undefined] | [key: ...]'.
+  Type '["dashboard:pointsLabel", { count: string; }]' is not assignable to type '[key: "dashboard:pointsLabel" | "dashboard:pointsLabel"[], options?: (TOptionsBase & $Dictionary) | undefined]'.
+    Type at position 1 in source is not compatible with type at position 1 in target.
+      Type '{ count: string; }' is not assignable to type 'TOptionsBase & $Dictionary'.
+        Type '{ count: string; }' is not assignable to type 'TOptionsBase'.
+          Types of property 'count' are incompatible.
+            Type 'string' is not assignable to type 'number'.
+client/src/pages/student-exams.tsx(295,12): error TS2678: Type '"available"' is not comparable to type '"draft" | "scheduled" | "active" | "completed" | "archived" | "in_progress" | "submitted" | "graded" | "flagged" | "under_review" | "invalidated"'.
+client/src/pages/student-exams.tsx(333,23): error TS2339: Property 'replace' does not exist on type 'never'.
+client/src/pages/student-exams.tsx(428,13): error TS2322: Type 'boolean | "" | null' is not assignable to type 'boolean | undefined'.
+  Type 'null' is not assignable to type 'boolean | undefined'.
+client/src/pages/student-report-cards.tsx(14,15): error TS2724: '"@shared/schema"' has no exported member named 'ReportCard'. Did you mean 'reportCards'?
+client/src/pages/student-report-cards.tsx(14,27): error TS2305: Module '"@shared/schema"' has no exported member 'ReportPeriod'.
+client/src/pages/student-report-cards.tsx(106,53): error TS2339: Property 'id' does not exist on type 'ReportCardWithDetails'.
+client/src/pages/student-report-cards.tsx(128,53): error TS2339: Property 'id' does not exist on type 'ReportCardWithDetails'.
+client/src/pages/student-report-cards.tsx(140,31): error TS2339: Property 'fileName' does not exist on type 'ReportCardWithDetails'.
+client/src/pages/student-report-cards.tsx(156,19): error TS2339: Property 'period' does not exist on type 'ReportCardWithDetails'.
+client/src/pages/student-report-cards.tsx(274,59): error TS2339: Property 'period' does not exist on type 'ReportCardWithDetails'.
+client/src/pages/student-report-cards.tsx(278,35): error TS2339: Property 'id' does not exist on type 'ReportCardWithDetails'.
+client/src/pages/student-report-cards.tsx(288,39): error TS2339: Property 'academicYear' does not exist on type 'ReportCardWithDetails'.
+client/src/pages/student-report-cards.tsx(298,56): error TS2339: Property 'uploadedAt' does not exist on type 'ReportCardWithDetails'.
+client/src/pages/student-report-cards.tsx(304,80): error TS2339: Property 'fileName' does not exist on type 'ReportCardWithDetails'.
+client/src/pages/study-groups-enhanced.tsx(91,28): error TS2554: Expected 1 arguments, but got 0.
+client/src/pages/study-groups-enhanced.tsx(191,9): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(input: string | URL | Request, init?: RequestInit | undefined): Promise<Response>', gave the following error.
+    Type '{ Authorization: string; } | { Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+      Type '{ Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+        Type '{ Authorization?: undefined; }' is not assignable to type 'Record<string, string>'.
+          Property 'Authorization' is incompatible with index signature.
+            Type 'undefined' is not assignable to type 'string'.
+  Overload 2 of 2, '(input: URL | RequestInfo, init?: RequestInit | undefined): Promise<Response>', gave the following error.
+    Type '{ Authorization: string; } | { Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+      Type '{ Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+        Type '{ Authorization?: undefined; }' is not assignable to type 'Record<string, string>'.
+          Property 'Authorization' is incompatible with index signature.
+            Type 'undefined' is not assignable to type 'string'.
+client/src/pages/study-groups-enhanced.tsx(213,9): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(input: string | URL | Request, init?: RequestInit | undefined): Promise<Response>', gave the following error.
+    Type '{ Authorization: string; } | { Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+      Type '{ Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+        Type '{ Authorization?: undefined; }' is not assignable to type 'Record<string, string>'.
+          Property 'Authorization' is incompatible with index signature.
+            Type 'undefined' is not assignable to type 'string'.
+  Overload 2 of 2, '(input: URL | RequestInfo, init?: RequestInit | undefined): Promise<Response>', gave the following error.
+    Type '{ Authorization: string; } | { Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+      Type '{ Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+        Type '{ Authorization?: undefined; }' is not assignable to type 'Record<string, string>'.
+          Property 'Authorization' is incompatible with index signature.
+            Type 'undefined' is not assignable to type 'string'.
+client/src/pages/study-groups-enhanced.tsx(229,11): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(input: string | URL | Request, init?: RequestInit | undefined): Promise<Response>', gave the following error.
+    Type '{ Authorization: string; } | { Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+      Type '{ Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+        Type '{ Authorization?: undefined; }' is not assignable to type 'Record<string, string>'.
+          Property 'Authorization' is incompatible with index signature.
+            Type 'undefined' is not assignable to type 'string'.
+  Overload 2 of 2, '(input: URL | RequestInfo, init?: RequestInit | undefined): Promise<Response>', gave the following error.
+    Type '{ Authorization: string; } | { Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+      Type '{ Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+        Type '{ Authorization?: undefined; }' is not assignable to type 'Record<string, string>'.
+          Property 'Authorization' is incompatible with index signature.
+            Type 'undefined' is not assignable to type 'string'.
+client/src/pages/study-groups-enhanced.tsx(251,11): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(input: string | URL | Request, init?: RequestInit | undefined): Promise<Response>', gave the following error.
+    Type '{ Authorization: string; } | { Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+      Type '{ Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+        Type '{ Authorization?: undefined; }' is not assignable to type 'Record<string, string>'.
+          Property 'Authorization' is incompatible with index signature.
+            Type 'undefined' is not assignable to type 'string'.
+  Overload 2 of 2, '(input: URL | RequestInfo, init?: RequestInit | undefined): Promise<Response>', gave the following error.
+    Type '{ Authorization: string; } | { Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+      Type '{ Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+        Type '{ Authorization?: undefined; }' is not assignable to type 'Record<string, string>'.
+          Property 'Authorization' is incompatible with index signature.
+            Type 'undefined' is not assignable to type 'string'.
+client/src/pages/study-groups-enhanced.tsx(326,9): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(input: string | URL | Request, init?: RequestInit | undefined): Promise<Response>', gave the following error.
+    Type '{ Authorization: string; } | { Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+      Type '{ Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+        Type '{ Authorization?: undefined; }' is not assignable to type 'Record<string, string>'.
+          Property 'Authorization' is incompatible with index signature.
+            Type 'undefined' is not assignable to type 'string'.
+  Overload 2 of 2, '(input: URL | RequestInfo, init?: RequestInit | undefined): Promise<Response>', gave the following error.
+    Type '{ Authorization: string; } | { Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+      Type '{ Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+        Type '{ Authorization?: undefined; }' is not assignable to type 'Record<string, string>'.
+          Property 'Authorization' is incompatible with index signature.
+            Type 'undefined' is not assignable to type 'string'.
+client/src/pages/study-groups-enhanced.tsx(377,9): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(input: string | URL | Request, init?: RequestInit | undefined): Promise<Response>', gave the following error.
+    Type '{ 'Content-Type': string; Authorization: string; } | { 'Content-Type': string; Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+      Type '{ 'Content-Type': string; Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+        Type '{ 'Content-Type': string; Authorization?: undefined; }' is not assignable to type 'undefined'.
+  Overload 2 of 2, '(input: URL | RequestInfo, init?: RequestInit | undefined): Promise<Response>', gave the following error.
+    Type '{ 'Content-Type': string; Authorization: string; } | { 'Content-Type': string; Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+      Type '{ 'Content-Type': string; Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+        Type '{ 'Content-Type': string; Authorization?: undefined; }' is not assignable to type 'undefined'.
+client/src/pages/study-groups-enhanced.tsx(413,11): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(input: string | URL | Request, init?: RequestInit | undefined): Promise<Response>', gave the following error.
+    Type '{ Authorization: string; } | { Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+      Type '{ Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+        Type '{ Authorization?: undefined; }' is not assignable to type 'Record<string, string>'.
+          Property 'Authorization' is incompatible with index signature.
+            Type 'undefined' is not assignable to type 'string'.
+  Overload 2 of 2, '(input: URL | RequestInfo, init?: RequestInit | undefined): Promise<Response>', gave the following error.
+    Type '{ Authorization: string; } | { Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+      Type '{ Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+        Type '{ Authorization?: undefined; }' is not assignable to type 'Record<string, string>'.
+          Property 'Authorization' is incompatible with index signature.
+            Type 'undefined' is not assignable to type 'string'.
+client/src/pages/study-groups-enhanced.tsx(442,11): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(input: string | URL | Request, init?: RequestInit | undefined): Promise<Response>', gave the following error.
+    Type '{ 'Content-Type': string; Authorization: string; } | { 'Content-Type': string; Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+      Type '{ 'Content-Type': string; Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+        Type '{ 'Content-Type': string; Authorization?: undefined; }' is not assignable to type 'undefined'.
+  Overload 2 of 2, '(input: URL | RequestInfo, init?: RequestInit | undefined): Promise<Response>', gave the following error.
+    Type '{ 'Content-Type': string; Authorization: string; } | { 'Content-Type': string; Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+      Type '{ 'Content-Type': string; Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+        Type '{ 'Content-Type': string; Authorization?: undefined; }' is not assignable to type 'undefined'.
+client/src/pages/study-groups-enhanced.tsx(475,11): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(input: string | URL | Request, init?: RequestInit | undefined): Promise<Response>', gave the following error.
+    Type '{ Authorization: string; } | { Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+      Type '{ Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+        Type '{ Authorization?: undefined; }' is not assignable to type 'Record<string, string>'.
+          Property 'Authorization' is incompatible with index signature.
+            Type 'undefined' is not assignable to type 'string'.
+  Overload 2 of 2, '(input: URL | RequestInfo, init?: RequestInit | undefined): Promise<Response>', gave the following error.
+    Type '{ Authorization: string; } | { Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+      Type '{ Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+        Type '{ Authorization?: undefined; }' is not assignable to type 'Record<string, string>'.
+          Property 'Authorization' is incompatible with index signature.
+            Type 'undefined' is not assignable to type 'string'.
+client/src/pages/study-groups-enhanced.tsx(504,11): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(input: string | URL | Request, init?: RequestInit | undefined): Promise<Response>', gave the following error.
+    Type '{ Authorization: string; } | { Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+      Type '{ Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+        Type '{ Authorization?: undefined; }' is not assignable to type 'Record<string, string>'.
+          Property 'Authorization' is incompatible with index signature.
+            Type 'undefined' is not assignable to type 'string'.
+  Overload 2 of 2, '(input: URL | RequestInfo, init?: RequestInit | undefined): Promise<Response>', gave the following error.
+    Type '{ Authorization: string; } | { Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+      Type '{ Authorization?: undefined; }' is not assignable to type 'HeadersInit | undefined'.
+        Type '{ Authorization?: undefined; }' is not assignable to type 'Record<string, string>'.
+          Property 'Authorization' is incompatible with index signature.
+            Type 'undefined' is not assignable to type 'string'.
+client/src/pages/study-groups.tsx(131,28): error TS2554: Expected 1 arguments, but got 0.
+client/src/pages/study-groups.tsx(963,49): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+client/src/pages/subscription-required.tsx(127,81): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Object literal may only specify known properties, and 'className' does not exist in type 'Partial<unknown> & Attributes'.
+client/src/pages/teacher-assignment-detail.tsx(87,21): error TS7006: Parameter 'row' implicitly has an 'any' type.
+client/src/pages/teacher-assignment-detail.tsx(87,36): error TS7006: Parameter 'cell' implicitly has an 'any' type.
+client/src/pages/teacher-dashboard-enhanced.tsx(575,19): error TS2322: Type '({ id: string; type: "submission"; title: string; description: string; timestamp: string; user: { name: string; }; } | { id: string; type: "message"; title: string; description: string; timestamp: string; user: { ...; }; } | { ...; } | { ...; })[]' is not assignable to type 'ActivityItem[]'.
+  Type '{ id: string; type: "submission"; title: string; description: string; timestamp: string; user: { name: string; }; } | { id: string; type: "message"; title: string; description: string; timestamp: string; user: { ...; }; } | { ...; } | { ...; }' is not assignable to type 'ActivityItem'.
+    Type '{ id: string; type: "submission"; title: string; description: string; timestamp: string; user: { name: string; }; }' is not assignable to type 'ActivityItem'.
+      Types of property 'type' are incompatible.
+        Type '"submission"' is not assignable to type '"announcement" | "grade" | "message" | "assignment" | "achievement"'.
+client/src/pages/teacher-dashboard-enhanced.tsx(585,19): error TS2322: Type '({ id: string; title: string; time: string; type: "class"; location: string; color: "blue"; } | { id: string; title: string; time: string; type: "class"; location: string; color: "green"; } | { id: string; ... 4 more ...; color: "purple"; } | { ...; })[]' is not assignable to type 'ScheduleItem[]'.
+  Type '{ id: string; title: string; time: string; type: "class"; location: string; color: "blue"; } | { id: string; title: string; time: string; type: "class"; location: string; color: "green"; } | { id: string; ... 4 more ...; color: "purple"; } | { ...; }' is not assignable to type 'ScheduleItem'.
+    Type '{ id: string; title: string; time: string; type: "office"; location: string; color: "orange"; }' is not assignable to type 'ScheduleItem'.
+      Types of property 'type' are incompatible.
+        Type '"office"' is not assignable to type '"class" | "meeting" | "assignment" | "event"'.
+client/src/pages/teacher-dashboard-enhanced.tsx(606,26): error TS2322: Type '{ title: string; description: string; icon: ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>; earned: boolean; earnedDate: string; color: "gold"; key: string; } | { ...; } | { ...; } | { ...; }' is not assignable to type 'IntrinsicAttributes & AchievementBadgeProps'.
+  Type '{ title: string; description: string; icon: ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>; earned: boolean; color: "purple"; earnedDate?: undefined; key: string; }' is not assignable to type 'AchievementBadgeProps'.
+    Types of property 'color' are incompatible.
+      Type '"purple"' is not assignable to type '"blue" | "gold" | "green" | "silver" | "bronze" | undefined'.
+client/src/pages/teacher-dashboard.tsx(297,18): error TS2304: Cannot find name 'Link'.
+client/src/pages/teacher-dashboard.tsx(299,19): error TS2304: Cannot find name 'Link'.
+client/src/pages/teacher-dashboard.tsx(318,24): error TS2304: Cannot find name 'Link'.
+client/src/pages/teacher-dashboard.tsx(337,25): error TS2304: Cannot find name 'Link'.
+client/src/pages/teacher-dashboard.tsx(350,18): error TS2304: Cannot find name 'Link'.
+client/src/pages/teacher-dashboard.tsx(352,19): error TS2304: Cannot find name 'Link'.
+client/src/pages/teacher-exam-questions.tsx(360,15): error TS2322: Type 'Dispatch<SetStateAction<Question[]>>' is not assignable to type '(questions: Question[]) => void'.
+  Types of parameters 'value' and 'questions' are incompatible.
+    Type 'Question[]' is not assignable to type 'SetStateAction<Question[]>'.
+      Type 'Question[]' is not assignable to type 'Question[]'. Two different types with this name exist, but they are unrelated.
+        Type 'Question' is not assignable to type 'Question'. Two different types with this name exist, but they are unrelated.
+          Types of property 'type' are incompatible.
+            Type 'string' is not assignable to type '"essay" | "code" | "matching" | "fill_blank" | "short" | "mc" | "tf"'.
+client/src/pages/teacher-report-cards.tsx(38,15): error TS2724: '"@shared/schema"' has no exported member named 'ReportCard'. Did you mean 'reportCards'?
+client/src/pages/teacher-report-cards.tsx(38,27): error TS2305: Module '"@shared/schema"' has no exported member 'ReportPeriod'.
+client/src/pages/teacher-report-cards.tsx(38,41): error TS2724: '"@shared/schema"' has no exported member named 'User'. Did you mean 'users'?
+client/src/pages/teacher-report-cards.tsx(258,53): error TS2339: Property 'id' does not exist on type 'ReportCardWithStudent'.
+client/src/pages/teacher-report-cards.tsx(498,35): error TS2339: Property 'id' does not exist on type 'ReportCardWithStudent'.
+client/src/pages/teacher-report-cards.tsx(513,52): error TS2339: Property 'period' does not exist on type 'ReportCardWithStudent'.
+client/src/pages/teacher-report-cards.tsx(516,37): error TS2339: Property 'academicYear' does not exist on type 'ReportCardWithStudent'.
+client/src/pages/teacher-report-cards.tsx(519,56): error TS2339: Property 'uploadedAt' does not exist on type 'ReportCardWithStudent'.
+client/src/pages/teacher-report-cards.tsx(536,62): error TS2339: Property 'id' does not exist on type 'ReportCardWithStudent'.
+client/src/pages/teacher-sessions.tsx(373,75): error TS2304: Cannot find name 't'.
+server/ai/lesson-digestion.service.ts(13,23): error TS2307: Cannot find module 'xlsx' or its corresponding type declarations.
+server/ai/lesson-digestion.service.ts(14,23): error TS2307: Cannot find module 'csv-parse/sync' or its corresponding type declarations.
+server/ai/lesson-digestion.service.ts(83,50): error TS2339: Property 'default' does not exist on type 'typeof import("D:/VIisual Studio Code/Eduverse-redesign/node_modules/pdf-parse/dist/pdf-parse/esm/index")'.
+server/src/api/admin-organizations.routes.ts(200,14): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(value: { name: string | SQL<unknown> | Placeholder<string, any>; subdomain: string | SQL<unknown> | Placeholder<string, any>; id?: string | SQL<unknown> | Placeholder<...> | undefined; ... 24 more ...; updatedAt?: SQL<...> | ... 3 more ... | undefined; }): PgInsertBase<...>', gave the following error.
+    Object literal may only specify known properties, but 'maxCourses' does not exist in type '{ name: string | SQL<unknown> | Placeholder<string, any>; subdomain: string | SQL<unknown> | Placeholder<string, any>; id?: string | SQL<unknown> | Placeholder<string, any> | undefined; ... 24 more ...; updatedAt?: SQL<...> | ... 3 more ... | undefined; }'. Did you mean to write 'maxUsers'?
+  Overload 2 of 2, '(values: { name: string | SQL<unknown> | Placeholder<string, any>; subdomain: string | SQL<unknown> | Placeholder<string, any>; id?: string | SQL<unknown> | Placeholder<...> | undefined; ... 24 more ...; updatedAt?: SQL<...> | ... 3 more ... | undefined; }[]): PgInsertBase<...>', gave the following error.
+    Object literal may only specify known properties, and 'id' does not exist in type '{ name: string | SQL<unknown> | Placeholder<string, any>; subdomain: string | SQL<unknown> | Placeholder<string, any>; id?: string | SQL<unknown> | Placeholder<string, any> | undefined; ... 24 more ...; updatedAt?: SQL<...> | ... 3 more ... | undefined; }[]'.
+server/src/api/admin-organizations.routes.ts(294,17): error TS2561: Object literal may only specify known properties, but 'maxCourses' does not exist in type '{ name?: string | SQL<unknown> | PgColumn<ColumnBaseConfig<ColumnDataType, string>, {}, {}> | undefined; subdomain?: string | SQL<unknown> | PgColumn<...> | undefined; ... 25 more ...; updatedAt?: SQL<...> | ... 3 more ... | undefined; }'. Did you mean to write 'maxUsers'?
+server/src/api/admin-users.routes.ts(111,14): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(value: { email: string | SQL<unknown> | Placeholder<string, any>; organizationId: string | SQL<unknown> | Placeholder<string, any>; username: string | SQL<...> | Placeholder<...>; ... 18 more ...; isTemporaryPassword?: boolean | ... 2 more ... | undefined; }): PgInsertBase<...>', gave the following error.
+    Argument of type '{ organizationId?: any; email: any; fullName: any; username: any; password: string; role: any; isActive: true; emailVerified: false; passwordResetExpires: Date; }' is not assignable to parameter of type '{ email: string | SQL<unknown> | Placeholder<string, any>; organizationId: string | SQL<unknown> | Placeholder<string, any>; username: string | SQL<unknown> | Placeholder<...>; ... 18 more ...; isTemporaryPassword?: boolean | ... 2 more ... | undefined; }'.
+      Property 'organizationId' is optional in type '{ organizationId?: any; email: any; fullName: any; username: any; password: string; role: any; isActive: true; emailVerified: false; passwordResetExpires: Date; }' but required in type '{ email: string | SQL<unknown> | Placeholder<string, any>; organizationId: string | SQL<unknown> | Placeholder<string, any>; username: string | SQL<unknown> | Placeholder<...>; ... 18 more ...; isTemporaryPassword?: boolean | ... 2 more ... | undefined; }'.
+  Overload 2 of 2, '(values: { email: string | SQL<unknown> | Placeholder<string, any>; organizationId: string | SQL<unknown> | Placeholder<string, any>; username: string | SQL<...> | Placeholder<...>; ... 18 more ...; isTemporaryPassword?: boolean | ... 2 more ... | undefined; }[]): PgInsertBase<...>', gave the following error.
+    Object literal may only specify known properties, and 'email' does not exist in type '{ email: string | SQL<unknown> | Placeholder<string, any>; organizationId: string | SQL<unknown> | Placeholder<string, any>; username: string | SQL<unknown> | Placeholder<...>; ... 18 more ...; isTemporaryPassword?: boolean | ... 2 more ... | undefined; }[]'.

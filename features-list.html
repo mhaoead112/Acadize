@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Eduverse LMS — All Platform Features</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --blue:        #1a56db;
+      --blue-light:  #3b82f6;
+      --orange:      #f97316;
+      --ai-gold:     #d97706;
+      --gray-50:     #f8fafc;
+      --gray-100:    #f1f5f9;
+      --gray-200:    #e2e8f0;
+      --gray-700:    #334155;
+      --gray-800:    #1e293b;
+      --white:       #ffffff;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--white);
+      color: var(--gray-700);
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    /* ── Page wrapper ────────────────────────────── */
+    .page {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 48px 40px 64px;
+    }
+
+    /* ── Page header ─────────────────────────────── */
+    .page-header {
+      margin-bottom: 40px;
+      border-bottom: 3px solid var(--blue);
+      padding-bottom: 20px;
+    }
+    .page-header h1 {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--blue);
+      letter-spacing: -0.5px;
+    }
+    .page-header p {
+      font-size: 13px;
+      color: #64748b;
+      margin-top: 4px;
+    }
+
+    /* ── Two-column grid ─────────────────────────── */
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      column-gap: 48px;
+      row-gap: 0;
+    }
+
+    /* ── Category block ──────────────────────────── */
+    .category {
+      margin-bottom: 32px;
+      break-inside: avoid;
+    }
+
+    .category-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--blue);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .category-title .icon {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+
+    /* AI badge */
+    .ai-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      background: linear-gradient(135deg, #fef3c7, #fde68a);
+      color: var(--ai-gold);
+      border: 1px solid #fde68a;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Sub-title for nested sections */
+    .sub-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin: 10px 0 5px 0;
+    }
+
+    /* ── Feature list ────────────────────────────── */
+    ul.features {
+      list-style: none;
+      padding: 0;
+    }
+    ul.features li {
+      position: relative;
+      padding-left: 14px;
+      font-size: 13.5px;
+      color: var(--gray-700);
+      margin-bottom: 4px;
+    }
+    ul.features li::before {
+      content: "•";
+      position: absolute;
+      left: 0;
+      color: var(--blue-light);
+      font-weight: 700;
+    }
+
+    /* Partial / coming-soon items */
+    ul.features li.partial {
+      color: #94a3b8;
+    }
+    ul.features li.partial::before {
+      color: #cbd5e1;
+    }
+    .tag {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 1px 5px;
+      border-radius: 3px;
+      vertical-align: middle;
+      margin-left: 4px;
+    }
+    .tag-partial { background:#fef9c3; color:#92400e; }
+    .tag-schema  { background:#ede9fe; color:#5b21b6; }
+
+    /* Divider between major groups */
+    .divider {
+      border: none;
+      border-top: 1px dashed var(--gray-200);
+      margin: 4px 0 14px 0;
+    }
+
+    /* ── Print / PDF optimisations ───────────────── */
+    @media print {
+      body { font-size: 12px; }
+      .page { padding: 20px 24px 32px; }
+      .page-header h1 { font-size: 22px; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <div class="page-header">
+    <h1>All Platform Features — Eduverse LMS</h1>
+    <p>Codebase-verified · February 2026 · Based on implemented features across 49 API route files, 46 service files, and 1,260-line schema</p>
+  </div>
+
+  <div class="grid">
+
+    <!-- ══════════════ LEFT COLUMN ══════════════ -->
+    <div>
+
+      <!-- AI Capabilities -->
+      <div class="category">
+        <div class="category-title">
+          <!-- brain icon -->
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v.5a2.5 2.5 0 0 1 2.5-2.5A2.5 2.5 0 0 1 17 5a2.5 2.5 0 0 1 2.5 2.5c0 1-.6 1.9-1.5 2.3V10a2.5 2.5 0 0 1-2.5 2.5h-.09A5 5 0 0 1 12 17a5 5 0 0 1-3.41-4.5H8.5A2.5 2.5 0 0 1 6 10v-.2A2.5 2.5 0 0 1 4.5 7.5 2.5 2.5 0 0 1 7 5a2.5 2.5 0 0 1 2.5-2.5z"/></svg>
+          AI Capabilities
+          <span class="ai-badge">✦ AI</span>
+        </div>
+        <ul class="features">
+          <li>AI Study Buddy — RAG Q&amp;A (GPT-4o-mini + Google Custom Search)</li>
+          <li>AI answer scoring for essay &amp; code questions</li>
+          <li>AI feedback generation per submitted answer</li>
+          <li>AI lesson digestion — auto-generate summaries from uploads</li>
+          <li>Metered AI queries per plan (10 / 100 / 1,000 / Unlimited)</li>
+          <li class="partial">AR Learning page <span class="tag tag-partial">Partial/UI</span></li>
+          <li class="partial">Emotional Learning page <span class="tag tag-partial">Partial/UI</span></li>
+        </ul>
+      </div>
+
+      <!-- Core Learning -->
+      <div class="category">
+        <div class="category-title">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+          Core Learning &amp; Content
+        </div>
+        <ul class="features">
+          <li>Course creation &amp; publishing</li>
+          <li>Lesson upload — multi-format (PDF, video, audio, etc.) via Cloudinary CDN</li>
+          <li>Course join via invite link or join code</li>
+          <li>Lesson ordering &amp; management</li>
+          <li>Student enrollment management</li>
+          <li>Course &amp; lesson translations (multi-locale)</li>
+          <li>Announcements with pinning &amp; translations</li>
+          <li>Calendar &amp; events (class, exam, meeting, holiday, announcement types)</li>
+          <li>Study streaks &amp; gamification (streak table, weekly goals)</li>
+          <li>Report cards (uploadable, per period: Q1–Q4, S1–S2, FINAL)</li>
+          <li>Student progress tracking &amp; study activities</li>
+          <li>Assignments (homework, projects, etc.)</li>
+          <li>Submission review &amp; grading by teacher</li>
+          <li>Grades table with per-answer feedback</li>
+        </ul>
+      </div>
+
+      <!-- Exam & Assessment -->
+      <div class="category">
+        <div class="category-title">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Exam &amp; Assessment Engine
+        </div>
+        <ul class="features">
+          <li>7 question types: MCQ, true/false, short answer, essay, code, matching, fill-in-the-blank</li>
+          <li>Exam scheduling (start/end time, duration, attempt limits)</li>
+          <li>Shuffle questions &amp; answer options</li>
+          <li>Timed exam attempts with auto-submission</li>
+          <li>Auto-grading (MCQ, true/false)</li>
+          <li>Manual grading with rubric (essay, code)</li>
+          <li>Partial credit scoring</li>
+          <li>Late submission policy &amp; penalty system</li>
+          <li>Access code &amp; IP whitelist per exam</li>
+          <li>Teacher attempt review dashboard</li>
+          <li>Student exam results &amp; detailed feedback</li>
+          <li>Retake system with configurable delay policy</li>
+          <li>Adaptive retake exams (mistake-pool driven question selection)</li>
+          <li>Mistake pool tracking (topic, subtopic, skill tag, difficulty)</li>
+          <li>Question metadata tagging (Bloom's taxonomy, difficulty, topic)</li>
+          <li class="partial">Data retention policy (GDPR-aware) <span class="tag tag-schema">Schema</span></li>
+        </ul>
+      </div>
+
+      <!-- Anti-Cheat -->
+      <div class="category">
+        <div class="category-title">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Anti-Cheat &amp; Academic Integrity
+        </div>
+        <ul class="features">
+          <li>Tab switch, window blur, copy-paste, right-click &amp; keyboard shortcut monitoring</li>
+          <li>DevTools detection &amp; fullscreen enforcement</li>
+          <li>Browser extension &amp; screen share detection</li>
+          <li>Face detection — no face, multiple faces, look-away</li>
+          <li>Rapid answers &amp; unusual timing pattern detection</li>
+          <li>Risk scoring engine (behavior, timing, device, biometric, pattern scores)</li>
+          <li>Device fingerprinting per exam attempt</li>
+          <li>IP address tracking</li>
+          <li>Webcam recording per attempt (Cloudinary storage)</li>
+          <li>Screen recording URL per attempt</li>
+          <li>Screenshot capture on violation events</li>
+          <li>Proctor review workflow (pending → under review → cleared / violation / escalated)</li>
+          <li>5-tier severity model (low, medium, high, critical)</li>
+          <li>Final verdict system (cleared, warning, violation, invalidated)</li>
+          <li class="partial">AI confidence score per detected event <span class="tag tag-schema">Schema</span></li>
+        </ul>
+      </div>
+
+      <!-- Attendance -->
+      <div class="category">
+        <div class="category-title">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Smart Attendance
+        </div>
+        <ul class="features">
+          <li>QR code check-in (rotatable, expiring token)</li>
+          <li>GPS geo-fence validation (configurable radius in meters)</li>
+          <li>Zoom webhook attendance automation</li>
+          <li>Manual check-in fallback</li>
+          <li>Physical vs. online session types</li>
+          <li>Attendance records with join/leave time &amp; duration</li>
+          <li>Configurable attendance percentage threshold</li>
+          <li>Low-attendance alert triggers</li>
+          <li>Attendance notifications (in-app, email channels)</li>
+          <li class="partial">SMS &amp; WhatsApp attendance alerts <span class="tag tag-schema">Schema</span></li>
+          <li>Admin attendance reports</li>
+        </ul>
+      </div>
+
+    </div><!-- /left column -->
+
+
+    <!-- ══════════════ RIGHT COLUMN ══════════════ -->
+    <div>
+
+      <!-- Messaging & Collaboration -->
+      <div class="category">
+        <div class="category-title">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Messaging &amp; Collaboration
+        </div>
+        <ul class="features">
+          <li>Study groups (manual + auto-generated per course)</li>
+          <li>Real-time group chat via WebSocket</li>
+          <li>Direct messages between users</li>
+          <li>Message types: text, file, image, video</li>
+          <li>Read receipts &amp; message delivery tracking</li>
+          <li>User presence (online / offline / away)</li>
+          <li>Group member roles (admin / member), muting &amp; restricting</li>
+          <li>Block &amp; report users</li>
+          <li>Parent-teacher conversation threads</li>
+          <li>In-app push notifications (VAPID / WebPush)</li>
+        </ul>
+      </div>
+
+      <!-- Parent Portal -->
+      <div class="category">
+        <div class="category-title">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Parent Portal
+        </div>
+        <ul class="features">
+          <li>Parent-child account linking</li>
+          <li>Parent dashboard (grades, attendance, progress overview)</li>
+          <li>View assignments &amp; lesson content</li>
+          <li>Attendance history &amp; analytics</li>
+          <li>Parent-teacher messaging</li>
+          <li>Report card access</li>
+          <li>Parent calendar</li>
+        </ul>
+      </div>
+
+      <!-- Analytics -->
+      <div class="category">
+        <div class="category-title">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          Analytics &amp; Reporting
+        </div>
+        <ul class="features">
+          <li>Teacher analytics dashboard (overview, students, courses)</li>
+          <li>Student-level: average score, completion rate, performance trend</li>
+          <li>Course-level analytics: enrollment, avg score, completion</li>
+          <li>Weekly performance trend buckets (configurable timeframe)</li>
+          <li>Submission status breakdown (on-time, late, missing, pending)</li>
+          <li>At-risk student identification (score &lt; 60 threshold)</li>
+          <li>Teacher mistake analytics dashboard</li>
+          <li>Admin analytics dashboard</li>
+          <li>Parent analytics dashboard</li>
+          <li>Revenue stats &amp; subscription analytics (admin)</li>
+        </ul>
+      </div>
+
+      <!-- Administration & Multi-Tenancy -->
+      <div class="category">
+        <div class="category-title">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+          Administration &amp; Multi-Tenancy
+        </div>
+        <ul class="features">
+          <li>Multi-tenant organizations with subdomain routing</li>
+          <li>Per-org plan tiers (Free, Starter, Professional, Enterprise)</li>
+          <li>Per-org user limits &amp; storage quotas</li>
+          <li>Per-org branding (logo, favicon, primary &amp; secondary colors)</li>
+          <li>Organization invite system (token-based, role-specified)</li>
+          <li>Admin user management (create, update, suspend users)</li>
+          <li>Admin organization management panel</li>
+          <li>Admin global settings configuration</li>
+          <li>Admin search across all users</li>
+          <li>Staff profiles &amp; achievements</li>
+          <li>News articles with comments</li>
+          <li class="partial">Custom domain per org <span class="tag tag-schema">Schema</span></li>
+          <li class="partial">Per-org JSONB feature config <span class="tag tag-schema">Schema</span></li>
+          <li class="partial">Org suspension with reason logging <span class="tag tag-schema">Schema</span></li>
+        </ul>
+      </div>
+
+      <!-- Billing & Subscriptions -->
+      <div class="category">
+        <div class="category-title">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          Billing &amp; Subscriptions
+        </div>
+        <ul class="features">
+          <li>B2C per-user Paymob checkout (monthly &amp; annual billing)</li>
+          <li>Trial activation via promo codes</li>
+          <li>Promo code management (discount %, trial days, max uses, expiry)</li>
+          <li>Subscription lifecycle webhooks (success / failure / refund)</li>
+          <li>Payment retry logic (3 retries)</li>
+          <li>Admin bulk-subscribe all org users</li>
+          <li>Subscription-required middleware API access gating</li>
+          <li>Checkout success / failure redirect pages</li>
+          <li class="partial">B2B org-level subscription <span class="tag tag-schema">Schema</span></li>
+        </ul>
+      </div>
+
+      <!-- Internationalisation -->
+      <div class="category">
+        <div class="category-title">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          Internationalisation &amp; Customisation
+        </div>
+        <ul class="features">
+          <li>Multi-locale support — English &amp; Arabic (RTL) per tenant</li>
+          <li>Locale management via admin panel</li>
+          <li>Translated course, lesson, exam &amp; announcement content</li>
+          <li>Per-user preferred locale setting</li>
+          <li>White-label full branding (Enterprise: custom CSS theming)</li>
+        </ul>
+      </div>
+
+      <!-- Infrastructure & Integrations -->
+      <div class="category">
+        <div class="category-title">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          Infrastructure &amp; Integrations
+        </div>
+
+        <div class="sub-title">Video Conferencing</div>
+        <ul class="features">
+          <li>Zoom OAuth + webhooks (attendance &amp; session management)</li>
+        </ul>
+
+        <div class="sub-title">File &amp; Media</div>
+        <ul class="features">
+          <li>Cloudinary CDN for all file &amp; media uploads</li>
+        </ul>
+
+        <div class="sub-title">Notifications</div>
+        <ul class="features">
+          <li>Email (SendGrid / SMTP) with rich HTML templates</li>
+          <li>Web push notifications (VAPID)</li>
+          <li>In-app real-time notifications (WebSocket)</li>
+        </ul>
+
+        <div class="sub-title">Auth &amp; Security</div>
+        <ul class="features">
+          <li>JWT auth with refresh tokens + session management</li>
+          <li>Password reset &amp; email verification flows</li>
+          <li>5-role model: student, teacher, admin, parent, proctor</li>
+        </ul>
+
+        <div class="sub-title">Deployment</div>
+        <ul class="features">
+          <li>Railway / Render / Vercel deployment configs</li>
+          <li>Neon PostgreSQL cloud (migration guide included)</li>
+          <li>Sentry error tracking (env-configured)</li>
+        </ul>
+      </div>
+
+    </div><!-- /right column -->
+  </div><!-- /grid -->
+
+  <!-- Footer legend -->
+  <div style="margin-top:32px; padding-top:16px; border-top:1px solid var(--gray-200); display:flex; gap:20px; flex-wrap:wrap; font-size:12px; color:#64748b;">
+    <span><span class="tag tag-schema" style="margin-right:4px;">Schema</span> Field/table present in DB schema; full UI flow not yet wired</span>
+    <span><span class="tag tag-partial" style="margin-right:4px;">Partial/UI</span> UI page exists; backend logic partially implemented</span>
+    <span style="margin-left:auto; font-style:italic;">Eduverse LMS · February 2026 · features-list.html</span>
+  </div>
+</div>
+</body>
+</html>

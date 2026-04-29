@@ -1,0 +1,82 @@
+{
+  "traceId": "trace-20250425-student-tutor-002",
+  "status": "failed_graceful_fallback",
+  "response": {
+    "content": "I'm currently unable to generate a personalized response due to temporary service limitations, but here's helpful information:\n\n**Photosynthesis** is the process by which plants convert sunlight into chemical energy (glucose) and release oxygen as a byproduct. It occurs primarily in the leaves and involves two main stages: the light-dependent reactions (in thylakoids) and the light-independent reactions (in stroma).\n\nKey Points:\n- Input: Carbon dioxide, water, sunlight\n- Output: Glucose, oxygen  \n- Location: Chloroplasts in plant cells\n- Importance: Foundation of most food chains and atmospheric oxygen production\n- Equation: 6CO2 + 6H2O + light energy → C6H12O6 + 6O2\n\nFor more detailed explanations with examples, please check the lesson materials or contact your teacher.",
+    "type": "student_tutor",
+    "isFallback": true,
+    "data": {
+      "reason": "AI service temporarily unavailable - showing cached lesson content",
+      "fallbackSource": "lesson_cache",
+      "fallbackQuality": "high"
+    },
+    "metadata": {
+      "model": "cached_content",
+      "sources": ["lesson-biology-101", "course-science-12"]
+    }
+  },
+  "trace": {
+    "requestId": "trace-20250425-student-tutor-002",
+    "timeline": [
+      {
+        "type": "start",
+        "timestamp": "2025-04-25T10:40:00.000Z",
+        "description": "Orchestration request received"
+      },
+      {
+        "type": "validation",
+        "timestamp": "2025-04-25T10:40:00.050Z",
+        "description": "Payload and auth validation passed",
+        "duration": 50
+      },
+      {
+        "type": "ai_call",
+        "timestamp": "2025-04-25T10:40:00.100Z",
+        "description": "Attempting to call AI service",
+        "duration": 30000,
+        "error": "AI_SERVICE_TIMEOUT"
+      },
+      {
+        "type": "fallback_triggered",
+        "timestamp": "2025-04-25T10:40:30.100Z",
+        "description": "AI service timeout exceeded - triggering fallback to lesson cache",
+        "duration": 50
+      },
+      {
+        "type": "cache_hit",
+        "timestamp": "2025-04-25T10:40:30.150Z",
+        "description": "Successfully retrieved cached lesson content",
+        "duration": 50
+      },
+      {
+        "type": "complete",
+        "timestamp": "2025-04-25T10:40:30.200Z",
+        "description": "Fallback response ready",
+        "duration": 200
+      }
+    ],
+    "totalExecutionTime": 30200,
+    "executionPath": "fallback",
+    "dependencyStatus": {
+      "aiServiceAvailable": false,
+      "lessonContextAvailable": true,
+      "cacheHit": true
+    },
+    "validations": {
+      "payloadValid": true,
+      "authValid": true,
+      "contextValid": true,
+      "reasons": []
+    }
+  },
+  "error": {
+    "code": "AI_SERVICE_TIMEOUT",
+    "message": "AI service did not respond within timeout. Showing cached content instead.",
+    "details": {
+      "timeout": 30000,
+      "service": "ai.hackclub.com",
+      "retryAfter": 60
+    }
+  },
+  "generatedAt": "2025-04-25T10:40:30.200Z"
+}

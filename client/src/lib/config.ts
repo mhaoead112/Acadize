@@ -21,7 +21,7 @@ if (isProduction && !import.meta.env.VITE_API_URL) {
 }
 
 let apiUrl = import.meta.env.VITE_API_URL || (isProduction ? '' : 'http://localhost:3001');
-let wsUrl = import.meta.env.VITE_WS_URL || (isProduction ? '' : 'ws://localhost:3001');
+let wsUrl = import.meta.env.VITE_WS_URL || (isProduction ? '' : 'ws://localhost:3001/ws');
 
 // Development helper: If accessed via LAN IP on a phone (e.g. 192.168.x.x), 
 // automatically swap 'localhost' in the env var to the actual device IP.

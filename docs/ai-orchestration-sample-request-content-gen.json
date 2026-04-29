@@ -1,0 +1,34 @@
+{
+  "traceId": "trace-20250425-content-gen-001",
+  "task": {
+    "type": "content_generation",
+    "contentType": "summary",
+    "sourceId": "lesson-math-algebra-101",
+    "depth": "intermediate"
+  },
+  "context": {
+    "userId": "student-12345",
+    "userRole": "student",
+    "organizationId": "org-school-01",
+    "lessonId": "lesson-math-algebra-101",
+    "courseId": "course-math-101",
+    "language": "en",
+    "preferences": {
+      "verbose": false,
+      "includeExamples": true,
+      "includeResources": true
+    }
+  },
+  "config": {
+    "enableFallback": true,
+    "timeout": 45000,
+    "enableCache": true,
+    "cacheTTL": 14400
+  },
+  "metadata": {
+    "source": "web",
+    "version": "1.0.0",
+    "platform": "student_portal"
+  },
+  "createdAt": "2025-04-25T11:00:00Z"
+}
