@@ -12,7 +12,7 @@ import { Slider } from '@/components/ui/slider';
 import { Loader2, Users, BookOpen, Megaphone, FolderOpen, Globe, Lock, Mail } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { queryClient } from '@/lib/queryClient';
-import type { User } from '@shared/schema';
+import type { User } from './types';
 
 interface CreateGroupModalProps {
   open: boolean;
@@ -247,7 +247,7 @@ export function CreateGroupModal({ open, onClose }: CreateGroupModalProps) {
                 <Checkbox
                   id="require-approval"
                   checked={requireApproval}
-                  onCheckedChange={setRequireApproval}
+                  onCheckedChange={(v) => setRequireApproval(Boolean(v))}
                   disabled={isLoading}
                   data-testid="checkbox-require-approval"
                 />
@@ -259,7 +259,7 @@ export function CreateGroupModal({ open, onClose }: CreateGroupModalProps) {
                 <Checkbox
                   id="allow-member-invite"
                   checked={allowMemberInvite}
-                  onCheckedChange={setAllowMemberInvite}
+                  onCheckedChange={(v) => setAllowMemberInvite(Boolean(v))}
                   disabled={isLoading}
                   data-testid="checkbox-allow-member-invite"
                 />

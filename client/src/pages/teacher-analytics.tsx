@@ -466,6 +466,7 @@ export default function TeacherAnalytics() {
             <h3 className="text-slate-900 dark:text-white font-bold text-lg mb-6">{t("teacherAnalytics.submissionStatus")}</h3>
             <div className="flex-1 flex flex-col justify-center items-center gap-6 relative">
               <div className="w-[200px] h-[200px] relative">
+                {pieData.some(d => d.value > 0) ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
@@ -483,6 +484,11 @@ export default function TeacherAnalytics() {
                     </Pie>
                   </PieChart>
                 </ResponsiveContainer>
+                ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <div className="w-[160px] h-[160px] rounded-full border-[20px] border-slate-200 dark:border-slate-700" />
+                </div>
+                )}
                 <div className="absolute inset-0 m-auto w-32 h-32 flex flex-col items-center justify-center pointer-events-none">
                   <span className="text-3xl font-bold text-slate-900 dark:text-white">{submissionStatus.totalAssignments || 0}</span>
                   <span className="text-xs text-slate-500">{t("teacherAnalytics.totalAssignments")}</span>

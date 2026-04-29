@@ -4,7 +4,7 @@ import { ChatArea } from './ChatArea';
 import { AuthModal } from './AuthModal';
 import { useAuth } from '@/hooks/useAuth';
 import { useWebSocket } from '@/hooks/useWebSocket';
-import type { Group, User } from '@shared/schema';
+import type { Group, User } from './types';
 
 export function GroupChatLayout() {
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);

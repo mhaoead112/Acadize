@@ -30,7 +30,7 @@ import { TypingIndicator } from './TypingIndicator';
 import { PollModal } from './PollModal';
 import { GroupMembersModal } from './GroupMembersModal';
 import { GroupSettingsModal } from './GroupSettingsModal';
-import type { Group, User, GroupMessage } from '@shared/schema';
+import type { Group, User, GroupMessage } from './types';
 
 interface ChatAreaProps {
   group: Group;

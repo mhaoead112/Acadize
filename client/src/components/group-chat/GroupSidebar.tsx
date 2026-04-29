@@ -12,7 +12,7 @@ import { Search, Users, Plus, Settings, LogOut, MessageCircle, UserPlus, Globe, 
 import { useAuth } from '@/hooks/useAuth';
 import { CreateGroupModal } from './CreateGroupModal';
 import { queryClient } from '@/lib/queryClient';
-import type { Group, User } from '@shared/schema';
+import type { Group, User } from './types';
 
 interface GroupSidebarProps {
   user: User | null;

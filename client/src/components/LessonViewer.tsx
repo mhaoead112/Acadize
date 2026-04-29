@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Download, FileText, Video, ExternalLink, Play, Maximize2, AlertCircle } from "lucide-react";
+import { Download, FileText, Video, ExternalLink, Play, Maximize2, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Props {
   fileUrl?: string;
@@ -175,69 +176,9 @@ export const LessonViewer: React.FC<Props> = ({ fileUrl, fileType, fileName, vid
     );
   }
 
-  // PDF preview with multiple fallback strategies
+  // PDF preview with authenticated fetch → blob URL
   if (type.includes("pdf") || fileUrl?.endsWith(".pdf")) {
-    // PDF URL already has view=inline parameter from the API
-    const pdfViewUrl = `${fileUrl}#toolbar=1&navpanes=0`;
-    
-    // Google Docs viewer as fallback (works for public URLs)
-    const googleDocsUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl || '')}&embedded=true`;
-
-    return (
-      <Card className="border-0 shadow-lg overflow-hidden">
-        <CardHeader className="flex flex-row items-center justify-between bg-gradient-to-r from-red-50 to-orange-50 pb-3">
-          <CardTitle className="flex items-center gap-2 text-red-800">
-            <FileText className="h-5 w-5" />
-            PDF Document
-          </CardTitle>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-2"
-              onClick={() => window.open(fileUrl, '_blank')}
-            >
-              <Maximize2 className="h-4 w-4" />
-              Full Screen
-            </Button>
-            <DownloadButton />
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          {pdfError ? (
-            <div className="p-8 text-center bg-gray-50">
-              <AlertCircle className="h-12 w-12 text-amber-500 mx-auto mb-4" />
-              <p className="text-gray-600 mb-4">PDF preview is not available in this browser.</p>
-              <div className="flex gap-3 justify-center">
-                <Button onClick={() => window.open(fileUrl, '_blank')}>
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  Open in New Tab
-                </Button>
-                <DownloadButton />
-              </div>
-            </div>
-          ) : (
-            <div className="w-full h-[720px] bg-gray-100">
-              <object
-                data={pdfViewUrl}
-                type="application/pdf"
-                className="w-full h-full"
-                onError={() => setPdfError(true)}
-              >
-                {/* Fallback to iframe if object fails */}
-                <iframe
-                  title="lesson-pdf"
-                  src={pdfViewUrl}
-                  className="w-full h-full border-0"
-                  key={fileUrl}
-                  onError={() => setPdfError(true)}
-                />
-              </object>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    );
+    return <AuthenticatedPdfViewer fileUrl={fileUrl!} fileName={fileName} />;
   }
 
   // Image preview
@@ -378,5 +319,111 @@ export const LessonViewer: React.FC<Props> = ({ fileUrl, fileType, fileName, vid
     </Card>
   );
 };
+
+// Separate component for PDF viewing with authenticated fetch
+function AuthenticatedPdfViewer({ fileUrl, fileName }: { fileUrl: string; fileName?: string }) {
+  const { getAuthHeaders } = useAuth();
+  const [blobUrl, setBlobUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    let objectUrl: string | null = null;
+
+    const fetchPdf = async () => {
+      try {
+        setLoading(true);
+        setError(false);
+        const headers = getAuthHeaders();
+        const res = await fetch(fileUrl, {
+          headers: headers as Record<string, string>,
+          credentials: 'include',
+        });
+
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+        const blob = await res.blob();
+        if (cancelled) return;
+
+        objectUrl = URL.createObjectURL(blob);
+        setBlobUrl(objectUrl);
+      } catch (err) {
+        console.error('Failed to fetch PDF:', err);
+        if (!cancelled) setError(true);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    fetchPdf();
+
+    return () => {
+      cancelled = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [fileUrl, getAuthHeaders]);
+
+  const pdfViewUrl = blobUrl ? `${blobUrl}#toolbar=1&navpanes=0` : '';
+
+  return (
+    <Card className="border-0 shadow-lg overflow-hidden">
+      <CardHeader className="flex flex-row items-center justify-between bg-gradient-to-r from-red-50 to-orange-50 pb-3">
+        <CardTitle className="flex items-center gap-2 text-red-800">
+          <FileText className="h-5 w-5" />
+          PDF Document
+        </CardTitle>
+        <div className="flex gap-2">
+          {blobUrl && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() => window.open(blobUrl, '_blank')}
+            >
+              <Maximize2 className="h-4 w-4" />
+              Full Screen
+            </Button>
+          )}
+          <Button asChild variant="outline" size="sm" className="gap-2 shadow-sm">
+            <a href={fileUrl} download={fileName} target="_blank" rel="noreferrer">
+              <Download className="h-4 w-4" />
+              Download
+            </a>
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent className="p-0">
+        {loading ? (
+          <div className="w-full h-[720px] bg-gray-100 flex flex-col items-center justify-center gap-4">
+            <Loader2 className="h-10 w-10 text-red-400 animate-spin" />
+            <p className="text-gray-500">Loading PDF...</p>
+          </div>
+        ) : error ? (
+          <div className="p-8 text-center bg-gray-50">
+            <AlertCircle className="h-12 w-12 text-amber-500 mx-auto mb-4" />
+            <p className="text-gray-600 mb-4">PDF preview is not available.</p>
+            <div className="flex gap-3 justify-center">
+              <Button asChild>
+                <a href={fileUrl} download={fileName} target="_blank" rel="noreferrer">
+                  <Download className="h-4 w-4 mr-2" />
+                  Download PDF
+                </a>
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="w-full h-[720px] bg-gray-100">
+            <iframe
+              title="lesson-pdf"
+              src={pdfViewUrl}
+              className="w-full h-full border-0"
+            />
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
 export default LessonViewer;

@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { queryClient } from '@/lib/queryClient';
-import type { Group, User } from '@shared/schema';
+import type { Group, User } from './types';
 
 interface GroupSettingsModalProps {
   open: boolean;

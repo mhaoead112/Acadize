@@ -8,7 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, BarChart3, Plus, X } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import type { Group, User } from '@shared/schema';
+import type { Group, User } from './types';
 
 interface PollModalProps {
   open: boolean;

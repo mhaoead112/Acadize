@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { formatDistanceToNow } from 'date-fns';
 import { Heart, Laugh, ThumbsUp, MoreHorizontal, Reply, Pin } from 'lucide-react';
-import type { GroupMessage, User } from '@shared/schema';
+import type { GroupMessage, User } from './types';
 
 interface MessageBubbleProps {
   message: GroupMessage;
