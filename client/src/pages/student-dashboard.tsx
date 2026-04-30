@@ -6,7 +6,7 @@ import {
   BookOpen, Calendar, Flame,
   FlaskConical, FileEdit, Calculator, BookOpenCheck,
   CheckCircle2, Circle, Megaphone, FileText,
-  ArrowRight, MoreHorizontal, Trophy
+  ArrowRight, MoreHorizontal, Trophy, Video
 } from "lucide-react";
 
 import { DashboardStatsSkeleton } from "@/components/skeletons/DashboardStatsSkeleton";
@@ -76,6 +76,17 @@ interface Assignment {
   priority?: 'high' | 'medium' | 'low';
 }
 
+interface ActiveSession {
+  id: string;
+  title: string;
+  sessionType: 'physical' | 'online';
+  startTime: string;
+  endTime: string;
+  courseId: string;
+  courseTitle: string;
+  zoomJoinUrl?: string | null;
+}
+
 export default function StudentDashboard() {
   const { t } = useTranslation('dashboard');
   const { user, token, isLoading: authLoading } = useAuth();
@@ -89,6 +100,7 @@ export default function StudentDashboard() {
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [activeOnlineSession, setActiveOnlineSession] = useState<ActiveSession | null>(null);
   const [lessonsCount, setLessonsCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [courseProgress, setCourseProgress] = useState<Record<string, number>>({});
@@ -131,7 +143,7 @@ export default function StudentDashboard() {
       const authHeaders = getAuthHeaders();
 
       // Parallelize all API calls for better performance
-      const [enrollmentsRes, progressOverallRes, progressCoursesRes, streakRes] = await Promise.all([
+      const [enrollmentsRes, progressOverallRes, progressCoursesRes, streakRes, activeSessionsRes] = await Promise.all([
         fetch(apiEndpoint("/api/enrollments/student"), {
           headers: authHeaders,
           credentials: "include",
@@ -149,6 +161,10 @@ export default function StudentDashboard() {
           headers: authHeaders,
           credentials: "include",
         }).catch(() => null),
+        fetch(apiEndpoint("/api/sessions/student/active"), {
+          headers: authHeaders,
+          credentials: "include",
+        }).catch(() => null),
       ]);
 
       if (!enrollmentsRes.ok) {
@@ -156,6 +172,16 @@ export default function StudentDashboard() {
       }
 
       const enrollmentsData = await enrollmentsRes.json();
+      if (activeSessionsRes?.ok) {
+        const sessionsData = await activeSessionsRes.json().catch(() => ({ sessions: [] }));
+        const activeSessions: ActiveSession[] = Array.isArray(sessionsData?.sessions) ? sessionsData.sessions : [];
+        setActiveOnlineSession(
+          activeSessions.find((session) => session.sessionType === 'online' && Boolean(session.zoomJoinUrl)) ?? null,
+        );
+      } else {
+        setActiveOnlineSession(null);
+      }
+
       const enrollmentsList = Array.isArray(enrollmentsData?.data) ? enrollmentsData.data : (Array.isArray(enrollmentsData) ? enrollmentsData : []);
       
       // Extract courses from enrollments
@@ -495,6 +521,18 @@ export default function StudentDashboard() {
     [assignments.length, announcements.length, t]
   );
 
+  const joinActiveOnlineSession = useCallback(() => {
+    if (!activeOnlineSession?.zoomJoinUrl) {
+      toast({
+        title: 'Zoom link unavailable',
+        description: 'Please ask your teacher to recreate or restart the online session.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    window.open(activeOnlineSession.zoomJoinUrl, '_blank', 'noopener,noreferrer');
+  }, [activeOnlineSession, toast]);
+
   if (loading) {
     return (
       <div className="flex-1 overflow-y-auto p-4 md:p-8 no-scrollbar bg-slate-50 dark:bg-[#0a192f] scroll-smooth">
@@ -551,6 +589,39 @@ export default function StudentDashboard() {
                 </div>
               </div>
             </m.section>
+
+            {activeOnlineSession && (
+              <m.section variants={premiumEnterVariants}>
+                <div className="relative overflow-hidden rounded-3xl border border-emerald-500/25 bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-500 p-5 text-white shadow-xl shadow-emerald-500/15">
+                  <div className="absolute -right-10 -top-10 size-32 rounded-full bg-white/20 blur-3xl" />
+                  <div className="relative z-10 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                    <div className="flex items-start gap-3">
+                      <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-white/18 ring-1 ring-white/25">
+                        <Video className="h-6 w-6" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="size-2.5 rounded-full bg-white shadow-[0_0_0_5px_rgba(255,255,255,0.18)]" />
+                          <p className="text-xs font-black uppercase tracking-[0.18em] text-white/80">Live online class</p>
+                        </div>
+                        <h2 className="mt-1 text-lg font-black md:text-xl">{activeOnlineSession.title}</h2>
+                        <p className="mt-1 text-sm font-medium text-white/80">{activeOnlineSession.courseTitle}</p>
+                        <p className="mt-2 max-w-xl text-xs leading-relaxed text-white/75">
+                          Join using your Acadize email or full name so Zoom attendance can match you correctly.
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      onClick={joinActiveOnlineSession}
+                      className="h-11 rounded-2xl bg-white px-5 font-black text-emerald-700 shadow-lg shadow-black/10 hover:bg-white/90"
+                    >
+                      Join Zoom Class
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </m.section>
+            )}
 
             {gamProfile?.dailyChallenge && (
               <m.section variants={premiumEnterVariants}>
