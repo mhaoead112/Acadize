@@ -70,8 +70,6 @@ router.post('/', ...requireAuth, async (req: Request, res: Response) => {
             gpsLat: req.body.gpsLat,
             gpsLng: req.body.gpsLng,
             gpsRadius: req.body.gpsRadius,
-            // Online
-            zoomMeetingId: req.body.zoomMeetingId,
             // Config
             minAttendancePercent: req.body.minAttendancePercent,
             qrExpiryMinutes: req.body.qrExpiryMinutes,
@@ -133,7 +131,7 @@ router.get('/', ...requireAuth, async (req: Request, res: Response) => {
 
 // ─────────────────────────────────────────────────────────────
 // GET /api/sessions/student/active
-// Student: list active physical sessions for enrolled courses only
+// Student: list active sessions for enrolled courses only
 // ─────────────────────────────────────────────────────────────
 router.get('/student/active', ...requireAuth, async (req: Request, res: Response) => {
     try {
@@ -156,6 +154,8 @@ router.get('/student/active', ...requireAuth, async (req: Request, res: Response
                 endTime: sessions.endTime,
                 courseId: sessions.courseId,
                 courseTitle: courses.title,
+                zoomJoinUrl: sessions.zoomJoinUrl,
+                zoomMeetingId: sessions.zoomMeetingId,
             })
             .from(sessions)
             .innerJoin(courses, eq(sessions.courseId, courses.id))
@@ -166,7 +166,6 @@ router.get('/student/active', ...requireAuth, async (req: Request, res: Response
             .where(and(
                 eq(sessions.organizationId, orgId),
                 eq(sessions.status, 'active'),
-                eq(sessions.sessionType, 'physical'),
             ))
             .orderBy(desc(sessions.startTime));
 
@@ -202,9 +201,9 @@ router.get('/:id', ...requireAuth, async (req: Request, res: Response) => {
             return res.status(403).json({ message: 'Forbidden.' });
         }
 
-        // For students: strip QR token from response (security)
+        // For students: strip QR token and host-only Zoom start URL from response.
         if (user.role === 'student') {
-            const { qrToken, ...safeSession } = session;
+            const { qrToken, zoomStartUrl, ...safeSession } = session;
             return res.status(200).json(safeSession);
         }
 

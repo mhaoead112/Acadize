@@ -56,6 +56,15 @@ interface SubmissionStatus {
   pending: number;
 }
 
+const unwrapList = <T,>(payload: unknown): T[] => {
+  if (Array.isArray(payload)) return payload as T[];
+  if (payload && typeof payload === "object") {
+    const value = (payload as { data?: unknown; courses?: unknown }).data ?? (payload as { courses?: unknown }).courses;
+    return Array.isArray(value) ? value as T[] : [];
+  }
+  return [];
+};
+
 export default function TeacherAnalytics() {
   const { t } = useTranslation('teacher');
   const { toast } = useToast();
@@ -176,7 +185,7 @@ export default function TeacherAnalytics() {
       });
       if (coursesRes.ok) {
         const coursesData = await coursesRes.json();
-        setCourses(coursesData);
+        setCourses(unwrapList<Course>(coursesData));
       }
 
       // Fetch analytics overview
@@ -196,7 +205,7 @@ export default function TeacherAnalytics() {
       });
       if (studentsRes.ok) {
         const studentsData = await studentsRes.json();
-        setStudents(studentsData);
+        setStudents(unwrapList<StudentAnalytics>(studentsData));
       }
 
       // Fetch course analytics
@@ -207,7 +216,7 @@ export default function TeacherAnalytics() {
         });
         if (courseAnalyticsRes.ok) {
           const courseAnalyticsData = await courseAnalyticsRes.json();
-          setCourseAnalytics(courseAnalyticsData);
+          setCourseAnalytics(unwrapList<CourseAnalytics>(courseAnalyticsData));
         }
       }
 
@@ -218,7 +227,7 @@ export default function TeacherAnalytics() {
       });
       if (trendRes.ok) {
         const trendData = await trendRes.json();
-        setTrendData(trendData);
+        setTrendData(unwrapList<PerformancePoint>(trendData));
       }
 
       // Fetch submission status

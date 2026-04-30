@@ -13,6 +13,7 @@ import {
 import { eq, and, desc, gte, lte, lt, isNull, sql, inArray } from 'drizzle-orm';
 import { createId } from '@paralleldrive/cuid2';
 import { requireTenantId } from '../utils/tenant-query.js';
+import { createZoomMeeting } from './zoom-api.service.js';
 import crypto from 'crypto';
 
 // ─────────────────────────────────────────────────────────────
@@ -108,9 +109,18 @@ export async function createSession(data: CreateSessionInput) {
         throw new Error('Course not found or does not belong to this organization.');
     }
 
-    // Enforce type-specific requirements
-    if (data.sessionType === 'online' && !data.zoomMeetingId?.trim()) {
-        throw new Error('zoomMeetingId is required for online sessions.');
+    if (data.startTime >= data.endTime) {
+        throw new Error('startTime must be before endTime.');
+    }
+
+    let zoomMeeting: Awaited<ReturnType<typeof createZoomMeeting>> | null = null;
+    if (data.sessionType === 'online') {
+        zoomMeeting = await createZoomMeeting({
+            title: data.title,
+            startTime: data.startTime,
+            endTime: data.endTime,
+            timezone: 'UTC',
+        });
     }
 
     // For physical sessions, fall back to org defaults if GPS not provided
@@ -137,10 +147,6 @@ export async function createSession(data: CreateSessionInput) {
         }
     }
 
-    if (data.startTime >= data.endTime) {
-        throw new Error('startTime must be before endTime.');
-    }
-
     const [newSession] = await db
         .insert(sessions)
         .values({
@@ -151,7 +157,11 @@ export async function createSession(data: CreateSessionInput) {
             sessionType: data.sessionType,
             title: data.title,
             status: 'scheduled',
-            zoomMeetingId: data.zoomMeetingId ?? null,
+            zoomMeetingId: zoomMeeting?.meetingId ?? data.zoomMeetingId ?? null,
+            zoomMeetingUuid: zoomMeeting?.meetingUuid ?? null,
+            zoomJoinUrl: zoomMeeting?.joinUrl ?? null,
+            zoomStartUrl: zoomMeeting?.startUrl ?? null,
+            zoomHostEmail: zoomMeeting?.hostEmail ?? null,
             gpsRequired: data.gpsRequired ?? false,
             gpsLat: gpsLat as number | null,
             gpsLng: gpsLng as number | null,
@@ -188,6 +198,10 @@ export async function getSession(sessionId: string) {
             title: sessions.title,
             status: sessions.status,
             zoomMeetingId: sessions.zoomMeetingId,
+            zoomMeetingUuid: sessions.zoomMeetingUuid,
+            zoomJoinUrl: sessions.zoomJoinUrl,
+            zoomStartUrl: sessions.zoomStartUrl,
+            zoomHostEmail: sessions.zoomHostEmail,
             qrToken: sessions.qrToken,
             qrExpiresAt: sessions.qrExpiresAt,
             qrExpiryMinutes: sessions.qrExpiryMinutes,
@@ -264,6 +278,10 @@ export async function listSessions(filters: ListSessionsInput) {
             title: sessions.title,
             status: sessions.status,
             zoomMeetingId: sessions.zoomMeetingId,
+            zoomMeetingUuid: sessions.zoomMeetingUuid,
+            zoomJoinUrl: sessions.zoomJoinUrl,
+            zoomStartUrl: sessions.zoomStartUrl,
+            zoomHostEmail: sessions.zoomHostEmail,
             gpsRequired: sessions.gpsRequired,
             minAttendancePercent: sessions.minAttendancePercent,
             startTime: sessions.startTime,
@@ -381,6 +399,7 @@ export async function endSession(sessionId: string, teacherId: string) {
         .select({
             id: sessions.id,
             status: sessions.status,
+            sessionType: sessions.sessionType,
             courseId: sessions.courseId,
             startTime: sessions.startTime,
             endTime: sessions.endTime,
@@ -476,7 +495,7 @@ export async function endSession(sessionId: string, teacherId: string) {
                     durationMinutes: 0,
                     attendancePercent: 0,
                     status: 'absent' as const,
-                    checkInMethod: 'manual' as const,
+                    checkInMethod: existing.sessionType === 'online' ? 'zoom' as const : 'manual' as const,
                 })),
             );
         }

@@ -1167,6 +1167,10 @@ export const sessions = pgTable("sessions", {
 
   // Zoom (online sessions)
   zoomMeetingId: varchar("zoom_meeting_id", { length: 100 }),
+  zoomMeetingUuid: varchar("zoom_meeting_uuid", { length: 255 }),
+  zoomJoinUrl: text("zoom_join_url"),
+  zoomStartUrl: text("zoom_start_url"),
+  zoomHostEmail: varchar("zoom_host_email", { length: 255 }),
 
   // QR (physical sessions)
   qrToken: varchar("qr_token", { length: 255 }),
@@ -1197,6 +1201,7 @@ export const sessions = pgTable("sessions", {
   createdByIdx: index("sessions_created_by_idx").on(table.createdBy),
   statusIdx: index("sessions_status_idx").on(table.status),
   startTimeIdx: index("sessions_start_time_idx").on(table.startTime),
+  zoomMeetingUuidIdx: index("sessions_zoom_meeting_uuid_idx").on(table.zoomMeetingUuid),
 }));
 
 export const attendanceRecords = pgTable("attendance_records", {

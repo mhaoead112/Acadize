@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { apiEndpoint } from "@/lib/config";
@@ -21,6 +21,15 @@ interface Course {
   title: string;
 }
 
+const unwrapList = <T,>(payload: unknown): T[] => {
+  if (Array.isArray(payload)) return payload as T[];
+  if (payload && typeof payload === "object") {
+    const value = (payload as { data?: unknown; courses?: unknown }).data ?? (payload as { courses?: unknown }).courses;
+    return Array.isArray(value) ? value as T[] : [];
+  }
+  return [];
+};
+
 export default function TeacherGamificationPage() {
   const { token, isAuthenticated, getAuthHeaders } = useAuth();
 
@@ -33,7 +42,7 @@ export default function TeacherGamificationPage() {
       });
       if (!res.ok) throw new Error("Failed to load courses");
       const data = await res.json();
-      return Array.isArray(data) ? data : [];
+      return unwrapList<Course>(data);
     },
     enabled: isAuthenticated && !!token,
   });
@@ -41,9 +50,11 @@ export default function TeacherGamificationPage() {
   const [selectedCourseId, setSelectedCourseId] = useState<string>("");
 
   // Default to first course once loaded if not set
-  if (courses && courses.length > 0 && !selectedCourseId) {
-    setSelectedCourseId(courses[0].id);
-  }
+  useEffect(() => {
+    if (courses && courses.length > 0 && !selectedCourseId) {
+      setSelectedCourseId(courses[0].id);
+    }
+  }, [courses, selectedCourseId]);
 
   // 2. Fetch overview data scoped to selected course
   const { data: overview, isLoading: loadingOverview, error: overviewError } = useTeacherGamificationOverview(

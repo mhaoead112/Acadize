@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { isAuthenticated } from '../middleware/auth.middleware.js';
 import { requireAuth } from '../middleware/protected.middleware.js';
 import { addTeacherNote, getNotesForStudent } from '../services/teacher-notes.service.js';
+import { createUser } from '../services/admin.service.js';
 import { db } from '../db/index.js';
 import { exams, examAttempts, antiCheatRiskScores, courses, users, examQuestions, examAnswers } from '../db/schema.js';
 import { eq, and, desc, gte } from 'drizzle-orm';
@@ -27,6 +28,38 @@ router.post('/notes', ...requireAuth, async (req, res) => {
   } catch (err) {
     console.error('Error creating teacher note:', err);
     return res.status(500).json({ message: 'Failed to create note' });
+  }
+});
+
+// POST /api/teacher/students -> Create a new student user
+router.post('/students', ...requireAuth, async (req, res) => {
+  try {
+    const teacher = req.user;
+    if (!teacher || teacher.role !== 'teacher') {
+      return res.status(403).json({ message: 'Forbidden: Teachers only' });
+    }
+
+    const { username, email, fullName, password } = req.body;
+    if (!username || !email || !fullName || !password) {
+      return res.status(400).json({ message: 'Missing required fields' });
+    }
+
+    const newStudent = await createUser({
+      username,
+      email,
+      fullName,
+      password,
+      role: 'student',
+      organizationId: teacher.organizationId,
+    });
+
+    return res.status(201).json({ message: 'Student created successfully', student: newStudent });
+  } catch (err) {
+    console.error('Error creating student:', err);
+    if (err instanceof Error && (err.message.includes('already exists') || err.message.includes('already in use'))) {
+      return res.status(409).json({ message: err.message });
+    }
+    return res.status(500).json({ message: 'Failed to create student' });
   }
 });
 

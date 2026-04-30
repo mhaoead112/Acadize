@@ -96,7 +96,7 @@ export default function TeacherReportCards() {
       }
 
       const data = await response.json();
-      setStudents(data);
+      setStudents(Array.isArray(data) ? data : (data.data || []));
     } catch (err) {
       console.error('Failed to fetch students:', err);
       toast({
@@ -120,7 +120,7 @@ export default function TeacherReportCards() {
       if (!response.ok) throw new Error('Failed to fetch report cards');
 
       const data = await response.json();
-      setReportCards(data);
+      setReportCards(Array.isArray(data) ? data : (data.data || []));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {

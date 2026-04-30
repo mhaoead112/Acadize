@@ -51,19 +51,10 @@ export default function TeacherCalendar() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState<'month' | 'week' | 'day'>('month');
+  const [miniCalendarDate, setMiniCalendarDate] = useState(new Date());
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState<number | null>(null);
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
-
-  // Filter states
-  const [showCalendars, setShowCalendars] = useState({
-    myCalendars: [true, true, false],
-    eventTypes: [true, true]
-  });
-
-  // Mini calendar state
-  const [miniCalendarDate, setMiniCalendarDate] = useState(new Date());
 
   const [newEvent, setNewEvent] = useState({
     title: "",
@@ -453,52 +444,6 @@ export default function TeacherCalendar() {
           </div>
         </div>
 
-        {/* Filters */}
-        <div className="p-6 flex flex-col gap-6">
-          <div>
-            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-3">{t('myCalendars')}</h3>
-            <div className="flex flex-col gap-2">
-              {[t("teacherCalendar.mathAlgebra"), t("teacherCalendar.homeroom"), t("teacherCalendar.staffMeetings")].map((cal, idx) => (
-                <label key={idx} className="flex items-center gap-3 cursor-pointer group">
-                  <input
-                    type="checkbox"
-                    checked={showCalendars.myCalendars[idx]}
-                    onChange={(e) => setShowCalendars({
-                      ...showCalendars,
-                      myCalendars: showCalendars.myCalendars.map((v, i) => i === idx ? e.target.checked : v)
-                    })}
-                    className="rounded border-slate-300 dark:border-slate-700 bg-transparent text-gold focus:ring-gold h-4 w-4"
-                  />
-                  <span className={`size-2 rounded-full ${['bg-blue-500', 'bg-purple-500', 'bg-emerald-500'][idx]}`}></span>
-                  <span className="text-sm text-slate-600 dark:text-slate-300 group-hover:text-gold transition-colors">{cal}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-          <div>
-            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-3">{t("teacherCalendar.eventTypes")}</h3>
-            <div className="flex flex-col gap-2">
-              {[t("assignments"), t("exams")].map((type, idx) => (
-                <label key={idx} className="flex items-center gap-3 cursor-pointer group">
-                  <input
-                    type="checkbox"
-                    checked={showCalendars.eventTypes[idx]}
-                    onChange={(e) => setShowCalendars({
-                      ...showCalendars,
-                      eventTypes: showCalendars.eventTypes.map((v, i) => i === idx ? e.target.checked : v)
-                    })}
-                    className="rounded border-slate-300 dark:border-slate-700 bg-transparent text-gold focus:ring-gold h-4 w-4"
-                  />
-                  <span className="material-symbols-outlined text-slate-400 text-[18px]">
-                    {idx === 0 ? 'assignment' : 'quiz'}
-                  </span>
-                  <span className="text-sm text-slate-600 dark:text-slate-300 group-hover:text-gold transition-colors">{type}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-        </div>
-
         {/* Upcoming Agenda */}
         <div className="mt-auto p-6 border-t border-slate-200 dark:border-slate-800 bg-slate-100/50 dark:bg-navy/10">
           <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-4">{t("teacherCalendar.upcomingDeadlines")}</h3>
@@ -540,22 +485,6 @@ export default function TeacherCalendar() {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            {/* View Toggle */}
-            <div className="flex bg-slate-100 dark:bg-navy/30 rounded-lg p-1 border border-slate-200 dark:border-slate-800">
-              {(['month', 'week', 'day'] as const).map(mode => (
-                <button
-                  key={mode}
-                  onClick={() => setViewMode(mode)}
-                  className={`px-4 py-1.5 rounded-md text-xs font-bold transition-colors capitalize ${
-                    viewMode === mode
-                      ? 'bg-white dark:bg-slate-800 shadow-sm text-slate-900 dark:text-white'
-                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                  }`}
-                >
-                  {mode}
-                </button>
-              ))}
-            </div>
             {/* Add Event Button */}
             <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
               <DialogTrigger asChild>

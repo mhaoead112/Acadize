@@ -358,7 +358,7 @@ export default function StudyGroupsChatPage() {
       });
       if (response.ok) {
         const data = await response.json();
-        setStudyGroups(data);
+        setStudyGroups(Array.isArray(data) ? data : (data.data || []));
       }
     } catch (error) {
       console.error("Failed to fetch study groups:", error);
@@ -373,7 +373,7 @@ export default function StudyGroupsChatPage() {
       });
       if (response.ok) {
         const data = await response.json();
-        setDirectMessages(data);
+        setDirectMessages(Array.isArray(data) ? data : (data.data || []));
       }
     } catch (error) {
       console.error("Failed to fetch direct messages:", error);
@@ -388,13 +388,15 @@ export default function StudyGroupsChatPage() {
       });
       if (response.ok) {
         const data = await response.json();
-        setMessages(data);
+        const messagesArray = Array.isArray(data) ? data : (data.data || []);
+        
+        setMessages(messagesArray);
         
         // Extract media files and links
-        const media = data.filter((m: Message) => m.type === 'image' || m.type === 'file');
+        const media = messagesArray.filter((m: Message) => m.type === 'image' || m.type === 'file');
         setMediaFiles(media);
         
-        const links = data
+        const links = messagesArray
           .filter((m: Message) => m.content && m.content.includes('http'))
           .map((m: Message) => m.content!)
           .filter(Boolean);
@@ -444,7 +446,8 @@ export default function StudyGroupsChatPage() {
       });
       if (response.ok) {
         const data = await response.json();
-        setAvailableUsers(data.filter((u: User) => u.id !== user?.id));
+        const usersArray = Array.isArray(data) ? data : (data.data || []);
+        setAvailableUsers(usersArray.filter((u: User) => u.id !== user?.id));
       }
     } catch (error) {
       console.error("Failed to fetch users:", error);

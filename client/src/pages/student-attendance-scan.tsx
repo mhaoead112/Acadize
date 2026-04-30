@@ -37,6 +37,7 @@ interface ActiveSession {
   endTime: string;
   courseId: string;
   courseTitle: string;
+  zoomJoinUrl?: string | null;
 }
 
 interface SessionDetail {
@@ -93,7 +94,7 @@ export default function StudentAttendanceScan() {
   const [manualSubmitting, setManualSubmitting] = useState(false);
   const [manualError, setManualError] = useState('');
 
-  // Fetch active sessions (student enrolled, physical, active)
+  // Fetch active sessions (student enrolled, physical or online, active)
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -198,7 +199,21 @@ export default function StudentAttendanceScan() {
     }
   }, [manualCode, handleScanSuccess, t]);
 
+  const joinOnlineSession = (session: ActiveSession) => {
+    if (!session.zoomJoinUrl) {
+      setSelectedSession(session);
+      setErrorMessage('This online session is missing its Zoom join link. Please ask your teacher to recreate the session.');
+      setPhase('error');
+      return;
+    }
+    window.open(session.zoomJoinUrl, '_blank', 'noopener,noreferrer');
+  };
+
   const goToScanning = (session: ActiveSession) => {
+    if (session.sessionType === 'online') {
+      joinOnlineSession(session);
+      return;
+    }
     setSelectedSession(session);
     setPhase('scanning');
   };
@@ -318,11 +333,15 @@ export default function StudentAttendanceScan() {
                       className={`${minTap} w-full flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/10 text-left hover:bg-white/10 active:scale-[0.98] transition-all`}
                     >
                       <div className="w-12 h-12 rounded-xl bg-[#FFD700]/20 flex items-center justify-center flex-shrink-0">
-                        <span className="material-symbols-outlined text-2xl text-[#FFD700]">school</span>
+                        <span className="material-symbols-outlined text-2xl text-[#FFD700]">
+                          {s.sessionType === 'online' ? 'video_call' : 'school'}
+                        </span>
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-semibold text-white truncate">{s.title}</p>
-                        <p className="text-sm text-slate-400 truncate">{s.courseTitle}</p>
+                        <p className="text-sm text-slate-400 truncate">
+                          {s.courseTitle} • {s.sessionType === 'online' ? 'Zoom class' : 'QR attendance'}
+                        </p>
                       </div>
                       <span className="material-symbols-outlined text-slate-400">chevron_right</span>
                     </button>
@@ -348,17 +367,29 @@ export default function StudentAttendanceScan() {
               exit={{ opacity: 0 }}
               className="flex-1 flex flex-col p-6"
             >
-              <p className="text-slate-400 text-center text-lg mb-2">{t("alignQrCode")}</p>
+              <p className="text-slate-400 text-center text-lg mb-2">
+                {selectedSession.sessionType === 'online'
+                  ? 'Join the Zoom class from Acadize so attendance can be recorded.'
+                  : t("alignQrCode")}
+              </p>
               <div className="flex-1 flex flex-col items-center justify-center">
                 <button
                   type="button"
-                  onClick={() => setPhase('scanning')}
+                  onClick={() => selectedSession.sessionType === 'online' ? joinOnlineSession(selectedSession) : setPhase('scanning')}
                   className={`${minTap} w-full max-w-[280px] mx-auto rounded-2xl border-2 border-[#FFD700] bg-[#FFD700]/10 text-[#FFD700] font-bold text-lg flex items-center justify-center gap-3 shadow-lg`}
                 >
-                  <span className="material-symbols-outlined text-3xl">qr_code_scanner</span>
-                  {t("openCameraToScan")}
+                  <span className="material-symbols-outlined text-3xl">
+                    {selectedSession.sessionType === 'online' ? 'video_call' : 'qr_code_scanner'}
+                  </span>
+                  {selectedSession.sessionType === 'online' ? 'Join Zoom Class' : t("openCameraToScan")}
                 </button>
+                {selectedSession.sessionType === 'online' && (
+                  <p className="mt-5 max-w-xs text-center text-sm leading-relaxed text-slate-400">
+                    Use your Acadize email or full name in Zoom. That is how the webhook matches you to your attendance record.
+                  </p>
+                )}
               </div>
+              {selectedSession.sessionType === 'physical' && (
               <div className="mt-8">
                 <p className="text-slate-400 text-sm mb-2">{t("cameraNotWorking")}</p>
                 <input
@@ -378,6 +409,7 @@ export default function StudentAttendanceScan() {
                   {manualSubmitting ? t("submitting") : t("submitCode")}
                 </button>
               </div>
+              )}
             </motion.div>
           )}
 

@@ -2,30 +2,16 @@ import React, { useRef } from 'react';
 import { Link } from "wouter";
 import { useTranslation } from 'react-i18next';
 import { ArrowDown, Calendar, CheckCircle } from "lucide-react";
-import { motion, useScroll, useTransform, useSpring } from "framer-motion";
+import { motion } from "framer-motion";
 
 const Hero: React.FC = () => {
   const { t } = useTranslation('landing');
   const ref = useRef(null);
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start start", "end start"]
-  });
-
-  // 3D Parallax effects
-  const y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
-  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
-  const scale = useTransform(scrollYProgress, [0, 1], [1, 0.8]);
-  
-  // Smooth spring physics
-  const ySpring = useSpring(y, { stiffness: 100, damping: 30 });
-  const scaleSpring = useSpring(scale, { stiffness: 100, damping: 30 });
 
   return (
     <section ref={ref} className="relative overflow-hidden pt-16 pb-20 lg:pt-24 lg:pb-32">
       <motion.div 
         className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10"
-        style={{ opacity }}
       >
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
           
@@ -100,8 +86,6 @@ const Hero: React.FC = () => {
             animate={{ opacity: 1, x: 0, rotateY: 0 }}
             transition={{ duration: 1, ease: [0.6, -0.05, 0.01, 0.99] }}
             style={{ 
-              y: ySpring,
-              scale: scaleSpring,
               transformStyle: "preserve-3d",
               perspective: "1000px"
             }}
@@ -149,7 +133,6 @@ const Hero: React.FC = () => {
       {/* Background Decoration with Parallax */}
       <motion.div 
         className="absolute top-0 right-0 -z-10 h-[600px] w-[600px] bg-blue-900/10 blur-[120px] rounded-full"
-        style={{ y: ySpring, scale: scaleSpring }}
       ></motion.div>
     </section>
   );

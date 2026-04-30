@@ -38,6 +38,8 @@ interface Session {
   startTime:            string;
   endTime:              string;
   minAttendancePercent: number | null;
+  zoomJoinUrl?:          string | null;
+  zoomStartUrl?:         string | null;
   attendanceSummary?:   AttendanceSummary;
 }
 
@@ -52,6 +54,8 @@ interface RawSession {
   startTime:            string | Date;
   endTime:              string | Date;
   minAttendancePercent?: number | null;
+  zoomJoinUrl?:          string | null;
+  zoomStartUrl?:         string | null;
 }
 
 interface Course {
@@ -319,6 +323,17 @@ function SessionCard({
               Start
             </motion.button>
           )}
+          {session.sessionType === 'online' && session.zoomStartUrl && (
+            <motion.button
+              whileHover={{ scale: 1.06 }}
+              whileTap={{ scale: 0.94 }}
+              onClick={() => window.open(session.zoomStartUrl!, '_blank', 'noopener,noreferrer')}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-700 dark:text-blue-300 text-[11px] font-black uppercase tracking-wide transition-all"
+            >
+              <span className="material-symbols-outlined text-[15px]">video_call</span>
+              Start Zoom
+            </motion.button>
+          )}
           <motion.button
             whileHover={{ scale: 1.06 }}
             whileTap={{ scale: 0.94 }}
@@ -453,6 +468,8 @@ export default function TeacherSessions() {
         startTime:            typeof r.startTime === 'string' ? r.startTime : new Date(r.startTime).toISOString(),
         endTime:              typeof r.endTime   === 'string' ? r.endTime   : new Date(r.endTime).toISOString(),
         minAttendancePercent: r.minAttendancePercent ?? null,
+        zoomJoinUrl:          r.zoomJoinUrl ?? null,
+        zoomStartUrl:         r.zoomStartUrl ?? null,
         attendanceSummary:    undefined,
       }));
 

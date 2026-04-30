@@ -35,6 +35,12 @@ import {
     parentChildren,
 } from '../db/schema.js';
 import { eq, and, gte, lte, isNull, not, inArray } from 'drizzle-orm';
+import {
+    emitAttendanceUpdate,
+    emitSessionEnded,
+    emitStudentCheckedIn,
+    emitStudentLeft,
+} from './realtime.service.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -153,6 +159,30 @@ function log(level: 'info' | 'warn' | 'error', context: string, msg: string, met
     if (level === 'error') { console.error('[zoom.service]', JSON.stringify(entry)); return; }
     if (level === 'warn') { console.warn('[zoom.service]', JSON.stringify(entry)); return; }
     console.info('[zoom.service]', JSON.stringify(entry));
+}
+
+async function emitZoomAttendanceSnapshot(session: ResolvedSession): Promise<void> {
+    const [enrolledRows, attendanceRows] = await Promise.all([
+        db
+            .select({ studentId: enrollments.studentId })
+            .from(enrollments)
+            .where(eq(enrollments.courseId, session.courseId)),
+        db
+            .select({
+                userId: attendanceRecords.userId,
+                status: attendanceRecords.status,
+            })
+            .from(attendanceRecords)
+            .where(eq(attendanceRecords.sessionId, session.id)),
+    ]);
+
+    const checkedIn = attendanceRows.filter((row) => row.status === 'present' || row.status === 'late').length;
+    const totalEnrolled = enrolledRows.length;
+    emitAttendanceUpdate(session.id, {
+        totalEnrolled,
+        checkedIn,
+        livePercent: totalEnrolled > 0 ? Math.round((checkedIn / totalEnrolled) * 100) : 0,
+    });
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -308,7 +338,15 @@ export async function handleParticipantJoined(webhook: ZoomWebhookPayload): Prom
         participant.user_name,
         session.organizationId,
     );
-    if (!user) return; // already logged
+    if (!user) {
+        log('warn', 'handleParticipantJoined', 'Unmatched Zoom participant for resolved session', {
+            meetingId,
+            sessionId: session.id,
+            participantEmail: participant.email,
+            participantName: participant.user_name,
+        });
+        return;
+    }
 
     // Record the start of this segment
     const key = segmentKey(meetingId, user.id);
@@ -360,6 +398,14 @@ export async function handleParticipantJoined(webhook: ZoomWebhookPayload): Prom
     log('info', 'handleParticipantJoined', 'Participant joined', {
         userId: user.id, sessionId: session.id, joinTime: joinTime.toISOString(),
     });
+
+    emitStudentCheckedIn(session.id, {
+        studentId: user.id,
+        studentName: user.fullName,
+        time: joinTime.toISOString(),
+        method: 'zoom',
+    });
+    await emitZoomAttendanceSnapshot(session);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -392,7 +438,15 @@ export async function handleParticipantLeft(webhook: ZoomWebhookPayload): Promis
         participant.user_name,
         session.organizationId,
     );
-    if (!user) return;
+    if (!user) {
+        log('warn', 'handleParticipantLeft', 'Unmatched Zoom participant for resolved session', {
+            meetingId,
+            sessionId: session.id,
+            participantEmail: participant.email,
+            participantName: participant.user_name,
+        });
+        return;
+    }
 
     const key = segmentKey(meetingId, user.id);
     const segment = segmentStore.get(key);
@@ -470,6 +524,12 @@ export async function handleParticipantLeft(webhook: ZoomWebhookPayload): Promis
         totalMinutes, attendancePercent,
         leaveTime: leaveTime.toISOString(),
     });
+
+    emitStudentLeft(session.id, {
+        studentId: user.id,
+        time: leaveTime.toISOString(),
+    });
+    await emitZoomAttendanceSnapshot(session);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -611,6 +671,25 @@ export async function handleMeetingEnded(webhook: ZoomWebhookPayload): Promise<v
     log('info', 'handleMeetingEnded', 'Session finalised', {
         sessionId: session.id,
         enrolledCount: enrolledIds.length,
+        notificationsQueued: notifications.length,
+    });
+
+    const finalRows = await db
+        .select({ status: attendanceRecords.status })
+        .from(attendanceRecords)
+        .where(eq(attendanceRecords.sessionId, session.id));
+    emitAttendanceUpdate(session.id, {
+        totalEnrolled: enrolledIds.length,
+        checkedIn: finalRows.filter((row) => row.status === 'present' || row.status === 'late').length,
+        livePercent: enrolledIds.length > 0
+            ? Math.round((finalRows.filter((row) => row.status === 'present' || row.status === 'late').length / enrolledIds.length) * 100)
+            : 0,
+    });
+    emitSessionEnded(session.id, {
+        enrolledCount: enrolledIds.length,
+        presentCount: finalRows.filter((row) => row.status === 'present').length,
+        lateCount: finalRows.filter((row) => row.status === 'late').length,
+        absentCount: finalRows.filter((row) => row.status === 'absent').length,
         notificationsQueued: notifications.length,
     });
 }

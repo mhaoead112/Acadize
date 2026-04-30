@@ -37,6 +37,15 @@ interface Course {
   studentCount?: number;
 }
 
+const unwrapList = <T,>(payload: unknown): T[] => {
+  if (Array.isArray(payload)) return payload as T[];
+  if (payload && typeof payload === "object") {
+    const value = (payload as { data?: unknown; courses?: unknown }).data ?? (payload as { courses?: unknown }).courses;
+    return Array.isArray(value) ? value as T[] : [];
+  }
+  return [];
+};
+
 // Get course icon based on title
 const getCourseStyle = (title: string) => {
   const lowerTitle = title.toLowerCase();
@@ -96,7 +105,7 @@ export default function TeacherCoursesPage() {
       }
       
       const data = await res.json();
-      const coursesData = Array.isArray(data) ? data : [];
+      const coursesData = unwrapList<Course>(data);
       
       // Fetch enrollment counts for each course
       const coursesWithCounts = await Promise.all(
@@ -108,7 +117,7 @@ export default function TeacherCoursesPage() {
             
             if (enrollRes.ok) {
               const enrollments = await enrollRes.json();
-              return { ...course, studentCount: Array.isArray(enrollments) ? enrollments.length : 0 };
+              return { ...course, studentCount: unwrapList(enrollments).length };
             }
           } catch (err) {
             console.error(`Failed to fetch enrollments for course ${course.id}:`, err);
@@ -180,7 +189,7 @@ export default function TeacherCoursesPage() {
     
     setDeletingId(courseToDelete.id);
     try {
-      const res = await fetch(`/api/courses/${courseToDelete.id}`, {
+      const res = await fetch(apiEndpoint(`/api/courses/${courseToDelete.id}`), {
         method: 'DELETE',
         headers: getAuthHeaders()
       });

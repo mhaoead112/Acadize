@@ -38,6 +38,9 @@ interface SessionDetail {
   endTime:                   string;
   qrToken:                  string | null;
   qrExpiresAt:              string | null;
+  zoomJoinUrl?:             string | null;
+  zoomStartUrl?:            string | null;
+  zoomMeetingId?:           string | null;
   qrExpiryMinutes:          number;
   qrRotationEnabled:        boolean;
   qrRotationIntervalSeconds: number;
@@ -104,6 +107,11 @@ function displayStatus(s: AttendStatus, t: (key: string) => string): string {
 
 function initials(name: string): string {
   return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+}
+
+function openExternalUrl(url?: string | null) {
+  if (!url) return;
+  window.open(url, '_blank', 'noopener,noreferrer');
 }
 
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -591,17 +599,81 @@ export default function TeacherSessionLive() {
                 </div>
               )}
 
+              {/* Zoom controls (online sessions) */}
+              {session.sessionType === 'online' && (
+                <div className="rounded-2xl p-5 space-y-4 bg-white dark:bg-[#141928] border border-blue-200 dark:border-blue-500/20">
+                  <div className="flex items-start gap-3">
+                    <div className="size-11 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+                      <span className="material-symbols-outlined text-[22px] text-blue-500 dark:text-blue-300">video_call</span>
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-black text-slate-900 dark:text-white">Zoom online class</p>
+                      <p className="text-xs mt-1 text-slate-500 dark:text-white/40">
+                        Start the Acadize session, then open Zoom. Student join/leave webhooks will update this attendance roster live.
+                      </p>
+                    </div>
+                  </div>
+
+                  {session.status !== 'active' && session.status !== 'completed' && (
+                    <motion.button
+                      whileHover={{ scale: 1.04 }}
+                      whileTap={{ scale: 0.96 }}
+                      onClick={handleStartSession}
+                      disabled={starting}
+                      className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-sm text-black disabled:opacity-60 transition-all"
+                      style={{ background: '#f59e0b' }}
+                    >
+                      <span className={`material-symbols-outlined text-[18px] ${starting ? 'animate-spin' : ''}`}>
+                        {starting ? 'refresh' : 'play_arrow'}
+                      </span>
+                      {starting ? t('teacherSessionLive.starting') : t('teacherSessionLive.startSession')}
+                    </motion.button>
+                  )}
+
+                  <div className="grid grid-cols-1 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => openExternalUrl(session.zoomStartUrl)}
+                      disabled={!session.zoomStartUrl}
+                      className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">open_in_new</span>
+                      Start Zoom as Host
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => openExternalUrl(session.zoomJoinUrl)}
+                      disabled={!session.zoomJoinUrl}
+                      className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-slate-100 dark:bg-white/10 border border-slate-300 dark:border-white/10 text-slate-700 dark:text-white/70 text-sm font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">link</span>
+                      Test Student Join Link
+                    </button>
+                  </div>
+
+                  <p className="text-[11px] leading-relaxed text-slate-500 dark:text-white/35">
+                    Ask students to join using their Acadize email or full name. If Zoom sends a different identity, the webhook will log it as unmatched instead of creating the wrong attendance record.
+                  </p>
+                </div>
+              )}
+
               {/* â”€â”€ Session Security & End â”€â”€ */}
               <div className="rounded-2xl p-5 flex items-center justify-between bg-white dark:bg-[#141928] border border-slate-200 dark:border-white/10">
                 <div className="flex items-center gap-3">
-                  <span className="material-symbols-outlined text-[22px] text-slate-500 dark:text-white/30">settings</span>
+                  <span className="material-symbols-outlined text-[22px] text-slate-500 dark:text-white/30">
+                    {session.sessionType === 'online' ? 'verified_user' : 'settings'}
+                  </span>
                   <div>
-                    <p className="text-sm font-bold text-slate-900 dark:text-white">{t('teacherSessionLive.sessionSecurity')}</p>
+                    <p className="text-sm font-bold text-slate-900 dark:text-white">
+                      {session.sessionType === 'online' ? 'Zoom attendance security' : t('teacherSessionLive.sessionSecurity')}
+                    </p>
                     <p className="text-xs text-slate-500 dark:text-white/35">
-                      {[
-                        session.gpsRequired && t('teacherSessionLive.security.gps'),
-                        session.qrExpiryMinutes < 9999 && t('teacherSessionLive.security.expiry'),
-                      ].filter(Boolean).join(' & ') || t('teacherSessionLive.security.standard')} {t('teacherSessionLive.security.active')}
+                      {session.sessionType === 'online'
+                        ? 'Webhook attendance is matched by student email first, then full name similarity.'
+                        : `${[
+                            session.gpsRequired && t('teacherSessionLive.security.gps'),
+                            session.qrExpiryMinutes < 9999 && t('teacherSessionLive.security.expiry'),
+                          ].filter(Boolean).join(' & ') || t('teacherSessionLive.security.standard')} ${t('teacherSessionLive.security.active')}`}
                     </p>
                   </div>
                 </div>

@@ -35,8 +35,6 @@ interface SessionFormData {
   qrRotationEnabled:         boolean;
   qrRotationIntervalSeconds: number;    // 15 | 30 | 60
   minAttendancePercent:      number;    // 50–100
-  // Online
-  zoomMeetingId:             string;
 }
 
 interface CreateSessionModalProps {
@@ -67,7 +65,6 @@ const DEFAULTS: SessionFormData = {
   qrRotationEnabled:         true,
   qrRotationIntervalSeconds: 15,
   minAttendancePercent:      75,
-  zoomMeetingId:             '',
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -172,7 +169,7 @@ export default function CreateSessionModal({
     }
     setGpsStatus('loading');
     let cancelled = false;
-    const watchId = navigator.geolocation.getCurrentPosition(
+    navigator.geolocation.getCurrentPosition(
       ({ coords }) => {
         if (cancelled) return;
         setForm(f => ({ ...f, gpsLat: coords.latitude, gpsLng: coords.longitude }));
@@ -183,7 +180,7 @@ export default function CreateSessionModal({
       },
       { timeout: 10000, maximumAge: 60000 }
     );
-    geoAbortRef.current = () => { cancelled = true; navigator.geolocation.clearWatch(watchId); };
+    geoAbortRef.current = () => { cancelled = true; };
     return () => { geoAbortRef.current?.(); };
   }, [form.gpsRequired, orgGpsLat, orgGpsLng]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -203,8 +200,6 @@ export default function CreateSessionModal({
     if (!form.endTime)         e.endTime    = 'End time is required';
     if (form.startTime && form.endTime && form.endTime <= form.startTime)
       e.endTime = 'Must be after start time';
-    if (form.sessionType === 'online' && !form.zoomMeetingId.trim())
-      e.zoomMeetingId = 'Zoom Meeting ID is required';
     if (form.sessionType === 'physical' && form.gpsRequired && (form.gpsLat === null || form.gpsLng === null))
       e.gps = 'GPS coordinates are required. Enable location access in your browser.';
     setErrors(e);
@@ -239,8 +234,6 @@ export default function CreateSessionModal({
           body.gpsLng    = form.gpsLng;
           body.gpsRadius = form.gpsRadius;
         }
-      } else {
-        body.zoomMeetingId = form.zoomMeetingId.trim();
       }
 
       const url    = isEdit ? apiEndpoint(`/api/sessions/${editSession!.id}`) : apiEndpoint('/api/sessions');
@@ -638,28 +631,20 @@ export default function CreateSessionModal({
 
               {/* ── ONLINE-SPECIFIC ───────────────────────────────── */}
               {form.sessionType === 'online' && (
-                <div className="space-y-1.5">
-                  <label htmlFor="s-zoom" className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.55)' }}>
-                    Zoom Meeting ID <span className="text-amber-400">*</span>
-                  </label>
-                  <div className="relative">
-                    <span className="absolute inset-y-0 left-3.5 flex items-center pointer-events-none">
-                      <span className="material-symbols-outlined text-[17px]" style={{ color: 'rgba(255,255,255,0.25)' }}>meeting_room</span>
-                    </span>
-                    <input
-                      id="s-zoom"
-                      type="text"
-                      value={form.zoomMeetingId}
-                      onChange={e => patch('zoomMeetingId', e.target.value)}
-                      placeholder="e.g., 123 456 7890"
-                      className="w-full rounded-lg pl-10 pr-4 py-2.5 text-sm text-white placeholder-white/25 outline-none"
-                      style={{
-                        background: 'rgba(255,255,255,0.05)',
-                        border: errors.zoomMeetingId ? '1px solid rgba(239,68,68,0.6)' : '1px solid rgba(255,255,255,0.1)',
-                      }}
-                    />
+                <div
+                  className="rounded-xl p-4 flex items-start gap-3"
+                  style={{ background: 'rgba(59,130,246,0.10)', border: '1px solid rgba(96,165,250,0.22)' }}
+                >
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{ background: 'rgba(96,165,250,0.18)', border: '1px solid rgba(96,165,250,0.26)' }}>
+                    <span className="material-symbols-outlined text-[20px] text-blue-300">video_call</span>
                   </div>
-                  {errors.zoomMeetingId && <p className="text-[11px] text-red-400">{errors.zoomMeetingId}</p>}
+                  <div>
+                    <p className="text-sm font-semibold text-white">Zoom meeting will be created automatically</p>
+                    <p className="text-xs mt-1 leading-relaxed" style={{ color: 'rgba(255,255,255,0.55)' }}>
+                      Acadize will create and store the Zoom meeting links when you save this online session. Students will join from Acadize so attendance can be matched to their account.
+                    </p>
+                  </div>
                 </div>
               )}
 
