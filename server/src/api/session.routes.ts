@@ -5,7 +5,7 @@ import { isAuthenticated } from '../middleware/auth.middleware.js';
 import { requireSubscription } from '../middleware/subscription.middleware.js';
 import { db } from '../db/index.js';
 import { sessions, courses, enrollments } from '../db/schema.js';
-import { eq, and, desc } from 'drizzle-orm';
+import { eq, and, desc, gte } from 'drizzle-orm';
 import {
     createSession,
     getSession,
@@ -166,6 +166,7 @@ router.get('/student/active', ...requireAuth, async (req: Request, res: Response
             .where(and(
                 eq(sessions.organizationId, orgId),
                 eq(sessions.status, 'active'),
+                gte(sessions.endTime, new Date(Date.now() - 15 * 60 * 1000)),
             ))
             .orderBy(desc(sessions.startTime));
 

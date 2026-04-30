@@ -71,6 +71,22 @@ function generateQrTokenValue(): string {
     return crypto.randomBytes(32).toString('hex');
 }
 
+async function completeExpiredActiveSessions(organizationId: string) {
+    await db
+        .update(sessions)
+        .set({
+            status: 'completed',
+            qrToken: null,
+            qrExpiresAt: null,
+            updatedAt: new Date(),
+        } as any)
+        .where(and(
+            eq(sessions.organizationId, organizationId),
+            eq(sessions.status, 'active'),
+            lt(sessions.endTime, new Date()),
+        ));
+}
+
 // ─────────────────────────────────────────────────────────────
 // 1. createSession
 // ─────────────────────────────────────────────────────────────
@@ -248,6 +264,8 @@ export async function getSession(sessionId: string) {
 export async function listSessions(filters: ListSessionsInput) {
     const orgId = requireTenantId(filters.organizationId);
     const limit = Math.min(filters.limit ?? 20, 100);
+
+    await completeExpiredActiveSessions(orgId);
 
     const conditions = [eq(sessions.organizationId, orgId)];
 

@@ -574,6 +574,18 @@ export async function handleMeetingEnded(webhook: ZoomWebhookPayload): Promise<v
 
     if (enrolledIds.length === 0) {
         log('info', 'handleMeetingEnded', 'No enrolled students — nothing to finalise', { sessionId: session.id });
+        emitAttendanceUpdate(session.id, {
+            totalEnrolled: 0,
+            checkedIn: 0,
+            livePercent: 0,
+        });
+        emitSessionEnded(session.id, {
+            enrolledCount: 0,
+            presentCount: 0,
+            lateCount: 0,
+            absentCount: 0,
+            notificationsQueued: 0,
+        });
         return;
     }
 
