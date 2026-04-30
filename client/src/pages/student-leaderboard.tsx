@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Trophy, Info, ShieldAlert, Award, Star } from 'lucide-react';
+import { Trophy, Info, ShieldAlert, Award, Star , Medal } from 'lucide-react';
 
 import StudentLayout from '@/components/StudentLayout';
 import { useStudentEnrollments } from '@/hooks/useStudentDashboard';
