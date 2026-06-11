@@ -1,0 +1,27 @@
+kind = "web"
+previewPath = "/"
+title = "Acadize"
+version = "1.0.0"
+id = "artifacts/acadize"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 25817
+
+[services.development]
+run = "pnpm --filter @workspace/acadize run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/acadize", "run", "build" ]
+publicDir = "artifacts/acadize/out"
+serve = "static"
+
+[services.env]
+PORT = "25817"
+BASE_PATH = "/"
