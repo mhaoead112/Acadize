@@ -5,7 +5,6 @@ import "./i18n/config"; // i18n: init and RTL
 import App from "./App";
 import "./index.css";
 import { BrandingProvider } from "./contexts/BrandingContext";
-import { ThemeProvider } from "@/components/landing-new/ThemeProvider";
 import { logger } from "./lib/logger";
 import { StatePanel } from "./components/ui/state-panel";
 
@@ -24,11 +23,9 @@ if ('serviceWorker' in navigator) {
 }
 
 createRoot(document.getElementById("root")!).render(
-  <ThemeProvider>
-    <BrandingProvider>
-      <Suspense fallback={<div className="flex min-h-screen items-center justify-center p-4"><StatePanel variant="loading" title="Loading app" description="Initializing workspace..." className="w-full max-w-sm" /></div>}>
-        <App />
-      </Suspense>
-    </BrandingProvider>
-  </ThemeProvider>
+  <BrandingProvider>
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center p-4"><StatePanel variant="loading" title="Loading app" description="Initializing workspace..." className="w-full max-w-sm" /></div>}>
+      <App />
+    </Suspense>
+  </BrandingProvider>
 );
