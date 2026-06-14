@@ -3,7 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <meta name="theme-color" content="#1e40af" />
+    <meta name="description" content="A comprehensive educational platform for students and teachers" />
     <title>Acadize</title>
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json" />
     <!-- Favicon: dark-mode icon so it’s visible in browser tabs; light icon for prefers-color-scheme: light -->
     <link rel="icon" href="/acadize-logo-icon-dark.png" type="image/png" sizes="32x32" />
     <link rel="icon" href="/acadize-logo-icon-dark.png" type="image/png" sizes="16x16" />
@@ -16,6 +20,20 @@
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <script type="module" src="/src/main.tsx"></script>
+    <!-- Service Worker Registration -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(registration => {
+              console.log('[App] Service Worker registered:', registration);
+            })
+            .catch(error => {
+              console.warn('[App] Service Worker registration failed:', error);
+            });
+        });
+      }
+    </script>
   </body>
 </html>
