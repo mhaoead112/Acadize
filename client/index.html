@@ -3,16 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
-    <meta name="theme-color" content="#1e40af" />
-    <meta name="description" content="A comprehensive educational platform for students and teachers" />
     <title>Acadize</title>
-    <!-- Favicon and PWA Links -->
-    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="shortcut icon" href="/favicon.ico" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-    <meta name="apple-mobile-web-app-title" content="Acadize" />
-    <link rel="manifest" href="/site.webmanifest" />
+    <!-- Favicon: dark-mode icon so it’s visible in browser tabs; light icon for prefers-color-scheme: light -->
+    <link rel="icon" href="/acadize-logo-icon-dark.png" type="image/png" sizes="32x32" />
+    <link rel="icon" href="/acadize-logo-icon-dark.png" type="image/png" sizes="16x16" />
+    <link rel="icon" href="/acadize-logo-icon.png" type="image/png" sizes="32x32" media="(prefers-color-scheme: light)" />
+    <link rel="apple-touch-icon" href="/acadize-logo-icon-dark.png" sizes="180x180" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -20,20 +16,6 @@
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-    <!-- Service Worker Registration -->
-    <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js')
-            .then(registration => {
-              console.log('[App] Service Worker registered:', registration);
-            })
-            .catch(error => {
-              console.warn('[App] Service Worker registration failed:', error);
-            });
-        });
-      }
-    </script>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
