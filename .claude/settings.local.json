@@ -1,0 +1,34 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rtk ls *)",
+      "Bash(rtk find *)",
+      "Bash(rtk npx *)",
+      "Bash(npm install *)",
+      "Bash(node_modules/.bin/drizzle-kit push *)",
+      "Bash(npm list *)",
+      "Bash(rtk grep *)",
+      "Bash(docker *)",
+      "Bash(pg_isready *)",
+      "Bash(node run_migration.js)",
+      "Bash(net start *)",
+      "Bash(findstr /i postgre)",
+      "Bash(netstat -ano)",
+      "Bash(findstr :5432)",
+      "Bash(/c/Windows/System32/sc.exe query *)",
+      "Bash(findstr /i post)",
+      "Bash(findstr \"post\")",
+      "Bash(node -e ' *)",
+      "Bash(findstr :543-)",
+      "Bash(where pg_ctl)",
+      "Bash(dir /b /s \"postgresql*\")",
+      "Bash(findstr /i \"bin\\\\\\\\psql.exe\")",
+      "Bash(dir C:\\\\Program Files\\\\PostgreSQL* *)",
+      "Bash(grep -E \"\\\\.\\(sh|ps1|bat\\)$\")",
+      "Bash(rtk wc *)",
+      "Bash(rtk read *)",
+      "Bash(gt)",
+      "Bash(verification_summary.txt)"
+    ]
+  }
+}

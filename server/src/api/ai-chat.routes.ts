@@ -3,6 +3,7 @@ import { Pool } from 'pg';
 import OpenAI from 'openai';
 import { isAuthenticated } from '../middleware/auth.middleware.js';
 import { requireSubscription } from '../middleware/subscription.middleware.js';
+import { getTeacherAwareResponse, getEnhancedRagResponse } from '../services/ai-chat.service';
 
 // Combined auth + subscription middleware
 const requireAuth = [isAuthenticated, requireSubscription];
@@ -297,6 +298,76 @@ router.post('/chat', ...requireAuth, async (req, res) => {
     res.status(500).json({ error: 'Failed to generate answer', details: error.message });
   }
 });
+
+// POST /api/ai-chat/teacher - Teacher-aware AI Study Buddy with educational context
+router.post('/teacher-chat', ...requireAuth, async (req, res) => {
+  try {
+    const { question, lessonId, teachingStrategy, studentId } = req.body;
+
+    if (!question || !question.trim()) {
+      return res.status(400).json({ error: 'Question is required' });
+    }
+
+    if (!process.env.OPENAI_API_KEY) {
+      return res.status(503).json({ error: 'AI service not configured. Please add OPENAI_API_KEY to .env' });
+    }
+
+    // Safety check
+    const forbidden = ['bomb', 'kill', 'suicide', 'harm'];
+    if (forbidden.some(word => question.toLowerCase().includes(word))) {
+      return res.status(400).json({ error: 'Unsafe request detected' });
+    }
+
+    // Get student model if studentId is provided
+    let studentModel = null;
+    if (studentId) {
+      try {
+        const { getStudentModel } = await import('../services/student-model.service.js');
+        studentModel = await getStudentModel(studentId, lessonId);
+      } catch (error) {
+        console.warn('Could not fetch student model:', error);
+        // Continue without student model
+      }
+    }
+
+    // Generate teacher-aware response
+    const answer = await getTeacherAwareResponse({
+      userQuery: question,
+      lessonId,
+      teachingStrategy,
+      studentModel
+    });
+
+    if (!answer) {
+      return res.status(500).json({ error: 'Failed to generate answer' });
+    }
+
+    res.json({
+      answer,
+      lessonId,
+      teachingStrategy: teachingStrategy || undefined,
+      hasStudentModel: !!studentModel
+    });
+
+  } catch (error: any) {
+    console.error('Teacher-aware AI Chat Error:', error);
+
+    // Handle rate limit errors
+    if (error?.status === 429) {
+      const waitTime = 'Please wait a minute before trying again.';
+
+      return res.status(429).json({
+        error: 'Rate limit exceeded. The free tier has limited requests per minute.',
+        message: waitTime,
+        suggestion: 'Try asking a simpler question or wait before retrying.'
+      });
+    }
+
+    res.status(500).json({ error: 'Failed to generate answer', details: error.message });
+  }
+});
+
+// POST /api/ai-chat/general - Versa General Knowledge Chat (no lesson context)
 
 // POST /api/ai-chat/general - Versa General Knowledge Chat (no lesson context)
 router.post('/general', async (req, res) => {

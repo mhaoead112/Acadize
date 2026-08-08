@@ -25,35 +25,8 @@ const openai = new OpenAI({
   baseURL: 'https://ai.hackclub.com/proxy/v1',
 });
 
-// Get AI database configuration
-const getAiDbConfig = () => {
-  if (process.env.AI_DB_HOST) {
-    return {
-      host: process.env.AI_DB_HOST,
-      port: parseInt(process.env.AI_DB_PORT || '5432'),
-      user: process.env.AI_DB_USER,
-      password: process.env.AI_DB_PASSWORD,
-      database: process.env.AI_DB_NAME,
-      ssl: process.env.AI_DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
-    };
-  }
-
-  if (process.env.DATABASE_URL) {
-    return {
-      connectionString: process.env.DATABASE_URL,
-      ssl: { rejectUnauthorized: false },
-    };
-  }
-
-  return {
-    host: 'localhost',
-    port: 5432,
-    user: 'postgres',
-    password: 'postgres',
-    database: 'eduverse',
-    ssl: false,
-  };
-};
+// Get AI database configuration - imported from db schema
+import { getAiDbConfig } from '../db/schema';
 
 // Get main database configuration (for lessons table)
 const getMainDbConfig = () => {
@@ -165,6 +138,132 @@ function getFileHash(filePath: string): string {
   const hashSum = crypto.createHash('md5');
   hashSum.update(fileBuffer);
   return hashSum.digest('hex');
+}
+
+// Helper: Extract educational metadata from file path/name or content
+// In a real implementation, this might parse specialized metadata files,
+// read from LMS systems, or extract from document properties
+function extractEducationalMetadata(
+  filePath: string,
+  fileName: string,
+  content: string,
+  courseId: string | null = null // Would come from lessons table in real implementation
+): {
+  learningObjectives: Array<{ objective: string; bloomsTaxonomyLevel?: string }>;
+  prerequisiteConcepts: Array<{ conceptDescription: string; prerequisiteLessonId?: string }>;
+  academicStandards: Array<{ standardCode: string; standardDescription: string; subjectArea?: string; gradeLevel?: string }>;
+  commonMisconceptions: string[];
+  topicSequence?: number;
+  difficultyLevel?: string;
+  estimatedDurationMinutes?: number;
+  keywords: string[];
+} {
+  // For now, we'll return empty/default values
+  // In a production system, this would:
+  // 1. Check for accompanying metadata files (JSON/YAML)
+  // 2. Parse document properties (for PDF/DOCX/PPTX)
+  // 3. Extract from structured comments in the content
+  // 4. Use NLP to identify learning objectives, etc.
+  // 5. Map to known standards based on course/program
+
+  // Placeholder implementation that extracts basic info from filename/path
+  const metadata: any = {
+    learningObjectives: [],
+    prerequisiteConcepts: [],
+    academicStandards: [],
+    commonMisconceptions: [],
+    topicSequence: undefined,
+    difficultyLevel: undefined,
+    estimatedDurationMinutes: undefined,
+    keywords: []
+  };
+
+  // Extract potential topic sequence from filename (e.g., "01_introduction.pdf")
+  const sequenceMatch = fileName.match(/^(\d+)[_-]/);
+  if (sequenceMatch) {
+    metadata.topicSequence = parseInt(sequenceMatch[1]);
+  }
+
+  // Extract potential difficulty from path or filename
+  const difficultyMatch = (filePath + fileName).toLowerCase().match(/(beginner|introductory|intermediate|advanced)/);
+  if (difficultyMatch) {
+    metadata.difficultyLevel = difficultyMatch[1];
+  }
+
+  // Extract some basic keywords from filename (remove extension and numbers)
+  const cleanName = fileName.replace(/\.[^/.]+$/, "").replace(/^[\d\s\-_]+/, "").replace(/[\d\s\-_]+$/g, "");
+  if (cleanName) {
+    metadata.keywords = cleanName.split(/[\s\-_]+/).filter(k => k.length > 2);
+  }
+
+  // For demonstration, add a common misconception if we detect certain topics
+  const contentLower = content.toLowerCase();
+  if (contentLower.includes("fraction") || contentLower.includes("numerator") || contentLower.includes("denominator")) {
+    metadata.commonMisconceptions.push("Students often think that a larger denominator means a larger fraction");
+  }
+
+  if (contentLower.includes("photosynthesis") || contentLower.includes("chlorophyll")) {
+    metadata.commonMisconceptions.push("Students often believe plants get their food from the soil rather than from air and water");
+  }
+
+  if (contentLower.includes("evolution") || contentLower.includes("natural selection")) {
+    metadata.commonMisconceptions.push("Students often think evolution is goal-oriented or that individual organisms evolve during their lifetime");
+  }
+
+  // Add a sample learning objective if none found
+  if (metadata.learningObjectives.length === 0 && content.length > 100) {
+    metadata.learningObjectives.push({
+      objective: `Understand and explain the key concepts covered in this lesson`,
+      bloomsTaxonomyLevel: "understand"
+    });
+  }
+
+  return metadata;
+}
+
+// Update the processLessonFile function to store educational metadata
+async function storeEducationalMetadata(
+  dbPool: Pool,
+  lessonId: string,
+  metadata: any
+): Promise<void> {
+  // Store learning objectives
+  for (const obj of metadata.learningObjectives) {
+    await dbPool.query(
+      `INSERT INTO learning_objectives (lesson_id, objective, blooms_taxonomy_level) VALUES ($1, $2, $3)`,
+      [lessonId, obj.objective, obj.bloomsTaxonomyLevel]
+    );
+  }
+
+  // Store prerequisite concepts
+  for (const prereq of metadata.prerequisiteConcepts) {
+    await dbPool.query(
+      `INSERT INTO prerequisite_concepts (lesson_id, concept_description, prerequisite_lesson_id) VALUES ($1, $2, $3)`,
+      [lessonId, prereq.conceptDescription, prereq.prerequisiteLessonId || null]
+    );
+  }
+
+  // Store academic standards
+  for (const standard of metadata.academicStandards) {
+    await dbPool.query(
+      `INSERT INTO academic_standards (lesson_id, standard_code, standard_description, subject_area, grade_level) VALUES ($1, $2, $3, $4, $5)`,
+      [lessonId, standard.standardCode, standard.standardDescription, standard.subjectArea || null, standard.gradeLevel || null]
+    );
+  }
+
+  // Store lesson metadata
+  await dbPool.query(
+    `INSERT INTO lesson_metadata (lesson_id, common_misconceptions, topic_sequence, difficulty_level, estimated_duration_minutes, keywords)
+     VALUES ($1, $2, $3, $4, $5, $6)`,
+    [
+      lessonId,
+      JSON.stringify(metadata.commonMisconceptions),
+      metadata.topicSequence,
+      metadata.difficultyLevel,
+      metadata.estimatedDurationMinutes,
+      JSON.stringify(metadata.keywords)
+    ]
+  );
 }
 
 // Helper: URL hash for cloud files
@@ -418,6 +517,10 @@ export async function processLessonFile(filePath: string, lessonId: string): Pro
       };
     }
 
+    // Extract educational metadata from the content and file info
+    // In a real implementation, we would get courseId from the lessons table
+    const metadata = extractEducationalMetadata(filePath, path.basename(filePath), text, null);
+
     const chunks = chunkText(text);
     console.log(`Extracted ${chunks.length} chunks from ${lessonId}`);
 
@@ -438,6 +541,10 @@ export async function processLessonFile(filePath: string, lessonId: string): Pro
         console.error(`Embedding/DB insert error for chunk:`, chunkErr);
       }
     }
+
+    // Store educational metadata
+    // In a real implementation, we'd get courseId from the lessons table
+    await storeEducationalMetadata(dbPool, lessonId, metadata);
 
     // Mark as processed
     await dbPool.query(
@@ -530,6 +637,10 @@ export async function processCloudLesson(
         };
       }
 
+      // Extract educational metadata from the content and file info
+      // In a real implementation, we would get courseId from the lessons table
+      const metadata = extractEducationalMetadata(cloudUrl, fileName, text, null);
+
       const chunks = chunkText(text);
       console.log(`  📄 Extracted ${chunks.length} chunks from ${lessonId}`);
 
@@ -550,6 +661,10 @@ export async function processCloudLesson(
           console.error(`  ⚠️ Embedding error:`, chunkErr.message);
         }
       }
+
+      // Store educational metadata
+      // In a real implementation, we'd get courseId from the lessons table
+      await storeEducationalMetadata(dbPool, lessonId, metadata);
 
       // Mark as processed
       await dbPool.query(

@@ -228,6 +228,89 @@ export const lessonTranslations = pgTable("lesson_translations", {
   lessonLocaleIdx: uniqueIndex("lesson_translations_lesson_locale_idx").on(table.lessonId, table.locale),
 }));
 
+// Educational Metadata Tables
+export const learningObjectives = pgTable("learning_objectives", {
+  id: text("id").primaryKey().$defaultFn(() => createId()),
+  lessonId: text("lesson_id").notNull().references(() => lessons.id, { onDelete: "cascade" }),
+  objective: text("objective").notNull(),
+  bloomsTaxonomyLevel: varchar("blooms_taxonomy_level", { length: 50 }), // remember, understand, apply, analyze, evaluate, create
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
+});
+
+export const prerequisiteConcepts = pgTable("prerequisite_concepts", {
+  id: text("id").primaryKey().$defaultFn(() => createId()),
+  lessonId: text("lesson_id").notNull().references(() => lessons.id, { onDelete: "cascade" }),
+  prerequisiteLessonId: text("prerequisite_lesson_id").references(() => lessons.id),
+  conceptDescription: text("concept_description").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const academicStandards = pgTable("academic_standards", {
+  id: text("id").primaryKey().$defaultFn(() => createId()),
+  lessonId: text("lesson_id").notNull().references(() => lessons.id, { onDelete: "cascade" }),
+  standardCode: varchar("standard_code", { length: 100 }).notNull(), // e.g., "CCSS.MATH.CONTENT.HSA.SSE.A.1"
+  standardDescription: text("standard_description").notNull(),
+  subjectArea: varchar("subject_area", { length: 50 }), // e.g., "Mathematics", "Science"
+  gradeLevel: varchar("grade_level", { length: 20 }), // e.g., "9", "10-12"
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const lessonMetadata = pgTable("lesson_metadata", {
+  id: text("id").primaryKey().$defaultFn(() => createId()),
+  lessonId: text("lesson_id").notNull().references(() => lessons.id, { onDelete: "cascade" }),
+  commonMisconceptions: text("common_misconceptions"), // JSON array of common student misconceptions
+  topicSequence: integer("topic_sequence"), // Position in curriculum (unit, chapter, lesson number)
+  difficultyLevel: varchar("difficulty_level", { length: 20 }), // introductory, intermediate, advanced
+  estimatedDurationMinutes: integer("estimated_duration_minutes"),
+  keywords: text("keywords"), // JSON array of key concepts/tags
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
+});
+
+// Student Modeling Tables
+export const studentModel = pgTable("student_model", {
+  id: text("id").primaryKey().$defaultFn(() => createId()),
+  studentId: text("student_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  lessonId: text("lesson_id").references(() => lessons.id),
+  conceptMastery: text("concept_mastery"), // JSON object tracking mastery of concepts
+  learningPreferences: text("learning_preferences"), // JSON object (visual, auditory, textual preferences)
+  engagementScore: real("engagement_score"), // 0-100 scale
+  struggleAreas: text("struggle_areas"), // JSON array of concepts student struggles with
+  breakthroughMoments: text("breakthrough_moments"), // JSON array of learning breakthroughs
+  preferredExplanationStyle: varchar("preferred_explanation_style", { length: 50 }), // visual, analogical, procedural, etc.
+  totalInteractions: integer("total_interactions").default(0),
+  lastInteractionAt: timestamp("last_interaction_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
+});
+
+// Teacher Customization Tables
+export const teacherCustomPrompts = pgTable("teacher_custom_prompts", {
+  id: text("id").primaryKey().$defaultFn(() => createId()),
+  teacherId: text("teacher_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  courseId: text("course_id").references(() => courses.id),
+  title: varchar("title", { length: 255 }).notNull(),
+  promptTemplate: text("prompt_template").notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
+});
+
+// AI Interaction Analytics
+export const aiInteractionAnalytics = pgTable("ai_interaction_analytics", {
+  id: text("id").primaryKey().$defaultFn(() => createId()),
+  studentId: text("student_id").references(() => users.id),
+  lessonId: text("lesson_id").references(() => lessons.id),
+  question: text("question").notNull(),
+  aiResponse: text("ai_response").notNull(),
+  personaUsed: varchar("persona_used", { length: 50 }), // alex, doctor, coach
+  teachingStrategyUsed: varchar("teaching_strategy_used", { length: 50 }), // socratic, scaffolding, etc.
+  helpfulnessRating: integer("helpfulness_rating"), // 1-5 scale (if provided by student)
+  followUpQuestions: text("follow_up_questions"), // JSON array of suggested follow-up questions
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const assignments = pgTable("assignments", {
   id: text("id").primaryKey().$defaultFn(() => createId()),
   courseId: text("course_id").notNull().references(() => courses.id, { onDelete: 'cascade' }),
@@ -1642,3 +1725,33 @@ export const skillTreeNodes = pgTable("skill_tree_nodes", {
 
 export type SkillTreeNode = typeof skillTreeNodes.$inferSelect;
 export type NewSkillTreeNode = typeof skillTreeNodes.$inferInsert;
+
+// Database configuration for AI services
+export const getAiDbConfig = () => {
+  if (process.env.AI_DB_HOST) {
+    return {
+      host: process.env.AI_DB_HOST,
+      port: parseInt(process.env.AI_DB_PORT || '5432'),
+      user: process.env.AI_DB_USER,
+      password: process.env.AI_DB_PASSWORD,
+      database: process.env.AI_DB_NAME,
+      ssl: process.env.AI_DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
+    };
+  }
+
+  if (process.env.DATABASE_URL) {
+    return {
+      connectionString: process.env.DATABASE_URL,
+      ssl: { rejectUnauthorized: false },
+    };
+  }
+
+  return {
+    host: 'localhost',
+    port: 5432,
+    user: 'postgres',
+    password: 'postgres',
+    database: 'eduverse',
+    ssl: false,
+  };
+};
