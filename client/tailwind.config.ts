@@ -18,9 +18,33 @@ const config: Config = {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "#F2D00D",
+          DEFAULT: "hsl(var(--primary))",
           hover: "#E5C50C",
-          foreground: "#0F172A",
+          foreground: "hsl(var(--primary-foreground))",
+        },
+        secondary: {
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--secondary-foreground))",
+        },
+        destructive: {
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
+        },
+        muted: {
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
+        },
+        accent: {
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
+        },
+        popover: {
+          DEFAULT: "hsl(var(--popover))",
+          foreground: "hsl(var(--popover-foreground))",
+        },
+        card: {
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))",
         },
         // ── Academy brand colors (driven by BrandingContext CSS vars) ──
         brand: {
@@ -51,7 +75,6 @@ const config: Config = {
         "navy-dark": "#0f172a",
         "navy-card": "#1e293b",
         "navy-border": "#334155",
-        "card": "#1e293b",
         "text-secondary": "#94a3b8",
         "primary-hover": "#d9ba0b",
       },

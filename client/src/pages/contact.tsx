@@ -1,285 +1,322 @@
-import { useState } from "react";
-import { useTranslation } from "react-i18next";
-import { motion, useScroll, useTransform } from "framer-motion";
-import { useToast } from "@/hooks/use-toast";
+import { motion } from "framer-motion";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { useMutation } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-
-import { 
-  School, 
-  Mail, 
-  Headphones, 
-  Phone, 
-  BookOpen, 
-  FlaskConical, 
-  Globe, 
-  User, 
-  FileText, 
-  Send
-} from "lucide-react";
-import type { InsertContact } from "@shared/schema";
-import Navbar from "@/components/landing/Navbar";
-import Footer from "@/components/landing/Footer";
+import { Button } from "@/components/ui/button";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import { MascotFloat } from "@/components/MascotFloat";
+import { Mail, Phone, MapPin, Loader2 } from "lucide-react";
+import { GeometricShapes } from "@/components/GeometricShapes";
 import { apiEndpoint } from "@/lib/config";
 
+const mascotRunning = "/images/mascot-6.png";
+
+const formSchema = z.object({
+  firstName: z.string().min(2, "First name is required"),
+  lastName: z.string().min(2, "Last name is required"),
+  email: z.string().email("Invalid email address"),
+  phone: z.string().min(5, "Phone number is required"),
+  schoolName: z.string().min(2, "School name is required"),
+  students: z.string().min(1, "Please select number of students"),
+  role: z.string().min(1, "Please select your role"),
+  message: z.string().optional(),
+});
+
+type FormValues = z.infer<typeof formSchema>;
+
 export default function Contact() {
-  const { t } = useTranslation('landing');
   const { toast } = useToast();
-  const [formData, setFormData] = useState<InsertContact>({
-    name: "",
-    email: "",
-    subject: "",
-    message: "",
+  
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      email: "",
+      phone: "",
+      schoolName: "",
+      students: "",
+      role: "",
+      message: "",
+    },
   });
 
-  const { scrollYProgress } = useScroll();
-  const orbTopY = useTransform(scrollYProgress, [0, 1], [0, -60]);
-  const orbBottomY = useTransform(scrollYProgress, [0, 1], [0, 40]);
-
-  const containerVariants = {
-    hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0, transition: { staggerChildren: 0.12 } }
-  };
-  const itemVariants = {
-    hidden: { opacity: 0, y: 24 },
-    show: { opacity: 1, y: 0 }
-  };
-
   const contactMutation = useMutation({
-    mutationFn: async (data: InsertContact) => {
+    mutationFn: async (values: FormValues) => {
+      const payload = {
+        name: `${values.firstName} ${values.lastName}`.trim(),
+        email: values.email,
+        subject: `Demo Request - ${values.schoolName} (${values.role}, ${values.students} students)`,
+        message: `Phone: ${values.phone}\nSchool/Institution: ${values.schoolName}\nRole: ${values.role}\nStudents Range: ${values.students}\n\nMessage:\n${values.message || "No additional message provided."}`,
+      };
+
       const response = await fetch(apiEndpoint("/api/contacts"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(data),
-      })
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.message || errData.error || "Failed to submit demo request");
+      }
+
       return response.json();
     },
     onSuccess: () => {
       toast({
-        title: t('contactForm.messageSentSuccess'),
-        description: t('contactForm.messageSentDescription'),
+        title: "Demo Request Received",
+        description: "Thank you for reaching out! We'll be in touch shortly to schedule your demo.",
       });
-      setFormData({
-        name: "",
-        email: "",
-        subject: "",
-        message: "",
-      });
+      form.reset();
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast({
-        title: t('contactForm.failedToSendMessage'),
-        description: error instanceof Error ? error.message : t('contactForm.failedToSendDescription'),
+        title: "Submission Failed",
+        description: error.message || "Something went wrong. Please try again or email us directly.",
         variant: "destructive",
       });
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    contactMutation.mutate(formData);
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { id, value } = e.target;
-    setFormData((prev: InsertContact) => ({ ...prev, [id]: value }));
-  };
+  function onSubmit(values: FormValues) {
+    contactMutation.mutate(values);
+  }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-white font-sans antialiased overflow-x-hidden">
-
-      <section className="relative pt-16 pb-24 lg:pt-24 lg:pb-32 overflow-hidden">
-        <motion.div className="absolute top-0 right-0 -z-10 h-[600px] w-[600px] bg-primary/5 blur-[120px] rounded-full" style={{ y: orbTopY }}></motion.div>
-        <motion.div className="absolute bottom-0 left-0 -z-10 h-[400px] w-[400px] bg-blue-900/10 blur-[100px] rounded-full" style={{ y: orbBottomY }}></motion.div>
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
-          <motion.div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-start" variants={containerVariants} initial="hidden" animate="show">
-            {/* Left Column */}
-            <motion.div className="flex flex-col gap-8" variants={itemVariants}>
-              <div>
-                <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 w-fit mb-6">
-                  <span className="flex size-2 rounded-full bg-primary"></span>
-                  <span className="text-xs font-semibold text-primary uppercase tracking-wide">24/7 Support</span>
-                </div>
-                <h1 className="text-4xl lg:text-5xl font-black leading-[1.1] tracking-tight text-slate-900 dark:text-white mb-6">
-                  {t('contactTitle')}
-                </h1>
-                <p className="text-lg text-slate-600 dark:text-text-muted leading-relaxed max-w-lg">
-                  Whether you're an administrator looking for a demo, a teacher needing support, or a student with login issues, our team is ready to help.
-                </p>
-              </div>
-              
-              <div className="space-y-6">
-                <motion.div className="flex items-start gap-4 p-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 dark:border-white/5 dark:bg-slate-900/50 dark:hover:bg-slate-900 transition-colors group" whileHover={{ y: -4, rotateX: 2, rotateY: -2 }} transition={{ type: "spring", stiffness: 350, damping: 20 }} style={{ perspective: 1000, transformStyle: 'preserve-3d' }}>
-                  <div className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-slate-950 border border-white/10 text-primary group-hover:scale-110 transition-transform">
-                    <Mail className="h-6 w-6" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-white">Email Us</h3>
-                    <p className="text-sm text-slate-600 dark:text-text-muted mb-1">For general inquiries and sales</p>
-                    <a className="text-primary font-medium hover:text-white transition-colors" href="mailto:support@acadize.com">support@acadize.com</a>
-                  </div>
-                </motion.div>
-                
-                <motion.div className="flex items-start gap-4 p-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 dark:border-white/5 dark:bg-slate-900/50 dark:hover:bg-slate-900 transition-colors group" whileHover={{ y: -4, rotateX: 2, rotateY: -2 }} transition={{ type: "spring", stiffness: 350, damping: 20 }} style={{ perspective: 1000, transformStyle: 'preserve-3d' }}>
-                  <div className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-slate-950 border border-white/10 text-primary group-hover:scale-110 transition-transform">
-                    <Headphones className="h-6 w-6" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-white">Technical Support</h3>
-                    <p className="text-sm text-slate-600 dark:text-text-muted mb-1">For existing customers needing help</p>
-                    <a className="text-primary font-medium hover:text-white transition-colors" href="mailto:contact@acadize.com">contact@acadize.com</a>
-                  </div>
-                </motion.div>
-                
-                <motion.div className="flex items-start gap-4 p-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 dark:border-white/5 dark:bg-slate-900/50 dark:hover:bg-slate-900 transition-colors group" whileHover={{ y: -4, rotateX: 2, rotateY: -2 }} transition={{ type: "spring", stiffness: 350, damping: 20 }} style={{ perspective: 1000, transformStyle: 'preserve-3d' }}>
-                  <div className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-slate-950 border border-white/10 text-primary group-hover:scale-110 transition-transform">
-                    <Phone className="h-6 w-6" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-white">Call Us</h3>
-                    <p className="text-sm text-slate-600 dark:text-text-muted mb-1">Mon-Fri from 8am to 6pm EST</p>
-                    <a className="text-primary font-medium hover:text-white transition-colors" href="tel:+201008547459">+20 10 08547459</a>
-                  </div>
-                </motion.div>
-              </div>
-              
-              {/* <div className="pt-6 border-t border-white/10">
-                <p className="text-sm text-text-muted mb-4">Trusted by 500+ institutions worldwide</p>
-                <div className="flex gap-4 opacity-50 grayscale">
-                  <School className="h-8 w-8" />
-                  <BookOpen className="h-8 w-8" />
-                  <FlaskConical className="h-8 w-8" />
-                  <Globe className="h-8 w-8" />
-                </div>
-              </div> */}
-            </motion.div>
-
-            {/* Right Column - Form */}
-            <motion.div className="relative" variants={itemVariants}>
-              <motion.div className="absolute -inset-1 bg-gradient-to-r from-primary/30 to-blue-500/30 rounded-2xl blur-lg opacity-50" style={{ y: orbTopY }}></motion.div>
-              <motion.div className="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl p-6 sm:p-8 lg:p-10 shadow-2xl" initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-                <div className="mb-8">
-                  <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Send us a message</h2>
-                  <p className="text-slate-600 dark:text-text-muted text-sm">We typically reply within 2 hours during business days.</p>
-                </div>
-                
-                <form onSubmit={handleSubmit} className="space-y-5">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                    <div className="space-y-1.5">
-                      <label className="text-sm font-semibold text-slate-600 dark:text-text-muted" htmlFor="name">Full Name</label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-text-muted/50">
-                          <User className="h-[18px] w-[18px]" />
-                        </div>
-                        <input 
-                          className="block w-full rounded-lg border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-950/50 pl-10 py-2.5 text-slate-900 dark:text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm transition-colors" 
-                          id="name" 
-                          value={formData.name}
-                          onChange={handleChange}
-                          placeholder="Jane Doe" 
-                          type="text"
-                          required
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-sm font-semibold text-slate-600 dark:text-text-muted" htmlFor="email">Email Address</label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-text-muted/50">
-                          <Mail className="h-[18px] w-[18px]" />
-                        </div>
-                        <input 
-                          className="block w-full rounded-lg border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-950/50 pl-10 py-2.5 text-slate-900 dark:text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm transition-colors" 
-                          id="email" 
-                          value={formData.email}
-                          onChange={handleChange}
-                          placeholder="jane@school.edu" 
-                          type="email"
-                          required
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-semibold text-slate-600 dark:text-text-muted" htmlFor="subject">Subject</label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-text-muted/50">
-                        <FileText className="h-[18px] w-[18px]" />
-                      </div>
-                      <select 
-                        className="block w-full rounded-lg border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-950/50 pl-10 py-2.5 text-slate-900 dark:text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm transition-colors [&>option]:bg-white dark:[&>option]:bg-slate-900 [&>option]:text-slate-900 dark:[&>option]:text-white" 
-                        id="subject"
-                        value={formData.subject}
-                        onChange={handleChange}
-                        required
-                      >
-                        <option value="" disabled>Select a subject</option>
-                        <option value="demo">I'd like to schedule a demo</option>
-                        <option value="sales">Sales & Pricing Inquiry</option>
-                        <option value="support">Technical Support</option>
-                        <option value="billing">Billing Question</option>
-                        <option value="other">Other</option>
-                      </select>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-1.5">
-                    <label className="text-sm font-semibold text-slate-600 dark:text-text-muted" htmlFor="message">Message</label>
-                    <div className="relative">
-                      <textarea 
-                        className="block w-full rounded-lg border border-slate-300 dark:border-white/10 bg-white dark:bg-slate-950/50 p-3 text-slate-900 dark:text-white shadow-sm focus:border-primary focus:ring-primary sm:text-sm transition-colors resize-none" 
-                        id="message" 
-                        value={formData.message}
-                        onChange={handleChange}
-                        placeholder="How can we help you today?" 
-                        rows={4}
-                        required
-                      ></textarea>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-2 mb-2">
-                    <input 
-                      className="rounded border-slate-300 dark:border-white/20 bg-white dark:bg-slate-950 text-primary focus:ring-primary/50" 
-                      id="newsletter" 
-                      type="checkbox"
-                    />
-                    <label className="text-xs text-slate-600 dark:text-text-muted" htmlFor="newsletter">I agree to receive communications from Acadize.</label>
-                  </div>
-                  
-                  <button 
-                    className="group flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-8 py-3 text-sm font-bold text-background-dark transition-all hover:bg-primary-hover hover:scale-[1.02] shadow-lg shadow-primary/20" 
-                    type="submit"
-                    disabled={contactMutation.isPending}
-                  >
-                    {contactMutation.isPending ? "Sending..." : "Send Message"}
-                    <Send className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                  </button>
-                </form>
-              </motion.div>
-            </motion.div>
+    <div className="flex flex-col min-h-screen">
+      {/* Hero */}
+      <section className="bg-primary text-primary-foreground pt-32 pb-24 relative overflow-hidden">
+        <GeometricShapes variant="cta" />
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="max-w-2xl"
+          >
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6">
+              Let's Get Started
+            </h1>
+            <p className="text-xl text-primary-foreground/90 font-medium">
+              Book a personalized demo to see how Acadize can transform your school's operations and learning experience.
+            </p>
           </motion.div>
+          <MascotFloat src={mascotRunning} alt="Running Mascot" className="absolute bottom-0 right-10 w-48 lg:w-64 hidden md:block drop-shadow-2xl translate-y-1/4" animation="sway" />
         </div>
       </section>
 
-      <section className="border-t border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-slate-900/20 py-16">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold text-slate-900 dark:text-white text-center mb-10">Frequently Asked Questions</h2>
-          <div className="grid md:grid-cols-3 gap-8 text-center">
-            <div className="p-6 rounded-xl border border-slate-200 bg-white dark:border-white/5 dark:bg-slate-900/40">
-              <h3 className="font-bold text-slate-900 dark:text-white mb-2">What are your support hours?</h3>
-              <p className="text-sm text-slate-600 dark:text-text-muted">Our support team is available Monday through Friday, 8am - 6pm EST. Critical issues are monitored 24/7.</p>
+      {/* Main Content */}
+      <section className="py-20 bg-muted/30 flex-1">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 max-w-6xl mx-auto">
+            
+            {/* Form */}
+            <div className="lg:col-span-2 bg-card rounded-2xl shadow-sm border border-border p-8">
+              <h2 className="text-2xl font-bold text-foreground mb-6">Book Your Demo</h2>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField
+                      control={form.control}
+                      name="firstName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>First Name</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Jane" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="lastName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Last Name</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Doe" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Work Email</FormLabel>
+                          <FormControl>
+                            <Input type="email" placeholder="jane@school.edu" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Phone Number</FormLabel>
+                          <FormControl>
+                            <Input placeholder="(555) 123-4567" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="schoolName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>School/Institution Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Greenfield Academy" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField
+                      control={form.control}
+                      name="students"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Number of Students</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select size" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="under50">Under 50</SelectItem>
+                              <SelectItem value="50to200">50 - 200</SelectItem>
+                              <SelectItem value="200to500">200 - 500</SelectItem>
+                              <SelectItem value="over500">500+</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="role"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Your Role</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select role" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="principal">Principal/Director</SelectItem>
+                              <SelectItem value="admin">Administrator</SelectItem>
+                              <SelectItem value="teacher">Teacher</SelectItem>
+                              <SelectItem value="it">IT/Tech Staff</SelectItem>
+                              <SelectItem value="other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="message"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Anything specific you'd like to see? (Optional)</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="Tell us about your current challenges..." 
+                            className="resize-none" 
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <Button 
+                    type="submit" 
+                    className="w-full h-12 text-lg font-bold" 
+                    disabled={contactMutation.isPending}
+                  >
+                    {contactMutation.isPending ? (
+                      <span className="flex items-center gap-2">
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        Submitting...
+                      </span>
+                    ) : (
+                      "Book My Demo"
+                    )}
+                  </Button>
+                </form>
+              </Form>
             </div>
-            <div className="p-6 rounded-xl border border-slate-200 bg-white dark:border-white/5 dark:bg-slate-900/40">
-              <h3 className="font-bold text-slate-900 dark:text-white mb-2">Do you offer free trials?</h3>
-              <p className="text-sm text-slate-600 dark:text-text-muted">Yes, we offer a 14-day free trial for all plans so you can explore the features before committing.</p>
-            </div>
-            <div className="p-6 rounded-xl border border-slate-200 bg-white dark:border-white/5 dark:bg-slate-900/40">
-              <h3 className="font-bold text-slate-900 dark:text-white mb-2">Where are you located?</h3>
-              <p className="text-sm text-slate-600 dark:text-text-muted">We have remote teams supporting clients globally.</p>
+
+            {/* Sidebar info */}
+            <div className="space-y-8">
+              <div className="bg-slate-900 text-white rounded-2xl p-8">
+                <h3 className="text-xl font-bold mb-6">Contact Information</h3>
+                <div className="space-y-6">
+                  <div className="flex items-start gap-4">
+                    <Mail className="w-6 h-6 text-amber-400 shrink-0" />
+                    <div>
+                      <div className="font-medium text-slate-300 text-sm">Email Us</div>
+                      <a href="mailto:hello@acadize.com" className="text-lg hover:text-amber-400 transition-colors">hello@acadize.com</a>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-4">
+                    <Phone className="w-6 h-6 text-amber-400 shrink-0" />
+                    <div>
+                      <div className="font-medium text-slate-300 text-sm">Call Us</div>
+                      <a href="tel:+15551234567" className="text-lg hover:text-amber-400 transition-colors">+1 (555) 123-4567</a>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-4">
+                    <MapPin className="w-6 h-6 text-amber-400 shrink-0" />
+                    <div>
+                      <div className="font-medium text-slate-300 text-sm">HQ Location</div>
+                      <div className="text-lg">San Francisco, CA</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-card rounded-2xl p-8 shadow-sm border border-border text-center">
+                <h3 className="font-bold text-lg mb-2 text-foreground">Want to skip the form?</h3>
+                <p className="text-muted-foreground mb-6 text-sm">Pick a time directly on our calendar.</p>
+                <a href="mailto:hello@acadize.com?subject=Schedule%20Meeting%20-%20Acadize%20Demo">
+                  <Button variant="outline" className="w-full">Schedule Meeting</Button>
+                </a>
+              </div>
             </div>
           </div>
         </div>

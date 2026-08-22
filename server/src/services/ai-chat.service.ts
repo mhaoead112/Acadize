@@ -68,7 +68,7 @@ export const getTeacherAwareResponse = async ({
       EDUCATIONAL CONTEXT FOR THIS LESSON:
       ${educationalContext.learningObjectives.length > 0 ? `Learning Objectives: ${educationalContext.learningObjectives.join('. ')}` : ''}
       ${educationalContext.prerequisiteConcepts.length > 0 ? `Prerequisite Concepts: ${educationalContext.prerequisiteConcepts.join('. ')}` : ''}
-      ${educationalContext.academicStandards.length > 0 ? `Academic Standards: ${educationalContext.academicStandards.map(s => \`${s.standard_code}: ${s.standard_description}\`).join('. ')}` : ''}
+      ${educationalContext.academicStandards.length > 0 ? `Academic Standards: ${educationalContext.academicStandards.map(s => `${s.standard_code}: ${s.standard_description}`).join('. ')}` : ''}
       ${educationalContext.commonMisconceptions.length > 0 ? `Common Student Misconceptions to Address: ${educationalContext.commonMisconceptions.join('. ')}` : ''}
       ${educationalContext.topicSequence !== undefined ? `Topic Sequence: ${educationalContext.topicSequence}` : ''}
       ${educationalContext.difficultyLevel !== undefined ? `Difficulty Level: ${educationalContext.difficultyLevel}` : ''}

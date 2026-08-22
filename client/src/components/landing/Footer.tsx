@@ -1,131 +1,83 @@
-import React, { useRef } from 'react';
 import { Link } from "wouter";
-import { useTranslation } from 'react-i18next';
-import { Globe, AtSign, Rss } from "lucide-react";
-import { AcadizeLogo } from "@/components/AcadizeLogo";
-import { motion, useInView } from "framer-motion";
+import { Twitter, Linkedin, Facebook, Instagram } from "lucide-react";
 
-const Footer: React.FC = () => {
-  const { t } = useTranslation('landing');
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, amount: 0.2 });
+const logoImg = "/images/logo-icon.png";
 
+export function Footer() {
   return (
-    <footer ref={ref} className="bg-slate-100 dark:bg-slate-900 border-t border-slate-200 dark:border-white/5 pt-16 pb-8">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <motion.div 
-          className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 mb-12"
-          initial={{ opacity: 0, y: 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
-          transition={{ duration: 0.6 }}
-        >
-          
-          {/* Brand Column */}
-          <motion.div 
-            className="col-span-2 lg:col-span-2"
-            initial={{ opacity: 0, x: -30 }}
-            animate={isInView ? { opacity: 1, x: 0 } : { opacity: 0, x: -30 }}
-            transition={{ delay: 0.1, duration: 0.6 }}
-          >
-            <motion.div 
-              className="flex items-center gap-2 mb-4"
-              whileHover={{ scale: 1.05 }}
-            >
-              <AcadizeLogo variant="full" size="xl" />
-            </motion.div>
-            <p className="text-slate-600 dark:text-text-muted text-sm max-w-xs mb-6">{t('footerTagline')}</p>
-            <div className="flex gap-4">
-              <motion.a 
-                className="text-slate-600 dark:text-text-muted hover:text-slate-900 dark:hover:text-white transition-colors" 
-                href="#"
-                whileHover={{ scale: 1.2, y: -3 }}
-                whileTap={{ scale: 0.9 }}
-              >
-                <Globe className="h-5 w-5" />
-              </motion.a>
-              <motion.a 
-                className="text-slate-600 dark:text-text-muted hover:text-slate-900 dark:hover:text-white transition-colors" 
-                href="#"
-                whileHover={{ scale: 1.2, y: -3 }}
-                whileTap={{ scale: 0.9 }}
-              >
-                <AtSign className="h-5 w-5" />
-              </motion.a>
-              <motion.a 
-                className="text-slate-600 dark:text-text-muted hover:text-slate-900 dark:hover:text-white transition-colors" 
-                href="#"
-                whileHover={{ scale: 1.2, y: -3 }}
-                whileTap={{ scale: 0.9 }}
-              >
-                <Rss className="h-5 w-5" />
-              </motion.a>
+    <footer className="bg-muted/30 border-t pt-16 pb-8" data-testid="footer">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 mb-16">
+          <div className="lg:col-span-2">
+            <Link href="/" className="flex items-center gap-2.5 mb-6 inline-flex">
+              <img
+                src={logoImg}
+                alt="Acadize"
+                className="h-8 w-auto object-contain"
+              />
+              <span className="font-bold text-xl tracking-tight text-foreground">Acadize</span>
+            </Link>
+            <p className="text-muted-foreground mb-6 max-w-sm">
+              The all-in-one school platform that simplifies operations and maximizes student potential. Learn. Teach. Achieve.
+            </p>
+            <div className="flex items-center gap-4">
+              <a href="#" className="w-10 h-10 rounded-full bg-card border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-colors" data-testid="social-twitter" aria-label="Twitter">
+                <Twitter className="w-5 h-5" />
+              </a>
+              <a href="#" className="w-10 h-10 rounded-full bg-card border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-colors" data-testid="social-linkedin" aria-label="LinkedIn">
+                <Linkedin className="w-5 h-5" />
+              </a>
+              <a href="#" className="w-10 h-10 rounded-full bg-card border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-colors" data-testid="social-facebook" aria-label="Facebook">
+                <Facebook className="w-5 h-5" />
+              </a>
+              <a href="#" className="w-10 h-10 rounded-full bg-card border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary transition-colors" data-testid="social-instagram" aria-label="Instagram">
+                <Instagram className="w-5 h-5" />
+              </a>
             </div>
-          </motion.div>
-
-          {/* Product Column */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-            transition={{ delay: 0.2, duration: 0.6 }}
-          >
-            <h4 className="text-slate-900 dark:text-white font-bold mb-4">{t('product')}</h4>
-            <ul className="space-y-2 text-sm text-slate-600 dark:text-text-muted">
-              <motion.li whileHover={{ x: 5 }}><a className="hover:text-primary transition-colors" href="/#features">{t('features')}</a></motion.li>
-              <motion.li whileHover={{ x: 5 }}><Link className="hover:text-primary transition-colors" href="/pricing">{t('pricingTitle')}</Link></motion.li>
-              <motion.li whileHover={{ x: 5 }}><Link className="hover:text-primary transition-colors" href="/integrations">{t('integrations')}</Link></motion.li>
-              <motion.li whileHover={{ x: 5 }}><Link className="hover:text-primary transition-colors" href="/blog">{t('updates')}</Link></motion.li>
-            </ul>
-          </motion.div>
-
-          {/* Resources Column */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-            transition={{ delay: 0.3, duration: 0.6 }}
-          >
-            <h4 className="text-slate-900 dark:text-white font-bold mb-4">{t('resources')}</h4>
-            <ul className="space-y-2 text-sm text-slate-600 dark:text-text-muted">
-              <motion.li whileHover={{ x: 5 }}><Link className="hover:text-primary transition-colors" href="/docs">{t('docs')}</Link></motion.li>
-              <motion.li whileHover={{ x: 5 }}><Link className="hover:text-primary transition-colors" href="/community">Community</Link></motion.li>
-              <motion.li whileHover={{ x: 5 }}><Link className="hover:text-primary transition-colors" href="/help-center">{t('help')}</Link></motion.li>
-              <motion.li whileHover={{ x: 5 }}><Link className="hover:text-primary transition-colors" href="/integrations">{t('integrations')}</Link></motion.li>
-            </ul>
-          </motion.div>
-
-          {/* Company Column */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-            transition={{ delay: 0.4, duration: 0.6 }}
-          >
-            <h4 className="text-slate-900 dark:text-white font-bold mb-4">{t('company')}</h4>
-            <ul className="space-y-2 text-sm text-slate-600 dark:text-text-muted">
-              <motion.li whileHover={{ x: 5 }}><Link className="hover:text-primary transition-colors" href="/about">{t('about')}</Link></motion.li>
-              <motion.li whileHover={{ x: 5 }}><Link className="hover:text-primary transition-colors" href="/blog">{t('blog')}</Link></motion.li>
-              <motion.li whileHover={{ x: 5 }}><Link className="hover:text-primary transition-colors" href="/contact">{t('contact')}</Link></motion.li>
-              <motion.li whileHover={{ x: 5 }}><Link className="hover:text-primary transition-colors" href="/pricing">{t('pricingTitle')}</Link></motion.li>
-            </ul>
-          </motion.div>
-        </motion.div>
-
-        {/* Bottom Bar */}
-        <motion.div 
-          className="border-t border-white/5 pt-8 flex flex-col md:flex-row justify-between items-center gap-4"
-          initial={{ opacity: 0 }}
-          animate={isInView ? { opacity: 1 } : { opacity: 0 }}
-          transition={{ delay: 0.5, duration: 0.6 }}
-        >
-          <p className="text-xs text-text-muted">© 2024 Acadize. {t('allRightsReserved')}</p>
-          <div className="flex gap-6 text-xs text-text-muted">
-            <motion.div whileHover={{ y: -2 }}><Link className="hover:text-white" href="/privacy">{t('privacy')}</Link></motion.div>
-            <motion.div whileHover={{ y: -2 }}><Link className="hover:text-white" href="/terms">{t('terms')}</Link></motion.div>
-            <motion.div whileHover={{ y: -2 }}><a className="hover:text-white" href="#">Cookie Settings</a></motion.div>
           </div>
-        </motion.div>
+
+          <div>
+            <h3 className="font-semibold mb-6 text-foreground">Features</h3>
+            <ul className="space-y-4">
+              <li><Link href="/features" className="text-muted-foreground hover:text-primary transition-colors">Learning Management</Link></li>
+              <li><Link href="/features" className="text-muted-foreground hover:text-primary transition-colors">Teacher Tools</Link></li>
+              <li><Link href="/features" className="text-muted-foreground hover:text-primary transition-colors">Parent Engagement</Link></li>
+              <li><Link href="/features" className="text-muted-foreground hover:text-primary transition-colors">AI Assistant</Link></li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="font-semibold mb-6 text-foreground">Solutions</h3>
+            <ul className="space-y-4">
+              <li><Link href="/solutions" className="text-muted-foreground hover:text-primary transition-colors">For Schools</Link></li>
+              <li><Link href="/solutions" className="text-muted-foreground hover:text-primary transition-colors">For Teachers</Link></li>
+              <li><Link href="/solutions" className="text-muted-foreground hover:text-primary transition-colors">For Parents</Link></li>
+              <li><Link href="/solutions" className="text-muted-foreground hover:text-primary transition-colors">For Students</Link></li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="font-semibold mb-6 text-foreground">Company</h3>
+            <ul className="space-y-4">
+              <li><Link href="/about" className="text-muted-foreground hover:text-primary transition-colors">About Us</Link></li>
+              <li><Link href="/pricing" className="text-muted-foreground hover:text-primary transition-colors">Pricing</Link></li>
+              <li><Link href="/contact" className="text-muted-foreground hover:text-primary transition-colors">Contact</Link></li>
+              <li><Link href="/contact" className="text-muted-foreground hover:text-primary transition-colors">Careers</Link></li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="pt-8 border-t flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
+          <p>© {new Date().getFullYear()} Acadize Inc. All rights reserved.</p>
+          <div className="flex gap-6">
+            <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link>
+            <Link href="/terms" className="hover:text-foreground transition-colors">Terms of Service</Link>
+            <Link href="/help-center" className="hover:text-foreground transition-colors">Help Center</Link>
+          </div>
+        </div>
       </div>
     </footer>
   );
-};
+}
 
-export { Footer };
 export default Footer;

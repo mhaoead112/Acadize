@@ -5,25 +5,25 @@
 @tailwind utilities;
 
 :root {
-  --background: hsl(0, 0%, 98%);
-  --foreground: hsl(0, 0%, 11%);
-  --muted: hsl(0, 0%, 96%);
-  --muted-foreground: hsl(0, 0%, 45%);
-  --popover: hsl(0, 0%, 100%);
-  --popover-foreground: hsl(0, 0%, 11%);
-  --card: hsl(0, 0%, 100%);
-  --card-foreground: hsl(0, 0%, 11%);
-  --border: hsl(0, 0%, 93%);
-  --input: hsl(0, 0%, 89%);
-  --primary: hsl(0, 0%, 11%);
-  --primary-foreground: hsl(0, 0%, 98%);
-  --secondary: hsl(0, 0%, 96%);
-  --secondary-foreground: hsl(0, 0%, 11%);
-  --accent: hsl(0, 0%, 96%);
-  --accent-foreground: hsl(0, 0%, 11%);
-  --destructive: hsl(0, 84%, 60%);
-  --destructive-foreground: hsl(0, 0%, 98%);
-  --ring: hsl(0, 0%, 11%);
+  --background: 0 0% 100%;
+  --foreground: 222 47% 11%;
+  --muted: 210 40% 96%;
+  --muted-foreground: 215 16% 40%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 47% 11%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+  --border: 214 32% 91%;
+  --input: 214 32% 91%;
+  --primary: 48 96% 50%;
+  --primary-foreground: 222 47% 11%;
+  --secondary: 210 40% 96%;
+  --secondary-foreground: 222 47% 11%;
+  --accent: 48 96% 50%;
+  --accent-foreground: 222 47% 11%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 98%;
+  --ring: 48 96% 50%;
   --radius: 0.75rem;
 
   /* Landing Page Redesign Variables */
@@ -67,32 +67,33 @@
 }
 
 .dark {
-  --background: hsl(222, 47%, 8%);
-  --foreground: hsl(60, 30%, 96%);
-  --muted: hsl(223, 47%, 14%);
-  --muted-foreground: hsl(215, 20%, 65%);
-  --popover: hsl(222, 47%, 10%);
-  --popover-foreground: hsl(60, 30%, 96%);
-  --card: hsl(222, 47%, 10%);
-  --card-foreground: hsl(60, 30%, 96%);
-  --border: hsl(220, 15%, 22%);
-  --input: hsl(220, 15%, 22%);
-  --primary: hsl(42, 85%, 50%);
-  --primary-foreground: hsl(222, 47%, 8%);
-  --secondary: hsl(222, 35%, 18%);
-  --secondary-foreground: hsl(60, 30%, 96%);
-  --accent: hsl(42, 80%, 52%);
-  --accent-foreground: hsl(222, 47%, 8%);
-  --destructive: hsl(0, 62.8%, 45%);
-  --destructive-foreground: hsl(60, 30%, 96%);
-  --ring: hsl(42, 85%, 50%);
+  --background: 222 47% 7%;
+  --foreground: 210 40% 98%;
+  --muted: 217 33% 14%;
+  --muted-foreground: 215 20% 75%;
+  --popover: 222 47% 10%;
+  --popover-foreground: 210 40% 98%;
+  --card: 222 47% 11%;
+  --card-foreground: 210 40% 98%;
+  --border: 217 33% 20%;
+  --input: 217 33% 20%;
+  --primary: 48 96% 50%;
+  --primary-foreground: 222 47% 11%;
+  --secondary: 217 33% 18%;
+  --secondary-foreground: 210 40% 98%;
+  --accent: 48 96% 50%;
+  --accent-foreground: 222 47% 11%;
+  --destructive: 0 63% 45%;
+  --destructive-foreground: 210 40% 98%;
+  --ring: 48 96% 50%;
   --radius: 0.75rem;
 
   /* Landing Page Redesign Dark Variables */
   --color-background: #020617;
   --color-surface: #0f172a;
   --color-text: #f8fafc;
-  --color-muted: #94a3b8;
+  --color-muted: #cbd5e1;
+  --color-border: rgba(255, 255, 255, 0.12);
   --color-border: rgba(255, 255, 255, 0.08);
   
   /* Dark mode specific eduverse colors */

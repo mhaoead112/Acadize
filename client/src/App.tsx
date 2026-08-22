@@ -44,6 +44,8 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { NotificationProvider } from "@/contexts/NotificationContext";
 const Home = React.lazy(() => import("@/pages/home"));
 const About = React.lazy(() => import("@/pages/about"));
+const Features = React.lazy(() => import("@/pages/features"));
+const Solutions = React.lazy(() => import("@/pages/solutions"));
 const Programs = React.lazy(() => import("@/pages/programs"));
 const Subjects = React.lazy(() => import("@/pages/subjects"));
 const Admissions = React.lazy(() => import("@/pages/admissions"));
@@ -250,6 +252,24 @@ function Router() {
           <Route path="/ar/about">
             <SyncLocaleFromPath locale="ar"><PublicLayout><About /></PublicLayout></SyncLocaleFromPath>
           </Route>
+          <Route path="/en/features">
+            <SyncLocaleFromPath locale="en"><PublicLayout><Features /></PublicLayout></SyncLocaleFromPath>
+          </Route>
+          <Route path="/ar/features">
+            <SyncLocaleFromPath locale="ar"><PublicLayout><Features /></PublicLayout></SyncLocaleFromPath>
+          </Route>
+          <Route path="/en/solutions">
+            <SyncLocaleFromPath locale="en"><PublicLayout><Solutions /></PublicLayout></SyncLocaleFromPath>
+          </Route>
+          <Route path="/ar/solutions">
+            <SyncLocaleFromPath locale="ar"><PublicLayout><Solutions /></PublicLayout></SyncLocaleFromPath>
+          </Route>
+          <Route path="/en/pricing">
+            <SyncLocaleFromPath locale="en"><PublicLayout><Pricing /></PublicLayout></SyncLocaleFromPath>
+          </Route>
+          <Route path="/ar/pricing">
+            <SyncLocaleFromPath locale="ar"><PublicLayout><Pricing /></PublicLayout></SyncLocaleFromPath>
+          </Route>
           <Route path="/en/contact">
             <SyncLocaleFromPath locale="en"><PublicLayout><Contact /></PublicLayout></SyncLocaleFromPath>
           </Route>
@@ -259,7 +279,7 @@ function Router() {
 
           {/* Public home page */}
           <Route path="/home">
-            <Home />
+            <PublicLayout><Home /></PublicLayout>
           </Route>
           
           {/* Redirect root to home page - no login required */}
@@ -747,6 +767,12 @@ function Router() {
           </Route>
           
           {/* New landing pages */}
+          <Route path="/features">
+            <PublicLayout><Features /></PublicLayout>
+          </Route>
+          <Route path="/solutions">
+            <PublicLayout><Solutions /></PublicLayout>
+          </Route>
           <Route path="/pricing">
             <PublicLayout><Pricing /></PublicLayout>
           </Route>

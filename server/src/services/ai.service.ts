@@ -62,7 +62,7 @@ async function performGoogleSearch(query: string): Promise<string> {
  * @param lessonId The ID of the lesson to get context for
  * @returns Educational context object
  */
-async function getEducationalContextForLesson(lessonId: string): Promise<any> {
+export async function getEducationalContextForLesson(lessonId: string): Promise<any> {
     try {
         const pool = getAiPool();
 
